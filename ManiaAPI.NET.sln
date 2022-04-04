@@ -1,0 +1,53 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32319.34
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Src", "Src", "{4F91FD3F-1931-44A8-B52C-6CE105E2938A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.NadeoAPI", "Src\ManiaAPI.NadeoAPI\ManiaAPI.NadeoAPI.csproj", "{F75685DD-8842-4FAF-86C6-44EA068CA851}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.TMX", "Src\ManiaAPI.TmxAPI\ManiaAPI.TMX.csproj", "{FB67D8E3-3F43-4E8F-AD2C-0115107A05DC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.TrackmaniaIO", "Src\ManiaAPI.TrackmaniaIO\ManiaAPI.TrackmaniaIO.csproj", "{6AFF9C7E-1D2A-4DAA-9E4E-ADF0AF17F32C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.XmlRpc", "Src\ManiaAPI.XmlRpc\ManiaAPI.XmlRpc.csproj", "{2FE65409-3EC2-473A-A68C-56747224A77A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{96BF39EA-937E-400B-AAE6-7729AEEFF976}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F75685DD-8842-4FAF-86C6-44EA068CA851}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F75685DD-8842-4FAF-86C6-44EA068CA851}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F75685DD-8842-4FAF-86C6-44EA068CA851}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F75685DD-8842-4FAF-86C6-44EA068CA851}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB67D8E3-3F43-4E8F-AD2C-0115107A05DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB67D8E3-3F43-4E8F-AD2C-0115107A05DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB67D8E3-3F43-4E8F-AD2C-0115107A05DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB67D8E3-3F43-4E8F-AD2C-0115107A05DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AFF9C7E-1D2A-4DAA-9E4E-ADF0AF17F32C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AFF9C7E-1D2A-4DAA-9E4E-ADF0AF17F32C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AFF9C7E-1D2A-4DAA-9E4E-ADF0AF17F32C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AFF9C7E-1D2A-4DAA-9E4E-ADF0AF17F32C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FE65409-3EC2-473A-A68C-56747224A77A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FE65409-3EC2-473A-A68C-56747224A77A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FE65409-3EC2-473A-A68C-56747224A77A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FE65409-3EC2-473A-A68C-56747224A77A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F75685DD-8842-4FAF-86C6-44EA068CA851} = {4F91FD3F-1931-44A8-B52C-6CE105E2938A}
+		{FB67D8E3-3F43-4E8F-AD2C-0115107A05DC} = {4F91FD3F-1931-44A8-B52C-6CE105E2938A}
+		{6AFF9C7E-1D2A-4DAA-9E4E-ADF0AF17F32C} = {4F91FD3F-1931-44A8-B52C-6CE105E2938A}
+		{2FE65409-3EC2-473A-A68C-56747224A77A} = {4F91FD3F-1931-44A8-B52C-6CE105E2938A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E273F519-B658-4F1C-8132-DF78A841A592}
+	EndGlobalSection
+EndGlobal
