@@ -10,4 +10,8 @@
     <PackageReference Include="TmEssentials" Version="2.1.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ManiaAPI.Base\ManiaAPI.Base.csproj" />
+  </ItemGroup>
+
 </Project>
