@@ -30,6 +30,8 @@ public class TrackmaniaIOTests
 
         var campaignsWhenRateLimited = await TrackmaniaIO.GetCampaignsAsync();
 
+        // Case of the rate limit being refreshed is still not being tested, due to the usage of the X-Ratelimit-Remaining value given by the actual request
+
         // Assert
         Assert.Null(startingRateLimitRemaining);
         Assert.Equal(expected: 1, actual: rateLimitPerRequest);
@@ -39,6 +41,7 @@ public class TrackmaniaIOTests
         Assert.IsType<Campaign>(officialCampaign);
         Assert.IsType<Leaderboard>(leaderboard);
         Assert.IsType<WorldRecord[]>(recentWorldRecords);
+
         Assert.IsType<CampaignCollection>(campaignsWhenRateLimited);
     }
 }
