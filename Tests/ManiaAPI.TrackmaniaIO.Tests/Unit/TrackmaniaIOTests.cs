@@ -11,7 +11,7 @@ public class TrackmaniaIOTests
     {
         // Arrange
         var userAgent = "Test User Agent";
-        var expected = $"TrackmaniaIO.NET by BigBang1112 " + userAgent;
+        var expected = $"ManiaAPI.NET (TrackmaniaIO) by BigBang1112 " + userAgent;
 
         // Act
         TrackmaniaIO.AddUserAgent(userAgent);

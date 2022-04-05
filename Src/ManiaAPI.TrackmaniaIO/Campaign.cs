@@ -1,4 +1,4 @@
-﻿using ManiaAPI.TrackmaniaIO.Converters;
+﻿using ManiaAPI.Base.Converters;
 using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TrackmaniaIO;

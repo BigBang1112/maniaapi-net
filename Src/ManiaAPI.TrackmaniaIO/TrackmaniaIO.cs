@@ -1,4 +1,5 @@
-﻿using ManiaAPI.TrackmaniaIO.Converters;
+﻿using ManiaAPI.Base.Converters;
+using ManiaAPI.TrackmaniaIO.Converters;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -24,7 +25,7 @@ public static class TrackmaniaIO
             BaseAddress = new Uri("https://trackmania.io/api/")
         };
 
-        Client.DefaultRequestHeaders.Add("User-Agent", "TrackmaniaIO.NET by BigBang1112");
+        Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (TrackmaniaIO) by BigBang1112");
     }
 
     public static void AddUserAgent(string userAgent)

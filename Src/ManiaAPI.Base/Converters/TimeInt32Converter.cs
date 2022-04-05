@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using TmEssentials;
 
-namespace ManiaAPI.TrackmaniaIO.Converters;
+namespace ManiaAPI.Base.Converters;
 
 public class TimeInt32Converter : JsonConverter<TimeInt32>
 {

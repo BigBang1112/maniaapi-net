@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace ManiaAPI.TrackmaniaIO.Converters;
+namespace ManiaAPI.Base.Converters;
 
 public class NullableDateTimeOffsetUnixConverter : JsonConverter<DateTimeOffset?>
 {
