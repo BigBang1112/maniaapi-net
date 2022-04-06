@@ -31,10 +31,10 @@ public class JwtPayload
     public string Usage { get; init; } = "";
     
     [JsonPropertyName("sid")]
-    public string SessionId { get; init; } = "";
+    public Guid SessionId { get; init; }
 
     [JsonPropertyName("sub")]
-    public string Subject { get; init; } = "";
+    public Guid Subject { get; init; }
 
     [JsonPropertyName("aun")]
     public string Account { get; init; } = "";
@@ -47,7 +47,7 @@ public class JwtPayload
         var jwtDot1Index = accessToken.IndexOf('.');
         var jwtDot2Index = accessToken.LastIndexOf('.');
         var jwtPayloadBase64UrlSafe = accessToken.Substring(jwtDot1Index + 1, jwtDot2Index - jwtDot1Index - 1);
-        
+
         // Tried to be optimized but bruh I don't have energy for this xd
         var jwtPayloadBase64 = jwtPayloadBase64UrlSafe.Replace('_', '/').Replace('-', '+');
 
@@ -55,7 +55,7 @@ public class JwtPayload
         {
             case 2: jwtPayloadBase64 += "=="; break;
             case 3: jwtPayloadBase64 += "="; break;
-        }
+        }        
 
         var jwtPayloadDecoded = Convert.FromBase64String(jwtPayloadBase64);
 
