@@ -64,6 +64,13 @@ public abstract class NadeoAPI
 
         await response.EnsureSuccessStatusCodeAsync();
 
+#if DEBUG
+        if (typeof(T) == typeof(string))
+        {
+            return (T)(object)await response.Content.ReadAsStringAsync(cancellationToken);
+        }
+#endif
+
         return await response.Content.ReadFromJsonAsync<T>(JsonSerializerOptions, cancellationToken) ?? throw new Exception("This shouldn't be null.");
     }
 }
