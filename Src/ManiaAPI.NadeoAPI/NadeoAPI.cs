@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace ManiaAPI.NadeoAPI;
 
-public abstract class NadeoAPI : JsonApiBase
+public abstract class NadeoAPI : JsonAPI
 {
     private string? accessToken;
     private string? refreshToken;

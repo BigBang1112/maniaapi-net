@@ -5,7 +5,7 @@ using System.Net.Http.Json;
 
 namespace ManiaAPI.TrackmaniaAPI;
 
-public class TrackmaniaAPI : JsonApiBase
+public class TrackmaniaAPI : JsonAPI
 { 
     private string? accessToken;
     private string? clientId;

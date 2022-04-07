@@ -18,7 +18,7 @@ public static class HttpResponseMessageExtensions
 
         if (response.Content.Headers.ContentLength > 0)
         {
-            errorResponse = await response.Content.ReadFromJsonAsync<TErrorReponse>(JsonApiBase.JsonSerializerOptions, cancellationToken);
+            errorResponse = await response.Content.ReadFromJsonAsync<TErrorReponse>(JsonAPI.JsonSerializerOptions, cancellationToken);
         }
 
         throw new ApiRequestException<TErrorReponse>(response.ReasonPhrase, response.StatusCode, errorResponse);

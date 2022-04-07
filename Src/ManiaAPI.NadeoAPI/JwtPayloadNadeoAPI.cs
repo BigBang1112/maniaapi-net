@@ -28,7 +28,7 @@ public class JwtPayloadNadeoAPI : JwtPayloadBase
 
     public static JwtPayloadNadeoAPI DecodeFromAccessToken(string accessToken)
     {
-        return JsonSerializer.Deserialize<JwtPayloadNadeoAPI>(DecodeToJsonBytesFromAccessToken(accessToken), JsonApiBase.JsonSerializerOptions)
+        return JsonSerializer.Deserialize<JwtPayloadNadeoAPI>(DecodeToJsonBytesFromAccessToken(accessToken), JsonAPI.JsonSerializerOptions)
             ?? throw new Exception("This should never happen");
     }
 }

@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace ManiaAPI.Base;
 
-public abstract class JsonApiBase
+public abstract class JsonAPI
 {
     public HttpClient Client { get; }
 
@@ -14,12 +14,12 @@ public abstract class JsonApiBase
     
     protected bool AutomaticallyAuthorize { get; }
 
-    static JsonApiBase()
+    static JsonAPI()
     {
         JsonSerializerOptions.Converters.Add(new TimeInt32Converter());
     }
 
-    protected JsonApiBase(string baseUrl, bool automaticallyAuthorize)
+    protected JsonAPI(string baseUrl, bool automaticallyAuthorize)
     {
         Client = new HttpClient
         {
