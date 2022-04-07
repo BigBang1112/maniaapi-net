@@ -14,7 +14,7 @@ public abstract class NadeoAPI
     private string? refreshToken;
 
     public HttpClient Client { get; }
-    public JwtPayload? Payload { get; private set; }
+    public JwtPayloadNadeoAPI? Payload { get; private set; }
     
     public DateTimeOffset? RefreshAt => Payload?.RefreshAt;
     public DateTimeOffset? ExpirationTime => Payload?.ExpirationTime;
@@ -53,14 +53,14 @@ public abstract class NadeoAPI
         (accessToken, refreshToken) = await httpResponse.Content.ReadFromJsonAsync<AuthorizationResponse>(JsonSerializerOptions, cancellationToken)
             ?? throw new Exception("This shouldn't be null.");
 
-        Payload = JwtPayload.DecodeFromAccessToken(accessToken);
+        Payload = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);
 
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
     }
 
-    protected async Task<T> GetApiAsync<T>(string requestUri, CancellationToken cancellationToken = default)
+    protected async Task<T> GetApiAsync<T>(string endpoint, CancellationToken cancellationToken = default)
     {
-        using var response = await Client.GetAsync(requestUri, cancellationToken);
+        using var response = await Client.GetAsync(endpoint, cancellationToken);
 
         await response.EnsureSuccessStatusCodeAsync();
 
