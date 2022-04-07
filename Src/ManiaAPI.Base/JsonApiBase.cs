@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.Base.Converters;
+using ManiaAPI.Base.Exceptions;
 using ManiaAPI.Base.Extensions;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -10,18 +11,22 @@ public abstract class JsonApiBase
     public HttpClient Client { get; }
 
     internal static JsonSerializerOptions JsonSerializerOptions { get; } = new(JsonSerializerDefaults.Web);
+    
+    protected bool AutomaticallyAuthorize { get; }
 
     static JsonApiBase()
     {
         JsonSerializerOptions.Converters.Add(new TimeInt32Converter());
     }
 
-    protected JsonApiBase(string baseUrl)
+    protected JsonApiBase(string baseUrl, bool automaticallyAuthorize)
     {
         Client = new HttpClient
         {
             BaseAddress = new Uri(baseUrl)
         };
+
+        AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
     /// <summary>
@@ -31,12 +36,12 @@ public abstract class JsonApiBase
     /// <param name="endpoint">Endpoint to call.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Response object asynchronously.</returns>
-    /// <exception cref="TrackmaniaApiRequestException">API responded with an error message.</exception>
-    protected async Task<T> GetApiAsync<T>(string endpoint, CancellationToken cancellationToken = default)
+    /// <exception cref="ApiRequestException{T}">API responded with an error message.</exception>
+    protected virtual async Task<T> GetApiAsync<T>(string endpoint, CancellationToken cancellationToken = default)
     {
         using var response = await Client.GetAsync(endpoint, cancellationToken);
 
-        await response.EnsureSuccessStatusCodeAsync();
+        await response.EnsureSuccessStatusCodeAsync(cancellationToken);
 
 #if DEBUG
         if (typeof(T) == typeof(string))
