@@ -58,7 +58,7 @@ public static class TrackmaniaIO
         return await GetApiAsync<WorldRecord[]>($"leaderboard/track/{leaderboardUid}", cancellationToken);
     }
 
-    public static async Task<T> GetApiAsync<T>(string requestUri, CancellationToken cancellationToken = default)
+    private static async Task<T> GetApiAsync<T>(string requestUri, CancellationToken cancellationToken = default)
     {
         if (RateLimitRemaining == 0)
         {
@@ -81,9 +81,7 @@ public static class TrackmaniaIO
             RateLimitReset = DateTimeOffset.FromUnixTimeSeconds(rateLimitResetCurrent.Value);
         }
 
-        var obj = await response.Content.ReadFromJsonAsync<T>(JsonSerializerOptions, cancellationToken) ?? throw new Exception("This shoudln't be null.");
-
-        return obj;
+        return await response.Content.ReadFromJsonAsync<T>(JsonSerializerOptions, cancellationToken) ?? throw new Exception("This shouldn't be null.");
     }
 
     internal static long? GetHeaderNumberValue(string name, HttpResponseMessage response)
