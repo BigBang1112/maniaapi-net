@@ -2,11 +2,11 @@
 
 namespace ManiaAPI.Base.Exceptions;
 
-public class ApiRequestException<T> : HttpRequestException where T : ErrorResponse
+public class ApiRequestException : HttpRequestException
 {
-    public T? ErrorResponse { get; }
+    public ErrorResponse? ErrorResponse { get; }
 
-    public ApiRequestException(string? message, HttpStatusCode? statusCode, T? errorResponse)
+    public ApiRequestException(string? message, HttpStatusCode? statusCode, ErrorResponse? errorResponse)
         : base(errorResponse?.Message ?? message, inner: null, statusCode)
     {
         ErrorResponse = errorResponse;

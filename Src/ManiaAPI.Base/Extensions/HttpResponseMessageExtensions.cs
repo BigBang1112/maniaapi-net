@@ -21,7 +21,7 @@ public static class HttpResponseMessageExtensions
             errorResponse = await response.Content.ReadFromJsonAsync<TErrorReponse>(JsonAPI.JsonSerializerOptions, cancellationToken);
         }
 
-        throw new ApiRequestException<TErrorReponse>(response.ReasonPhrase, response.StatusCode, errorResponse);
+        throw new ApiRequestException(response.ReasonPhrase, response.StatusCode, errorResponse);
     }
 
     public static async ValueTask<HttpResponseMessage> EnsureSuccessStatusCodeAsync(this HttpResponseMessage response, CancellationToken cancellationToken = default)
