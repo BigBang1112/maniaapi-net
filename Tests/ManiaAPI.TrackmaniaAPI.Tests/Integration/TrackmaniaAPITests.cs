@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using ManiaAPI.Base.Exceptions;
+using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -18,14 +20,18 @@ public class TrackmaniaAPITests
         var clientId = configuration.GetValue<string>("ClientId");
         var clientSecret = configuration.GetValue<string>("ClientSecret");
 
-        var tmio = new TrackmaniaAPI();
+        var client = new TrackmaniaAPI();
 
-        await tmio.AuthorizeAsync(clientId, clientSecret);
+        await client.AuthorizeAsync(clientId, clientSecret);
 
-        var displayNames = await tmio.GetDisplayNamesAsync(new Guid[]
+        var displayNames = await client.GetDisplayNamesAsync(new Guid[]
         {
             Guid.Parse("6a43df20-cd1a-4b3b-87b9-a6835a9b416d"),
             Guid.Parse("faedcf21-d61a-4305-9ffe-680b2ee5d65e")
         });
+
+        Assert.IsType<Dictionary<Guid, string>>(displayNames);
+
+        await Assert.ThrowsAsync<ApiRequestException>(async () => await client.GetUserAsync());
     }
 }

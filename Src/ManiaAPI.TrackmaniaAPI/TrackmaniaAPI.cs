@@ -71,6 +71,11 @@ public class TrackmaniaAPI : JsonAPI
         return await GetApiAsync<Dictionary<Guid, string>>($"display-names?{string.Join('&', accountIds.Select((x, i) => $"accountId[{i}]={x}"))}", cancellationToken);
     }
 
+    public async Task<User> GetUserAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetApiAsync<User>("user", cancellationToken);
+    }
+
     /// <summary>
     /// Does a general API call that expects a JSON result. If access token was requested but is expired, new one is requested.
     /// </summary>
