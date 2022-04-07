@@ -19,7 +19,7 @@ public abstract class NadeoAPI : JsonApiBase
     public DateTimeOffset? RefreshAt => Payload?.RefreshAt;
     public DateTimeOffset? ExpirationTime => Payload?.ExpirationTime;
 
-    protected NadeoAPI(string baseUrl) : base(baseUrl)
+    protected NadeoAPI(string baseUrl, bool automaticallyAuthorize = true) : base(baseUrl, automaticallyAuthorize)
     {
         Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (NadeoAPI) by BigBang1112");
     }
@@ -35,8 +35,13 @@ public abstract class NadeoAPI : JsonApiBase
         message.Content = JsonContent.Create(new AuthorizationBody(GetType().Name));
 
         using var httpResponse = await Client.SendAsync(message, cancellationToken);
-        
-        await httpResponse.EnsureSuccessStatusCodeAsync();
+
+        await SaveTokenResponseAsync(httpResponse, cancellationToken);
+    }
+
+    private async Task SaveTokenResponseAsync(HttpResponseMessage httpResponse, CancellationToken cancellationToken)
+    {
+        await httpResponse.EnsureSuccessStatusCodeAsync(cancellationToken);
 
         (accessToken, refreshToken) = await httpResponse.Content.ReadFromJsonAsync<AuthorizationResponse>(JsonSerializerOptions, cancellationToken)
             ?? throw new Exception("This shouldn't be null.");
@@ -44,5 +49,33 @@ public abstract class NadeoAPI : JsonApiBase
         Payload = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);
 
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
+    }
+
+    public async ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default)
+    {
+        if (refreshToken is null || RefreshAt is null || DateTimeOffset.UtcNow < RefreshAt.Value)
+        {
+            return false;
+        }
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh");
+        
+        message.Headers.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={refreshToken}");
+
+        using var httpResponse = await Client.SendAsync(message, cancellationToken);
+        
+        await SaveTokenResponseAsync(httpResponse, cancellationToken);
+
+        return true;
+    }
+
+    protected override async Task<T> GetApiAsync<T>(string endpoint, CancellationToken cancellationToken = default)
+    {
+        if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime)
+        {
+            await RefreshAsync(cancellationToken);
+        }
+
+        return await base.GetApiAsync<T>(endpoint, cancellationToken);
     }
 }
