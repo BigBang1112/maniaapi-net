@@ -1,6 +1,5 @@
 ﻿using ManiaAPI.Base.Converters;
-using ManiaAPI.TrackmaniaAPI.Exceptions;
-using ManiaAPI.TrackmaniaAPI.Extensions;
+using ManiaAPI.Base.Extensions;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;

@@ -1,13 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="TmEssentials" Version="2.1.3" />
-  </ItemGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="ManiaAPI.NadeoAPI" />
+		<InternalsVisibleTo Include="ManiaAPI.TrackmaniaAPI" />
+		<InternalsVisibleTo Include="ManiaAPI.TrackmaniaIO" />
+		<InternalsVisibleTo Include="ManiaAPI.XmlRpc" />
+		<InternalsVisibleTo Include="ManiaAPI.TMX" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="TmEssentials" Version="2.1.3" />
+	</ItemGroup>
 
 </Project>

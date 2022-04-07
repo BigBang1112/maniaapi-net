@@ -1,5 +1,6 @@
-﻿using ManiaAPI.Base.Converters;
-using ManiaAPI.NadeoAPI.Extensions;
+﻿using ManiaAPI.Base;
+using ManiaAPI.Base.Converters;
+using ManiaAPI.Base.Extensions;
 using System;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -8,31 +9,18 @@ using System.Text.Json;
 
 namespace ManiaAPI.NadeoAPI;
 
-public abstract class NadeoAPI
+public abstract class NadeoAPI : JsonApiBase
 {
     private string? accessToken;
     private string? refreshToken;
 
-    public HttpClient Client { get; }
     public JwtPayloadNadeoAPI? Payload { get; private set; }
     
     public DateTimeOffset? RefreshAt => Payload?.RefreshAt;
     public DateTimeOffset? ExpirationTime => Payload?.ExpirationTime;
 
-    internal static JsonSerializerOptions JsonSerializerOptions { get; } = new(JsonSerializerDefaults.Web);
-
-    static NadeoAPI()
+    protected NadeoAPI(string baseUrl) : base(baseUrl)
     {
-        JsonSerializerOptions.Converters.Add(new TimeInt32Converter());
-    }
-
-    protected NadeoAPI(string baseUrl)
-    {
-        Client = new HttpClient
-        {
-            BaseAddress = new Uri(baseUrl)
-        };
-
         Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (NadeoAPI) by BigBang1112");
     }
 
@@ -56,21 +44,5 @@ public abstract class NadeoAPI
         Payload = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);
 
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
-    }
-
-    protected async Task<T> GetApiAsync<T>(string endpoint, CancellationToken cancellationToken = default)
-    {
-        using var response = await Client.GetAsync(endpoint, cancellationToken);
-
-        await response.EnsureSuccessStatusCodeAsync();
-
-#if DEBUG
-        if (typeof(T) == typeof(string))
-        {
-            return (T)(object)await response.Content.ReadAsStringAsync(cancellationToken);
-        }
-#endif
-
-        return await response.Content.ReadFromJsonAsync<T>(JsonSerializerOptions, cancellationToken) ?? throw new Exception("This shouldn't be null.");
     }
 }
