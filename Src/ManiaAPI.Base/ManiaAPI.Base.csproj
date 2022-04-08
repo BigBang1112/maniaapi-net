@@ -1,9 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<Product>ManiaAPI.Base</Product>
+		<AssemblyName>ManiaAPI.Base</AssemblyName>
+		<AssemblyTitle>ManiaAPI.Base</AssemblyTitle>
+		<Authors>Petr Pivoňka (BigBang1112)</Authors>
+		<Description>Base library for the ManiaAPI projects. Do not use this alone!</Description>
+		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi</PackageTags>
+
+		<Version>1.0.0</Version>
+		<PackageReleaseNotes></PackageReleaseNotes>
+
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<LangVersion>10</LangVersion>
+
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/BigBang1112/maniaapi-net</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+		<NoWarn>1591</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -1,17 +1,35 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<Product>ManiaAPI.NadeoAPI</Product>
+		<AssemblyName>ManiaAPI.NadeoAPI</AssemblyName>
+		<AssemblyTitle>ManiaAPI.NadeoAPI</AssemblyTitle>
+		<Authors>Petr Pivoňka (BigBang1112)</Authors>
+		<Description>Wrapper for the official in-game Nadeo API from Trackmania released in 2020. Part of the ManiaAPI library set.</Description>
+		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, nadeo, nadeoapi</PackageTags>
 
-  <ItemGroup>
-    <PackageReference Include="TmEssentials" Version="2.1.3" />
-  </ItemGroup>
+		<Version>1.0.0</Version>
+		<PackageReleaseNotes></PackageReleaseNotes>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ManiaAPI.Base\ManiaAPI.Base.csproj" />
-  </ItemGroup>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>10</LangVersion>
+
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/BigBang1112/maniaapi-net</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+		<NoWarn>1591</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ManiaAPI.Base\ManiaAPI.Base.csproj" />
+	</ItemGroup>
 
 </Project>
