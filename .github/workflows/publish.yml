@@ -36,6 +36,13 @@ jobs:
     - name: Test
       run: dotnet test -c Release --no-build --verbosity normal
       
+    - name: Create the ManiaAPI.Base package
+      run: dotnet pack Src/ManiaAPI.Base -c Release
+    - name: Publish the ManiaAPI.Base package to nuget.org
+      run: dotnet nuget push Src/ManiaAPI.Base/bin/Release/*.nupkg -k $NUGET_API_KEY -s $NUGET_SOURCE --skip-duplicate
+    - name: Publish the ManiaAPI.Base package to github.com
+      run: dotnet nuget push Src/ManiaAPI.Base/bin/Release/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_SOURCE --skip-duplicate
+      
     - name: Create the ManiaAPI.NadeoAPI package
       run: dotnet pack Src/ManiaAPI.NadeoAPI -c Release
     - name: Publish the ManiaAPI.NadeoAPI package to nuget.org
