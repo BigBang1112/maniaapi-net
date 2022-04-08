@@ -21,12 +21,12 @@ jobs:
       run: dotnet restore
     - name: Set Nadeo API secrets
       run: |
-        dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests --id d7b44d16-a183-42ef-95f5-cdcb6be7869a set "DedicatedServer:Login" ${{ secrets.NADEO_API_LOGIN }}
-        dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests --id d7b44d16-a183-42ef-95f5-cdcb6be7869a set "DedicatedServer:Password" ${{ secrets.NADEO_API_PASSWORD }}
+        dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests --id d7b44d16-a183-42ef-95f5-cdcb6be7869a set "DedicatedServer:Login" "${{ secrets.NADEO_API_LOGIN }}"
+        dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests --id d7b44d16-a183-42ef-95f5-cdcb6be7869a set "DedicatedServer:Password" "${{ secrets.NADEO_API_PASSWORD }}"
     - name: Set Trackmania API secrets
       run: |
-        dotnet user-secrets -p Tests/ManiaAPI.TrackmaniaAPI.Tests --id d864cd9f-edad-4ebf-b6e2-9c0c91bd62f8 set "ClientId" ${{ secrets.TRACKMANIA_API_CLIENTID }}
-        dotnet user-secrets -p Tests/ManiaAPI.TrackmaniaAPI.Tests --id d864cd9f-edad-4ebf-b6e2-9c0c91bd62f8 set "ClientSecret" ${{ secrets.TRACKMANIA_API_CLIENTSECRET }}
+        dotnet user-secrets -p Tests/ManiaAPI.TrackmaniaAPI.Tests --id d864cd9f-edad-4ebf-b6e2-9c0c91bd62f8 set "ClientId" "${{ secrets.TRACKMANIA_API_CLIENTID }}"
+        dotnet user-secrets -p Tests/ManiaAPI.TrackmaniaAPI.Tests --id d864cd9f-edad-4ebf-b6e2-9c0c91bd62f8 set "ClientSecret" "${{ secrets.TRACKMANIA_API_CLIENTSECRET }}"
     - name: Build
       run: dotnet build --no-restore
     - name: Test
