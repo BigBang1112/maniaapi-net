@@ -19,7 +19,7 @@ public abstract class NadeoAPI : JsonAPI
     public DateTimeOffset? RefreshAt => Payload?.RefreshAt;
     public DateTimeOffset? ExpirationTime => Payload?.ExpirationTime;
 
-    protected NadeoAPI(string baseUrl, bool automaticallyAuthorize = true) : base(baseUrl, automaticallyAuthorize)
+    protected NadeoAPI(string baseUrl, bool automaticallyAuthorize) : base(baseUrl, automaticallyAuthorize)
     {
         Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (NadeoAPI) by BigBang1112");
     }

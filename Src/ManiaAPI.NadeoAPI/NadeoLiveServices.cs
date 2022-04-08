@@ -2,7 +2,7 @@
 
 public class NadeoLiveServices : NadeoAPI
 {
-    public NadeoLiveServices() : base("https://live-services.trackmania.nadeo.live/api/")
+    public NadeoLiveServices(bool automaticallyAuthorize = true) : base("https://live-services.trackmania.nadeo.live/api/", automaticallyAuthorize)
     {
         
     }
