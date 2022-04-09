@@ -1,10 +1,10 @@
 ﻿namespace ManiaAPI.NadeoAPI;
 
-public class NadeoLiveServices : NadeoAPI
+public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
 {
-    public NadeoLiveServices() : base("https://live-services.trackmania.nadeo.live/api/")
+    public NadeoLiveServices(bool automaticallyAuthorize = true) : base("https://live-services.trackmania.nadeo.live/api/", automaticallyAuthorize)
     {
-        
+
     }
 
     public async Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, int length = 10, int offset = 0, bool onlyWorld = true, CancellationToken cancellationToken = default)
