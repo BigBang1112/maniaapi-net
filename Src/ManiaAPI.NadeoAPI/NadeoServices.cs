@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.NadeoAPI;
 
-public class NadeoServices : NadeoAPI
+public class NadeoServices : NadeoAPI, INadeoServices
 {
     public NadeoServices(bool automaticallyAuthorize = true) : base("https://prod.trackmania.core.nadeo.online/", automaticallyAuthorize)
     {

@@ -1,12 +1,13 @@
 ﻿using ManiaAPI.Base;
+using ManiaAPI.Base.Exceptions;
 using ManiaAPI.Base.Extensions;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 namespace ManiaAPI.TrackmaniaAPI;
 
-public class TrackmaniaAPI : JsonAPI
-{ 
+public class TrackmaniaAPI : JsonAPI, ITrackmaniaAPI
+{
     private string? accessToken;
     private string? clientId;
     private string? clientSecret;
@@ -30,7 +31,7 @@ public class TrackmaniaAPI : JsonAPI
     /// <param name="clientId">Client ID.</param>
     /// <param name="clientSecret">Client secret.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <exception cref="TrackmaniaApiRequestException">API responded with an error message.</exception>
+    /// <exception cref="ApiRequestException">API responded with an error message.</exception>
     public async Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
     {
         var values = new Dictionary<string, string>
@@ -65,7 +66,7 @@ public class TrackmaniaAPI : JsonAPI
     /// <param name="accountIds">Account IDs.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Dictionary of nicknames.</returns>
-    /// <exception cref="TrackmaniaApiRequestException">API responded with an error message.</exception>
+    /// <exception cref="ApiRequestException">API responded with an error message.</exception>
     public async Task<Dictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
         return await GetApiAsync<Dictionary<Guid, string>>($"display-names?{string.Join('&', accountIds.Select((x, i) => $"accountId[{i}]={x}"))}", cancellationToken);
@@ -83,7 +84,7 @@ public class TrackmaniaAPI : JsonAPI
     /// <param name="endpoint">Endpoint to call.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Response object asynchronously.</returns>
-    /// <exception cref="TrackmaniaApiRequestException">API responded with an error message.</exception>
+    /// <exception cref="ApiRequestException">API responded with an error message.</exception>
     protected override async Task<T> GetApiAsync<T>(string endpoint, CancellationToken cancellationToken = default)
     {
         if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime && clientId is not null && clientSecret is not null)

@@ -9,13 +9,13 @@ using System.Text.Json;
 
 namespace ManiaAPI.NadeoAPI;
 
-public abstract class NadeoAPI : JsonAPI
+public abstract class NadeoAPI : JsonAPI, INadeoAPI
 {
     private string? accessToken;
     private string? refreshToken;
 
     public JwtPayloadNadeoAPI? Payload { get; private set; }
-    
+
     public DateTimeOffset? RefreshAt => Payload?.RefreshAt;
     public DateTimeOffset? ExpirationTime => Payload?.ExpirationTime;
 
@@ -59,11 +59,11 @@ public abstract class NadeoAPI : JsonAPI
         }
 
         using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh");
-        
+
         message.Headers.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={refreshToken}");
 
         using var httpResponse = await Client.SendAsync(message, cancellationToken);
-        
+
         await SaveTokenResponseAsync(httpResponse, cancellationToken);
 
         return true;
