@@ -6,6 +6,7 @@ namespace ManiaAPI.Base.Extensions;
 
 public static class HttpResponseMessageExtensions
 {
+    /// <exception cref="ApiRequestException"></exception>
     public static async ValueTask<HttpResponseMessage> EnsureSuccessStatusCodeAsync<TErrorReponse>(this HttpResponseMessage response, CancellationToken cancellationToken = default)
         where TErrorReponse : ErrorResponse
     {
@@ -24,6 +25,7 @@ public static class HttpResponseMessageExtensions
         throw new ApiRequestException(response.ReasonPhrase, response.StatusCode, errorResponse);
     }
 
+    /// <exception cref="ApiRequestException"></exception>
     public static async ValueTask<HttpResponseMessage> EnsureSuccessStatusCodeAsync(this HttpResponseMessage response, CancellationToken cancellationToken = default)
     {
         return await response.EnsureSuccessStatusCodeAsync<ErrorResponse>(cancellationToken);
