@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.TrackmaniaIO;
 
-public record OfficialCampaignItem : CampaignItem
+public record OfficialCampaignItem : CampaignItem, IOfficialCampaignItem
 {
     public OfficialCampaignItem(int id, string name, DateTimeOffset timestamp, int mapCount) : base(id, name, timestamp, mapCount)
     {

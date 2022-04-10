@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.TrackmaniaIO;
 
-public record CustomCampaignItem : CampaignItem
+public record CustomCampaignItem : CampaignItem, ICustomCampaignItem
 {
     public int ClubId { get; init; }
 
