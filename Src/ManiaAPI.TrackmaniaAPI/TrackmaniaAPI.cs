@@ -67,9 +67,14 @@ public class TrackmaniaAPI : JsonAPI, ITrackmaniaAPI
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Dictionary of nicknames.</returns>
     /// <exception cref="ApiRequestException">API responded with an error message.</exception>
-    public async Task<Dictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
+    public async ValueTask<Dictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
-        return await GetApiAsync<Dictionary<Guid, string>>($"display-names?{string.Join('&', accountIds.Select((x, i) => $"accountId[{i}]={x}"))}", cancellationToken);
+        if (accountIds.Any())
+        {
+            return await GetApiAsync<Dictionary<Guid, string>>($"display-names?{string.Join('&', accountIds.Select((x, i) => $"accountId[{i}]={x}"))}", cancellationToken);
+        }
+
+        return new Dictionary<Guid, string>();
     }
 
     public async Task<User> GetUserAsync(CancellationToken cancellationToken = default)

@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace ManiaAPI.Base;
 
-public abstract class JsonAPI
+public abstract class JsonAPI : IDisposable
 {
     public HttpClient Client { get; }
 
@@ -36,7 +36,7 @@ public abstract class JsonAPI
     /// <param name="endpoint">Endpoint to call.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Response object asynchronously.</returns>
-    /// <exception cref="ApiRequestException{T}">API responded with an error message.</exception>
+    /// <exception cref="ApiRequestException">API responded with an error message.</exception>
     protected virtual async Task<T> GetApiAsync<T>(string endpoint, CancellationToken cancellationToken = default)
     {
         using var response = await Client.GetAsync(endpoint, cancellationToken);
@@ -51,5 +51,11 @@ public abstract class JsonAPI
 #endif
 
         return await response.Content.ReadFromJsonAsync<T>(JsonSerializerOptions, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+    }
+
+    public void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

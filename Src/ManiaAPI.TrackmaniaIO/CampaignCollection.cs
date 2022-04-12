@@ -2,20 +2,20 @@
 
 namespace ManiaAPI.TrackmaniaIO;
 
-public class CampaignCollection : IReadOnlyCollection<CampaignItem>
+public class CampaignCollection : IReadOnlyCollection<ICampaignItem>
 {
-    private readonly CampaignItem[] campaigns;
+    private readonly ICampaignItem[] campaigns;
 
     public int Page { get; init; }
 
-    public CampaignCollection(CampaignItem[] campaigns, int page = 0)
+    public CampaignCollection(ICampaignItem[] campaigns, int page = 0)
     {
         this.campaigns = campaigns;
 
         Page = page;
     }
 
-    public CampaignItem this[int index]
+    public ICampaignItem this[int index]
     {
         get
         {
@@ -25,9 +25,9 @@ public class CampaignCollection : IReadOnlyCollection<CampaignItem>
 
     public int Count => campaigns.Length;
 
-    public IEnumerator<CampaignItem> GetEnumerator()
+    public IEnumerator<ICampaignItem> GetEnumerator()
     {
-        return ((IEnumerable<CampaignItem>)campaigns).GetEnumerator();
+        return ((IEnumerable<ICampaignItem>)campaigns).GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()

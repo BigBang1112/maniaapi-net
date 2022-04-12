@@ -13,7 +13,7 @@ public record Map
     public TimeInt32 SilverScore { get; init; }
     public TimeInt32 BronzeScore { get; init; }
     public string CollectionName { get; init; } = "";
-    public string Filename { get; init; } = "";
+    public string FileName { get; init; } = "";
     public bool IsPlayable { get; init; }
     public Guid MapId { get; init; }
     public string MapUid { get; init; } = "";
