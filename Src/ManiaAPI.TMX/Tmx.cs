@@ -15,17 +15,14 @@ public class TMX : JsonAPI
 
     public string SiteName { get; }
 
-    static TMX()
-    {
-        JsonSerializerOptions.Converters.Add(new DateTimeUtcFixConverter());
-    }
-
     public TMX(TmxSite site) : base(string.Format(BaseApiUrl, site.ToString().ToLower()), automaticallyAuthorize: true)
     {
         Site = site;
         SiteName = site.ToString();
 
         Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (TMX) by BigBang1112");
+
+        JsonSerializerOptionsInObject.Converters.Add(new DateTimeUtcFixConverter());
     }
 
     public async Task<ItemCollection<TrackSearchItem>> SearchAsync(TrackSearchFilters? filters = default, CancellationToken cancellationToken = default)
