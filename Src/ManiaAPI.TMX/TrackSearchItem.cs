@@ -20,9 +20,9 @@ public record TrackSearchItem : IItem
     [JsonPropertyName("CommentCt")]
     public int CommentCount { get; init; }
 
-    public DateTimeOffset UploadedAt { get; init; }
-    public DateTimeOffset UpdatedAt { get; init; }
-    public DateTimeOffset ActivityAt { get; init; }
+    public DateTime UploadedAt { get; init; }
+    public DateTime UpdatedAt { get; init; }
+    public DateTime ActivityAt { get; init; }
     public int ReplayType { get; init; }
     public int ReplayScore { get; init; }
     public bool HasThumbnail { get; init; }

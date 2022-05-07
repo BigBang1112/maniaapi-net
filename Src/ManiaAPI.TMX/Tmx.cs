@@ -15,6 +15,11 @@ public class TMX : JsonAPI
 
     public string SiteName { get; }
 
+    static TMX()
+    {
+        JsonSerializerOptions.Converters.Add(new DateTimeUtcFixConverter());
+    }
+
     public TMX(TmxSite site) : base(string.Format(BaseApiUrl, site.ToString().ToLower()), automaticallyAuthorize: true)
     {
         Site = site;
