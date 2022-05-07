@@ -12,6 +12,8 @@ public abstract class JsonAPI : IDisposable
 
     internal static JsonSerializerOptions JsonSerializerOptions { get; } = new(JsonSerializerDefaults.Web);
     
+    internal JsonSerializerOptions JsonSerializerOptionsInObject { get; }
+
     protected bool AutomaticallyAuthorize { get; }
 
     static JsonAPI()
@@ -27,6 +29,8 @@ public abstract class JsonAPI : IDisposable
         };
 
         AutomaticallyAuthorize = automaticallyAuthorize;
+
+        JsonSerializerOptionsInObject = new(JsonSerializerOptions);
     }
 
     /// <summary>
