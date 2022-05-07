@@ -43,7 +43,7 @@ public abstract class NadeoAPI : JsonAPI, INadeoAPI
     {
         await httpResponse.EnsureSuccessStatusCodeAsync(cancellationToken);
 
-        (accessToken, refreshToken) = await httpResponse.Content.ReadFromJsonAsync<AuthorizationResponse>(JsonSerializerOptions, cancellationToken)
+        (accessToken, refreshToken) = await httpResponse.Content.ReadFromJsonAsync<AuthorizationResponse>(JsonSerializerOptionsInObject, cancellationToken)
             ?? throw new Exception("This shouldn't be null.");
 
         Payload = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);

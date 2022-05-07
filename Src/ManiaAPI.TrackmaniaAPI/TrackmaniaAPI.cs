@@ -50,7 +50,7 @@ public class TrackmaniaAPI : JsonAPI, ITrackmaniaAPI
 
         await response.EnsureSuccessStatusCodeAsync(cancellationToken);
 
-        (_, _, accessToken) = await response.Content.ReadFromJsonAsync<AuthorizationResponse>(JsonSerializerOptions, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        (_, _, accessToken) = await response.Content.ReadFromJsonAsync<AuthorizationResponse>(JsonSerializerOptionsInObject, cancellationToken) ?? throw new Exception("This shouldn't be null.");
 
         Payload = JwtPayloadTrackmaniaAPI.DecodeFromAccessToken(accessToken);
 
