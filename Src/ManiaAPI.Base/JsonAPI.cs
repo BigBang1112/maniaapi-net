@@ -54,7 +54,7 @@ public abstract class JsonAPI : IDisposable
         }
 #endif
 
-        return await response.Content.ReadFromJsonAsync<T>(JsonSerializerOptions, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync<T>(JsonSerializerOptionsInObject, cancellationToken) ?? throw new Exception("This shouldn't be null.");
     }
 
     public void Dispose()
