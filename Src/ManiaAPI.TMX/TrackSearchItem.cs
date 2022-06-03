@@ -1,10 +1,14 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Net;
+using System.Reflection;
+using System.Text.Json.Serialization;
 using TmEssentials;
 
 namespace ManiaAPI.TMX;
 
 public record TrackSearchItem : IItem
 {
+    private static string? fieldsQuery;
+
     public int TrackId { get; init; }
     public string TrackName { get; init; } = default!;
     public TrackType PrimaryType { get; init; }
@@ -46,8 +50,8 @@ public record TrackSearchItem : IItem
     public Image[] Images { get; init; } = default!;
     public TrackStyle[] Tags { get; init; } = default!;
     public User Uploader { get; init; } = default!;
-    public Replay WRReplay { get; init; } = default!;
-    public Replay? UserReplay { get; init; } = default!;
+    public WRReplay? WRReplay { get; init; }
+    public UserReplay? UserReplay { get; init; }
 
     public async Task<ItemCollection<ReplayItem>> GetReplaysAsync(TMX tmx, CancellationToken cancellationToken = default)
     {
