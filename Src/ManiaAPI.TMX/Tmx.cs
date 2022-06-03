@@ -1,7 +1,5 @@
 ﻿using ManiaAPI.Base;
 using ManiaAPI.Base.Converters;
-using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace ManiaAPI.TMX;
 
@@ -31,8 +29,14 @@ public class TMX : JsonAPI
 
         if (filters is not null)
         {
-            route += filters.ToQuery();
+            route += filters.ToQuery() + "&";
         }
+        else
+        {
+            route += "?";
+        }
+
+        route += "fields=TrackId%2CTrackName%2CAuthors%5B%5D%2CTags%5B%5D%2CAuthorTime%2CRoutes%2CDifficulty%2CEnvironment%2CCar%2CPrimaryType%2CMood%2CAwards%2CHasThumbnail%2CImages%5B%5D%2CIsPublic";
 
         return await GetApiAsync<ItemCollection<TrackSearchItem>>(route, cancellationToken);
     }
@@ -44,6 +48,10 @@ public class TMX : JsonAPI
 
     public async Task<ItemCollection<ReplayItem>> GetReplaysAsync(int trackId, CancellationToken cancellationToken = default)
     {
-        return await GetApiAsync<ItemCollection<ReplayItem>>($"replays?trackid={trackId}&count=1000", cancellationToken);
+        var route = $"replays?trackid={trackId}&count=1000";
+        
+        route += "&fields=ReplayId%2CUser.UserId%2CUser.Name%2CReplayTime%2CReplayScore%2CReplayRespawns%2CTrackAt%2CValidated%2CReplayAt%2CScore";
+        
+        return await base.GetApiAsync<ItemCollection<ReplayItem>>(route, cancellationToken);
     }
 }
