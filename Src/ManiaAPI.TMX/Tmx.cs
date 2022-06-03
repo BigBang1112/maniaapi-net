@@ -1,10 +1,15 @@
 ﻿using ManiaAPI.Base;
 using ManiaAPI.Base.Converters;
+using System.Net;
+using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TMX;
 
 public class TMX : JsonAPI
 {
+    private static readonly Dictionary<Type, string> fieldQueryStrings = new();
+
     private const string ApiRoute = "api";
     private const string BaseUrl = "https://{0}.tm-exchange.com";
     private const string BaseApiUrl = $"{BaseUrl}/{ApiRoute}/";
@@ -36,7 +41,7 @@ public class TMX : JsonAPI
             route += "?";
         }
 
-        route += "fields=TrackId%2CTrackName%2CAuthors%5B%5D%2CTags%5B%5D%2CAuthorTime%2CRoutes%2CDifficulty%2CEnvironment%2CCar%2CPrimaryType%2CMood%2CAwards%2CHasThumbnail%2CImages%5B%5D%2CIsPublic";
+        route += "fields=" + GetFieldsQuery<TrackSearchItem>();
 
         return await GetApiAsync<ItemCollection<TrackSearchItem>>(route, cancellationToken);
     }
@@ -50,8 +55,54 @@ public class TMX : JsonAPI
     {
         var route = $"replays?trackid={trackId}&count=1000";
         
-        route += "&fields=ReplayId%2CUser.UserId%2CUser.Name%2CReplayTime%2CReplayScore%2CReplayRespawns%2CTrackAt%2CValidated%2CReplayAt%2CScore";
-        
+        route += "&fields=" + GetFieldsQuery<ReplayItem>();
+
         return await base.GetApiAsync<ItemCollection<ReplayItem>>(route, cancellationToken);
+    }
+
+    private static IEnumerable<string> GetFields(Type type)
+    {
+        foreach (var prop in type.GetProperties())
+        {
+            var name = prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? prop.Name;
+
+            if (prop.PropertyType.IsArray)
+            {
+                name += "[]";
+            }
+
+            var hadInnerFields = false;
+
+            // Is property type is record
+            if (prop.PropertyType.GetMethod("<Clone>$") is not null)
+            {
+                foreach (var innerField in GetFields(prop.PropertyType))
+                {
+                    yield return $"{name}.{innerField}";
+                    hadInnerFields = true;
+                }
+            }
+
+            if (!hadInnerFields)
+            {
+                yield return name;
+            }
+        }
+    }
+
+    private static string GetFieldsQuery<T>()
+    {
+        var type = typeof(T);
+
+        if (fieldQueryStrings.TryGetValue(type, out string? query))
+        {
+            return query;
+        }
+
+        query = WebUtility.UrlEncode(string.Join(',', GetFields(type)));
+
+        fieldQueryStrings.Add(type, query);
+
+        return query;
     }
 }
