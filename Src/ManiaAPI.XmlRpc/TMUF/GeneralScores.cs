@@ -2,7 +2,7 @@
 
 namespace ManiaAPI.XmlRpc.TMUF;
 
-public partial class GeneralScores
+public class GeneralScores
 {
     public Dictionary<string, GeneralScoresLeaderboard> Zones { get; }
 
