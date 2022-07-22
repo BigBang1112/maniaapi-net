@@ -11,6 +11,12 @@ public class GeneralScores
         Zones = zones;
     }
 
+    public static GeneralScores Parse(string fileName)
+    {
+        using var fs = File.OpenRead(fileName);
+        return Parse(fs);
+    }
+
     public static GeneralScores Parse(Stream stream)
     {
         using var gz = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
