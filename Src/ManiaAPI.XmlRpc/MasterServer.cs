@@ -9,6 +9,11 @@ public abstract class MasterServer : IDisposable
         Client = new();
     }
 
+    public MasterServer(HttpClient httpClient)
+    {
+        Client = httpClient;
+    }
+
     public void Dispose()
     {
         Client.Dispose();
