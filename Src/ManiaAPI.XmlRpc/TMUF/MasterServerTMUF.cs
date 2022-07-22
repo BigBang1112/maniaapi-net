@@ -114,12 +114,12 @@ public class MasterServerTMUF : MasterServer
         throw new Exception();
     }
 
-    private static string GetScoresUrl(ScoresNumber num, string scoresName, int zoneId)
+    internal static string GetScoresUrl(ScoresNumber num, string scoresName, int zoneId)
     {
         return $"http://scores.trackmaniaforever.com/scores{(int)num}/{scoresName}/{scoresName}{zoneId}.gz";
     }
 
-    private static string GetGeneralScoresUrl(ScoresNumber num, int zoneId)
+    internal static string GetGeneralScoresUrl(ScoresNumber num, int zoneId)
     {
         return GetScoresUrl(num, GeneralScoresName, zoneId);
     }

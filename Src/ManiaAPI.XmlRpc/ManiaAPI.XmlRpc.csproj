@@ -29,6 +29,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="ManiaAPI.XmlRpc.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\ManiaAPI.Base\ManiaAPI.Base.csproj" />
 	</ItemGroup>
 
