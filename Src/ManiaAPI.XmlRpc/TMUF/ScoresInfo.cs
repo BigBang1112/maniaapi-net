@@ -1,3 +1,3 @@
 ﻿namespace ManiaAPI.XmlRpc.TMUF;
 
-public record ScoresInfo(DateTimeOffset LastModified, ScoresNumber Number);
+public record struct ScoresInfo(DateTimeOffset LastModified, ScoresNumber Number);
