@@ -4,14 +4,12 @@ on:
   release:
     types: [ published ]
 
-env:
-  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-  NUGET_SOURCE: https://api.nuget.org/v3/index.json
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  GITHUB_SOURCE: https://nuget.pkg.github.com/bigbang1112/index.json
-
 jobs:
   build:
+    
+    strategy:
+      matrix:
+        lib: [Base, NadeoAPI, TMX, TrackmaniaAPI, TrackmaniaIO]
 
     runs-on: ubuntu-latest
 
@@ -36,72 +34,16 @@ jobs:
     - name: Test
       run: dotnet test -c Release --no-build --verbosity normal
       
-    - name: Create the ManiaAPI.Base package
-      run: dotnet pack Src/ManiaAPI.Base -c Release
-    - name: Publish the ManiaAPI.Base package to nuget.org
-      run: dotnet nuget push Src/ManiaAPI.Base/bin/Release/*.nupkg -k $NUGET_API_KEY -s $NUGET_SOURCE --skip-duplicate
-    - name: Publish the ManiaAPI.Base package to github.com
-      run: dotnet nuget push Src/ManiaAPI.Base/bin/Release/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_SOURCE --skip-duplicate
-    - name: Attach the ManiaAPI.Base package to the release
+    - name: Create the ManiaAPI.${{ matrix.lib }} package
+      run: dotnet pack Src/ManiaAPI.${{ matrix.lib }} -c Release
+    - name: Publish the ManiaAPI.${{ matrix.lib }} package to nuget.org
+      run: dotnet nuget push Src/ManiaAPI.${{ matrix.lib }}/bin/Release/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+    - name: Publish the ManiaAPI.${{ matrix.lib }} package to github.com
+      run: dotnet nuget push Src/ManiaAPI.${{ matrix.lib }}/bin/Release/*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/bigbang1112/index.json --skip-duplicate
+    - name: Attach the ManiaAPI.${{ matrix.lib }} package to the release
       uses: svenstaro/upload-release-action@v2
       with:
-        file: Src/ManiaAPI.Base/bin/Release/*.nupkg
-        file_glob: true
-        tag: ${{ github.ref }}
-        overwrite: true
-      
-    - name: Create the ManiaAPI.NadeoAPI package
-      run: dotnet pack Src/ManiaAPI.NadeoAPI -c Release
-    - name: Publish the ManiaAPI.NadeoAPI package to nuget.org
-      run: dotnet nuget push Src/ManiaAPI.NadeoAPI/bin/Release/*.nupkg -k $NUGET_API_KEY -s $NUGET_SOURCE --skip-duplicate
-    - name: Publish the ManiaAPI.NadeoAPI package to github.com
-      run: dotnet nuget push Src/ManiaAPI.NadeoAPI/bin/Release/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_SOURCE --skip-duplicate
-    - name: Attach the ManiaAPI.NadeoAPI package to the release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        file: Src/ManiaAPI.NadeoAPI/bin/Release/*.nupkg
-        file_glob: true
-        tag: ${{ github.ref }}
-        overwrite: true
-      
-    - name: Create the ManiaAPI.TMX package
-      run: dotnet pack Src/ManiaAPI.TMX -c Release
-    - name: Publish the ManiaAPI.TMX package to nuget.org
-      run: dotnet nuget push Src/ManiaAPI.TMX/bin/Release/*.nupkg -k $NUGET_API_KEY -s $NUGET_SOURCE --skip-duplicate
-    - name: Publish the ManiaAPI.TMX package to github.com
-      run: dotnet nuget push Src/ManiaAPI.TMX/bin/Release/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_SOURCE --skip-duplicate
-    - name: Attach the ManiaAPI.TMX package to the release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        file: Src/ManiaAPI.TMX/bin/Release/*.nupkg
-        file_glob: true
-        tag: ${{ github.ref }}
-        overwrite: true
-      
-    - name: Create the ManiaAPI.TrackmaniaAPI package
-      run: dotnet pack Src/ManiaAPI.TrackmaniaAPI -c Release
-    - name: Publish the ManiaAPI.TrackmaniaAPI package to nuget.org
-      run: dotnet nuget push Src/ManiaAPI.TrackmaniaAPI/bin/Release/*.nupkg -k $NUGET_API_KEY -s $NUGET_SOURCE --skip-duplicate
-    - name: Publish the ManiaAPI.TrackmaniaAPI package to github.com
-      run: dotnet nuget push Src/ManiaAPI.TrackmaniaAPI/bin/Release/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_SOURCE --skip-duplicate
-    - name: Attach the ManiaAPI.TrackmaniaAPI package to the release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        file: Src/ManiaAPI.TrackmaniaAPI/bin/Release/*.nupkg
-        file_glob: true
-        tag: ${{ github.ref }}
-        overwrite: true
-      
-    - name: Create the ManiaAPI.TrackmaniaIO package
-      run: dotnet pack Src/ManiaAPI.TrackmaniaIO -c Release
-    - name: Publish the ManiaAPI.TrackmaniaIO package to nuget.org
-      run: dotnet nuget push Src/ManiaAPI.TrackmaniaIO/bin/Release/*.nupkg -k $NUGET_API_KEY -s $NUGET_SOURCE --skip-duplicate
-    - name: Publish the ManiaAPI.TrackmaniaIO package to github.com
-      run: dotnet nuget push Src/ManiaAPI.TrackmaniaIO/bin/Release/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_SOURCE --skip-duplicate
-    - name: Attach the ManiaAPI.TrackmaniaIO package to the release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        file: Src/ManiaAPI.TrackmaniaIO/bin/Release/*.nupkg
+        file: Src/ManiaAPI.${{ matrix.lib }}/bin/Release/*.nupkg
         file_glob: true
         tag: ${{ github.ref }}
         overwrite: true
