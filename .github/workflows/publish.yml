@@ -4,12 +4,6 @@ on:
   release:
     types: [ published ]
 
-env:
-  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-  NUGET_SOURCE: https://api.nuget.org/v3/index.json
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  GITHUB_SOURCE: https://nuget.pkg.github.com/bigbang1112/index.json
-
 jobs:
   build:
 
@@ -17,56 +11,62 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x
+   
     - name: Restore dependencies
       run: dotnet restore
+    
     - name: Set Nadeo API secrets
       run: |
         dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests --id d7b44d16-a183-42ef-95f5-cdcb6be7869a set "DedicatedServer:Login" "${{ secrets.NADEO_API_LOGIN }}"
         dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests --id d7b44d16-a183-42ef-95f5-cdcb6be7869a set "DedicatedServer:Password" "${{ secrets.NADEO_API_PASSWORD }}"
+    
     - name: Set Trackmania API secrets
       run: |
         dotnet user-secrets -p Tests/ManiaAPI.TrackmaniaAPI.Tests --id d864cd9f-edad-4ebf-b6e2-9c0c91bd62f8 set "ClientId" "${{ secrets.TRACKMANIA_API_CLIENTID }}"
         dotnet user-secrets -p Tests/ManiaAPI.TrackmaniaAPI.Tests --id d864cd9f-edad-4ebf-b6e2-9c0c91bd62f8 set "ClientSecret" "${{ secrets.TRACKMANIA_API_CLIENTSECRET }}"
+    
     - name: Build
       run: dotnet build -c Release --no-restore
+      
     - name: Test
       run: dotnet test -c Release --no-build --verbosity normal
       
-    - name: Create the ManiaAPI.Base package
-      run: dotnet pack Src/ManiaAPI.Base -c Release
-    - name: Publish the ManiaAPI.Base package to nuget.org
-      run: dotnet nuget push Src/ManiaAPI.Base/bin/Release/*.nupkg -k $NUGET_API_KEY -s $NUGET_SOURCE --skip-duplicate
-    - name: Publish the ManiaAPI.Base package to github.com
-      run: dotnet nuget push Src/ManiaAPI.Base/bin/Release/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_SOURCE --skip-duplicate
-      
-    - name: Create the ManiaAPI.NadeoAPI package
-      run: dotnet pack Src/ManiaAPI.NadeoAPI -c Release
-    - name: Publish the ManiaAPI.NadeoAPI package to nuget.org
-      run: dotnet nuget push Src/ManiaAPI.NadeoAPI/bin/Release/*.nupkg -k $NUGET_API_KEY -s $NUGET_SOURCE --skip-duplicate
-    - name: Publish the ManiaAPI.NadeoAPI package to github.com
-      run: dotnet nuget push Src/ManiaAPI.NadeoAPI/bin/Release/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_SOURCE --skip-duplicate
-      
-    - name: Create the ManiaAPI.TMX package
-      run: dotnet pack Src/ManiaAPI.TMX -c Release
-    - name: Publish the ManiaAPI.TMX package to nuget.org
-      run: dotnet nuget push Src/ManiaAPI.TMX/bin/Release/*.nupkg -k $NUGET_API_KEY -s $NUGET_SOURCE --skip-duplicate
-    - name: Publish the ManiaAPI.TMX package to github.com
-      run: dotnet nuget push Src/ManiaAPI.TMX/bin/Release/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_SOURCE --skip-duplicate
-      
-    - name: Create the ManiaAPI.TrackmaniaAPI package
-      run: dotnet pack Src/ManiaAPI.TrackmaniaAPI -c Release
-    - name: Publish the ManiaAPI.TrackmaniaAPI package to nuget.org
-      run: dotnet nuget push Src/ManiaAPI.TrackmaniaAPI/bin/Release/*.nupkg -k $NUGET_API_KEY -s $NUGET_SOURCE --skip-duplicate
-    - name: Publish the ManiaAPI.TrackmaniaAPI package to github.com
-      run: dotnet nuget push Src/ManiaAPI.TrackmaniaAPI/bin/Release/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_SOURCE --skip-duplicate
-      
-    - name: Create the ManiaAPI.TrackmaniaIO package
-      run: dotnet pack Src/ManiaAPI.TrackmaniaIO -c Release
-    - name: Publish the ManiaAPI.TrackmaniaIO package to nuget.org
-      run: dotnet nuget push Src/ManiaAPI.TrackmaniaIO/bin/Release/*.nupkg -k $NUGET_API_KEY -s $NUGET_SOURCE --skip-duplicate
-    - name: Publish the ManiaAPI.TrackmaniaIO package to github.com
-      run: dotnet nuget push Src/ManiaAPI.TrackmaniaIO/bin/Release/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_SOURCE --skip-duplicate
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: build
+        path: Src/ManiaAPI.*/bin/Release/*.nupkg
+  
+  publish:
+    needs: build
+    
+    strategy:
+      matrix:
+        lib: [Base, NadeoAPI, TMX, TrackmaniaAPI, TrackmaniaIO]
+        
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download a Build Artifact
+      uses: actions/download-artifact@v3.0.0
+      with:
+        name: build
+    
+    - name: Publish the ManiaAPI.${{ matrix.lib }} package to nuget.org
+      run: dotnet nuget push ManiaAPI.${{ matrix.lib }}.*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+    
+    - name: Publish the ManiaAPI.${{ matrix.lib }} package to github.com
+      run: dotnet nuget push ManiaAPI.${{ matrix.lib }}.*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/bigbang1112/index.json --skip-duplicate
+    
+    - name: Attach the ManiaAPI.${{ matrix.lib }} package to the release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        file: ManiaAPI.${{ matrix.lib }}.*.nupkg
+        file_glob: true
+        tag: ${{ github.ref }}
+        overwrite: true
