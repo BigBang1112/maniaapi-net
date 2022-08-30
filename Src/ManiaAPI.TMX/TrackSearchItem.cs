@@ -7,8 +7,6 @@ namespace ManiaAPI.TMX;
 
 public record TrackSearchItem : IItem
 {
-    private static string? fieldsQuery;
-
     public int TrackId { get; init; }
     public string TrackName { get; init; } = default!;
     public TrackType PrimaryType { get; init; }
@@ -21,7 +19,7 @@ public record TrackSearchItem : IItem
     public int Difficulty { get; init; }
     public int Awards { get; init; }
 
-    [JsonPropertyName("CommentCt")]
+    [JsonPropertyName("Comments")]
     public int CommentCount { get; init; }
 
     public DateTime UploadedAt { get; init; }

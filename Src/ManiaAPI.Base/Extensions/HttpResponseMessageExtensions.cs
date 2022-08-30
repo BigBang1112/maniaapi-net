@@ -31,6 +31,7 @@ public static class HttpResponseMessageExtensions
             catch
             {
                 // All non-json responses
+                message = await response.Content.ReadAsStringAsync(cancellationToken);
             }
         }
 
