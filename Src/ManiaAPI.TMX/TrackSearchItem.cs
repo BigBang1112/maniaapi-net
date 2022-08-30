@@ -19,6 +19,9 @@ public record TrackSearchItem : IItem
     public int Difficulty { get; init; }
     public int Awards { get; init; }
 
+    [JsonPropertyName("Comments")]
+    public int CommentCount { get; init; }
+
     public DateTime UploadedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
     public DateTime ActivityAt { get; init; }
