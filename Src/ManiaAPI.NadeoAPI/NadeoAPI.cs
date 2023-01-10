@@ -1,13 +1,15 @@
 ﻿using ManiaAPI.Base;
-using ManiaAPI.Base.Converters;
 using ManiaAPI.Base.Extensions;
-using System;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json;
 
 namespace ManiaAPI.NadeoAPI;
+
+public interface INadeoAPI
+{
+    ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default);
+}
 
 public abstract class NadeoAPI : JsonAPI, INadeoAPI
 {
@@ -19,9 +21,19 @@ public abstract class NadeoAPI : JsonAPI, INadeoAPI
     public DateTimeOffset? RefreshAt => Payload?.RefreshAt;
     public DateTimeOffset? ExpirationTime => Payload?.ExpirationTime;
 
+    protected NadeoAPI(HttpClientHandler handler, string baseUrl, bool automaticallyAuthorize) : base(handler, baseUrl, automaticallyAuthorize)
+    {
+        SetUserAgent();
+    }
+
     protected NadeoAPI(string baseUrl, bool automaticallyAuthorize) : base(baseUrl, automaticallyAuthorize)
     {
-        Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (NadeoAPI) by BigBang1112");
+        SetUserAgent();
+    }
+
+    private void SetUserAgent()
+    {
+        Client.DefaultRequestHeaders.Add("User-Agent", $"ManiaAPI.NET ({GetType().Name}) by BigBang1112");
     }
 
     public async Task AuthorizeAsync(string login, string password, CancellationToken cancellationToken = default)
@@ -39,7 +51,7 @@ public abstract class NadeoAPI : JsonAPI, INadeoAPI
         await SaveTokenResponseAsync(httpResponse, cancellationToken);
     }
 
-    private async Task SaveTokenResponseAsync(HttpResponseMessage httpResponse, CancellationToken cancellationToken)
+    internal async Task SaveTokenResponseAsync(HttpResponseMessage httpResponse, CancellationToken cancellationToken)
     {
         await httpResponse.EnsureSuccessStatusCodeAsync(cancellationToken);
 

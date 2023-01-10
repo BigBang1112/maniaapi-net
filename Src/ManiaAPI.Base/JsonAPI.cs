@@ -21,9 +21,9 @@ public abstract class JsonAPI : IDisposable
         JsonSerializerOptions.Converters.Add(new TimeInt32Converter());
     }
 
-    protected JsonAPI(string baseUrl, bool automaticallyAuthorize)
+    protected JsonAPI(HttpClientHandler handler, string baseUrl, bool automaticallyAuthorize)
     {
-        Client = new HttpClient
+        Client = new HttpClient(handler)
         {
             BaseAddress = new Uri(baseUrl)
         };
@@ -31,6 +31,11 @@ public abstract class JsonAPI : IDisposable
         AutomaticallyAuthorize = automaticallyAuthorize;
 
         JsonSerializerOptionsInObject = new(JsonSerializerOptions);
+    }
+
+    protected JsonAPI(string baseUrl, bool automaticallyAuthorize) : this(new HttpClientHandler(), baseUrl, automaticallyAuthorize)
+    {
+
     }
 
     /// <summary>

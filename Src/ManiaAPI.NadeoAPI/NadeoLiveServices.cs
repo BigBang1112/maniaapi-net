@@ -8,9 +8,16 @@ public interface INadeoLiveServices : INadeoAPI
 
 public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
 {
-    public NadeoLiveServices(bool automaticallyAuthorize = true) : base("https://live-services.trackmania.nadeo.live/api/", automaticallyAuthorize)
+    private const string BaseUrl = "https://live-services.trackmania.nadeo.live/api/";
+
+    public NadeoLiveServices(HttpClientHandler handler, bool automaticallyAuthorize = true) : base(handler, BaseUrl, automaticallyAuthorize)
     {
         
+    }
+
+    public NadeoLiveServices(bool automaticallyAuthorize = true) : base(BaseUrl, automaticallyAuthorize)
+    {
+
     }
 
     public async Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, int length = 10, int offset = 0, bool onlyWorld = true, CancellationToken cancellationToken = default)
