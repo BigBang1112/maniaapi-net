@@ -26,7 +26,6 @@ public record TrackSearchItem : IItem
     public DateTime UpdatedAt { get; init; }
     public DateTime ActivityAt { get; init; }
     public int ReplayType { get; init; }
-    public int ReplayScore { get; init; }
     public bool HasThumbnail { get; init; }
     public bool IsPublic { get; init; }
 

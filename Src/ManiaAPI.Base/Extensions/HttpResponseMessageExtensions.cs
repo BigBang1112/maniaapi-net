@@ -1,7 +1,5 @@
-﻿using ManiaAPI.Base;
-using ManiaAPI.Base.Exceptions;
+﻿using ManiaAPI.Base.Exceptions;
 using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace ManiaAPI.Base.Extensions;
 
@@ -19,22 +17,29 @@ public static class HttpResponseMessageExtensions
 
         if (response.Content.Headers.ContentLength > 0)
         {
-            try
-            {
-                var dictionaryResponse = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>(JsonAPI.JsonSerializerOptions, cancellationToken);
-
-                if (dictionaryResponse is not null && dictionaryResponse.TryGetValue("message", out object? messageObject))
-                {
-                    message = messageObject.ToString();
-                }
-            }
-            catch
-            {
-                // All non-json responses
-                message = await response.Content.ReadAsStringAsync(cancellationToken);
-            }
+            message = await GetResponseMessageAsync(response, cancellationToken);
         }
 
         throw new ApiRequestException(message ?? response.ReasonPhrase, response.StatusCode);
+    }
+
+    private static async Task<string?> GetResponseMessageAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var dictionaryResponse = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>(JsonAPI.JsonSerializerOptions, cancellationToken);
+
+            if (dictionaryResponse is not null && dictionaryResponse.TryGetValue("message", out object? messageObject))
+            {
+                return messageObject.ToString();
+            }
+        }
+        catch
+        {
+            // All non-json responses
+            return await response.Content.ReadAsStringAsync(cancellationToken);
+        }
+
+        return null;
     }
 }

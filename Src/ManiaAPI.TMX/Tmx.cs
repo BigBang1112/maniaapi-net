@@ -73,7 +73,7 @@ public class TMX : JsonAPI
 
             var hadInnerFields = false;
 
-            // Is property type is record
+            // If property type is record
             if (prop.PropertyType.GetMethod("<Clone>$") is not null)
             {
                 foreach (var innerField in GetFields(prop.PropertyType))

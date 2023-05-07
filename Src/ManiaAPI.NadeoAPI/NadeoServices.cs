@@ -1,8 +1,21 @@
 ﻿namespace ManiaAPI.NadeoAPI;
 
+public interface INadeoServices : INadeoAPI
+{
+    Task<string> GetAccountDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
+    Task<MapRecord[]> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default);
+}
+
 public class NadeoServices : NadeoAPI, INadeoServices
 {
-    public NadeoServices(bool automaticallyAuthorize = true) : base("https://prod.trackmania.core.nadeo.online/", automaticallyAuthorize)
+    private const string BaseUrl = "https://prod.trackmania.core.nadeo.online/";
+
+    public NadeoServices(bool automaticallyAuthorize = true) : base(BaseUrl, automaticallyAuthorize)
+    {
+
+    }
+
+    public NadeoServices(HttpClientHandler handler, bool automaticallyAuthorize = true) : base(handler, BaseUrl, automaticallyAuthorize)
     {
 
     }
