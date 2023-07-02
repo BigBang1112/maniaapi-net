@@ -1,108 +1,227 @@
-﻿using ManiaAPI.Base;
-using ManiaAPI.Base.Converters;
-using System.Net;
-using System.Reflection;
-using System.Text.Json.Serialization;
+﻿using ManiaAPI.TMX.Converters;
+using ManiaAPI.TMX.JsonContexts;
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 
 namespace ManiaAPI.TMX;
 
-public class TMX : JsonAPI
+public class TMX
 {
-    private static readonly Dictionary<Type, string> fieldQueryStrings = new();
-
-    private const string ApiRoute = "api";
-    private const string BaseUrl = "https://{0}.tm-exchange.com";
-    private const string BaseApiUrl = $"{BaseUrl}/{ApiRoute}/";
-
+    public HttpClient Client { get; }
     public TmxSite Site { get; }
-
     public string SiteName { get; }
 
-    public TMX(TmxSite site) : base(string.Format(BaseApiUrl, site.ToString().ToLower()), automaticallyAuthorize: true)
+    public TMX(HttpClient client, TmxSite site)
     {
-        Site = site;
-        SiteName = site.ToString();
-
+        Client = client;
         Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (TMX) by BigBang1112");
 
-        JsonSerializerOptionsInObject.Converters.Add(new DateTimeUtcFixConverter());
+        Site = site;
+        SiteName = site.ToStringFast();
+
+        Client.BaseAddress = new Uri($"https://{SiteName}.exchange/api/");
     }
 
-    public async Task<ItemCollection<TrackSearchItem>> SearchAsync(TrackSearchFilters? filters = default, CancellationToken cancellationToken = default)
-    {
-        var route = "tracks";
+    public TMX(TmxSite site) : this(new HttpClient(), site) { }
 
-        if (filters is not null)
+    public async Task<ItemCollection<ReplayItem>> GetReplaysAsync(GetReplaysParameters parameters, CancellationToken cancellationToken = default)
+    {
+        var sb = new StringBuilder("replays?");
+        parameters.AppendQueryString(sb);
+
+        using var response = await Client.GetAsync(sb.ToString(), cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync(ItemCollection_ReplayItem.TypeInfo, cancellationToken) ?? new();
+    }
+
+    public readonly record struct GetReplaysParameters
+    {
+        public required long TrackId { get; init; }
+        public int? Count { get; init; }
+        public long? After { get; init; }
+        public long? Before { get; init; }
+        public long? From { get; init; }
+        public bool? Best { get; init; }
+        public long? UserId { get; init; }
+        public ReplayItemFields Fields { get; init; }
+
+        public GetReplaysParameters()
         {
-            route += filters.ToQuery() + "&";
+            Fields = ReplayItemFields.All;
         }
-        else
+
+        internal void AppendQueryString(StringBuilder sb)
         {
-            route += "?";
-        }
+            sb.Append("trackid=");
+            sb.Append(TrackId);
 
-        route += "fields=" + GetFieldsQuery<TrackSearchItem>();
-
-        return await GetApiAsync<ItemCollection<TrackSearchItem>>(route, cancellationToken);
-    }
-
-    public async Task<ItemCollection<ReplayItem>> GetReplaysAsync(TrackSearchItem track, CancellationToken cancellationToken = default)
-    {
-        return await GetReplaysAsync(track.TrackId, cancellationToken);
-    }
-
-    public async Task<ItemCollection<ReplayItem>> GetReplaysAsync(int trackId, CancellationToken cancellationToken = default)
-    {
-        var route = $"replays?trackid={trackId}&count=1000";
-        
-        route += "&fields=" + GetFieldsQuery<ReplayItem>();
-
-        return await base.GetApiAsync<ItemCollection<ReplayItem>>(route, cancellationToken);
-    }
-
-    private static IEnumerable<string> GetFields(Type type)
-    {
-        foreach (var prop in type.GetProperties())
-        {
-            var name = prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? prop.Name;
-
-            if (prop.PropertyType.IsArray)
+            if (Count.HasValue)
             {
-                name += "[]";
+                sb.Append("&count=");
+                sb.Append(Count.Value);
             }
 
-            var hadInnerFields = false;
-
-            // If property type is record
-            if (prop.PropertyType.GetMethod("<Clone>$") is not null)
+            if (After.HasValue)
             {
-                foreach (var innerField in GetFields(prop.PropertyType))
-                {
-                    yield return $"{name}.{innerField}";
-                    hadInnerFields = true;
-                }
+                sb.Append("&after=");
+                sb.Append(After.Value);
             }
 
-            if (!hadInnerFields)
+            if (Before.HasValue)
             {
-                yield return name;
+                sb.Append("&before=");
+                sb.Append(Before.Value);
+            }
+
+            if (From.HasValue)
+            {
+                sb.Append("&from=");
+                sb.Append(From.Value);
+            }
+
+            if (Best.HasValue)
+            {
+                sb.Append("&best=");
+                sb.Append(Best.Value ? '1' : '0');
+            }
+
+            if (UserId.HasValue)
+            {
+                sb.Append("&userid=");
+                sb.Append(UserId.Value);
+            }
+
+            sb.Append("&fields=");
+            Fields.Append(sb);
+        }   
+    }
+
+    public readonly record struct ReplayItemFields
+    {
+        public bool ReplayId { get; init; }
+        public UserFields User { get; init; }
+        public bool ReplayTime { get; init; }
+        public bool ReplayScore { get; init; }
+        public bool ReplayRespawns { get; init; }
+        public bool Score { get; init; }
+        public bool Position { get; init; }
+        public bool IsBest { get; init; }
+        public bool IsLeaderboard { get; init; }
+        public bool TrackAt { get; init; }
+        public bool ReplayAt { get; init; }
+
+        public static readonly ReplayItemFields All = new()
+        {
+            ReplayId = true,
+            User = UserFields.All,
+            ReplayTime = true,
+            ReplayScore = true,
+            ReplayRespawns = true,
+            Score = true,
+            Position = true,
+            IsBest = true,
+            IsLeaderboard = true,
+            TrackAt = true,
+            ReplayAt = true
+        };
+
+        internal void Append(StringBuilder sb)
+        {
+            var first = true;
+
+            if (ReplayId)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(ReplayId));
+                first = false;
+            }
+
+            if (User.UserId)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(User));
+                sb.Append('.');
+                sb.Append(nameof(ManiaAPI.TMX.User.UserId));
+                first = false;
+            }
+
+            if (User.Name)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(User));
+                sb.Append('.');
+                sb.Append(nameof(ManiaAPI.TMX.User.Name));
+            }
+
+            if (ReplayTime)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(ReplayTime));
+                first = false;
+            }
+
+            if (ReplayScore)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(ReplayScore));
+                first = false;
+            }
+
+            if (ReplayRespawns)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(ReplayRespawns));
+                first = false;
+            }
+
+            if (Score)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(Score));
+                first = false;
+            }
+
+            if (Position)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(Position));
+                first = false;
+            }
+
+            if (IsBest)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(IsBest));
+                first = false;
+            }
+
+            if (IsLeaderboard)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(IsLeaderboard));
+                first = false;
+            }
+
+            if (TrackAt)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(TrackAt));
+                first = false;
+            }
+
+            if (ReplayAt)
+            {
+                if (!first) sb.Append(',');
+                sb.Append(nameof(ReplayAt));
             }
         }
     }
 
-    private static string GetFieldsQuery<T>()
+    public Task<ItemCollection<TrackSearchItem>> SearchTracksAsync(TrackSearchFilters? filters = null, CancellationToken cancellationToken = default)
     {
-        var type = typeof(T);
-
-        if (fieldQueryStrings.TryGetValue(type, out string? query))
-        {
-            return query;
-        }
-
-        query = WebUtility.UrlEncode(string.Join(',', GetFields(type)));
-
-        fieldQueryStrings.Add(type, query);
-
-        return query;
+        throw new NotImplementedException();
     }
 }

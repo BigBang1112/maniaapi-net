@@ -1,7 +1,13 @@
-﻿namespace ManiaAPI.TMX;
+﻿using NetEscapades.EnumGenerators;
 
+namespace ManiaAPI.TMX;
+
+[EnumExtensions]
 public enum TmxSite
 {
-    United,
-    TMNForever
+    TMUF,
+    TMNF,
+    Nations,
+    Sunrise,
+    Original
 }

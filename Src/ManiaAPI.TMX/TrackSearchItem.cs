@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using ManiaAPI.TMX.Old;
 using TmEssentials;
 
 namespace ManiaAPI.TMX;
@@ -49,9 +50,4 @@ public record TrackSearchItem : IItem
     public User Uploader { get; init; } = default!;
     public WRReplay? WRReplay { get; init; }
     public UserReplay? UserReplay { get; init; }
-
-    public async Task<ItemCollection<ReplayItem>> GetReplaysAsync(TMX tmx, CancellationToken cancellationToken = default)
-    {
-        return await tmx.GetReplaysAsync(TrackId, cancellationToken);
-    }
 }
