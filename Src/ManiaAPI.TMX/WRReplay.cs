@@ -1,5 +1,7 @@
-﻿using TmEssentials;
+﻿using ManiaAPI.TMX.Attributes;
+using TmEssentials;
 
 namespace ManiaAPI.TMX;
 
-public record WRReplay(User User, TimeInt32 ReplayTime, int ReplayScore);
+[Fields]
+public record WRReplay(User User, TimeInt32 ReplayTime, int ReplayScore, int ReplayId);

@@ -114,17 +114,17 @@ public class FieldsGenerator : ISourceGenerator
         return sb.ToString();
     }
 
-    private static void AppendFieldCheck(StringBuilder sb, IPropertySymbol propSymbol, bool isFields, List<IPropertySymbol>? accessToProperty = null)
+    private static void AppendFieldCheck(StringBuilder sb, IPropertySymbol propSymbol, bool isFields, IPropertySymbol[]? accessToProperty = null)
     {
         if (isFields)
         {
             if (accessToProperty is null)
             {
-                accessToProperty = new() { propSymbol };
+                accessToProperty = new[] { propSymbol };
             }
             else
             {
-                accessToProperty.Add(propSymbol);
+                accessToProperty = accessToProperty.Append(propSymbol).ToArray();
             }
 
             foreach (var symbol in propSymbol.Type.GetMembers().OfType<IPropertySymbol>())

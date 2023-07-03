@@ -90,7 +90,8 @@ public class ParametersGenerator : ISourceGenerator
             // this generation can be done better, but it works for now
             if (propSymbol.Type.Name == "Nullable")
             {
-                var asNumber = ((INamedTypeSymbol)propSymbol.Type).TypeArguments[0].Name == "Boolean" && atts.Any(x => x.AttributeClass?.Name == "AsNumberAttribute");
+                var actualType = ((INamedTypeSymbol)propSymbol.Type).TypeArguments[0];
+                var asNumber = actualType.Name == "Boolean" && atts.Any(x => x.AttributeClass?.Name == "AsNumberAttribute");
 
                 sb.Append("            if (");
                 sb.Append(propSymbol.Name);
@@ -102,6 +103,12 @@ public class ParametersGenerator : ISourceGenerator
                 sb.Append(propSymbol.Name.ToLowerInvariant());
                 sb.AppendLine("=\");");
                 sb.Append("                sb.Append(");
+
+                if (actualType.TypeKind == TypeKind.Enum)
+                {
+                    sb.Append("(int)");
+                }
+
                 sb.Append(propSymbol.Name);
 
                 if (asNumber)

@@ -37,20 +37,36 @@ public partial class TMX : IClient
         public long? UserId { get; init; }
     }
 
-    public async Task<ItemCollection<ReplayItem>> GetReplaysAsync(GetReplaysParameters parameters, CancellationToken cancellationToken = default)
+    [GetMethod<ItemCollection_ReplayItem>("replays")]
+    public partial Task<ItemCollection<ReplayItem>> GetReplaysAsync(GetReplaysParameters parameters, CancellationToken cancellationToken = default);
+
+    [Parameters<TrackItem>]
+    public readonly partial record struct SearchTracksParameters
     {
-        var sb = new StringBuilder("replays");
-        parameters.AppendQueryString(sb);
+        public int? Count { get; init; }
+        public string? Author { get; init; }
+        public Environment? Environment { get; init; }
+        public Environment? Vehicle { get; init; }
+        public TrackType? PrimaryType { get; init; }
+        public TrackStyle? Tag { get; init; }
+        public Mood? Mood { get; init; }
+        public Difficulty? Difficulty { get; init; }
+        public TrackRoutes? Routes { get; init; }
+        public LeaderboardType? LbType { get; init; }
+        public TrackOrder? Order1 { get; init; }
+        public TrackOrder? Order2 { get; init; }
 
-        using var response = await Client.GetAsync(sb.ToString(), cancellationToken);
+        /// <summary>
+        /// After a certain track ID.
+        /// </summary>
+        public int? After { get; init; }
 
-        response.EnsureSuccessStatusCode();
-
-        return await response.Content.ReadFromJsonAsync(ItemCollection_ReplayItem.TypeInfo, cancellationToken) ?? new();
+        /// <summary>
+        /// Before a certain track ID.
+        /// </summary>
+        public int? Before { get; init; }
     }
 
-    public Task<ItemCollection<TrackSearchItem>> SearchTracksAsync(TrackSearchFilters? filters = null, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
+    [GetMethod<ItemCollection_TrackItem>("tracks")]
+    public partial Task<ItemCollection<TrackItem>> SearchTracksAsync(SearchTracksParameters parameters, CancellationToken cancellationToken = default);
 }
