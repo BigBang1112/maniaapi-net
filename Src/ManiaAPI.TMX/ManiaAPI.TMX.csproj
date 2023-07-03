@@ -10,6 +10,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, tmx, mx, exchange</PackageTags>
 		<IsTrimmable>true</IsTrimmable>
+		<IsAotCompatible>true</IsAotCompatible>
 
 		<Version>1.0.9</Version>
 		<PackageReleaseNotes></PackageReleaseNotes>

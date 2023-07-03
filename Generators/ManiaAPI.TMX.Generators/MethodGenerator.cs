@@ -85,6 +85,8 @@ public class MethodGenerator : ISourceGenerator
         sb.AppendLine(")");
         sb.AppendLine("    {");
 
+        sb.AppendLine("        cancellationToken.ThrowIfCancellationRequested();");
+        sb.AppendLine();
         sb.Append("        var sb = new StringBuilder(\"");
         sb.Append(route);
         sb.AppendLine("\");");

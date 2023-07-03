@@ -51,12 +51,14 @@ public class ParametersGenerator : ISourceGenerator
 
         sb.AppendLine("using System.Runtime.InteropServices;");
         sb.AppendLine("using System.Text;");
+        sb.AppendLine("using System.Net;");
         sb.AppendLine();
         sb.AppendLine("namespace ManiaAPI.TMX;");
         sb.AppendLine();
         sb.Append("public partial class ");
         sb.AppendLine(clientSymbol.Name);
         sb.AppendLine("{");
+        sb.AppendLine("    /// <remarks>Be careful using <c>default</c> value. It also disables all fields.</remarks>");
         sb.AppendLine("    [StructLayout(LayoutKind.Auto)]");
         sb.Append("    public readonly partial record struct ");
         sb.AppendLine(parametersSymbol.Name);
@@ -146,9 +148,28 @@ public class ParametersGenerator : ISourceGenerator
 
                 sb.AppendLine("            first = false;");
             }
+            else if (propSymbol.Type.Name == "String")
+            {
+                sb.Append("            if (!string.IsNullOrEmpty(");
+                sb.Append(propSymbol.Name);
+                sb.AppendLine("))");
+                sb.AppendLine("            {");
+                sb.AppendLine("                if (first) sb.Append('?');");
+                sb.AppendLine("                else sb.Append('&');");
+                sb.Append("                sb.Append(\"");
+                sb.Append(propSymbol.Name.ToLowerInvariant());
+                sb.AppendLine("=\");");
+                sb.Append("                sb.Append(WebUtility.UrlEncode(");
+                sb.Append(propSymbol.Name);
+                sb.AppendLine("));");
+                sb.AppendLine("                first = false;");
+                sb.AppendLine("            }");
+            }
             else
             {
-                // TODO
+                sb.Append("            // TODO: ");
+                sb.Append(propSymbol.Name);
+                sb.AppendLine(" is not supported yet");
             }
         }
 
