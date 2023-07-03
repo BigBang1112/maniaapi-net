@@ -28,7 +28,6 @@ public class ParametersGenerator : ISourceGenerator
 
         var clientSymbols = maniaApiTmxNamespace.GetTypeMembers()
             .Where(x => x.Interfaces.Any(x => x.Name == "IClient"));
-            //);
 
         foreach (var clientSymbol in clientSymbols)
         {
@@ -147,8 +146,8 @@ public class ParametersGenerator : ISourceGenerator
         }
 
         sb.AppendLine();
-        sb.AppendLine("            if (first) sb.Append('?');");
-        sb.AppendLine("            else sb.Append('&');");
+        sb.AppendLine("            if (first) sb.Append(\"?fields=\");");
+        sb.AppendLine("            else sb.Append(\"&fields=\");");
         sb.AppendLine("            Fields.Append(sb);");
         sb.AppendLine();
         sb.AppendLine("            return !first;");
