@@ -1,7 +1,9 @@
-﻿using TmEssentials;
+﻿using ManiaAPI.TMX.Attributes;
+using TmEssentials;
 
 namespace ManiaAPI.TMX;
 
+[Fields]
 public record ReplayItem : IItem
 {
     public int? ReplayId { get; set; }

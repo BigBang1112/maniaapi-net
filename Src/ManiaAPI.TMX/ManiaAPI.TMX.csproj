@@ -34,6 +34,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Generators\ManiaAPI.TMX.Generators\ManiaAPI.TMX.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 		<ProjectReference Include="..\ManiaAPI.Base\ManiaAPI.Base.csproj" />
 	</ItemGroup>
 
