@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.TMX;
 
-public enum Mood
+public enum Mood : byte
 {
     Sunrise,
     Day,

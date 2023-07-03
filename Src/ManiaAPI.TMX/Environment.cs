@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.TMX;
 
-public enum Environment
+public enum Environment : byte
 {
     Unknown,
     Snow,

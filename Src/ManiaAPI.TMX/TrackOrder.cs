@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.TMX;
 
-public enum TrackOrder
+public enum TrackOrder : byte
 {
     None,
     UploadedOldest,

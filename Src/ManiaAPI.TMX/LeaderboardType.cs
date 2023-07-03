@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.TMX;
 
-public enum LeaderboardType
+public enum LeaderboardType : byte
 {
     Standard,
     Classic,

@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.TMX;
 
-public enum Difficulty
+public enum Difficulty : byte
 {
     Beginner,
     Intermediate,
