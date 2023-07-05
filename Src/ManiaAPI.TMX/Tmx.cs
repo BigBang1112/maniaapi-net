@@ -3,7 +3,19 @@ using ManiaAPI.TMX.JsonContexts;
 
 namespace ManiaAPI.TMX;
 
-public partial class TMX : IClient
+public interface ITMX : IClient
+{
+    TmxSite Site { get; }
+    string SiteName { get; }
+
+    Task<ItemCollection<ReplayItem>> GetReplaysAsync(TMX.GetReplaysParameters parameters, CancellationToken cancellationToken = default);
+    Task<ItemCollection<LeaderboardItem>> SearchLeaderboardsAsync(TMX.SearchLeaderboardsParameters parameters, CancellationToken cancellationToken = default);
+    Task<ItemCollection<TrackpackItem>> SearchTrackpacksAsync(TMX.SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
+    Task<ItemCollection<TrackItem>> SearchTracksAsync(TMX.SearchTracksParameters parameters, CancellationToken cancellationToken = default);
+    Task<ItemCollection<UserItem>> SearchUsersAsync(TMX.SearchUsersParameters parameters, CancellationToken cancellationToken = default);
+}
+
+public partial class TMX : ITMX, IClient
 {
     public HttpClient Client { get; }
     public TmxSite Site { get; }
@@ -25,7 +37,7 @@ public partial class TMX : IClient
             TmxSite.Sunrise => "https://sunrise.tm-exchange.com/api/",
             TmxSite.Nations => "https://nations.tm-exchange.com/api/",
             _ => throw new NotImplementedException()
-        };  
+        };
 
         Client.BaseAddress = new Uri(url);
     }
