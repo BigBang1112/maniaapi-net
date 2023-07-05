@@ -5,10 +5,10 @@ namespace ManiaAPI.TMX;
 
 static class TmxJsonSerializerOptions
 {
-    public static readonly JsonSerializerOptions Default = new();
-
-    static TmxJsonSerializerOptions()
+    public static JsonSerializerOptions Create()
     {
-        Default.Converters.Add(new TimeInt32Converter());
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(new TimeInt32Converter());
+        return options;
     }
 }

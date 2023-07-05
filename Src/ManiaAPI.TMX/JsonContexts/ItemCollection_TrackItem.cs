@@ -6,5 +6,5 @@ namespace ManiaAPI.TMX.JsonContexts;
 [JsonSerializable(typeof(ItemCollection<TrackItem>))]
 partial class ItemCollection_TrackItem : JsonSerializerContext
 {
-    public static JsonTypeInfo<ItemCollection<TrackItem>> TypeInfo { get; } = new ItemCollection_TrackItem(TmxJsonSerializerOptions.Default).ItemCollectionTrackItem;
+    public static JsonTypeInfo<ItemCollection<TrackItem>> TypeInfo { get; } = new ItemCollection_TrackItem(TmxJsonSerializerOptions.Create()).ItemCollectionTrackItem;
 }
