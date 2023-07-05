@@ -12,7 +12,7 @@
 		<IsTrimmable>true</IsTrimmable>
 		<IsAotCompatible>true</IsAotCompatible>
 
-		<Version>1.0.9</Version>
+		<Version>2.0.0-alpha1</Version>
 		<PackageReleaseNotes></PackageReleaseNotes>
 
 		<TargetFrameworks>net7.0</TargetFrameworks>
@@ -32,11 +32,11 @@
 
 	<ItemGroup>
 	  <PackageReference Include="NetEscapades.EnumGenerators" Version="1.0.0-beta08" />
+	  <PackageReference Include="TmEssentials" Version="2.3.2" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Generators\ManiaAPI.TMX.Generators\ManiaAPI.TMX.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-		<ProjectReference Include="..\ManiaAPI.Base\ManiaAPI.Base.csproj" />
 	</ItemGroup>
 
 </Project>
