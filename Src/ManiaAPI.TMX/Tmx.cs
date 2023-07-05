@@ -62,28 +62,51 @@ public partial class TMX : ITMX, IClient
     [Parameters<TrackItem>]
     public readonly partial record struct SearchTracksParameters
     {
-        public int? Count { get; init; }
-        public string? Author { get; init; }
-        public Environment? Environment { get; init; }
-        public Environment? Vehicle { get; init; }
-        public TrackType? PrimaryType { get; init; }
-        public TrackStyle? Tag { get; init; }
-        public Mood? Mood { get; init; }
-        public Difficulty? Difficulty { get; init; }
-        public TrackRoutes? Routes { get; init; }
-        public LeaderboardType? LbType { get; init; }
         public TrackOrder? Order1 { get; init; }
-        public TrackOrder? Order2 { get; init; }
+        public int? Count { get; init; }
 
         /// <summary>
         /// After a certain track ID.
         /// </summary>
-        public int? After { get; init; }
+        public long? After { get; init; }
 
         /// <summary>
         /// Before a certain track ID.
         /// </summary>
-        public int? Before { get; init; }
+        public long? Before { get; init; }
+
+        public long? From { get; init; }
+        public long[]? Id { get; init; }
+        public string[]? UId { get; init; }
+        public string? Name { get; init; }
+        public string? Author { get; init; }
+        public long? AuthorUserId { get; init; }
+        public long? VideoId { get; init; }
+        public long? PackId { get; init; }
+        public string? AwardedBy { get; init; }
+        public string? CommentedBy { get; init; }
+        public TrackStyle[]? Tag { get; init; }
+        public TrackStyle[]? ETag { get; init; }
+        public bool? TagInclusive { get; init; }
+        public TrackType? PrimaryType { get; init; }
+        public LeaderboardType? LbType { get; init; }
+        public DateTimeOffset? UploadedAfter { get; init; }
+        public DateTimeOffset? UploadedBefore { get; init; }
+        public int? AuthorTimeMin { get; init; }
+        public int? AuthorTimeMax { get; init; }
+        public Environment[]? Environment { get; init; }
+        public Environment[]? Vehicle { get; init; }
+        public Mood[]? Mood { get; init; }
+        public Difficulty[]? Difficulty { get; init; }
+        public TrackRoutes[]? Routes { get; init; }
+        public int? AntiSpam { get; init; }
+        [AsNumber] public bool? InScreenshot { get; init; }
+        [AsNumber] public bool? InLatestAuthor { get; init; }
+        [AsNumber] public bool? InLatestAwardedAuthor { get; init; }
+        [AsNumber] public bool? InSupporter { get; init; }
+        [AsNumber] public bool? InHasRecord { get; init; }
+        [AsNumber] public bool? InEnvMix { get; init; }
+        public TrackOrder? Order2 { get; init; } // no longer?
     }
 
     [GetMethod<ItemCollection_TrackItem>("tracks")]
