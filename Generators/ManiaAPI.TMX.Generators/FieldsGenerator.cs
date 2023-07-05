@@ -158,7 +158,7 @@ public class FieldsGenerator : ISourceGenerator
         sb.Append(propSymbol.Name);
         sb.AppendLine(")");
         sb.AppendLine("        {");
-        sb.AppendLine("            if (!first) sb.Append(',');");
+        sb.AppendLine("            if (!first) sb.Append(\"%2C\");");
 
         if (accessToProperty is not null)
         {

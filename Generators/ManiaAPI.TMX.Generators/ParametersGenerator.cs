@@ -165,6 +165,23 @@ public class ParametersGenerator : ISourceGenerator
                 sb.AppendLine("                first = false;");
                 sb.AppendLine("            }");
             }
+            else if (propSymbol.Type.Kind == SymbolKind.ArrayType)
+            {
+                sb.Append("            if (");
+                sb.Append(propSymbol.Name);
+                sb.AppendLine(" is not null)");
+                sb.AppendLine("            {");
+                sb.AppendLine("                if (first) sb.Append('?');");
+                sb.AppendLine("                else sb.Append('&');");
+                sb.Append("                sb.Append(\"");
+                sb.Append(propSymbol.Name.ToLowerInvariant());
+                sb.AppendLine("=\");");
+                sb.Append("                sb.Append(string.Join(\"%2C\", ");
+                sb.Append(propSymbol.Name);
+                sb.AppendLine("));");
+                sb.AppendLine("                first = false;");
+                sb.AppendLine("            }");
+            }
             else
             {
                 sb.Append("            // TODO: ");
