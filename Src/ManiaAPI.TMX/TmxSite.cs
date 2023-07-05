@@ -1,8 +1,5 @@
-﻿using NetEscapades.EnumGenerators;
+﻿namespace ManiaAPI.TMX;
 
-namespace ManiaAPI.TMX;
-
-[EnumExtensions]
 public enum TmxSite
 {
     TMUF,

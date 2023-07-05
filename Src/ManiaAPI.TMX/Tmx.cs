@@ -27,7 +27,7 @@ public partial class TMX : ITMX, IClient
         Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (TMX) by BigBang1112");
 
         Site = site;
-        SiteName = site.ToStringFast();
+        SiteName = site.ToString();
 
         var url = site switch
         {
