@@ -33,7 +33,7 @@ public record TrackItem : IItem
     public bool HasThumbnail { get; set; }
     public WRReplay? WRReplay { get; set; }
     public UserReplay? UserReplay { get; set; }
-    public TrackAuthor[] Authors { get; set; } = default!;
+    public Author[] Authors { get; set; } = default!;
     public TrackStyle[] Tags { get; set; } = default!;
     public Image[]? Images { get; set; }
 }

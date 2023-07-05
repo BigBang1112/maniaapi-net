@@ -3,4 +3,4 @@
 namespace ManiaAPI.TMX;
 
 [Fields]
-public record TrackAuthor(User User, string Role);
+public record Author(User User, string Role);

@@ -77,11 +77,6 @@ public partial class TMX : IClient
     [GetMethod<ItemCollection_TrackItem>("tracks")]
     public partial Task<ItemCollection<TrackItem>> SearchTracksAsync(SearchTracksParameters parameters, CancellationToken cancellationToken = default);
 
-    public async Task<ItemCollection<TrackItem>> SearchTracksAsync(CancellationToken cancellationToken = default)
-    {
-        return await SearchTracksAsync(new(), cancellationToken);
-    }
-
     [Parameters<LeaderboardItem>]
     public readonly partial record struct SearchLeaderboardsParameters
     {
@@ -97,8 +92,45 @@ public partial class TMX : IClient
     [GetMethod<ItemCollection_LeaderboardItem>("leaderboards")]
     public partial Task<ItemCollection<LeaderboardItem>> SearchLeaderboardsAsync(SearchLeaderboardsParameters parameters, CancellationToken cancellationToken = default);
 
-    public async Task<ItemCollection<LeaderboardItem>> SearchLeaderboardsAsync(CancellationToken cancellationToken = default)
+    [Parameters<TrackpackItem>]
+    public readonly partial record struct SearchTrackpacksParameters
     {
-        return await SearchLeaderboardsAsync(new(), cancellationToken);
+        public int? Order1 { get; init; }
+        public int? Count { get; init; }
+        public long? After { get; init; }
+        public long? Before { get; init; }
+        public long? From { get; init; }
+        public long[]? Id { get; init; }
+        public string? Name { get; init; }
+        public string? Creator { get; init; }
     }
+
+    [GetMethod<ItemCollection_TrackpackItem>("trackpacks")]
+    public partial Task<ItemCollection<TrackpackItem>> SearchTrackpacksAsync(SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
+
+    [Parameters<UserItem>]
+    public readonly partial record struct SearchUsersParameters
+    {
+        public int? Order1 { get; init; }
+        public int? Count { get; init; }
+        public long? After { get; init; }
+        public long? Before { get; init; }
+        public long? From { get; init; }
+        public long[]? Id { get; init; }
+        public string? Name { get; init; }
+        public long[]? MxId { get; init; }
+        public int? TracksMin { get; init; }
+        public int? TracksMax { get; init; }
+        public int? AwardsMin { get; init; }
+        public int? AwardsMax { get; init; }
+        public int? AwardsGivenMin { get; init; }
+        public int? AwardsGivenMax { get; init; }
+        public DateTimeOffset? RegisteredAfter { get; init; }
+        public DateTimeOffset? RegisteredBefore { get; init; }
+        [AsNumber] public bool? InSupporters { get; init; }
+        [AsNumber] public bool? InModerators { get; init; }
+    }
+
+    [GetMethod<ItemCollection_UserItem>("users")]
+    public partial Task<ItemCollection<UserItem>> SearchUsersAsync(SearchUsersParameters parameters, CancellationToken cancellationToken = default);
 }
