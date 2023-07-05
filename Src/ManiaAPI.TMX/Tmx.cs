@@ -133,4 +133,10 @@ public partial class TMX : IClient
 
     [GetMethod<ItemCollection_UserItem>("users")]
     public partial Task<ItemCollection<UserItem>> SearchUsersAsync(SearchUsersParameters parameters, CancellationToken cancellationToken = default);
+
+    public void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }
