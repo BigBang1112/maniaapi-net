@@ -31,11 +31,11 @@ public partial class TMX : ITMX, IClient
 
         var url = site switch
         {
-            TmxSite.TMUF => "https://tmuf.exchange/api/",
-            TmxSite.TMNF => "https://tmnf.exchange/api/",
-            TmxSite.Original => "https://original.tm-exchange.com/api/",
-            TmxSite.Sunrise => "https://sunrise.tm-exchange.com/api/",
-            TmxSite.Nations => "https://nations.tm-exchange.com/api/",
+            TmxSite.TMUF => "https://tmuf.exchange/",
+            TmxSite.TMNF => "https://tmnf.exchange/",
+            TmxSite.Original => "https://original.tm-exchange.com/",
+            TmxSite.Sunrise => "https://sunrise.tm-exchange.com/",
+            TmxSite.Nations => "https://nations.tm-exchange.com/",
             _ => throw new NotImplementedException()
         };
 
@@ -56,8 +56,8 @@ public partial class TMX : ITMX, IClient
         public long? UserId { get; init; }
     }
 
-    [GetMethod<ItemCollection_ReplayItem>("replays")]
-    public partial Task<ItemCollection<ReplayItem>> GetReplaysAsync(GetReplaysParameters parameters, CancellationToken cancellationToken = default);
+    [GetMethod<ItemCollection_ReplayItem>("api/replays")]
+    public virtual partial Task<ItemCollection<ReplayItem>> GetReplaysAsync(GetReplaysParameters parameters, CancellationToken cancellationToken = default);
 
     [Parameters<TrackItem>]
     public readonly partial record struct SearchTracksParameters
@@ -109,8 +109,8 @@ public partial class TMX : ITMX, IClient
         public TrackOrder? Order2 { get; init; } // no longer?
     }
 
-    [GetMethod<ItemCollection_TrackItem>("tracks")]
-    public partial Task<ItemCollection<TrackItem>> SearchTracksAsync(SearchTracksParameters parameters, CancellationToken cancellationToken = default);
+    [GetMethod<ItemCollection_TrackItem>("api/tracks")]
+    public virtual partial Task<ItemCollection<TrackItem>> SearchTracksAsync(SearchTracksParameters parameters, CancellationToken cancellationToken = default);
 
     [Parameters<LeaderboardItem>]
     public readonly partial record struct SearchLeaderboardsParameters
@@ -124,8 +124,8 @@ public partial class TMX : ITMX, IClient
         public int? LbEnv { get; init; }
     }
 
-    [GetMethod<ItemCollection_LeaderboardItem>("leaderboards")]
-    public partial Task<ItemCollection<LeaderboardItem>> SearchLeaderboardsAsync(SearchLeaderboardsParameters parameters, CancellationToken cancellationToken = default);
+    [GetMethod<ItemCollection_LeaderboardItem>("api/leaderboards")]
+    public virtual partial Task<ItemCollection<LeaderboardItem>> SearchLeaderboardsAsync(SearchLeaderboardsParameters parameters, CancellationToken cancellationToken = default);
 
     [Parameters<TrackpackItem>]
     public readonly partial record struct SearchTrackpacksParameters
@@ -140,8 +140,8 @@ public partial class TMX : ITMX, IClient
         public string? Creator { get; init; }
     }
 
-    [GetMethod<ItemCollection_TrackpackItem>("trackpacks")]
-    public partial Task<ItemCollection<TrackpackItem>> SearchTrackpacksAsync(SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
+    [GetMethod<ItemCollection_TrackpackItem>("api/trackpacks")]
+    public virtual partial Task<ItemCollection<TrackpackItem>> SearchTrackpacksAsync(SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
 
     [Parameters<UserItem>]
     public readonly partial record struct SearchUsersParameters
@@ -166,10 +166,52 @@ public partial class TMX : ITMX, IClient
         [AsNumber] public bool? InModerators { get; init; }
     }
 
-    [GetMethod<ItemCollection_UserItem>("users")]
-    public partial Task<ItemCollection<UserItem>> SearchUsersAsync(SearchUsersParameters parameters, CancellationToken cancellationToken = default);
+    [GetMethod<ItemCollection_UserItem>("api/users")]
+    public virtual partial Task<ItemCollection<UserItem>> SearchUsersAsync(SearchUsersParameters parameters, CancellationToken cancellationToken = default);
 
-    public void Dispose()
+    public string GetTrackGbxUrl(long trackId) => $"{Client.BaseAddress}trackgbx/{trackId}";
+
+    public virtual async Task<HttpResponseMessage> GetTrackGbxAsync(long trackId, CancellationToken cancellationToken = default)
+    {
+        return await Client.GetAsync(GetTrackGbxUrl(trackId), cancellationToken);
+    }
+
+    public virtual async Task<Stream> OpenTrackGbxAsync(long trackId, CancellationToken cancellationToken = default)
+    {
+        var response = await GetTrackGbxAsync(trackId, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStreamAsync(cancellationToken);
+    }
+
+    public string GetTrackThumbnailUrl(long trackId) => $"{Client.BaseAddress}trackshow/{trackId}/image/0";
+
+    public virtual async Task<HttpResponseMessage> GetTrackThumbnailAsync(long trackId, CancellationToken cancellationToken = default)
+    {
+        return await Client.GetAsync(GetTrackThumbnailUrl(trackId), cancellationToken);
+    }
+
+    public virtual async Task<Stream> OpenTrackThumbnailAsync(long trackId, CancellationToken cancellationToken = default)
+    {
+        var response = await GetTrackThumbnailAsync(trackId, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStreamAsync(cancellationToken);
+    }
+
+    public string GetTrackImageUrl(long trackId, int imageIndex) => $"{Client.BaseAddress}trackshow/{trackId}/image/{imageIndex}";
+
+    public virtual async Task<HttpResponseMessage> GetTrackImageAsync(long trackId, int imageIndex, CancellationToken cancellationToken = default)
+    {
+        return await Client.GetAsync(GetTrackImageUrl(trackId, imageIndex), cancellationToken);
+    }
+
+    public virtual async Task<Stream> OpenTrackImageAsync(long trackId, int imageIndex, CancellationToken cancellationToken = default)
+    {
+        var response = await GetTrackImageAsync(trackId, imageIndex, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStreamAsync(cancellationToken);
+    }
+
+    public virtual void Dispose()
     {
         Client.Dispose();
         GC.SuppressFinalize(this);
