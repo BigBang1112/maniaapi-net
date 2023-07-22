@@ -60,7 +60,14 @@ public class MethodGenerator : ISourceGenerator
         sb.Append("public partial class ");
         sb.AppendLine(clientSymbol.Name);
         sb.AppendLine("{");
-        sb.Append("    public partial async ");
+        sb.Append("    public ");
+
+        if (symbol.IsVirtual)
+        {
+            sb.Append("virtual ");
+        }
+
+        sb.Append("partial async ");
         sb.Append(symbol.ReturnType);
         sb.Append(" ");
         sb.Append(symbol.Name);

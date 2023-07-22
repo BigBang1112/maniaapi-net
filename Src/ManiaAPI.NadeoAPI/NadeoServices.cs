@@ -21,13 +21,13 @@ public class NadeoServices : NadeoAPI, INadeoServices
     {
     }
 
-    public async Task<MapRecord[]> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
+    public virtual async Task<MapRecord[]> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"mapRecords/?accountIdList={string.Join(',', accountIds)}&mapIdList={string.Join(',', mapIds)}",
             MapRecordArrayJsonContext.Default.MapRecordArray, cancellationToken);
     }
 
-    public async Task<string> GetAccountDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
+    public virtual async Task<string> GetAccountDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
         return await GetAsync($"accounts/displayNames/?accountIdList={string.Join(',', accountIds)}", cancellationToken);
     }

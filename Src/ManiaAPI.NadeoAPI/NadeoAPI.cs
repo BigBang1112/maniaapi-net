@@ -10,7 +10,7 @@ namespace ManiaAPI.NadeoAPI;
 
 public interface INadeoAPI : IDisposable
 {
-    Task AuthorizeAsync(string login, string password, CancellationToken cancellationToken = default);
+    Task AuthorizeAsync(string login, string password, AuthorizationMethod method = AuthorizationMethod.DedicatedServer, CancellationToken cancellationToken = default);
     ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default);
 }
 
