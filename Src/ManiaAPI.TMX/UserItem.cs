@@ -3,7 +3,7 @@
 namespace ManiaAPI.TMX;
 
 [Fields]
-public record UserItem : IItem
+public sealed record UserItem : IItem
 {
     public long UserId { get; set; }
     public string Name { get; set; } = default!;

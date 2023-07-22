@@ -2,7 +2,7 @@
 
 namespace ManiaAPI.TMX;
 
-public class ItemCollection<T> where T : IItem
+public sealed class ItemCollection<T> where T : IItem
 {
     [JsonPropertyName("More")]
     public bool HasMoreItems { get; set; }

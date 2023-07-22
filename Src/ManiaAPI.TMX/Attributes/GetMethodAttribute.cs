@@ -3,7 +3,7 @@
 namespace ManiaAPI.TMX.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
-class GetMethodAttribute<TJsonContext> : Attribute where TJsonContext : JsonSerializerContext
+sealed class GetMethodAttribute<TJsonContext> : Attribute where TJsonContext : JsonSerializerContext
 {
     public string Route { get; }
 

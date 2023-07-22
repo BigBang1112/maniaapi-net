@@ -4,7 +4,7 @@ using TmEssentials;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public record ReplayItem : IItem
+public sealed record ReplayItem : IItem
 {
     public int ReplayId { get; set; }
     public TimeInt32 ReplayTime { get; set; }

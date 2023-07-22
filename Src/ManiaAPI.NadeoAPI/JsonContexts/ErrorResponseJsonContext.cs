@@ -4,6 +4,6 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 
 [JsonSerializable(typeof(ErrorResponse))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-partial class ErrorResponseJsonContext : JsonSerializerContext
+sealed partial class ErrorResponseJsonContext : JsonSerializerContext
 {
 }

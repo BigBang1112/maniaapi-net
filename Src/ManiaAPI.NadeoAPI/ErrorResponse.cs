@@ -1,3 +1,3 @@
 ﻿namespace ManiaAPI.NadeoAPI;
 
-public record ErrorResponse(string Message);
+public sealed record ErrorResponse(string Message);

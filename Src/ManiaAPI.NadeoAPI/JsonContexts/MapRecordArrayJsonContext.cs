@@ -4,6 +4,6 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 
 [JsonSerializable(typeof(MapRecord[]))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-partial class MapRecordArrayJsonContext : JsonSerializerContext
+sealed partial class MapRecordArrayJsonContext : JsonSerializerContext
 {
 }

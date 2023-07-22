@@ -4,4 +4,4 @@ using TmEssentials;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public record UserReplay(int ReplayId, TimeInt32 ReplayTime, int ReplayScore);
+public sealed record UserReplay(int ReplayId, TimeInt32 ReplayTime, int ReplayScore);

@@ -4,7 +4,7 @@ using TmEssentials;
 
 namespace ManiaAPI.NadeoAPI;
 
-public record RecordScore(
+public sealed record RecordScore(
     [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 Time,
     int Score,
     [property: JsonConverter(typeof(NullableIntConverter))] int? RespawnCount)

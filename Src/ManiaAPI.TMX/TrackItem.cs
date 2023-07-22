@@ -4,7 +4,7 @@ using TmEssentials;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public record TrackItem : IItem
+public sealed record TrackItem : IItem
 {
     public long TrackId { get; set; }
     public string TrackName { get; set; } = default!;

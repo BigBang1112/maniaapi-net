@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI;
 
-public record JwtPayloadNadeoAPI(
+public sealed record JwtPayloadNadeoAPI(
     [property: JsonPropertyName("jti")] string JwtId,
     [property: JsonPropertyName("aud")] string Audience,
     [property: JsonPropertyName("iat"), JsonConverter(typeof(DateTimeOffsetUnixConverter))] DateTimeOffset IssuedAt,

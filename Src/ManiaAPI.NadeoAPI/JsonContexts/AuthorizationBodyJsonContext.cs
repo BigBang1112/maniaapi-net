@@ -4,6 +4,6 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 
 [JsonSerializable(typeof(AuthorizationBody))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-partial class AuthorizationBodyJsonContext : JsonSerializerContext
+sealed partial class AuthorizationBodyJsonContext : JsonSerializerContext
 {
 }

@@ -5,7 +5,7 @@ using TmEssentials;
 
 namespace ManiaAPI.TMX.Converters;
 
-public class TimeInt32Converter : JsonConverter<TimeInt32>
+sealed class TimeInt32Converter : JsonConverter<TimeInt32>
 {
     public override TimeInt32 Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

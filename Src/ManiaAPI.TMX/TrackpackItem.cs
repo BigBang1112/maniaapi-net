@@ -3,7 +3,7 @@
 namespace ManiaAPI.TMX;
 
 [Fields]
-public record TrackpackItem : IItem
+public sealed record TrackpackItem : IItem
 {
     public long PackId { get; set; }
     public string PackName { get; set; } = default!;

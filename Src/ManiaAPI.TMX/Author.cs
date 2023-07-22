@@ -3,4 +3,4 @@
 namespace ManiaAPI.TMX;
 
 [Fields]
-public record Author(User User, string Role);
+public sealed record Author(User User, string Role);
