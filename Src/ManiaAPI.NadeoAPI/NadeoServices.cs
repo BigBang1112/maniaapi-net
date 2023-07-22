@@ -1,4 +1,6 @@
-﻿namespace ManiaAPI.NadeoAPI;
+﻿using ManiaAPI.NadeoAPI.JsonContexts;
+
+namespace ManiaAPI.NadeoAPI;
 
 public interface INadeoServices : INadeoAPI
 {
@@ -8,25 +10,25 @@ public interface INadeoServices : INadeoAPI
 
 public class NadeoServices : NadeoAPI, INadeoServices
 {
-    private const string BaseUrl = "https://prod.trackmania.core.nadeo.online/";
+    public override string Audience => nameof(NadeoServices);
 
-    public NadeoServices(bool automaticallyAuthorize = true) : base(BaseUrl, automaticallyAuthorize)
+    public NadeoServices(HttpClient client, bool automaticallyAuthorize = true) : base(client, automaticallyAuthorize)
     {
-
+        client.BaseAddress = new Uri("https://prod.trackmania.core.nadeo.online/");
     }
 
-    public NadeoServices(HttpClientHandler handler, bool automaticallyAuthorize = true) : base(handler, BaseUrl, automaticallyAuthorize)
+    public NadeoServices(bool automaticallyAuthorize = true) : this(new HttpClient(), automaticallyAuthorize)
     {
-
     }
 
     public async Task<MapRecord[]> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
     {
-        return await GetApiAsync<MapRecord[]>($"mapRecords/?accountIdList={string.Join(',', accountIds)}&mapIdList={string.Join(',', mapIds)}", cancellationToken);
+        return await GetJsonAsync($"mapRecords/?accountIdList={string.Join(',', accountIds)}&mapIdList={string.Join(',', mapIds)}",
+            MapRecordArrayJsonContext.Default.MapRecordArray, cancellationToken);
     }
 
     public async Task<string> GetAccountDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
-        return await GetApiAsync<string>($"accounts/displayNames/?accountIdList={string.Join(',', accountIds)}", cancellationToken);
+        return await GetAsync($"accounts/displayNames/?accountIdList={string.Join(',', accountIds)}", cancellationToken);
     }
 }

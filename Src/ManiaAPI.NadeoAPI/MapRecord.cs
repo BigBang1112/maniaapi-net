@@ -3,7 +3,7 @@
 namespace ManiaAPI.NadeoAPI;
 
 public record MapRecord(Guid AccountId,
-                        string FileName,
+                        [property: JsonPropertyName("filename")] string FileName,
                         string GameMode,
                         string GameModeCustomData,
                         Guid MapId,
@@ -12,7 +12,7 @@ public record MapRecord(Guid AccountId,
                         RecordScore RecordScore,
                         bool Removed,
                         Guid? ScopeId,
-                        string ScopeName,
+                        string ScopeType,
                         DateTimeOffset Timestamp,
                         string Url)
 {
