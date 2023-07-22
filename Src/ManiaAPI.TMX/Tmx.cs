@@ -49,9 +49,22 @@ public partial class TMX : ITMX, IClient
     {
         public required long TrackId { get; init; }
         public int? Count { get; init; }
+
+        /// <summary>
+        /// After a certain replay ID.
+        /// </summary>
         public long? After { get; init; }
+
+        /// <summary>
+        /// Before a certain replay ID.
+        /// </summary>
         public long? Before { get; init; }
+
+        /// <summary>
+        /// Like <see cref="After"/>, but includes the specified replay ID as well.
+        /// </summary>
         public long? From { get; init; }
+
         [AsNumber] public bool? Best { get; init; }
         public long? UserId { get; init; }
     }
@@ -75,7 +88,11 @@ public partial class TMX : ITMX, IClient
         /// </summary>
         public long? Before { get; init; }
 
+        /// <summary>
+        /// Like <see cref="After"/>, but includes the specified track ID as well.
+        /// </summary>
         public long? From { get; init; }
+
         public long[]? Id { get; init; }
         public string[]? UId { get; init; }
         public string? Name { get; init; }
@@ -117,8 +134,20 @@ public partial class TMX : ITMX, IClient
     {
         public int? Order1 { get; init; }
         public int? Count { get; init; }
+
+        /// <summary>
+        /// After a certain user ID.
+        /// </summary>
         public long? After { get; init; }
+
+        /// <summary>
+        /// Before a certain user ID.
+        /// </summary>
         public long? Before { get; init; }
+
+        /// <summary>
+        /// Like <see cref="After"/>, but includes the specified user ID as well.
+        /// </summary>
         public long? From { get; init; }
         public int? LbId { get; init; }
         public int? LbEnv { get; init; }
@@ -132,9 +161,22 @@ public partial class TMX : ITMX, IClient
     {
         public int? Order1 { get; init; }
         public int? Count { get; init; }
+
+        /// <summary>
+        /// After a certain trackpack ID.
+        /// </summary>
         public long? After { get; init; }
+
+        /// <summary>
+        /// Before a certain trackpack ID.
+        /// </summary>
         public long? Before { get; init; }
+
+        /// <summary>
+        /// Like <see cref="After"/>, but includes the specified trackpack ID as well.
+        /// </summary>
         public long? From { get; init; }
+
         public long[]? Id { get; init; }
         public string? Name { get; init; }
         public string? Creator { get; init; }
@@ -148,9 +190,22 @@ public partial class TMX : ITMX, IClient
     {
         public int? Order1 { get; init; }
         public int? Count { get; init; }
+
+        /// <summary>
+        /// After a certain user ID.
+        /// </summary>
         public long? After { get; init; }
+
+        /// <summary>
+        /// Before a certain user ID.
+        /// </summary>
         public long? Before { get; init; }
+
+        /// <summary>
+        /// Like <see cref="After"/>, but includes the specified user ID as well.
+        /// </summary>
         public long? From { get; init; }
+
         public long[]? Id { get; init; }
         public string? Name { get; init; }
         public long[]? MxId { get; init; }
