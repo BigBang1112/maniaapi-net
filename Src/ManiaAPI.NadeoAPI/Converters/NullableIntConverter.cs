@@ -12,7 +12,7 @@ sealed class NullableIntConverter : JsonConverter<int?>
 
         var number = reader.GetInt64();
 
-        if (number == uint.MaxValue)
+        if (number == uint.MaxValue || number == -1)
         {
             return null;
         }

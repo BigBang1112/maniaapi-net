@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.NadeoAPI.JsonContexts;
+using System.Text.RegularExpressions;
 
 namespace ManiaAPI.NadeoAPI;
 
@@ -11,6 +12,10 @@ public interface INadeoLiveServices : INadeoAPI
     Task<MedalRecordCollection> GetMapMedalRecordsAsync(string mapUid, string groupId, CancellationToken cancellationToken = default);
     Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, int length = 10, int offset = 0, bool onlyWorld = true, CancellationToken cancellationToken = default);
     Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, string groupId, int length = 10, int offset = 0, bool onlyWorld = true, CancellationToken cancellationToken = default);
+    Task<TrackOfTheDayCollection> GetTrackOfTheDaysAsync(int length, int offset = 0, bool royal = false, CancellationToken cancellationToken = default);
+    Task<TrackOfTheDayInfo> GetTrackOfTheDayInfoAsync(string mapUid, CancellationToken cancellationToken = default);
+    Task<CampaignCollection> GetCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
+    Task<SeasonPlayerRankingCollection> GetPlayerSeasonRankingsAsync(Guid accountId, string groupId, CancellationToken cancellationToken = default);
 }
 
 public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
@@ -69,5 +74,28 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         return await GetJsonAsync($"token/leaderboard/group/Personal_Best/map/{mapUid}/medals",
             NadeoAPIJsonContext.Default.MedalRecordCollection, cancellationToken);
+    }
+
+    public virtual async Task<TrackOfTheDayCollection> GetTrackOfTheDaysAsync(int length, int offset = 0, bool royal = false, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/campaign/month?length={length}&offset={offset}{(royal ? "&royal=true" : "")}",
+            NadeoAPIJsonContext.Default.TrackOfTheDayCollection, cancellationToken);
+    }
+
+    public virtual async Task<TrackOfTheDayInfo> GetTrackOfTheDayInfoAsync(string mapUid, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"campaign/map/{mapUid}", NadeoAPIJsonContext.Default.TrackOfTheDayInfo, cancellationToken);
+    }
+
+    public virtual async Task<CampaignCollection> GetCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/campaign/official?offset={offset}&length={length}",
+            NadeoAPIJsonContext.Default.CampaignCollection, cancellationToken);
+    }
+
+    public virtual async Task<SeasonPlayerRankingCollection> GetPlayerSeasonRankingsAsync(Guid accountId, string groupId, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/leaderboard/group/{groupId}?accountId={accountId}",
+            NadeoAPIJsonContext.Default.SeasonPlayerRankingCollection, cancellationToken);
     }
 }

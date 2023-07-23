@@ -40,15 +40,14 @@ public class MethodGenerator : ISourceGenerator
                     continue;
                 }
 
-                var jsonContextSymbol = att.AttributeClass.TypeArguments[0];
                 var route = att.ConstructorArguments[0].Value as string ?? throw new Exception("Route is null");
 
-                context.AddSource($"{clientSymbol.Name}.{symbol.Name}.cs", GeneratePartialMethods(clientSymbol, symbol, jsonContextSymbol, route));
+                context.AddSource($"{clientSymbol.Name}.{symbol.Name}.cs", GeneratePartialMethods(clientSymbol, symbol, route));
             }
         }
     }
 
-    private string GeneratePartialMethods(INamedTypeSymbol clientSymbol, IMethodSymbol symbol, ITypeSymbol jsonContextSymbol, string route)
+    private string GeneratePartialMethods(INamedTypeSymbol clientSymbol, IMethodSymbol symbol, string route)
     {
         var sb = new StringBuilder();
 
@@ -105,17 +104,26 @@ public class MethodGenerator : ISourceGenerator
         sb.AppendLine();
         sb.AppendLine("        response.EnsureSuccessStatusCode();");
         sb.AppendLine();
-        sb.Append("        return await response.Content.ReadFromJsonAsync(");
+        sb.Append("        return await response.Content.ReadFromJsonAsync(JsonContexts.TMXJsonContext.Default.");
 
-        if (jsonContextSymbol is not null)
+        var returnSymbol = symbol.ReturnType;
+
+        if (returnSymbol.Name == "Task")
         {
-            sb.Append(jsonContextSymbol);
-            sb.AppendLine(".TypeInfo, cancellationToken) ?? new();");
+            returnSymbol = (returnSymbol as INamedTypeSymbol)?.TypeArguments[0] ?? throw new Exception("This should not happen");
         }
-        else
+
+        sb.Append(returnSymbol.Name);
+
+        if (returnSymbol is INamedTypeSymbol namedReturnSymbol)
         {
-            sb.AppendLine("cancellationToken: cancellationToken) ?? new();");
+            foreach (var typeArg in namedReturnSymbol.TypeArguments)
+            {
+                sb.Append(typeArg.Name);
+            }
         }
+
+        sb.AppendLine(", cancellationToken) ?? new();");
 
         sb.AppendLine("    }");
         sb.AppendLine("}");
