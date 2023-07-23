@@ -12,7 +12,7 @@ public abstract class MasterServer : IDisposable
 
     protected MasterServer() : this(new HttpClient()) { }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         Client.Dispose();
         GC.SuppressFinalize(this);
