@@ -14,6 +14,4 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 [JsonSerializable(typeof(TopLeaderboardCollection))]
 [JsonSerializable(typeof(UbisoftAuthenticationTicket))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-sealed partial class NadeoAPIJsonContext : JsonSerializerContext
-{
-}
+sealed partial class NadeoAPIJsonContext : JsonSerializerContext { }

@@ -1,4 +1,6 @@
 ﻿using ManiaAPI.TMX.Attributes;
+using ManiaAPI.TMX.Converters;
+using System.Text.Json.Serialization;
 using TmEssentials;
 
 namespace ManiaAPI.TMX;
@@ -7,7 +9,7 @@ namespace ManiaAPI.TMX;
 public sealed record ReplayItem : IItem
 {
     public int ReplayId { get; set; }
-    public TimeInt32 ReplayTime { get; set; }
+    [JsonConverter(typeof(TimeInt32Converter))] public TimeInt32 ReplayTime { get; set; }
     public int ReplayScore { get; set; }
     public int ReplayRespawns { get; set; }
     public DateTimeOffset ReplayAt { get; set; }

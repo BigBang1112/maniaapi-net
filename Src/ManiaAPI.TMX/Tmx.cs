@@ -1,5 +1,4 @@
 ﻿using ManiaAPI.TMX.Attributes;
-using ManiaAPI.TMX.JsonContexts;
 
 namespace ManiaAPI.TMX;
 
@@ -69,7 +68,7 @@ public partial class TMX : ITMX, IClient
         public long? UserId { get; init; }
     }
 
-    [GetMethod<ItemCollection_ReplayItem>("api/replays")]
+    [GetMethod("api/replays")]
     public virtual partial Task<ItemCollection<ReplayItem>> GetReplaysAsync(GetReplaysParameters parameters, CancellationToken cancellationToken = default);
 
     [Parameters<TrackItem>]
@@ -126,7 +125,7 @@ public partial class TMX : ITMX, IClient
         public TrackOrder? Order2 { get; init; } // no longer?
     }
 
-    [GetMethod<ItemCollection_TrackItem>("api/tracks")]
+    [GetMethod("api/tracks")]
     public virtual partial Task<ItemCollection<TrackItem>> SearchTracksAsync(SearchTracksParameters parameters, CancellationToken cancellationToken = default);
 
     [Parameters<LeaderboardItem>]
@@ -153,7 +152,7 @@ public partial class TMX : ITMX, IClient
         public int? LbEnv { get; init; }
     }
 
-    [GetMethod<ItemCollection_LeaderboardItem>("api/leaderboards")]
+    [GetMethod("api/leaderboards")]
     public virtual partial Task<ItemCollection<LeaderboardItem>> SearchLeaderboardsAsync(SearchLeaderboardsParameters parameters, CancellationToken cancellationToken = default);
 
     [Parameters<TrackpackItem>]
@@ -182,7 +181,7 @@ public partial class TMX : ITMX, IClient
         public string? Creator { get; init; }
     }
 
-    [GetMethod<ItemCollection_TrackpackItem>("api/trackpacks")]
+    [GetMethod("api/trackpacks")]
     public virtual partial Task<ItemCollection<TrackpackItem>> SearchTrackpacksAsync(SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
 
     [Parameters<UserItem>]
@@ -221,7 +220,7 @@ public partial class TMX : ITMX, IClient
         [AsNumber] public bool? InModerators { get; init; }
     }
 
-    [GetMethod<ItemCollection_UserItem>("api/users")]
+    [GetMethod("api/users")]
     public virtual partial Task<ItemCollection<UserItem>> SearchUsersAsync(SearchUsersParameters parameters, CancellationToken cancellationToken = default);
 
     public string GetTrackGbxUrl(long trackId) => $"{Client.BaseAddress}trackgbx/{trackId}";

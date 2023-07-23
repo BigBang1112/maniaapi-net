@@ -1,9 +1,7 @@
-﻿using System.Text.Json.Serialization;
-
-namespace ManiaAPI.TMX.Attributes;
+﻿namespace ManiaAPI.TMX.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
-sealed class GetMethodAttribute<TJsonContext> : Attribute where TJsonContext : JsonSerializerContext
+sealed class GetMethodAttribute : Attribute
 {
     public string Route { get; }
 

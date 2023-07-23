@@ -1,4 +1,6 @@
 ﻿using ManiaAPI.TMX.Attributes;
+using ManiaAPI.TMX.Converters;
+using System.Text.Json.Serialization;
 using TmEssentials;
 
 namespace ManiaAPI.TMX;
@@ -9,11 +11,11 @@ public sealed record TrackItem : IItem
     public long TrackId { get; set; }
     public string TrackName { get; set; } = default!;
     public string UId { get; set; } = default!;
-    public TimeInt32 AuthorTime { get; set; }
+    [JsonConverter(typeof(TimeInt32Converter))] public TimeInt32 AuthorTime { get; set; }
     public int AuthorScore { get; set; }
-    public TimeInt32 GoldTarget { get; set; }
-    public TimeInt32 SilverTarget { get; set; }
-    public TimeInt32 BronzeTarget { get; set; }
+    [JsonConverter(typeof(TimeInt32Converter))] public TimeInt32 GoldTarget { get; set; }
+    [JsonConverter(typeof(TimeInt32Converter))] public TimeInt32 SilverTarget { get; set; }
+    [JsonConverter(typeof(TimeInt32Converter))] public TimeInt32 BronzeTarget { get; set; }
     public User Uploader { get; set; } = default!;
     public DateTimeOffset UploadedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
