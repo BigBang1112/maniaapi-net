@@ -20,6 +20,7 @@ public abstract class NadeoAPI : INadeoAPI
     private string? refreshToken;
 
     public JwtPayloadNadeoAPI? JWT { get; private set; }
+    public UbisoftAuthenticationTicket? UbisoftTicket { get; private set; }
 
     public DateTimeOffset? RefreshAt => JWT?.RefreshAt;
     public DateTimeOffset? ExpirationTime => JWT?.ExpirationTime;
@@ -42,15 +43,40 @@ public abstract class NadeoAPI : INadeoAPI
         var authenticationValue = $"{login}:{password}";
         var encodedAuthenticationValue = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationValue));
 
-        var payload = new AuthorizationBody(Audience);
-
-        using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/basic")
+        if (method == AuthorizationMethod.UbisoftAccount)
         {
-            Headers = { Authorization = new AuthenticationHeaderValue("Basic", encodedAuthenticationValue) },
-            Content = new StringContent(JsonSerializer.Serialize(payload, AuthorizationBodyJsonContext.Default.AuthorizationBody), Encoding.UTF8, "application/json")
+            using var ubiRequest = new HttpRequestMessage(HttpMethod.Post, "https://public-ubiservices.ubi.com/v3/profiles/sessions")
+            {
+                Headers = { Authorization = new AuthenticationHeaderValue("Basic", encodedAuthenticationValue) },
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            ubiRequest.Headers.Add("Ubi-AppId", "86263886-327a-4328-ac69-527f0d20a237");
+
+            using var ubiResponse = await Client.SendAsync(ubiRequest, cancellationToken);
+
+            UbisoftTicket = await ubiResponse.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.UbisoftAuthenticationTicket, cancellationToken);
+        }
+
+        var payload = new AuthorizationBody(Audience);
+        var content = new StringContent(JsonSerializer.Serialize(payload, NadeoAPIJsonContext.Default.AuthorizationBody), Encoding.UTF8, "application/json");
+        
+        var authRequest = method switch
+        {
+            AuthorizationMethod.UbisoftAccount => new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/ubiservices")
+            {
+                Headers = { Authorization = new AuthenticationHeaderValue("ubi_v1", $"t={UbisoftTicket?.Ticket ?? throw new Exception("Ticket not available")}") },
+                Content = content
+            },
+            AuthorizationMethod.DedicatedServer => new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/basic")
+            {
+                Headers = { Authorization = new AuthenticationHeaderValue("Basic", encodedAuthenticationValue) },
+                Content = content
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(method), method, null),
         };
 
-        using var response = await Client.SendAsync(message, cancellationToken);
+        using var response = await Client.SendAsync(authRequest, cancellationToken);
 
         await SaveTokenResponseAsync(response, cancellationToken);
     }
@@ -62,7 +88,16 @@ public abstract class NadeoAPI : INadeoAPI
             return;
         }
 
-        var error = await response.Content.ReadFromJsonAsync(ErrorResponseJsonContext.Default.ErrorResponse, cancellationToken);
+        ErrorResponse? error;
+
+        try
+        {
+            error = await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ErrorResponse, cancellationToken);
+        }
+        catch (JsonException)
+        {
+            error = null;
+        }
 
         throw new NadeoAPIResponseException(error, new HttpRequestException(response.ReasonPhrase, inner: null, response.StatusCode));
     }
@@ -75,7 +110,7 @@ public abstract class NadeoAPI : INadeoAPI
         var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 #endif
 
-        (accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(AuthorizationResponseJsonContext.Default.AuthorizationResponse, cancellationToken)
+        (accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.AuthorizationResponse, cancellationToken)
             ?? throw new Exception("This shouldn't be null.");
 
         _ = accessToken ?? throw new Exception("accessToken is null");

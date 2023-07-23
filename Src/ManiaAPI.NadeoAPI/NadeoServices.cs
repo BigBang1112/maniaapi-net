@@ -4,7 +4,7 @@ namespace ManiaAPI.NadeoAPI;
 
 public interface INadeoServices : INadeoAPI
 {
-    Task<string> GetAccountDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
+    Task<Account[]> GetAccountDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<MapRecord[]> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default);
 }
 
@@ -24,11 +24,11 @@ public class NadeoServices : NadeoAPI, INadeoServices
     public virtual async Task<MapRecord[]> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"mapRecords/?accountIdList={string.Join(',', accountIds)}&mapIdList={string.Join(',', mapIds)}",
-            MapRecordArrayJsonContext.Default.MapRecordArray, cancellationToken);
+            NadeoAPIJsonContext.Default.MapRecordArray, cancellationToken);
     }
 
-    public virtual async Task<string> GetAccountDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
+    public virtual async Task<Account[]> GetAccountDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
-        return await GetAsync($"accounts/displayNames/?accountIdList={string.Join(',', accountIds)}", cancellationToken);
+        return await GetJsonAsync($"accounts/displayNames/?accountIdList={string.Join(',', accountIds)}", NadeoAPIJsonContext.Default.AccountArray, cancellationToken);
     }
 }
