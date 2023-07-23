@@ -1,10 +1,8 @@
 ﻿using System.IO.Compression;
-using System.Runtime.InteropServices;
-using TmEssentials;
 
 namespace ManiaAPI.XmlRpc.TMUF;
 
-public class CampaignScores : Scores
+public class CampaignScores : IScores
 {
     public IReadOnlyDictionary<string, CampaignScoresLeaderboard> Maps { get; }
     public IReadOnlyDictionary<string, CampaignScoresMedalZone> MedalZones { get; }
@@ -56,14 +54,14 @@ public class CampaignScores : Scores
                 var zoneName = r.ReadString();
                 var hasRecordUnits = r.ReadBoolean(asByte: true);
 
-                var recordUnits = hasRecordUnits ? ReadRecordsBuffer(r) : Array.Empty<RecordUnit>();
+                var recordUnits = hasRecordUnits ? ScoresReadUtils.ReadRecordsBuffer(r) : Array.Empty<RecordUnit>();
 
-                var (sizeOfRanksInt, sizeOfTimesInt) = ArchiveSizesMask2(r);
+                var (sizeOfRanksInt, sizeOfTimesInt) = ScoresReadUtils.ArchiveSizesMask2(r);
 
                 var highScoreCount = r.ReadInt32();
 
-                var ranks = ReadIntBuffer(r, highScoreCount, sizeOfRanksInt);
-                var times = ReadIntBuffer(r, highScoreCount, sizeOfTimesInt);
+                var ranks = ScoresReadUtils.ReadIntBuffer(r, highScoreCount, sizeOfRanksInt);
+                var times = ScoresReadUtils.ReadIntBuffer(r, highScoreCount, sizeOfTimesInt);
                 var logins = r.ReadArray(highScoreCount, r => r.ReadString());
                 var nicknames = r.ReadArray(highScoreCount, r => r.ReadString());
 
@@ -94,7 +92,7 @@ public class CampaignScores : Scores
             for (var j = 0; j < modeCount; j++)
             {
                 var playMode = (PlayMode)r.ReadByte(); // play mode
-                var medals = ReadRecordsBuffer(r);
+                var medals = ScoresReadUtils.ReadRecordsBuffer(r);
 
                 medalZonesDict.Add(playMode, medals);
             }

@@ -1,8 +1,8 @@
 ﻿namespace ManiaAPI.XmlRpc.TMUF;
 
-public abstract class Scores
+static class ScoresReadUtils
 {    
-    protected static RecordUnit[] ReadRecordsBuffer(GbxBasedReader r)
+    public static RecordUnit[] ReadRecordsBuffer(GbxBasedReader r)
     {
         var (sizeOfScoreInt, sizeOfCountsInt) = ArchiveSizesMask2(r);
 
@@ -30,14 +30,14 @@ public abstract class Scores
         
         return array;
     }
-    
-    protected static (int, int) ArchiveSizesMask2(GbxBasedReader r)
+
+    public static (int, int) ArchiveSizesMask2(GbxBasedReader r)
     {
         var val = r.ReadByte(); // ArchiveSizesMask2
         return ((val & 3) + 1, (val >> 2) + 1);
     }
 
-    protected static int[] ReadIntBuffer(GbxBasedReader r, int count, int sizeOfInt)
+    public static int[] ReadIntBuffer(GbxBasedReader r, int count, int sizeOfInt)
     {
         var array = new int[count];
 
