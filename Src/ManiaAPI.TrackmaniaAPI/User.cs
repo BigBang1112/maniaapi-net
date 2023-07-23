@@ -1,3 +1,3 @@
 ﻿namespace ManiaAPI.TrackmaniaAPI;
 
-public record User(Guid AccountId, string DisplayName);
+public sealed record User(Guid AccountId, string DisplayName);

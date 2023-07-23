@@ -1,4 +1,4 @@
-﻿using ManiaAPI.Base.Converters;
+﻿using ManiaAPI.NadeoAPI.Converters;
 using ManiaAPI.NadeoAPI.JsonContexts;
 using System.Diagnostics;
 using System.Text;

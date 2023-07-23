@@ -2,9 +2,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace ManiaAPI.Base.Converters;
+namespace ManiaAPI.TrackmaniaAPI.Converters;
 
-public class DateTimeOffsetUnixConverter : JsonConverter<DateTimeOffset>
+sealed class DateTimeOffsetUnixConverter : JsonConverter<DateTimeOffset>
 {
     public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
