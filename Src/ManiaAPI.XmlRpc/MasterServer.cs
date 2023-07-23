@@ -4,15 +4,13 @@ public abstract class MasterServer : IDisposable
 {
     public HttpClient Client { get; }
 
-    public MasterServer()
+    protected MasterServer(HttpClient client)
     {
-        Client = new();
+        Client = client;
+        Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (XmlRpc) by BigBang1112");
     }
 
-    public MasterServer(HttpClient httpClient)
-    {
-        Client = httpClient;
-    }
+    protected MasterServer() : this(new HttpClient()) { }
 
     public void Dispose()
     {

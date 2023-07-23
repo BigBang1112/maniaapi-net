@@ -169,7 +169,7 @@ public abstract class NadeoAPI : INadeoAPI
     }
 #endif
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         Client.Dispose();
         GC.SuppressFinalize(this);

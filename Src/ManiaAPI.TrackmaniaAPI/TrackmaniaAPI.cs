@@ -7,7 +7,7 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace ManiaAPI.TrackmaniaAPI;
 
-public interface ITrackmaniaAPI
+public interface ITrackmaniaAPI : IDisposable
 {
     Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default);
     Task AuthorizeAsync(string clientId, string clientSecret, string[] scopes, CancellationToken cancellationToken = default);
@@ -179,5 +179,11 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         await ValidateResponseAsync(response, cancellationToken);
 
         return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+    }
+
+    public virtual void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

@@ -18,7 +18,7 @@
 		<TargetFrameworks>net7.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<LangVersion>10</LangVersion>
+		<LangVersion>11</LangVersion>
 
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/BigBang1112/maniaapi-net</RepositoryUrl>
@@ -31,7 +31,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\ManiaAPI.Base\ManiaAPI.Base.csproj" />
+	  <PackageReference Include="TmEssentials" Version="2.3.3" />
 	</ItemGroup>
 
 </Project>
