@@ -32,7 +32,7 @@ public class NadeoServicesTests
         };
 
         // Act
-        await nadeoServices.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
+        await nadeoServices.AuthorizeAsync(login, password, AuthorizationMethod.DedicatedServer);
 
         // Assert
         var stuff = await nadeoServices.GetPlayerClubTagsAsync(accountList);
