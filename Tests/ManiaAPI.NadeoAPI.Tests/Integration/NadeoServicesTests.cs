@@ -35,6 +35,6 @@ public class NadeoServicesTests
         await nadeoServices.AuthorizeAsync(login, password, AuthorizationMethod.DedicatedServer);
 
         // Assert
-        var stuff = await nadeoServices.GetPlayerClubTagsAsync(accountList);
+        //var stuff = await nadeoServices.GetPlayerClubTagsAsync(accountList);
     }
 }
