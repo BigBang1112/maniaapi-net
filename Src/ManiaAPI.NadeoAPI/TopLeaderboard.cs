@@ -1,3 +1,3 @@
 ﻿namespace ManiaAPI.NadeoAPI;
 
-public record TopLeaderboard(Guid ZoneId, string ZoneName, Record[] Top);
+public sealed record TopLeaderboard(Guid ZoneId, string ZoneName, Record[] Top);

@@ -5,21 +5,6 @@ namespace ManiaAPI.TrackmaniaIO.Tests.Unit;
 
 public class TrackmaniaIOTests
 {
-    // test AddUserAgent
-    [Fact]
-    public void AddUserAgent_Adds_UserAgent()
-    {
-        // Arrange
-        var userAgent = "Test User Agent";
-        var expected = $"ManiaAPI.NET (TrackmaniaIO) by BigBang1112 " + userAgent;
-
-        // Act
-        TrackmaniaIO.AddUserAgent(userAgent);
-
-        // Assert
-        Assert.Equal(expected, TrackmaniaIO.Client.DefaultRequestHeaders.UserAgent.ToString());
-    }
-
     // test GetHeaderNumberValue
     [Fact]
     public void GetHeaderNumberValue_ReturnsLong()

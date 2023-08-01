@@ -6,7 +6,7 @@ namespace ManiaAPI.XmlRpc;
 /// <summary>
 /// A binary reader modified to be compatible with Gbx engine binary serialization techniques.
 /// </summary>
-public class GbxBasedReader : BinaryReader
+sealed class GbxBasedReader : BinaryReader
 {
     private static readonly Encoding encoding = Encoding.UTF8;
 

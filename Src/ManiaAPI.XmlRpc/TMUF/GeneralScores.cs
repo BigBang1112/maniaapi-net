@@ -2,7 +2,7 @@
 
 namespace ManiaAPI.XmlRpc.TMUF;
 
-public class GeneralScores : Scores
+public class GeneralScores : IScores
 {
     public IReadOnlyDictionary<string, Leaderboard> Zones { get; }
 
@@ -31,15 +31,15 @@ public class GeneralScores : Scores
         {
             var zoneName = r.ReadString();
 
-            var recordUnits = ReadRecordsBuffer(r);
+            var recordUnits = ScoresReadUtils.ReadRecordsBuffer(r);
 
-            var (sizeOfRanksInt, sizeOfSkillpointsInt) = ArchiveSizesMask2(r);
+            var (sizeOfRanksInt, sizeOfSkillpointsInt) = ScoresReadUtils.ArchiveSizesMask2(r);
 
             // CGameHighScore array
             var highScoreCount = r.ReadInt32();
 
-            var ranks = ReadIntBuffer(r, highScoreCount, sizeOfRanksInt);
-            var skillpoints = ReadIntBuffer(r, highScoreCount, sizeOfSkillpointsInt);
+            var ranks = ScoresReadUtils.ReadIntBuffer(r, highScoreCount, sizeOfRanksInt);
+            var skillpoints = ScoresReadUtils.ReadIntBuffer(r, highScoreCount, sizeOfSkillpointsInt);
             var logins = r.ReadArray(highScoreCount, r => r.ReadString());
             var nicknames = r.ReadArray(highScoreCount, r => r.ReadString());
 

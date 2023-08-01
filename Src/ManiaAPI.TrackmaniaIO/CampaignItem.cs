@@ -1,30 +1,13 @@
-﻿using ManiaAPI.Base.Converters;
+﻿using ManiaAPI.TrackmaniaIO.Converters;
 using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TrackmaniaIO;
 
-public abstract record CampaignItem : ICampaignItem
+public sealed record CampaignItem(int Id,
+                                  string Name,
+                                  [property: JsonConverter(typeof(DateTimeOffsetUnixConverter))] DateTimeOffset Timestamp,
+                                  [property: JsonPropertyName("mapcount")] int MapCount,
+                                  bool Tracked)
 {
-    public int Id { get; init; }
-    public string Name { get; init; }
-
-    [JsonConverter(typeof(DateTimeOffsetUnixConverter))]
-    public DateTimeOffset Timestamp { get; init; }
-
-    public int MapCount { get; init; }
-
-    public CampaignItem(int id, string name, DateTimeOffset timestamp, int mapCount)
-    {
-        Id = id;
-        Name = name;
-        Timestamp = timestamp;
-        MapCount = mapCount;
-    }
-
-    public abstract Task<ICampaign> GetDetailsAsync(CancellationToken cancellationToken = default);
-
-    public override string ToString()
-    {
-        return Name;
-    }
+    public override string ToString() => Name;
 }

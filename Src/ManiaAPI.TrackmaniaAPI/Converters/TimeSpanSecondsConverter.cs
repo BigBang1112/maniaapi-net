@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TrackmaniaAPI.Converters;
 
-public class TimeSpanSecondsConverter : JsonConverter<TimeSpan>
+sealed class TimeSpanSecondsConverter : JsonConverter<TimeSpan>
 {
     public override TimeSpan Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

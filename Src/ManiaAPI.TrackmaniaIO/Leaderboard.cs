@@ -1,3 +1,3 @@
 ﻿namespace ManiaAPI.TrackmaniaIO;
 
-public record Leaderboard(Record[] Tops);
+public sealed record Leaderboard(Record[] Tops);

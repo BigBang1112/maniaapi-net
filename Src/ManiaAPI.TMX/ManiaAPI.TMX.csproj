@@ -9,14 +9,16 @@
 		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, tmx, mx, exchange</PackageTags>
+		<IsTrimmable>true</IsTrimmable>
+		<IsAotCompatible>true</IsAotCompatible>
 
-		<Version>1.0.9</Version>
+		<Version>2.0.0-alpha1</Version>
 		<PackageReleaseNotes></PackageReleaseNotes>
 
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net7.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<LangVersion>10</LangVersion>
+		<LangVersion>11</LangVersion>
 
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/BigBang1112/maniaapi-net</RepositoryUrl>
@@ -29,7 +31,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\ManiaAPI.Base\ManiaAPI.Base.csproj" />
+	  <PackageReference Include="TmEssentials" Version="2.3.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Generators\ManiaAPI.TMX.Generators\ManiaAPI.TMX.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 </Project>

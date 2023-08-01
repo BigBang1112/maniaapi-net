@@ -1,3 +1,6 @@
-﻿namespace ManiaAPI.TMX;
+﻿using ManiaAPI.TMX.Attributes;
 
-public record User(int UserId, string Name);
+namespace ManiaAPI.TMX;
+
+[Fields]
+public sealed record User(int UserId, string Name);

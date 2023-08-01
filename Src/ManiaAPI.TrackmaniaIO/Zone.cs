@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.TrackmaniaIO;
 
-public record Zone(string Name, string Flag, Zone Parent)
+public sealed record Zone(string Name, string Flag, Zone Parent)
 {
     public override string ToString()
     {

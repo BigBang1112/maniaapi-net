@@ -2,6 +2,9 @@
 
 public enum TmxSite
 {
-    United,
-    TMNForever
+    TMUF,
+    TMNF,
+    Nations,
+    Sunrise,
+    Original
 }
