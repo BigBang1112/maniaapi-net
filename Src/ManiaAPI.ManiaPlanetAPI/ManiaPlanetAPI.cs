@@ -106,6 +106,11 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         return await GetJsonAsync("me", ManiaPlanetAPIJsonContext.Default.User, cancellationToken);
     }
 
+    public virtual async Task<Title[]> GetTitlesAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync("me/titles/created", ManiaPlanetAPIJsonContext.Default.TitleArray, cancellationToken);
+    }
+
     protected internal async Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime && clientId is not null && clientSecret is not null)
