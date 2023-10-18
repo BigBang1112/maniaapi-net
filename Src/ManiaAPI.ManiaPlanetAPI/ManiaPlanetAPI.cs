@@ -20,6 +20,8 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     private string? clientId;
     private string? clientSecret;
 
+    public const string BaseAddress = "https://maniaplanet.com/webservices/";
+
     public JwtPayloadManiaPlanetAPI? Payload { get; private set; }
 
     public DateTimeOffset? ExpirationTime => Payload?.ExpirationTime;
@@ -35,9 +37,6 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     public ManiaPlanetAPI(HttpClient client, bool automaticallyAuthorize = true)
     {
         Client = client;
-        Client.BaseAddress = new Uri("https://maniaplanet.com/webservices/");
-        Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (TrackmaniaAPI) by BigBang1112");
-
         AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
@@ -60,7 +59,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             { "scope", string.Join("%20", scopes) }
         };
 
-        using var response = await Client.PostAsync("access_token", new FormUrlEncodedContent(values), cancellationToken);
+        using var response = await Client.PostAsync($"{BaseAddress}/access_token", new FormUrlEncodedContent(values), cancellationToken);
 
 #if DEBUG
         var stringResult = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -71,8 +70,6 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         (_, _, accessToken) = await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new Exception("This shouldn't be null.");
 
         Payload = JwtPayloadManiaPlanetAPI.DecodeFromAccessToken(accessToken);
-
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         this.clientId = clientId;
         this.clientSecret = clientSecret;
@@ -116,7 +113,14 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             await AuthorizeAsync(clientId, clientSecret, cancellationToken);
         }
 
-        using var response = await Client.GetAsync(endpoint, cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
+
+        if (accessToken is not null)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        }
+
+        using var response = await Client.SendAsync(request, cancellationToken);
 
         Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
