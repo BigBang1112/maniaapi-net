@@ -27,13 +27,13 @@ public abstract class NadeoAPI : INadeoAPI
 
     public HttpClient Client { get; }
     public bool AutomaticallyAuthorize { get; }
+
+    public abstract string BaseAddress { get; }
     public abstract string Audience { get; }
 
     protected NadeoAPI(HttpClient client, bool automaticallyAuthorize = true)
     {
         Client = client;
-        Client.DefaultRequestHeaders.Add("User-Agent", $"ManiaAPI.NET ({Audience}) by BigBang1112");
-
         AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
@@ -117,8 +117,6 @@ public abstract class NadeoAPI : INadeoAPI
         _ = refreshToken ?? throw new Exception("refreshToken is null");
 
         JWT = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);
-
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
     }
 
     public virtual async ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default)
@@ -147,7 +145,14 @@ public abstract class NadeoAPI : INadeoAPI
             await RefreshAsync(cancellationToken);
         }
 
-        using var response = await Client.GetAsync(endpoint, cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
+
+        if (accessToken is not null)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
+        }
+
+        using var response = await Client.SendAsync(request, cancellationToken);
 
         Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
@@ -159,7 +164,14 @@ public abstract class NadeoAPI : INadeoAPI
 #if DEBUG
     protected async Task<string> GetAsync(string endpoint, CancellationToken cancellationToken)
     {
-        using var response = await Client.GetAsync(endpoint, cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
+
+        if (accessToken is not null)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
+        }
+
+        using var response = await Client.SendAsync(request, cancellationToken);
 
         var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 

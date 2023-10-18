@@ -21,10 +21,10 @@ public interface INadeoLiveServices : INadeoAPI
 public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
 {
     public override string Audience => nameof(NadeoLiveServices);
+    public override string BaseAddress => "https://live-services.trackmania.nadeo.live/api";
 
     public NadeoLiveServices(HttpClient client, bool automaticallyAuthorize = true) : base(client, automaticallyAuthorize)
     {
-        client.BaseAddress = new Uri("https://live-services.trackmania.nadeo.live/api/");
     }
 
     public NadeoLiveServices(bool automaticallyAuthorize = true) : this(new HttpClient(), automaticallyAuthorize)
