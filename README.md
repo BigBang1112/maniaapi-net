@@ -1,5 +1,7 @@
 # ManiaAPI.NET
 
+**The project is currently being rewritten for V2 to support even more testability and injectability.** Stay tuned.
+
 Currently a wrapper for these web APIs:
 
 - Nadeo API (official TM2020 ingame API)
