@@ -12,7 +12,16 @@ public interface IManiaPlanetAPI : IDisposable
 {
     Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default);
     Task AuthorizeAsync(string clientId, string clientSecret, string[] scopes, CancellationToken cancellationToken = default);
-    Task<User> GetUserAsync(CancellationToken cancellationToken = default);
+    Task<DedicatedAccount[]> GetDedicatedAccountsAsync(CancellationToken cancellationToken = default);
+    Task<string> GetEmailAsync(CancellationToken cancellationToken = default);
+    Task<Map[]> GetMapsAsync(CancellationToken cancellationToken = default);
+    Task<Player> GetPlayerAsync(CancellationToken cancellationToken = default);
+    Task<OnlineServer[]> GetOnlineServersAsync(string orderBy = "playerCount", string[]? titleUids = null, string[]? environments = null, string? scriptName = null, string? search = null, string? zone = null, bool onlyPublic = false, bool onlyPrivate = false, bool onlyLobby = false, bool excludeLobby = true, int offset = 0, int length = 10, CancellationToken cancellationToken = default);
+    Task<Title?> GetTitleByUidAsync(string uid, CancellationToken cancellationToken = default);
+    Task<Title[]> GetTitlesAsync(CancellationToken cancellationToken = default);
+    Task<Title[]> GetTitlesAsync(string[]? filters = null, string? orderBy = "onlinePlayers", int offset = 0, int length = 10, CancellationToken cancellationToken = default);
+    Task<TitleScript[]> GetTitleScriptsAsync(string uid, CancellationToken cancellationToken = default);
+    Task<IEnumerable<string>> GetZonesAsync(CancellationToken cancellationToken = default);
 }
 
 public class ManiaPlanetAPI : IManiaPlanetAPI
@@ -20,6 +29,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     private string? accessToken;
     private string? clientId;
     private string? clientSecret;
+    private AuthenticationHeaderValue? authorization;
 
     public const string BaseAddress = "https://maniaplanet.com/webservices/";
 
@@ -72,8 +82,11 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
         Payload = JwtPayloadManiaPlanetAPI.DecodeFromAccessToken(accessToken);
 
+        // set afterwards in case the task cancels
         this.clientId = clientId;
         this.clientSecret = clientSecret;
+        
+        authorization = new AuthenticationHeaderValue("Bearer", accessToken);
     }
 
     public async Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
@@ -102,9 +115,9 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         throw new ManiaPlanetAPIResponseException(error, new HttpRequestException(response.ReasonPhrase, inner: null, response.StatusCode));
     }
 
-    public virtual async Task<User> GetUserAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<Player> GetPlayerAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("me", ManiaPlanetAPIJsonContext.Default.User, cancellationToken);
+        return await GetJsonAsync("me", ManiaPlanetAPIJsonContext.Default.Player, cancellationToken);
     }
 
     public virtual async Task<Title[]> GetTitlesAsync(CancellationToken cancellationToken = default)
@@ -112,9 +125,9 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         return await GetJsonAsync("me/titles/created", ManiaPlanetAPIJsonContext.Default.TitleArray, cancellationToken);
     }
 
-    public virtual async Task<DedicatedServer[]> GetDedicatedServersAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<DedicatedAccount[]> GetDedicatedAccountsAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("me/dedicated_servers", ManiaPlanetAPIJsonContext.Default.DedicatedServerArray, cancellationToken);
+        return await GetJsonAsync("me/dedicated", ManiaPlanetAPIJsonContext.Default.DedicatedAccountArray, cancellationToken);
     }
 
     public virtual async Task<Map[]> GetMapsAsync(CancellationToken cancellationToken = default)
@@ -140,7 +153,12 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         return zones.Select(x => x.Path);
     }
 
-    public virtual async Task<Title[]> GetTitlesAsync(string[]? filters = null, string? orderBy = "onlinePlayers", int offset = 0, int length = 10, CancellationToken cancellationToken = default)
+    public virtual async Task<Title[]> GetTitlesAsync(
+        string[]? filters = null, 
+        string? orderBy = "onlinePlayers", 
+        int offset = 0, 
+        int length = 10, 
+        CancellationToken cancellationToken = default)
     {
         var sb = new StringBuilder("titles");
         var first = true;
@@ -150,15 +168,17 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             sb.Append(first ? '?' : '&');
             first = false;
 
-            sb.Append($"filters[]={string.Join(",", filters)}");
+            sb.Append("filters[]=");
+            sb.Append(string.Join(",", filters));
         }
 
-        if (orderBy is not null and "onlinePlayers")
+        if (orderBy is not null and not "onlinePlayers")
         {
             sb.Append(first ? '?' : '&');
             first = false;
 
-            sb.Append($"orderBy={orderBy}");
+            sb.Append($"orderBy=");
+            sb.Append(orderBy);
         }
 
         if (offset != 0)
@@ -166,15 +186,16 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             sb.Append(first ? '?' : '&');
             first = false;
 
-            sb.Append($"offset={offset}");
+            sb.Append($"offset=");
+            sb.Append(offset);
         }
 
         if (length != 10)
         {
             sb.Append(first ? '?' : '&');
-            first = false;
 
-            sb.Append($"length={length}");
+            sb.Append($"length=");
+            sb.Append(length);
         }
 
         return await GetJsonAsync(sb.ToString(), ManiaPlanetAPIJsonContext.Default.TitleArray, cancellationToken);
@@ -183,6 +204,136 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     public virtual async Task<Title?> GetTitleByUidAsync(string uid, CancellationToken cancellationToken = default)
     {
         return await GetNullableJsonAsync($"titles/{uid}", ManiaPlanetAPIJsonContext.Default.Title, cancellationToken);
+    }
+
+    public virtual async Task<TitleScript[]> GetTitleScriptsAsync(string uid, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"titles/{uid}/scripts", ManiaPlanetAPIJsonContext.Default.TitleScriptArray, cancellationToken);
+    }
+
+    public virtual async Task<OnlineServer[]> GetOnlineServersAsync(
+        string orderBy = "playerCount",
+        string[]? titleUids = null,
+        string[]? environments = null,
+        string? scriptName = null,
+        string? search = null,
+        string? zone = null,
+        bool onlyPublic = false,
+        bool onlyPrivate = false,
+        bool onlyLobby = false,
+        bool excludeLobby = true,
+        int offset = 0,
+        int length = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var sb = new StringBuilder("servers/online");
+
+        var first = true;
+
+        if (orderBy is not null and not "playerCount")
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append($"orderBy=");
+            sb.Append(orderBy);
+        }
+
+        if (titleUids is not null)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append("titleUids[]=");
+            sb.Append(string.Join(",", titleUids));
+        }
+
+        if (environments is not null)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append("environments[]=");
+            sb.Append(string.Join(",", environments));
+        }
+
+        if (scriptName is not null)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append("scriptName=");
+            sb.Append(scriptName);
+        }
+
+        if (search is not null)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append("search=");
+            sb.Append(search);
+        }
+
+        if (zone is not null)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append("zone=");
+            sb.Append(zone);
+        }
+
+        if (onlyPublic)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append("onlyPublic=1");
+        }
+
+        if (onlyPrivate)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append("onlyPrivate=1");
+        }
+
+        if (onlyLobby)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append("onlyLobby=1");
+        }
+
+        if (!excludeLobby)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append("excludeLobby=0");
+        }
+
+        if (offset != 0)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append("offset=");
+            sb.Append(offset);
+        }
+
+        if (length != 10)
+        {
+            sb.Append(first ? '?' : '&');
+
+            sb.Append("length=");
+            sb.Append(length);
+        }
+
+        return await GetJsonAsync(sb.ToString(), ManiaPlanetAPIJsonContext.Default.OnlineServerArray, cancellationToken);
     }
 
     protected internal async Task<HttpResponseMessage> GetResponseAsync(string endpoint, CancellationToken cancellationToken = default)
@@ -196,7 +347,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
         if (accessToken is not null)
         {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            request.Headers.Authorization = authorization;
         }
 
         var response = await Client.SendAsync(request, cancellationToken);
