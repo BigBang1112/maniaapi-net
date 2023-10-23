@@ -24,6 +24,9 @@ public interface IManiaPlanetAPI : IDisposable
     Task<IEnumerable<string>> GetZonesAsync(CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// ManiaPlanet WebServices API client.
+/// </summary>
 public class ManiaPlanetAPI : IManiaPlanetAPI
 {
     private string? accessToken;
@@ -38,28 +41,38 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     public DateTimeOffset? ExpirationTime => Payload?.ExpirationTime;
 
     public HttpClient Client { get; }
+
+    /// <summary>
+    /// If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.
+    /// This is only considered after calling <see cref="AuthorizeAsync(string, string, string[], CancellationToken)"/>.
+    /// </summary>
     public bool AutomaticallyAuthorize { get; }
 
     /// <summary>
     /// Creates a new instance of the ManiaPlanet API client.
     /// </summary>
-    /// <param name="client">HTTP client.</param>
-    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.</param>
+    /// <param name="client">HTTP client to reuse. It is not intentionally mutated for better usage on backend.</param>
+    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, string[], CancellationToken)"/>.</param>
     public ManiaPlanetAPI(HttpClient client, bool automaticallyAuthorize = true)
     {
         Client = client;
         AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
+    /// <summary>
+    /// Creates a new instance of the ManiaPlanet API client.
+    /// </summary>
+    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, string[], CancellationToken)"/>.</param>
     public ManiaPlanetAPI(bool automaticallyAuthorize = true) : this(new HttpClient(), automaticallyAuthorize) { }
 
     /// <summary>
-    /// Authorizes with the official API using OAuth2 client credentials.
+    /// Authorizes with the API using the OAuth2 client credentials.
     /// </summary>
     /// <param name="clientId">Client ID.</param>
     /// <param name="clientSecret">Client secret.</param>
     /// <param name="scopes">Scopes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
     public virtual async Task AuthorizeAsync(string clientId, string clientSecret, string[] scopes, CancellationToken cancellationToken = default)
     {
         var values = new Dictionary<string, string>
@@ -89,11 +102,24 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         authorization = new AuthenticationHeaderValue("Bearer", accessToken);
     }
 
+    /// <summary>
+    /// Authorizes with the API using the OAuth2 client credentials.
+    /// </summary>
+    /// <param name="clientId">Client ID.</param>
+    /// <param name="clientSecret">Client secret.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
     public async Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
     {
         await AuthorizeAsync(clientId, clientSecret, Array.Empty<string>(), cancellationToken);
     }
 
+    /// <summary>
+    /// Validates the response and throws a specially formatted exception if it is not successful.
+    /// </summary>
+    /// <param name="response">HTTP response.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
     private static async ValueTask ValidateResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         if (response.IsSuccessStatusCode)
