@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization.Metadata;
 using System.Text.Json;
 using ManiaAPI.ManiaPlanetAPI.JsonContexts;
+using System.Text;
 
 namespace ManiaAPI.ManiaPlanetAPI;
 
@@ -116,7 +117,75 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         return await GetJsonAsync("me/dedicated_servers", ManiaPlanetAPIJsonContext.Default.DedicatedServerArray, cancellationToken);
     }
 
-    protected internal async Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    public virtual async Task<Map[]> GetMapsAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync("me/maps", ManiaPlanetAPIJsonContext.Default.MapArray, cancellationToken);
+    }
+
+    public virtual async Task<string> GetEmailAsync(CancellationToken cancellationToken = default)
+    {
+        using var response = await GetResponseAsync("me/email", cancellationToken);
+        return await response.Content.ReadAsStringAsync(cancellationToken);
+    }
+
+    public virtual async Task<Map?> GetMapByUidAsync(string uid, CancellationToken cancellationToken = default)
+    {
+        return await GetNullableJsonAsync($"maps/{uid}", ManiaPlanetAPIJsonContext.Default.Map, cancellationToken);
+    }
+
+    public virtual async Task<IEnumerable<string>> GetZonesAsync(CancellationToken cancellationToken = default)
+    {
+        var zones = await GetJsonAsync("zones", ManiaPlanetAPIJsonContext.Default.ZoneArray, cancellationToken);
+
+        return zones.Select(x => x.Path);
+    }
+
+    public virtual async Task<Title[]> GetTitlesAsync(string[]? filters = null, string? orderBy = "onlinePlayers", int offset = 0, int length = 10, CancellationToken cancellationToken = default)
+    {
+        var sb = new StringBuilder("titles");
+        var first = true;
+
+        if (filters is not null)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append($"filters[]={string.Join(",", filters)}");
+        }
+
+        if (orderBy is not null and "onlinePlayers")
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append($"orderBy={orderBy}");
+        }
+
+        if (offset != 0)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append($"offset={offset}");
+        }
+
+        if (length != 10)
+        {
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append($"length={length}");
+        }
+
+        return await GetJsonAsync(sb.ToString(), ManiaPlanetAPIJsonContext.Default.TitleArray, cancellationToken);
+    }
+
+    public virtual async Task<Title?> GetTitleByUidAsync(string uid, CancellationToken cancellationToken = default)
+    {
+        return await GetNullableJsonAsync($"titles/{uid}", ManiaPlanetAPIJsonContext.Default.Title, cancellationToken);
+    }
+
+    protected internal async Task<HttpResponseMessage> GetResponseAsync(string endpoint, CancellationToken cancellationToken = default)
     {
         if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime && clientId is not null && clientSecret is not null)
         {
@@ -130,13 +199,30 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         }
 
-        using var response = await Client.SendAsync(request, cancellationToken);
+        var response = await Client.SendAsync(request, cancellationToken);
 
         Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
         await ValidateResponseAsync(response, cancellationToken);
 
+        return response;
+    }
+
+    protected internal async Task<T?> GetNullableJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    {
+        using var response = await GetResponseAsync(endpoint, cancellationToken);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return default;
+        }
+
         return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+    }
+
+    protected internal async Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    {
+        return await GetNullableJsonAsync(endpoint, jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
     }
 
     public virtual void Dispose()
