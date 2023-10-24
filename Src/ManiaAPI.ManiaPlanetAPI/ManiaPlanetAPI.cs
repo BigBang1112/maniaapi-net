@@ -181,7 +181,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     public async Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
     {
-        await AuthorizeAsync(clientId, clientSecret, Array.Empty<string>(), cancellationToken);
+        await AuthorizeAsync(clientId, clientSecret, [], cancellationToken);
     }
 
     public async Task RefreshAsync(CancellationToken cancellationToken = default)

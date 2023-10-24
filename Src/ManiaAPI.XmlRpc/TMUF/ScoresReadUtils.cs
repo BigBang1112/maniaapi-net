@@ -43,20 +43,13 @@ static class ScoresReadUtils
 
         for (var i = 0; i < count; i++)
         {
-            switch (sizeOfInt)
+            array[i] = sizeOfInt switch
             {
-                case 1:
-                    array[i] = r.ReadByte();
-                    break;
-                case 2:
-                    array[i] = r.ReadInt16();
-                    break;
-                case 4:
-                    array[i] = r.ReadInt32();
-                    break;
-                default:
-                    throw new ArgumentException($"Invalid sizeOfInt: {sizeOfInt}");
-            }
+                1 => r.ReadByte(),
+                2 => r.ReadInt16(),
+                4 => r.ReadInt32(),
+                _ => throw new ArgumentException($"Invalid sizeOfInt: {sizeOfInt}"),
+            };
         }
 
         return array;
