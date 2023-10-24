@@ -23,11 +23,11 @@ public class TrackmaniaAPITests
 
         await client.AuthorizeAsync(clientId, clientSecret);
 
-        var displayNames = await client.GetDisplayNamesAsync(new Guid[]
-        {
+        var displayNames = await client.GetDisplayNamesAsync(
+        [
             Guid.Parse("6a43df20-cd1a-4b3b-87b9-a6835a9b416d"),
             Guid.Parse("faedcf21-d61a-4305-9ffe-680b2ee5d65e")
-        });
+        ]);
 
         Assert.IsType<Dictionary<Guid, string>>(displayNames);
 
