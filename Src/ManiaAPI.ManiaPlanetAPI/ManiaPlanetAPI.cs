@@ -13,7 +13,14 @@ namespace ManiaAPI.ManiaPlanetAPI;
 /// </summary>
 public interface IManiaPlanetAPI : IDisposable
 {
+    /// <summary>
+    /// HTTP client.
+    /// </summary>
     HttpClient Client { get; }
+
+    /// <summary>
+    /// Time when the access token expires.
+    /// </summary>
     DateTimeOffset? ExpirationTime { get; }
 
     /// <summary>
@@ -40,22 +47,50 @@ public interface IManiaPlanetAPI : IDisposable
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
     Task AuthorizeAsync(string clientId, string clientSecret, string[] scopes, CancellationToken cancellationToken = default);
-    
+
+    /// <summary>
+    /// Refreshes the access token.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
     Task RefreshAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all dedicated server accounts owned by the authorized player.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Dedicated server accounts.</returns>
+    /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
     Task<DedicatedAccount[]> GetDedicatedAccountsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the authorized player's email.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Email.</returns>
+    /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
     Task<string> GetEmailAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets uploaded maps by the authorized player.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Map infos.</returns>
+    /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
     Task<Map[]> GetMapsAsync(CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Gets the player authorized with the API.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Player.</returns>
+    /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
     Task<Player> GetPlayerAsync(CancellationToken cancellationToken = default);
-    Task<OnlineServer[]> GetOnlineServersAsync(string orderBy = "playerCount", string[]? titleUids = null, string[]? environments = null, string? scriptName = null, string? search = null, string? zone = null, bool onlyPublic = false, bool onlyPrivate = false, bool onlyLobby = false, bool excludeLobby = true, int offset = 0, int length = 10, CancellationToken cancellationToken = default);
+    
+    Task<OnlineServer[]> SearchOnlineServersAsync(string orderBy = "playerCount", string[]? titleUids = null, string[]? environments = null, string? scriptName = null, string? search = null, string? zone = null, bool onlyPublic = false, bool onlyPrivate = false, bool onlyLobby = false, bool excludeLobby = true, int offset = 0, int length = 10, CancellationToken cancellationToken = default);
     Task<Title?> GetTitleByUidAsync(string uid, CancellationToken cancellationToken = default);
     Task<Title[]> GetTitlesAsync(CancellationToken cancellationToken = default);
-    Task<Title[]> GetTitlesAsync(string[]? filters = null, string? orderBy = "onlinePlayers", int offset = 0, int length = 10, CancellationToken cancellationToken = default);
+    Task<Title[]> SearchTitlesAsync(string[]? filters = null, string? orderBy = "onlinePlayers", int offset = 0, int length = 10, CancellationToken cancellationToken = default);
     Task<TitleScript[]> GetTitleScriptsAsync(string uid, CancellationToken cancellationToken = default);
     Task<IEnumerable<string>> GetZonesAsync(CancellationToken cancellationToken = default);
 }
@@ -224,7 +259,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         return zones.Select(x => x.Path);
     }
 
-    public virtual async Task<Title[]> GetTitlesAsync(
+    public virtual async Task<Title[]> SearchTitlesAsync(
         string[]? filters = null, 
         string? orderBy = "onlinePlayers", 
         int offset = 0, 
@@ -282,7 +317,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         return await GetJsonAsync($"titles/{uid}/scripts", ManiaPlanetAPIJsonContext.Default.TitleScriptArray, cancellationToken);
     }
 
-    public virtual async Task<OnlineServer[]> GetOnlineServersAsync(
+    public virtual async Task<OnlineServer[]> SearchOnlineServersAsync(
         string orderBy = "playerCount",
         string[]? titleUids = null,
         string[]? environments = null,
