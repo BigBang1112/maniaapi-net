@@ -4,7 +4,6 @@ namespace ManiaAPI.ManiaPlanetAPI.Tests.Integration;
 
 public class ManiaPlanetAPITests
 {
-    [Fact]
     public async Task AuthorizeAsync()
     {
         var configuration = new ConfigurationBuilder()

@@ -13,7 +13,6 @@ public class ManiaPlanetAuthenticationOptions : OAuthOptions
         AuthorizationEndpoint = ManiaPlanetAuthenticationDefaults.AuthorizationEndpoint;
         TokenEndpoint = ManiaPlanetAuthenticationDefaults.TokenEndpoint;
         UserInformationEndpoint = ManiaPlanetAuthenticationDefaults.UserInformationEndpoint;
-        SaveTokens = true;
 
         ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "login");
         ClaimActions.MapJsonKey(ClaimTypes.Name, "nickname");
