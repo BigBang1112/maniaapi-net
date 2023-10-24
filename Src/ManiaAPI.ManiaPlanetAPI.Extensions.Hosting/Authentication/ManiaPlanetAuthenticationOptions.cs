@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.OAuth;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using System.Security.Claims;
 
 namespace ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Authentication;
