@@ -81,7 +81,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
     public async Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
     {
-        await AuthorizeAsync(clientId, clientSecret, Array.Empty<string>(), cancellationToken);
+        await AuthorizeAsync(clientId, clientSecret, [], cancellationToken);
     }
 
     private static async ValueTask ValidateResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
@@ -115,7 +115,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     {
         if (!accountIds.Any())
         {
-            return new Dictionary<Guid, string>();
+            return [];
         }
 
         return await GetJsonAsync($"display-names?{string.Join('&', accountIds.Select((x, i) => $"accountId[{i}]={x}"))}",
@@ -130,7 +130,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         }
         catch (JsonException)
         {
-            return new Dictionary<Guid, string>();
+            return [];
         }
     }
 
@@ -143,7 +143,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     {
         if (!displayNames.Any())
         {
-            return new Dictionary<string, Guid>();
+            return [];
         }
 
         return await GetJsonAsync($"display-names/account-ids?{string.Join('&', displayNames.Select((x, i) => $"displayName[{i}]={x}"))}",
@@ -158,7 +158,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         }
         catch (JsonException)
         {
-            return new Dictionary<string, Guid>();
+            return [];
         }
     }
 
