@@ -35,11 +35,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\ManiaAPI.Base\ManiaAPI.Base.csproj" />
+		<PackageReference Include="TmEssentials" Version="2.3.3" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Temporary\" />
+		<Folder Include="Temporary\" />
 	</ItemGroup>
 
 </Project>
