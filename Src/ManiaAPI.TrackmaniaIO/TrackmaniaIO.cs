@@ -87,7 +87,7 @@ public class TrackmaniaIO : ITrackmaniaIO
 
         if (rateLimitResetCurrent.HasValue)
         {
-            RateLimitReset = DateTimeOffset.FromUnixTimeSeconds(rateLimitResetCurrent.Value);
+            RateLimitReset = DateTimeOffset.UtcNow + TimeSpan.FromSeconds(rateLimitResetCurrent.Value);
         }
 
         Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
