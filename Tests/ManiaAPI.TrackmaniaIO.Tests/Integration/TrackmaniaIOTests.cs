@@ -1,9 +1,10 @@
 ﻿using System;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ManiaAPI.TrackmaniaIO.Integration;
 
-public class TrackmaniaIOTests
+public class TrackmaniaIOTests(ITestOutputHelper output)
 {
     [Fact]
     public async void RequestManagement()
@@ -16,6 +17,8 @@ public class TrackmaniaIOTests
         var campaigns = await trackmaniaIO.GetCampaignsAsync();
 
         var rateLimitRemainingAfterFirstRequest = TrackmaniaIO.RateLimitRemaining;
+
+        output.WriteLine("Rate limit remaining after first request: {0}", rateLimitRemainingAfterFirstRequest);
 
         var customCampaign = await trackmaniaIO.GetCustomCampaignAsync(clubId: 21571, campaignId: 5886);
        
