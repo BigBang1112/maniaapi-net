@@ -2,16 +2,12 @@
 
 namespace ManiaAPI.XmlRpc.TMUF;
 
-public class CampaignScores : IScores
+public sealed class CampaignScores(
+    IReadOnlyDictionary<string, CampaignScoresLeaderboard> maps,
+    IReadOnlyDictionary<string, CampaignScoresMedalZone> medalZones) : IScores
 {
-    public IReadOnlyDictionary<string, CampaignScoresLeaderboard> Maps { get; }
-    public IReadOnlyDictionary<string, CampaignScoresMedalZone> MedalZones { get; }
-
-    public CampaignScores(Dictionary<string, CampaignScoresLeaderboard> maps, Dictionary<string, CampaignScoresMedalZone> medalZones)
-    {
-        Maps = maps;
-        MedalZones = medalZones;
-    }
+    public IReadOnlyDictionary<string, CampaignScoresLeaderboard> Maps { get; } = maps;
+    public IReadOnlyDictionary<string, CampaignScoresMedalZone> MedalZones { get; } = medalZones;
 
     public static CampaignScores Parse(string fileName)
     {

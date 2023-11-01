@@ -2,14 +2,8 @@
 
 namespace ManiaAPI.XmlRpc.TMUF;
 
-public class Leaderboard
+public sealed class Leaderboard(HighScore[] highScores, RecordUnit[] skillpoints)
 {
-    public ImmutableArray<HighScore> HighScores { get; }
-    public ImmutableArray<RecordUnit> Skillpoints { get; }
-
-    public Leaderboard(HighScore[] highScores, RecordUnit[] skillpoints)
-    {
-        HighScores = ImmutableArray.Create(highScores);
-        Skillpoints = ImmutableArray.Create(skillpoints);
-    }
+    public ImmutableArray<HighScore> HighScores { get; } = ImmutableArray.Create(highScores);
+    public ImmutableArray<RecordUnit> Skillpoints { get; } = ImmutableArray.Create(skillpoints);
 }

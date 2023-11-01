@@ -1,11 +1,6 @@
 ﻿namespace ManiaAPI.XmlRpc.TMUF;
 
-public class CampaignScoresMedalZone
+public sealed class CampaignScoresMedalZone(Dictionary<PlayMode, RecordUnit[]> medals)
 {
-    public IReadOnlyDictionary<PlayMode, RecordUnit[]> Medals { get; }
-
-    public CampaignScoresMedalZone(Dictionary<PlayMode, RecordUnit[]> medals)
-    {
-        Medals = medals;
-    }
+    public IReadOnlyDictionary<PlayMode, RecordUnit[]> Medals { get; } = medals;
 }

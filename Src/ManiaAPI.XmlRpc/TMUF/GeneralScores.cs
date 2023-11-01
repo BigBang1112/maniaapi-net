@@ -2,14 +2,9 @@
 
 namespace ManiaAPI.XmlRpc.TMUF;
 
-public class GeneralScores : IScores
+public sealed class GeneralScores(IReadOnlyDictionary<string, Leaderboard> zones) : IScores
 {
-    public IReadOnlyDictionary<string, Leaderboard> Zones { get; }
-
-    public GeneralScores(Dictionary<string, Leaderboard> zones)
-    {
-        Zones = zones;
-    }
+    public IReadOnlyDictionary<string, Leaderboard> Zones { get; } = zones;
 
     public static GeneralScores Parse(string fileName)
     {
