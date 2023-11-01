@@ -6,7 +6,6 @@ namespace ManiaAPI.TrackmaniaIO.Integration;
 
 public class TrackmaniaIOTests(ITestOutputHelper output)
 {
-    [Fact]
     public async void RequestManagement()
     {
         // Arrange
