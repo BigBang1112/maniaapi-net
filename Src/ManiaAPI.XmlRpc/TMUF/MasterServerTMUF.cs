@@ -45,6 +45,45 @@ public class MasterServerTMUF : MasterServer
         return GeneralScores.Parse(stream);
     }
 
+    public async Task<CampaignScores?> DownloadLatestCampaignScoresAsync(string campaignName, string zone, bool parallelLatestCheck = false, CancellationToken cancellationToken = default)
+    {
+        if (Zones.ZoneIdsWithDataInTMUF.TryGetValue(zone, out int zoneId))
+        {
+            return await DownloadLatestCampaignScoresAsync(campaignName, zoneId, parallelLatestCheck, cancellationToken);
+        }
+
+        return null;
+    }
+
+    public async Task<CampaignScores> DownloadLatestCampaignScoresAsync(string campaignName, int zoneId, bool parallelLatestCheck = false, CancellationToken cancellationToken = default)
+    {
+        var scoresInfo = await FetchLatestCampaignScoresInfoAsync(campaignName, zoneId, parallelLatestCheck, cancellationToken);
+
+        return await DownloadCampaignScoresAsync(campaignName, scoresInfo.Number, zoneId, cancellationToken);
+    }
+
+    public async Task<CampaignScores?> DownloadCampaignScoresAsync(string campaignName, ScoresNumber num, string zone, CancellationToken cancellationToken = default)
+    {
+        if (Zones.ZoneIdsWithDataInTMUF.TryGetValue(zone, out int zoneId))
+        {
+            return await DownloadCampaignScoresAsync(campaignName, num, zoneId, cancellationToken);
+        }
+
+        return null;
+    }
+
+    public async Task<CampaignScores> DownloadCampaignScoresAsync(string campaignName, ScoresNumber num, int zoneId, CancellationToken cancellationToken = default)
+    {
+        var url = GetScoresUrl(num, campaignName, zoneId);
+        var response = await Client.GetAsync(url, cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+
+        return CampaignScores.Parse(stream);
+    }
+
     public async Task<ScoresInfo?> FetchLatestCampaignScoresInfoAsync(string campaignName, string zone, bool parallel = false, CancellationToken cancellationToken = default)
     {
         return await FetchLatestScoresInfoAsync(campaignName, zone, parallel, cancellationToken);
