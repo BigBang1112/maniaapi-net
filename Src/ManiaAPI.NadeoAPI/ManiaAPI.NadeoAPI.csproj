@@ -31,7 +31,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TmEssentials" Version="2.3.3" />
+		<PackageReference Include="TmEssentials" Version="2.4.0" />
 	</ItemGroup>
 
 </Project>
