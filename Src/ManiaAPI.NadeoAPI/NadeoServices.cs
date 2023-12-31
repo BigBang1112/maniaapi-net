@@ -14,6 +14,10 @@ public interface INadeoServices : INadeoAPI
     Task<Zone[]> GetZonesAsync(CancellationToken cancellationToken = default);
     Task<PlayerClubTag[]> GetPlayerClubTagsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<PlayerClubTag[]> GetPlayerClubTagsAsync(params Guid[] accountIds);
+    Task<MapInfo> GetMapInfoAsync(Guid mapId, CancellationToken cancellationToken = default);
+    Task<MapInfo[]> GetMapInfosAsync(IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default);
+    Task<MapInfo> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default);
+    Task<MapInfo[]> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default);
 }
 
 public class NadeoServices : NadeoAPI, INadeoServices
@@ -80,5 +84,27 @@ public class NadeoServices : NadeoAPI, INadeoServices
     public async Task<PlayerClubTag[]> GetPlayerClubTagsAsync(params Guid[] accountIds)
     {
         return await GetPlayerClubTagsAsync(accountIds, CancellationToken.None);
+    }
+
+    public virtual async Task<MapInfo> GetMapInfoAsync(Guid mapId, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"maps/?mapIdList={mapId}", NadeoAPIJsonContext.Default.MapInfo, cancellationToken);
+    }
+
+    public virtual async Task<MapInfo[]> GetMapInfosAsync(IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"maps/?mapIdList={string.Join(',', mapIds)}",
+            NadeoAPIJsonContext.Default.MapInfoArray, cancellationToken);
+    }
+
+    public virtual async Task<MapInfo> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"maps/?mapUidList={mapUid}", NadeoAPIJsonContext.Default.MapInfo, cancellationToken);
+    }
+
+    public virtual async Task<MapInfo[]> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"maps/?mapUidList={string.Join(',', mapUids)}",
+            NadeoAPIJsonContext.Default.MapInfoArray, cancellationToken);
     }
 }

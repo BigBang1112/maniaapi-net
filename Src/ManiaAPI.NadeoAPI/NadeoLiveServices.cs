@@ -1,14 +1,13 @@
 ﻿using ManiaAPI.NadeoAPI.JsonContexts;
-using System.Text.RegularExpressions;
 
 namespace ManiaAPI.NadeoAPI;
 
 public interface INadeoLiveServices : INadeoAPI
 {
     Task<Maniapub[]> GetActiveManiapubsAsync(CancellationToken cancellationToken = default);
-    Task<MapInfo> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default);
-    Task<MapInfo[]> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default);
-    Task<MapInfo[]> GetMapInfosAsync(params string[] mapUids);
+    Task<MapInfoLive> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default);
+    Task<MapInfoLive[]> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default);
+    Task<MapInfoLive[]> GetMapInfosAsync(params string[] mapUids);
     Task<MedalRecordCollection> GetMapMedalRecordsAsync(string mapUid, string groupId, CancellationToken cancellationToken = default);
     Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, int length = 10, int offset = 0, bool onlyWorld = true, CancellationToken cancellationToken = default);
     Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, string groupId, int length = 10, int offset = 0, bool onlyWorld = true, CancellationToken cancellationToken = default);
@@ -31,18 +30,18 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
     }
 
-    public virtual async Task<MapInfo> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)
+    public virtual async Task<MapInfoLive> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"token/map/{mapUid}", NadeoAPIJsonContext.Default.MapInfo, cancellationToken);
+        return await GetJsonAsync($"token/map/{mapUid}", NadeoAPIJsonContext.Default.MapInfoLive, cancellationToken);
     }
 
-    public virtual async Task<MapInfo[]> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
+    public virtual async Task<MapInfoLive[]> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
     {
         return (await GetJsonAsync($"token/map/get-multiple?mapUidList={string.Join(',', mapUids)}",
-            NadeoAPIJsonContext.Default.MapInfoCollection, cancellationToken)).MapList;
+            NadeoAPIJsonContext.Default.MapInfoLiveCollection, cancellationToken)).MapList;
     }
 
-    public async Task<MapInfo[]> GetMapInfosAsync(params string[] mapUids)
+    public async Task<MapInfoLive[]> GetMapInfosAsync(params string[] mapUids)
     {
         return await GetMapInfosAsync(mapUids, cancellationToken: default);
     }

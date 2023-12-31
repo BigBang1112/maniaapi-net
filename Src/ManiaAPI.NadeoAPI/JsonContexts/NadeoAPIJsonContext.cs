@@ -7,7 +7,7 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 [JsonSerializable(typeof(AuthorizationResponse))]
 [JsonSerializable(typeof(ErrorResponse))]
 [JsonSerializable(typeof(JwtPayloadNadeoAPI))]
-[JsonSerializable(typeof(MapInfoCollection))]
+[JsonSerializable(typeof(MapInfoLiveCollection))]
 [JsonSerializable(typeof(MapRecord[]))]
 [JsonSerializable(typeof(MedalRecordCollection))]
 [JsonSerializable(typeof(ManiapubCollection[]))]
@@ -21,5 +21,6 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 [JsonSerializable(typeof(Dictionary<string, ApiRoute>))]
 [JsonSerializable(typeof(Zone[]))]
 [JsonSerializable(typeof(PlayerClubTag[]))]
+[JsonSerializable(typeof(MapInfo[]))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 sealed partial class NadeoAPIJsonContext : JsonSerializerContext { }
