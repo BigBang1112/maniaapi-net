@@ -12,6 +12,11 @@ public interface INadeoAPI : IDisposable
 {
     Task AuthorizeAsync(string login, string password, AuthorizationMethod method = AuthorizationMethod.DedicatedServer, CancellationToken cancellationToken = default);
     ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default);
+
+    HttpClient Client { get; }
+
+    Task<HttpResponseMessage> SendAsync(HttpMethod method, string endpoint, HttpContent? content = null, CancellationToken cancellationToken = default);
+    Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default);
 }
 
 public abstract class NadeoAPI : INadeoAPI
@@ -138,26 +143,37 @@ public abstract class NadeoAPI : INadeoAPI
         return true;
     }
 
-    protected internal async Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    public async Task<HttpResponseMessage> SendAsync(HttpMethod method, string endpoint, HttpContent? content = null, CancellationToken cancellationToken = default)
     {
         if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime)
         {
             await RefreshAsync(cancellationToken);
         }
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
+        using var request = new HttpRequestMessage(method, $"{BaseAddress}/{endpoint}");
 
         if (accessToken is not null)
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
         }
 
-        using var response = await Client.SendAsync(request, cancellationToken);
+        if (content is not null)
+        {
+            request.Content = content;
+        }
+
+        var response = await Client.SendAsync(request, cancellationToken);
 
         Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
         await ValidateResponseAsync(response, cancellationToken);
 
+        return response;
+    }
+
+    public async Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
         return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
     }
 

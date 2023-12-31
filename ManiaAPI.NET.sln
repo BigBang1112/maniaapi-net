@@ -19,6 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.Base", "Src\ManiaA
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1A89C5C0-0A74-4955-AC0B-3D11A4781AA0}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -40,13 +41,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.ManiaPlanetAPI", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.XmlRpc", "Src\ManiaAPI.XmlRpc\ManiaAPI.XmlRpc.csproj", "{12E64A81-6DE6-4189-828B-038E90D3F663}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManiaAPI.ManiaPlanetAPI.Tests", "Tests\ManiaAPI.ManiaPlanetAPI.Tests\ManiaAPI.ManiaPlanetAPI.Tests.csproj", "{AAECCC64-40DD-4E26-9D5C-4F31CBF1EB07}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.ManiaPlanetAPI.Tests", "Tests\ManiaAPI.ManiaPlanetAPI.Tests\ManiaAPI.ManiaPlanetAPI.Tests.csproj", "{AAECCC64-40DD-4E26-9D5C-4F31CBF1EB07}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Generators", "Generators", "{2F6E59E5-43E9-4853-A57D-7F0F6B979879}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.TMX.Generators", "Generators\ManiaAPI.TMX.Generators\ManiaAPI.TMX.Generators.csproj", "{9875E40C-6609-4649-A620-0E495462F6E1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.ManiaPlanetAPI.Extensions.Hosting", "Src\ManiaAPI.ManiaPlanetAPI.Extensions.Hosting\ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.csproj", "{16582104-A7CF-4BCF-9550-5F9095A57E60}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.NadeoAPI.Extensions.Gbx", "Src\ManiaAPI.NadeoAPI.Extensions.Gbx\ManiaAPI.NadeoAPI.Extensions.Gbx.csproj", "{766F17F2-306E-4E4B-89EB-75CDF2907F63}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -114,6 +117,10 @@ Global
 		{16582104-A7CF-4BCF-9550-5F9095A57E60}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16582104-A7CF-4BCF-9550-5F9095A57E60}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16582104-A7CF-4BCF-9550-5F9095A57E60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{766F17F2-306E-4E4B-89EB-75CDF2907F63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{766F17F2-306E-4E4B-89EB-75CDF2907F63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{766F17F2-306E-4E4B-89EB-75CDF2907F63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{766F17F2-306E-4E4B-89EB-75CDF2907F63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -135,6 +142,7 @@ Global
 		{AAECCC64-40DD-4E26-9D5C-4F31CBF1EB07} = {96BF39EA-937E-400B-AAE6-7729AEEFF976}
 		{9875E40C-6609-4649-A620-0E495462F6E1} = {2F6E59E5-43E9-4853-A57D-7F0F6B979879}
 		{16582104-A7CF-4BCF-9550-5F9095A57E60} = {4F91FD3F-1931-44A8-B52C-6CE105E2938A}
+		{766F17F2-306E-4E4B-89EB-75CDF2907F63} = {4F91FD3F-1931-44A8-B52C-6CE105E2938A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E273F519-B658-4F1C-8132-DF78A841A592}
