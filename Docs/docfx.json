@@ -5,14 +5,7 @@
         {
           "src": "../Src",
           "files": [
-            "**ManiaAPI.ManiaPlanetAPI.dll",
-            "**ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.dll",
-            "**ManiaAPI.NadeoAPI.dll",
-            "**ManiaAPI.NadeoAPI.Extensions.Gbx.dll",
-            "**ManiaAPI.TMX.dll",
-            "**ManiaAPI.TrackmaniaAPI.dll",
-            "**ManiaAPI.TrackmaniaIO.dll",
-            "**ManiaAPI.XmlRpc.dll"
+            "**.csproj"
           ]
         }
       ],
