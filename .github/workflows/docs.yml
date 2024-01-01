@@ -33,13 +33,8 @@ jobs:
         with:
           dotnet-version: 8.0.x
   
-      - name: Build
-        run: dotnet build
-          
-      - name: Generate docs
-        uses: nikeee/docfx-action@v1.0.0
-        with:
-          args: Docs/docfx.json
+      - run: dotnet tool update -g docfx
+      - run: docfx Docs/docfx.json
           
       - name: Setup Pages
         uses: actions/configure-pages@v2
