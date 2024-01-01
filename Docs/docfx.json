@@ -5,7 +5,7 @@
         {
           "src": "../Src",
           "files": [
-            "**.csproj"
+            "**/bin/Release/**.dll"
           ]
         }
       ],
