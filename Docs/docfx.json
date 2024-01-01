@@ -16,17 +16,34 @@
     }
   ],
   "build": {
-    "content": [{
-      "files": [ "api/*.yml" ]
-    }],
-    "dest": "_site",
+    "content": [
+      {
+        "files": [
+          "**/*.{md,yml}"
+        ],
+        "exclude": [
+          "_site/**"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "output": "_site",
+    "template": [
+      "default",
+      "templates/DiscordFX/discordfx"
+    ],
     "globalMetadata": {
       "_appName": "ManiaAPI.NET",
       "_appTitle": "ManiaAPI.NET Documentation",
-      "_appFooter": "© 2024 BigBang1112"
-    },
-    "template": [
-      "default", "templates/DiscordFX/discordfx"
-    ]
+      "_appFooter": "© 2024 BigBang1112",
+      "_enableSearch": true,
+      "pdf": false
+    }
   }
 }
