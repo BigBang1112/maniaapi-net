@@ -12,7 +12,7 @@
 		<IsTrimmable>true</IsTrimmable>
 		<IsAotCompatible>true</IsAotCompatible>
 
-		<Version>2.0.0-alpha4</Version>
+		<Version>2.0.0-alpha5</Version>
 		<PackageReleaseNotes></PackageReleaseNotes>
 
 		<TargetFrameworks>net8.0;net7.0</TargetFrameworks>
@@ -36,6 +36,7 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="ManiaAPI.NadeoAPI.Extensions.Gbx" />
+		<InternalsVisibleTo Include="ManiaAPI.NadeoAPI.Extensions.Gbx.Tests" />
 	</ItemGroup>
 
 </Project>

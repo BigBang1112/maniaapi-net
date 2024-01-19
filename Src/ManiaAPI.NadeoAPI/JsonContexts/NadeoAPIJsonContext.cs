@@ -23,4 +23,4 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 [JsonSerializable(typeof(PlayerClubTag[]))]
 [JsonSerializable(typeof(MapInfo[]))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-sealed partial class NadeoAPIJsonContext : JsonSerializerContext { }
+internal sealed partial class NadeoAPIJsonContext : JsonSerializerContext { }

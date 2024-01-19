@@ -1,17 +1,40 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<Product>ManiaAPI.NadeoAPI.Extensions.Gbx</Product>
+		<AssemblyName>ManiaAPI.NadeoAPI.Extensions.Gbx</AssemblyName>
+		<AssemblyTitle>ManiaAPI.NadeoAPI.Extensions.Gbx</AssemblyTitle>
+		<Authors>Petr Pivoňka (BigBang1112)</Authors>
+		<Description></Description>
+		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, nadeo, nadeoapi</PackageTags>
+		<IsTrimmable>true</IsTrimmable>
+		<IsAotCompatible>true</IsAotCompatible>
 
-  <ItemGroup>
-    <PackageReference Include="GBX.NET" Version="1.2.4" />
-  </ItemGroup>
+		<Version>2.0.0-alpha5</Version>
+		<PackageReleaseNotes></PackageReleaseNotes>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ManiaAPI.NadeoAPI\ManiaAPI.NadeoAPI.csproj" />
-  </ItemGroup>
+		<TargetFrameworks>net8.0;net7.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>12</LangVersion>
+
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/BigBang1112/maniaapi-net</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GBX.NET" Version="1.2.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ManiaAPI.NadeoAPI\ManiaAPI.NadeoAPI.csproj" />
+	</ItemGroup>
 
 </Project>

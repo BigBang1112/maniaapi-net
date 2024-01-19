@@ -15,6 +15,15 @@ public interface INadeoAPI : IDisposable
 
     HttpClient Client { get; }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="method"></param>
+    /// <param name="endpoint"></param>
+    /// <param name="content"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="NadeoAPIResponseException"></exception>
     Task<HttpResponseMessage> SendAsync(HttpMethod method, string endpoint, HttpContent? content = null, CancellationToken cancellationToken = default);
     Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default);
 }
@@ -86,6 +95,13 @@ public abstract class NadeoAPI : INadeoAPI
         await SaveTokenResponseAsync(response, cancellationToken);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="response"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="NadeoAPIResponseException"></exception>
     private static async ValueTask ValidateResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         if (response.IsSuccessStatusCode)
