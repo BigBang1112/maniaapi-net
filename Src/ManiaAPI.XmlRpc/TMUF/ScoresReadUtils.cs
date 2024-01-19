@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.XmlRpc.TMUF;
 
-static class ScoresReadUtils
+internal static class ScoresReadUtils
 {    
     public static RecordUnit[] ReadRecordsBuffer(GbxBasedReader r)
     {

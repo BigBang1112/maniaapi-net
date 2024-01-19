@@ -13,4 +13,4 @@ namespace ManiaAPI.ManiaPlanetAPI.JsonContexts;
 [JsonSerializable(typeof(TitleScript[]))]
 [JsonSerializable(typeof(OnlineServer[]))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-sealed partial class ManiaPlanetAPIJsonContext : JsonSerializerContext { }
+internal sealed partial class ManiaPlanetAPIJsonContext : JsonSerializerContext { }

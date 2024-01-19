@@ -9,4 +9,4 @@ namespace ManiaAPI.TrackmaniaAPI.JsonContexts;
 [JsonSerializable(typeof(Dictionary<string, Guid>))]
 [JsonSerializable(typeof(ErrorResponse))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-sealed partial class TrackmaniaAPIJsonContext : JsonSerializerContext { }
+internal sealed partial class TrackmaniaAPIJsonContext : JsonSerializerContext { }

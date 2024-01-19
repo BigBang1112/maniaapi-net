@@ -7,5 +7,5 @@ public sealed class ItemCollection<T> where T : IItem
     [JsonPropertyName("More")]
     public bool HasMoreItems { get; set; }
 
-    public T[] Results { get; set; } = Array.Empty<T>();
+    public T[] Results { get; set; } = [];
 }

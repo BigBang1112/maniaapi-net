@@ -1,12 +1,7 @@
 ﻿namespace ManiaAPI.TMX.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
-sealed class GetMethodAttribute : Attribute
+internal sealed class GetMethodAttribute(string route) : Attribute
 {
-    public string Route { get; }
-
-    public GetMethodAttribute(string route)
-    {
-        Route = route;
-    }
+    public string Route { get; } = route;
 }

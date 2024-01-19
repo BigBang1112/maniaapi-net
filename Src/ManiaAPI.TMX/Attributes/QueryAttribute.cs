@@ -1,13 +1,8 @@
 ﻿namespace ManiaAPI.TMX.Attributes;
 
 [AttributeUsage(AttributeTargets.Property)]
-sealed class QueryAttribute : Attribute
+internal sealed class QueryAttribute(string name) : Attribute
 {
-    public string Name { get; }
+    public string Name { get; } = name;
     public object? Default { get; init; }
-
-    public QueryAttribute(string name)
-    {
-        Name = name;
-    }
 }

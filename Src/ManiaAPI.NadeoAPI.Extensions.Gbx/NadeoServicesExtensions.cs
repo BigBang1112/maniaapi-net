@@ -6,6 +6,9 @@ using TmEssentials;
 
 namespace ManiaAPI.NadeoAPI.Extensions.Gbx;
 
+/// <summary>
+/// Provides Gbx related extensions to <see cref="INadeoServices"/>.
+/// </summary>
 public static class NadeoServicesExtensions
 {
     /// <summary>

@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI.Converters;
 
-sealed class NullableIntConverter : JsonConverter<int?>
+internal sealed class NullableIntConverter : JsonConverter<int?>
 {
     public override int? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

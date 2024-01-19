@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TrackmaniaAPI.Converters;
 
-sealed class DateTimeOffsetUnixConverter : JsonConverter<DateTimeOffset>
+internal sealed class DateTimeOffsetUnixConverter : JsonConverter<DateTimeOffset>
 {
     public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

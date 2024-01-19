@@ -1,3 +1,3 @@
 ﻿namespace ManiaAPI.NadeoAPI;
 
-sealed record AuthorizationResponse(string AccessToken, string RefreshToken);
+internal sealed record AuthorizationResponse(string AccessToken, string RefreshToken);

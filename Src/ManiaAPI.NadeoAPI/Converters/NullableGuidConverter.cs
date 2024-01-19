@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI.Converters;
 
-public class NullableGuidConverter : JsonConverter<Guid?>
+internal sealed class NullableGuidConverter : JsonConverter<Guid?>
 {
     public override Guid? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

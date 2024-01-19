@@ -9,13 +9,16 @@ using System.Text.Json;
 
 namespace ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Authentication;
 
-internal class ManiaPlanetAuthenticationHandler : OAuthHandler<ManiaPlanetAuthenticationOptions>
+internal class ManiaPlanetAuthenticationHandler(
+    IOptionsMonitor<ManiaPlanetAuthenticationOptions> options,
+    ILoggerFactory logger,
+    UrlEncoder encoder
+#if NET8_0_OR_GREATER
+    ) : OAuthHandler<ManiaPlanetAuthenticationOptions>(options, logger, encoder)
+#else
+    , ISystemClock clock) : OAuthHandler<ManiaPlanetAuthenticationOptions>(options, logger, encoder, clock)
+#endif
 {
-    public ManiaPlanetAuthenticationHandler(IOptionsMonitor<ManiaPlanetAuthenticationOptions> options,
-                                            ILoggerFactory logger,
-                                            UrlEncoder encoder,
-                                            ISystemClock clock) : base(options, logger, encoder, clock) { }
-
     protected override async Task<AuthenticationTicket> CreateTicketAsync(ClaimsIdentity identity,
                                                                           AuthenticationProperties properties,
                                                                           OAuthTokenResponse tokens)

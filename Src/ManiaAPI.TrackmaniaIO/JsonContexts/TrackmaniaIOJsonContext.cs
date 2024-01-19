@@ -7,4 +7,4 @@ namespace ManiaAPI.TrackmaniaIO.JsonContexts;
 [JsonSerializable(typeof(Leaderboard))]
 [JsonSerializable(typeof(WorldRecord[]))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-sealed partial class TrackmaniaIOJsonContext : JsonSerializerContext { }
+internal sealed partial class TrackmaniaIOJsonContext : JsonSerializerContext { }

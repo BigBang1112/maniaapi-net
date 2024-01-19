@@ -7,4 +7,4 @@ namespace ManiaAPI.TMX.JsonContexts;
 [JsonSerializable(typeof(ItemCollection<TrackpackItem>))]
 [JsonSerializable(typeof(ItemCollection<UserItem>))]
 [JsonSerializable(typeof(ItemCollection<LeaderboardItem>))]
-sealed partial class TMXJsonContext : JsonSerializerContext { }
+internal sealed partial class TMXJsonContext : JsonSerializerContext { }
