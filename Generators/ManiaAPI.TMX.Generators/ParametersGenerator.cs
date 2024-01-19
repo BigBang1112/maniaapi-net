@@ -5,48 +5,41 @@ using System.Text;
 namespace ManiaAPI.TMX.Generators;
 
 [Generator]
-public class ParametersGenerator : ISourceGenerator
+public class ParametersGenerator : IIncrementalGenerator
 {
     private const bool Debug = false;
 
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         if (Debug && !Debugger.IsAttached)
         {
             Debugger.Launch();
         }
-    }
 
-    public void Execute(GeneratorExecutionContext context)
-    {
-        var maniaApiTmxNamespace = context.Compilation
-            .GlobalNamespace
-            .GetNamespaceMembers()
-            .FirstOrDefault(x => x.Name == "ManiaAPI")
-            .GetNamespaceMembers()
-            .FirstOrDefault(x => x.Name == "TMX");
-
-        var clientSymbols = maniaApiTmxNamespace.GetTypeMembers()
-            .Where(x => x.Interfaces.Any(x => x.Name == "IClient"));
-
-        foreach (var clientSymbol in clientSymbols)
+        var types = context.CompilationProvider.SelectMany((compilation, token) =>
         {
-            foreach (var symbol in clientSymbol.GetTypeMembers())
-            {
-                var att = symbol.GetAttributes().FirstOrDefault(x => x.AttributeClass?.Name == "ParametersAttribute")?.AttributeClass;
+            var maniaApiTmxNamespace = compilation.GlobalNamespace
+                .GetNamespaceMembers()
+                .FirstOrDefault(x => x.Name == "ManiaAPI")
+                .GetNamespaceMembers()
+                .FirstOrDefault(x => x.Name == "TMX");
 
-                if (att is null)
-                {
-                    continue;
-                }
+            return maniaApiTmxNamespace.GetTypeMembers()
+                .Where(x => x.Interfaces.Any(x => x.Name == "IClient"))
+                .SelectMany(clientSymbol => clientSymbol.GetTypeMembers()
+                    .Where(typeSymbol => typeSymbol.GetAttributes().Any(x => x.AttributeClass?.Name == "ParametersAttribute")));
+        });
 
-                context.AddSource($"{clientSymbol.Name}.{symbol.Name}.cs", GeneratePartialParameters(clientSymbol, symbol, att.TypeArguments[0]));
-            }
-        }
+        context.RegisterSourceOutput(types, GeneratePartialParameters);
     }
 
-    private string GeneratePartialParameters(INamedTypeSymbol clientSymbol, INamedTypeSymbol parametersSymbol, ITypeSymbol resultSymbol)
+    private void GeneratePartialParameters(SourceProductionContext context, INamedTypeSymbol parametersSymbol)
     {
+        var clientSymbol = parametersSymbol.ContainingType;
+        var resultSymbol = parametersSymbol.GetAttributes()
+            .FirstOrDefault(x => x.AttributeClass?.Name == "ParametersAttribute")?.AttributeClass?.TypeArguments[0] as INamedTypeSymbol
+            ?? throw new Exception("Result is null");
+
         var sb = new StringBuilder();
 
         sb.AppendLine("using System.Runtime.InteropServices;");
@@ -202,6 +195,6 @@ public class ParametersGenerator : ISourceGenerator
         sb.AppendLine("    }");
         sb.AppendLine("}");
 
-        return sb.ToString();
+        context.AddSource($"{clientSymbol.Name}.{parametersSymbol.Name}.cs", sb.ToString());
     }
 }

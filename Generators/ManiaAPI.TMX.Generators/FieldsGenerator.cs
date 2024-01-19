@@ -5,37 +5,33 @@ using System.Text;
 namespace ManiaAPI.TMX.Generators;
 
 [Generator]
-public class FieldsGenerator : ISourceGenerator
+public class FieldsGenerator : IIncrementalGenerator
 {
     private const bool Debug = false;
 
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         if (Debug && !Debugger.IsAttached)
         {
             Debugger.Launch();
         }
-    }
 
-    public void Execute(GeneratorExecutionContext context)
-    {
-        var maniaApiTmxNamespace = context.Compilation
-            .GlobalNamespace
-            .GetNamespaceMembers()
-            .FirstOrDefault(x => x.Name == "ManiaAPI")
-            .GetNamespaceMembers()
-            .FirstOrDefault(x => x.Name == "TMX");
-
-        var symbolsWithFieldsAtt = maniaApiTmxNamespace.GetTypeMembers()
-            .Where(x => x.GetAttributes().Any(x => x.AttributeClass?.Name == "FieldsAttribute"));
-
-        foreach (var symbol in symbolsWithFieldsAtt)
+        var fields = context.CompilationProvider.SelectMany((compilation, token) =>
         {
-            context.AddSource($"{symbol.Name}Fields.cs", GenerateFields(symbol));
-        }
+            return compilation.GlobalNamespace
+                .GetNamespaceMembers()
+                .FirstOrDefault(x => x.Name == "ManiaAPI")
+                .GetNamespaceMembers()
+                .FirstOrDefault(x => x.Name == "TMX")
+                .GetTypeMembers()
+                .Where(x => x.GetAttributes()
+                .Any(x => x.AttributeClass?.Name == "FieldsAttribute"));
+        });
+
+        context.RegisterSourceOutput(fields, GenerateFields);
     }
 
-    private string GenerateFields(INamedTypeSymbol symbol)
+    private void GenerateFields(SourceProductionContext context, INamedTypeSymbol symbol)
     {
         var sb = new StringBuilder("using System.Text;\n\n");
         sb.AppendLine("namespace ManiaAPI.TMX;");
@@ -111,7 +107,7 @@ public class FieldsGenerator : ISourceGenerator
         sb.Append(appendSb);
         sb.AppendLine("}");
 
-        return sb.ToString();
+        context.AddSource($"{symbol.Name}Fields.cs", sb.ToString());
     }
 
     private static void AppendFieldCheck(StringBuilder sb, IPropertySymbol propSymbol, bool isFields, IPropertySymbol[]? accessToProperty = null)

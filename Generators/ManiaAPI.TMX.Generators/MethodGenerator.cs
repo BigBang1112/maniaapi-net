@@ -5,50 +5,42 @@ using System.Text;
 namespace ManiaAPI.TMX.Generators;
 
 [Generator]
-public class MethodGenerator : ISourceGenerator
+public class MethodGenerator : IIncrementalGenerator
 {
     private const bool Debug = false;
 
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         if (Debug && !Debugger.IsAttached)
         {
             Debugger.Launch();
         }
-    }
 
-    public void Execute(GeneratorExecutionContext context)
-    {
-        var maniaApiTmxNamespace = context.Compilation
-            .GlobalNamespace
-            .GetNamespaceMembers()
-            .FirstOrDefault(x => x.Name == "ManiaAPI")
-            .GetNamespaceMembers()
-            .FirstOrDefault(x => x.Name == "TMX");
-
-        var clientSymbols = maniaApiTmxNamespace.GetTypeMembers()
-            .Where(x => x.Interfaces.Any(x => x.Name == "IClient"));
-
-        foreach (var clientSymbol in clientSymbols)
+        var methods = context.CompilationProvider.SelectMany((compilation, token) =>
         {
-            foreach (var symbol in clientSymbol.GetMembers().OfType<IMethodSymbol>())
-            {
-                var att = symbol.GetAttributes().FirstOrDefault(x => x.AttributeClass?.Name == "GetMethodAttribute");
+            var maniaApiTmxNamespace = compilation.GlobalNamespace
+                .GetNamespaceMembers()
+                .FirstOrDefault(x => x.Name == "ManiaAPI")
+                .GetNamespaceMembers()
+                .FirstOrDefault(x => x.Name == "TMX");
 
-                if (att?.AttributeClass is null)
-                {
-                    continue;
-                }
+            return maniaApiTmxNamespace.GetTypeMembers()
+                .Where(x => x.Interfaces.Any(x => x.Name == "IClient"))
+                .SelectMany(clientSymbol => clientSymbol.GetMembers()
+                    .OfType<IMethodSymbol>()
+                    .Where(methodSymbol => methodSymbol.GetAttributes().Any(x => x.AttributeClass?.Name == "GetMethodAttribute")));
+        });
 
-                var route = att.ConstructorArguments[0].Value as string ?? throw new Exception("Route is null");
-
-                context.AddSource($"{clientSymbol.Name}.{symbol.Name}.cs", GeneratePartialMethods(clientSymbol, symbol, route));
-            }
-        }
+        context.RegisterSourceOutput(methods, GeneratePartialMethods);
     }
 
-    private string GeneratePartialMethods(INamedTypeSymbol clientSymbol, IMethodSymbol symbol, string route)
+    private void GeneratePartialMethods(SourceProductionContext context, IMethodSymbol symbol)
     {
+        var clientSymbol = symbol.ContainingType;
+        var route = symbol.GetAttributes()
+            .FirstOrDefault(x => x.AttributeClass?.Name == "GetMethodAttribute")?.ConstructorArguments[0].Value as string
+            ?? throw new Exception("Route is null");
+
         var sb = new StringBuilder();
 
         sb.AppendLine("using System.Net.Http.Json;");
@@ -128,6 +120,6 @@ public class MethodGenerator : ISourceGenerator
         sb.AppendLine("    }");
         sb.AppendLine("}");
 
-        return sb.ToString();
+        context.AddSource($"{clientSymbol.Name}.{symbol.Name}.cs", sb.ToString());
     }
 }
