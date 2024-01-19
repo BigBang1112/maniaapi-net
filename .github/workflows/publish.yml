@@ -52,7 +52,7 @@ jobs:
     
     strategy:
       matrix:
-        lib: [NadeoAPI, TMX, TrackmaniaAPI, TrackmaniaIO, ManiaPlanetAPI, XmlRpc]
+        lib: [NadeoAPI, NadeoAPI.Extensions.Gbx, TMX, TrackmaniaAPI, TrackmaniaIO, ManiaPlanetAPI, XmlRpc]
         
     runs-on: ubuntu-latest
     
