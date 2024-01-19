@@ -10,7 +10,7 @@ namespace ManiaAPI.NadeoAPI;
 
 public interface INadeoAPI : IDisposable
 {
-    Task AuthorizeAsync(string login, string password, AuthorizationMethod method = AuthorizationMethod.DedicatedServer, CancellationToken cancellationToken = default);
+    Task AuthorizeAsync(string login, string password, AuthorizationMethod method, CancellationToken cancellationToken = default);
     ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default);
 
     HttpClient Client { get; }
@@ -51,7 +51,7 @@ public abstract class NadeoAPI : INadeoAPI
         AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
-    public virtual async Task AuthorizeAsync(string login, string password, AuthorizationMethod method = AuthorizationMethod.DedicatedServer, CancellationToken cancellationToken = default)
+    public virtual async Task AuthorizeAsync(string login, string password, AuthorizationMethod method, CancellationToken cancellationToken = default)
     {
         // TODO: Try optimize with Span
         var authenticationValue = $"{login}:{password}";

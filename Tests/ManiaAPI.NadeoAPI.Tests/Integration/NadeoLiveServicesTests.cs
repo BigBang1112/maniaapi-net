@@ -22,7 +22,7 @@ public class NadeoLiveServicesTests
         INadeoLiveServices nadeoLiveServices = new NadeoLiveServices();
         
         // Act
-        await nadeoLiveServices.AuthorizeAsync(login, password);
+        await nadeoLiveServices.AuthorizeAsync(login, password, AuthorizationMethod.DedicatedServer);
 
         var result = await nadeoLiveServices.GetPlayerSeasonRankingsAsync(Guid.Parse("6a43df20-cd1a-4b3b-87b9-a6835a9b416d"), "ee54d6c5-954c-49b9-bd82-b51f8175b3f7");
         // Assert
