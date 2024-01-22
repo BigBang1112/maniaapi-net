@@ -22,7 +22,7 @@ public partial class TMX : ITMX, IClient
 
     public TMX(HttpClient client, TmxSite site)
     {
-        Client = client;
+        Client = client ?? throw new ArgumentNullException(nameof(client));
         Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (TMX) by BigBang1112");
 
         Site = site;

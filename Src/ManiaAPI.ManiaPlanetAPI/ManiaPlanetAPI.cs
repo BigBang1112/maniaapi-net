@@ -124,7 +124,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, string[], CancellationToken)"/>.</param>
     public ManiaPlanetAPI(HttpClient client, bool automaticallyAuthorize = true)
     {
-        Client = client;
+        Client = client ?? throw new ArgumentNullException(nameof(client));
         AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
@@ -141,6 +141,10 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     internal async Task AuthorizeAsync(string clientId, string clientSecret, string[] scopes, bool refresh, CancellationToken cancellationToken)
     {
+        ArgumentException.ThrowIfNullOrEmpty(clientId);
+        ArgumentException.ThrowIfNullOrEmpty(clientSecret);
+        ArgumentNullException.ThrowIfNull(refresh);
+
         if (refresh && refreshToken is null)
         {
             throw new MissingRefreshTokenException();
@@ -249,6 +253,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     public virtual async Task<Map?> GetMapByUidAsync(string uid, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(uid);
         return await GetNullableJsonAsync($"maps/{uid}", ManiaPlanetAPIJsonContext.Default.Map, cancellationToken);
     }
 
@@ -309,11 +314,13 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     public virtual async Task<Title?> GetTitleByUidAsync(string uid, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(uid);
         return await GetNullableJsonAsync($"titles/{uid}", ManiaPlanetAPIJsonContext.Default.Title, cancellationToken);
     }
 
     public virtual async Task<TitleScript[]> GetTitleScriptsAsync(string uid, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(uid);
         return await GetJsonAsync($"titles/{uid}/scripts", ManiaPlanetAPIJsonContext.Default.TitleScriptArray, cancellationToken);
     }
 

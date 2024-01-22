@@ -30,7 +30,9 @@ public class TrackmaniaIO : ITrackmaniaIO
     /// <param name="userAgent">Custom user agent as explained in https://openplanet.dev/tmio/api</param>
     public TrackmaniaIO(HttpClient client, string userAgent)
     {
-        Client = client;
+        ArgumentException.ThrowIfNullOrEmpty(userAgent);
+
+        Client = client ?? throw new ArgumentNullException(nameof(client));
         Client.BaseAddress = new Uri("https://trackmania.io/api/");
 
         Client.DefaultRequestHeaders.Add("User-Agent", userAgent);
@@ -59,15 +61,20 @@ public class TrackmaniaIO : ITrackmaniaIO
 
     public virtual async Task<Leaderboard> GetLeaderboardAsync(string leaderboardUid, string mapUid, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(leaderboardUid);
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+
         return await GetJsonAsync($"leaderboard/{leaderboardUid}/{mapUid}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
     }
 
     public virtual async Task<WorldRecord[]> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(leaderboardUid);
+
         return await GetJsonAsync($"leaderboard/track/{leaderboardUid}", TrackmaniaIOJsonContext.Default.WorldRecordArray, cancellationToken);
     }
 
-    protected internal async Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         if (RateLimitRemaining == 0)
         {

@@ -10,6 +10,6 @@ public class TrackmaniaAPIResponseException : Exception
         Response = response;
     }
 
-    public TrackmaniaAPIResponseException(string message) : base(message) { }
-    public TrackmaniaAPIResponseException(string message, Exception inner) : base(message, inner) { }
+    public TrackmaniaAPIResponseException(string? message) : base(message) { }
+    public TrackmaniaAPIResponseException(string? message, Exception inner) : base(message, inner) { }
 }

@@ -10,6 +10,6 @@ public class ManiaPlanetAPIResponseException : Exception
         Response = response;
     }
 
-    public ManiaPlanetAPIResponseException(string message) : base(message) { }
-    public ManiaPlanetAPIResponseException(string message, Exception inner) : base(message, inner) { }
+    public ManiaPlanetAPIResponseException(string? message) : base(message) { }
+    public ManiaPlanetAPIResponseException(string? message, Exception inner) : base(message, inner) { }
 }

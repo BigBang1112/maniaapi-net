@@ -38,9 +38,10 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// </summary>
     /// <param name="client">HTTP client.</param>
     /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.</param>
+    /// <exception cref="ArgumentNullException"></exception>
     public TrackmaniaAPI(HttpClient client, bool automaticallyAuthorize = true)
     {
-        Client = client;
+        Client = client ?? throw new ArgumentNullException(nameof(client));
         AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
@@ -53,8 +54,14 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// <param name="clientSecret">Client secret.</param>
     /// <param name="scopes">Scopes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
     public virtual async Task AuthorizeAsync(string clientId, string clientSecret, string[] scopes, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(clientId);
+        ArgumentException.ThrowIfNullOrEmpty(clientSecret);
+        ArgumentNullException.ThrowIfNull(scopes);
+
         var values = new Dictionary<string, string>
         {
             { "grant_type", "client_credentials" },
@@ -111,8 +118,11 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// <param name="accountIds">Account IDs.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Dictionary of nicknames.</returns>
+    /// <exception cref="ArgumentNullException"></exception>
     public virtual async Task<Dictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(accountIds);
+
         if (!accountIds.Any())
         {
             return [];
@@ -141,6 +151,8 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
     public virtual async Task<Dictionary<string, Guid>> GetAccountIdsAsync(IEnumerable<string> displayNames, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(displayNames);
+
         if (!displayNames.Any())
         {
             return [];
@@ -162,7 +174,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         }
     }
 
-    protected internal async Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime && clientId is not null && clientSecret is not null)
         {
