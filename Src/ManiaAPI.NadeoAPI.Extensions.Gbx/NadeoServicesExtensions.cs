@@ -19,10 +19,14 @@ public static class NadeoServicesExtensions
     /// <param name="fileName"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
     /// <exception cref="FormatException">Author login is invalid.</exception>
     /// <exception cref="NadeoAPIResponseException"></exception>
     public static async Task<MapInfo> UploadMapAsync(this INadeoServices services, Stream stream, string fileName, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(stream);
+        ArgumentException.ThrowIfNullOrEmpty(fileName);
+
         using var bufferedStream = new BufferedStream(stream);
 
         using var content = CreateContent(bufferedStream, fileName);
@@ -41,9 +45,14 @@ public static class NadeoServicesExtensions
     /// <param name="fileName"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="FormatException">Author login is invalid.</exception>
+    /// <exception cref="NadeoAPIResponseException"></exception>
     public static async Task<MapInfo> UpdateMapAsync(this INadeoServices services, Guid mapId, Stream stream, string fileName, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(stream);
+        ArgumentNullException.ThrowIfNull(fileName);
+
         using var bufferedStream = new BufferedStream(stream);
 
         using var content = CreateContent(bufferedStream, fileName);

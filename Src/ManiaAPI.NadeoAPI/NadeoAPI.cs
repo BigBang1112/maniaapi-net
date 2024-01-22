@@ -45,14 +45,33 @@ public abstract class NadeoAPI : INadeoAPI
     public abstract string BaseAddress { get; }
     public abstract string Audience { get; }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="client"></param>
+    /// <param name="automaticallyAuthorize"></param>
+    /// <exception cref="ArgumentNullException"></exception>
     protected NadeoAPI(HttpClient client, bool automaticallyAuthorize = true)
     {
-        Client = client;
+        Client = client ?? throw new ArgumentNullException(nameof(client));
         AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="login"></param>
+    /// <param name="password"></param>
+    /// <param name="method"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public virtual async Task AuthorizeAsync(string login, string password, AuthorizationMethod method, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(login);
+        ArgumentException.ThrowIfNullOrEmpty(password);
+
         // TODO: Try optimize with Span
         var authenticationValue = $"{login}:{password}";
         var encodedAuthenticationValue = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationValue));
@@ -159,8 +178,10 @@ public abstract class NadeoAPI : INadeoAPI
         return true;
     }
 
-    public async Task<HttpResponseMessage> SendAsync(HttpMethod method, string endpoint, HttpContent? content = null, CancellationToken cancellationToken = default)
+    public async Task<HttpResponseMessage> SendAsync(HttpMethod method, string? endpoint, HttpContent? content = null, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(method);
+
         if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime)
         {
             await RefreshAsync(cancellationToken);
@@ -187,14 +208,14 @@ public abstract class NadeoAPI : INadeoAPI
         return response;
     }
 
-    public async Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    public async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
         return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
     }
 
 #if DEBUG
-    protected async Task<string> GetAsync(string endpoint, CancellationToken cancellationToken)
+    protected async Task<string> GetAsync(string? endpoint, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
 
