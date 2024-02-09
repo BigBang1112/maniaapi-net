@@ -12,7 +12,7 @@
 		<IsTrimmable>true</IsTrimmable>
 		<IsAotCompatible>true</IsAotCompatible>
 
-		<Version>2.0.0-alpha5</Version>
+		<Version>2.0.0-alpha6</Version>
 		<PackageReleaseNotes></PackageReleaseNotes>
 
 		<TargetFrameworks>net8.0;net7.0</TargetFrameworks>
@@ -31,7 +31,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TmEssentials" Version="2.4.0" />
+		<PackageReference Include="TmEssentials" Version="2.4.1" />
 	</ItemGroup>
 
 	<ItemGroup>
