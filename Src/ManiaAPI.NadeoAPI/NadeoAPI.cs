@@ -201,7 +201,7 @@ public abstract class NadeoAPI : INadeoAPI
 
         var response = await Client.SendAsync(request, cancellationToken);
 
-        Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
+        Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {response.StatusCode} {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
         await ValidateResponseAsync(response, cancellationToken);
 
