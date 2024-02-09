@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.NadeoAPI.JsonContexts;
+using System.Net.Http.Json;
 
 namespace ManiaAPI.NadeoAPI;
 
@@ -15,6 +16,13 @@ public interface INadeoLiveServices : INadeoAPI
     Task<TrackOfTheDayInfo> GetTrackOfTheDayInfoAsync(string mapUid, CancellationToken cancellationToken = default);
     Task<CampaignCollection> GetCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<SeasonPlayerRankingCollection> GetPlayerSeasonRankingsAsync(Guid accountId, string groupId, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Requests the daily channel join link. It can vary based on server occupancy.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="Task"/> with a string containing a join link.</returns>
+    Task<string> JoinDailyChannelAsync(CancellationToken cancellationToken = default);
 }
 
 public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
@@ -96,5 +104,11 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         return await GetJsonAsync($"token/leaderboard/group/{groupId}?accountId={accountId}",
             NadeoAPIJsonContext.Default.SeasonPlayerRankingCollection, cancellationToken);
+    }
+
+    public virtual async Task<string> JoinDailyChannelAsync(CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Post, "token/channel/daily/join", cancellationToken: cancellationToken);
+        return (await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.DailyChannelJoin, cancellationToken))?.JoinLink ?? throw new Exception("This shouldn't be null.");
     }
 }
