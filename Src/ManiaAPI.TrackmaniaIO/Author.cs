@@ -1,3 +1,3 @@
 ﻿namespace ManiaAPI.TrackmaniaIO;
 
-public sealed record Author(string Name, Guid Id, Meta Meta);
+public sealed record Author(string Name, string? Tag, Guid Id, Zone Zone, Meta Meta);
