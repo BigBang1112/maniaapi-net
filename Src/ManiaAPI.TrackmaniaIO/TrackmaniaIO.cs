@@ -14,12 +14,15 @@ public interface ITrackmaniaIO : IDisposable
     Task<Leaderboard> GetLeaderboardAsync(string leaderboardUid, string mapUid, CancellationToken cancellationToken = default);
     Task<Campaign> GetOfficialCampaignAsync(int campaignId, CancellationToken cancellationToken = default);
     Task<WorldRecord[]> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default);
+    Task<Map> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default);
 }
 
 public class TrackmaniaIO : ITrackmaniaIO
 {
     internal static long? RateLimitRemaining;
     internal static DateTimeOffset? RateLimitReset;
+
+    public const string BaseAddress = "https://trackmania.io/api";
 
     public HttpClient Client { get; }
 
@@ -33,8 +36,6 @@ public class TrackmaniaIO : ITrackmaniaIO
         ArgumentException.ThrowIfNullOrEmpty(userAgent);
 
         Client = client ?? throw new ArgumentNullException(nameof(client));
-        Client.BaseAddress = new Uri("https://trackmania.io/api/");
-
         Client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (TrackmaniaIO) by BigBang1112");
     }
@@ -74,6 +75,13 @@ public class TrackmaniaIO : ITrackmaniaIO
         return await GetJsonAsync($"leaderboard/track/{leaderboardUid}", TrackmaniaIOJsonContext.Default.WorldRecordArray, cancellationToken);
     }
 
+    public virtual async Task<Map> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+
+        return await GetJsonAsync($"map/{mapUid}", TrackmaniaIOJsonContext.Default.Map, cancellationToken);
+    }
+
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         if (RateLimitRemaining == 0)
@@ -84,7 +92,7 @@ public class TrackmaniaIO : ITrackmaniaIO
             }
         }
 
-        using var response = await Client.GetAsync(endpoint, cancellationToken);
+        using var response = await Client.GetAsync($"{BaseAddress}/{endpoint}", cancellationToken);
 
         response.EnsureSuccessStatusCode();
 
