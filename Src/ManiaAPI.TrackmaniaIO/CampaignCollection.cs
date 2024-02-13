@@ -1,3 +1,3 @@
 ﻿namespace ManiaAPI.TrackmaniaIO;
 
-public sealed record CampaignCollection(CampaignItem[] Campaigns, int Page);
+public sealed record CampaignCollection(CampaignItem[] Campaigns, int Page, int PageCount);
