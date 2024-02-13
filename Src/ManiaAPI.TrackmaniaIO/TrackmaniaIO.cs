@@ -82,6 +82,16 @@ public class TrackmaniaIO : ITrackmaniaIO
         return await GetJsonAsync($"map/{mapUid}", TrackmaniaIOJsonContext.Default.Map, cancellationToken);
     }
 
+    public virtual async Task<TrackOfTheDayMonth> GetTrackOfTheDaysAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync("totd/0", TrackmaniaIOJsonContext.Default.TrackOfTheDayMonth, cancellationToken);
+    }
+
+    public virtual async Task<AdCollection> GetAdsAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync("ads", TrackmaniaIOJsonContext.Default.AdCollection, cancellationToken);
+    }
+
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         if (RateLimitRemaining == 0)
