@@ -10,7 +10,7 @@ namespace ManiaAPI.TrackmaniaAPI;
 public interface ITrackmaniaAPI : IDisposable
 {
     Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default);
-    Task AuthorizeAsync(string clientId, string clientSecret, string[] scopes, CancellationToken cancellationToken = default);
+    Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default);
     Task<Dictionary<string, Guid>> GetAccountIdsAsync(IEnumerable<string> displayNames, CancellationToken cancellationToken = default);
     Task<Dictionary<string, Guid>> GetAccountIdsAsync(params string[] accountIds);
     Task<Dictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
@@ -56,7 +56,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="ArgumentNullException"></exception>
-    public virtual async Task AuthorizeAsync(string clientId, string clientSecret, string[] scopes, CancellationToken cancellationToken = default)
+    public virtual async Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(clientId);
         ArgumentException.ThrowIfNullOrEmpty(clientSecret);
