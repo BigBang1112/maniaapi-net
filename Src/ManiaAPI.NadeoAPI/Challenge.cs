@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.NadeoAPI.Converters;
+using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI;
@@ -12,7 +13,7 @@ public sealed record Challenge(int Id,
                                string Status,
                                string ResultsVisibility,
                                Guid Creator,
-                               Guid[] Admins,
+                               ImmutableArray<Guid> Admins,
                                int NbServers,
                                bool AutoScale,
                                int NbMaps,

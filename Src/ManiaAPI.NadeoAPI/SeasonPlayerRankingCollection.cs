@@ -1,5 +1,7 @@
-﻿namespace ManiaAPI.NadeoAPI;
+﻿using System.Collections.Immutable;
+
+namespace ManiaAPI.NadeoAPI;
 
 public sealed record SeasonPlayerRankingCollection(string GroupUid,
                                                    string Sp,
-                                                   SeasonPlayerRankingZone[] Zones);
+                                                   ImmutableArray<SeasonPlayerRankingZone> Zones);

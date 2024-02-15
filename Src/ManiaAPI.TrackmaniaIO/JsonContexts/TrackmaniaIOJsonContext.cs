@@ -1,11 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections.Immutable;
+using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TrackmaniaIO.JsonContexts;
 
 [JsonSerializable(typeof(CampaignCollection))]
 [JsonSerializable(typeof(Campaign))]
 [JsonSerializable(typeof(Leaderboard))]
-[JsonSerializable(typeof(WorldRecord[]))]
+[JsonSerializable(typeof(ImmutableArray<WorldRecord>))]
 [JsonSerializable(typeof(AdCollection))]
 [JsonSerializable(typeof(TrackOfTheDayMonth))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]

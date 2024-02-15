@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections.Immutable;
+using System.Text.Json.Serialization;
 
 namespace ManiaAPI.ManiaPlanetAPI.JsonContexts;
 
@@ -6,11 +7,11 @@ namespace ManiaAPI.ManiaPlanetAPI.JsonContexts;
 [JsonSerializable(typeof(AuthorizationResponse))]
 [JsonSerializable(typeof(Player))]
 [JsonSerializable(typeof(ErrorResponse))]
-[JsonSerializable(typeof(Title[]))]
-[JsonSerializable(typeof(DedicatedAccount[]))]
-[JsonSerializable(typeof(Map[]))]
-[JsonSerializable(typeof(Zone[]))]
-[JsonSerializable(typeof(TitleScript[]))]
-[JsonSerializable(typeof(OnlineServer[]))]
+[JsonSerializable(typeof(ImmutableArray<Title>))]
+[JsonSerializable(typeof(ImmutableArray<DedicatedAccount>))]
+[JsonSerializable(typeof(ImmutableArray<Map>))]
+[JsonSerializable(typeof(ImmutableArray<Zone>))]
+[JsonSerializable(typeof(ImmutableArray<TitleScript>))]
+[JsonSerializable(typeof(ImmutableArray<OnlineServer>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class ManiaPlanetAPIJsonContext : JsonSerializerContext { }

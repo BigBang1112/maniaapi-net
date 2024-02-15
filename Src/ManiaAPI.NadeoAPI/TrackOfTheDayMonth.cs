@@ -1,3 +1,5 @@
-﻿namespace ManiaAPI.NadeoAPI;
+﻿using System.Collections.Immutable;
 
-public sealed record TrackOfTheDayMonth(int Year, int Month, int LastDay, TrackOfTheDay[] Days, Media Media);
+namespace ManiaAPI.NadeoAPI;
+
+public sealed record TrackOfTheDayMonth(int Year, int Month, int LastDay, ImmutableArray<TrackOfTheDay> Days, Media Media);

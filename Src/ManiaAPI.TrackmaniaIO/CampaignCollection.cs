@@ -1,3 +1,5 @@
-﻿namespace ManiaAPI.TrackmaniaIO;
+﻿using System.Collections.Immutable;
 
-public sealed record CampaignCollection(CampaignItem[] Campaigns, int Page, int PageCount);
+namespace ManiaAPI.TrackmaniaIO;
+
+public sealed record CampaignCollection(ImmutableArray<CampaignItem> Campaigns, int Page, int PageCount);

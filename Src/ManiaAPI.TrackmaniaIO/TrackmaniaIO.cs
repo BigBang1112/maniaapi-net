@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.TrackmaniaIO.JsonContexts;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -13,7 +14,7 @@ public interface ITrackmaniaIO : IDisposable
     Task<Campaign> GetCustomCampaignAsync(int clubId, int campaignId, CancellationToken cancellationToken = default);
     Task<Leaderboard> GetLeaderboardAsync(string leaderboardUid, string mapUid, CancellationToken cancellationToken = default);
     Task<Campaign> GetOfficialCampaignAsync(int campaignId, CancellationToken cancellationToken = default);
-    Task<WorldRecord[]> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default);
+    Task<ImmutableArray<WorldRecord>> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default);
     Task<Map> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default);
 }
 
@@ -68,11 +69,11 @@ public class TrackmaniaIO : ITrackmaniaIO
         return await GetJsonAsync($"leaderboard/{leaderboardUid}/{mapUid}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
     }
 
-    public virtual async Task<WorldRecord[]> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default)
+    public virtual async Task<ImmutableArray<WorldRecord>> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(leaderboardUid);
 
-        return await GetJsonAsync($"leaderboard/track/{leaderboardUid}", TrackmaniaIOJsonContext.Default.WorldRecordArray, cancellationToken);
+        return await GetJsonAsync($"leaderboard/track/{leaderboardUid}", TrackmaniaIOJsonContext.Default.ImmutableArrayWorldRecord, cancellationToken);
     }
 
     public virtual async Task<Map> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)

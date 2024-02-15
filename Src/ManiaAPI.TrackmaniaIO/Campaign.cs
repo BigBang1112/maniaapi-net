@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.TrackmaniaIO.Converters;
+using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TrackmaniaIO;
@@ -10,7 +11,7 @@ public sealed record Campaign(int Id,
                               [property: JsonConverter(typeof(DateTimeOffsetUnixConverter)), JsonPropertyName("publishtime")] DateTimeOffset PublishTime,
                               [property: JsonPropertyName("clubid")] int ClubId,
                               [property: JsonPropertyName("leaderboarduid")] string LeaderboardUid,
-                              Map[] Playlist,
+                              ImmutableArray<Map> Playlist,
                               Media Mediae,
                               bool Tracked)
 {

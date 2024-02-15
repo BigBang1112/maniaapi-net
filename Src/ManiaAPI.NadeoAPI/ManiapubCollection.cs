@@ -1,3 +1,5 @@
-﻿namespace ManiaAPI.NadeoAPI;
+﻿using System.Collections.Immutable;
 
-public sealed record ManiapubCollection(Maniapub[] DisplayList);
+namespace ManiaAPI.NadeoAPI;
+
+public sealed record ManiapubCollection(ImmutableArray<Maniapub> DisplayList);

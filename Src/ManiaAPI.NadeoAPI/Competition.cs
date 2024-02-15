@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.NadeoAPI.Converters;
+using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI;
@@ -21,7 +22,7 @@ public sealed record Competition(int Id,
                                  string? WebsiteUrl,
                                  string? LogoUrl,
                                  string? VerticalUrl,
-                                 string[] AllowedZones,
+                                 ImmutableArray<string> AllowedZones,
                                  bool AutoNotmalizeSeeds,
                                  string Region,
                                  string AutoGetParticipantSkillLevel,

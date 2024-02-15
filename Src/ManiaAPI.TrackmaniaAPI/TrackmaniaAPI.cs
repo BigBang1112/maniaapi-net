@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.TrackmaniaAPI.JsonContexts;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -11,10 +12,10 @@ public interface ITrackmaniaAPI : IDisposable
 {
     Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default);
     Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default);
-    Task<Dictionary<string, Guid>> GetAccountIdsAsync(IEnumerable<string> displayNames, CancellationToken cancellationToken = default);
-    Task<Dictionary<string, Guid>> GetAccountIdsAsync(params string[] accountIds);
-    Task<Dictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
-    Task<Dictionary<Guid, string>> GetDisplayNamesAsync(params Guid[] accountIds);
+    Task<ImmutableDictionary<string, Guid>> GetAccountIdsAsync(IEnumerable<string> displayNames, CancellationToken cancellationToken = default);
+    Task<ImmutableDictionary<string, Guid>> GetAccountIdsAsync(params string[] accountIds);
+    Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
+    Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(params Guid[] accountIds);
     Task<User> GetUserAsync(CancellationToken cancellationToken = default);
 }
 
@@ -119,20 +120,20 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Dictionary of nicknames.</returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public virtual async Task<Dictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
+    public virtual async Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(accountIds);
 
         if (!accountIds.Any())
         {
-            return [];
+            return ImmutableDictionary<Guid, string>.Empty;
         }
 
         return await GetJsonAsync($"display-names?{string.Join('&', accountIds.Select((x, i) => $"accountId[{i}]={x}"))}",
-            TrackmaniaAPIJsonContext.Default.DictionaryGuidString, cancellationToken);
+            TrackmaniaAPIJsonContext.Default.ImmutableDictionaryGuidString, cancellationToken);
     }
 
-    public async Task<Dictionary<Guid, string>> GetDisplayNamesAsync(params Guid[] accountIds)
+    public async Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(params Guid[] accountIds)
     {
         try
         {
@@ -140,7 +141,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         }
         catch (JsonException)
         {
-            return [];
+            return ImmutableDictionary<Guid, string>.Empty;
         }
     }
 
@@ -149,20 +150,20 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         return await GetJsonAsync("user", TrackmaniaAPIJsonContext.Default.User, cancellationToken);
     }
 
-    public virtual async Task<Dictionary<string, Guid>> GetAccountIdsAsync(IEnumerable<string> displayNames, CancellationToken cancellationToken = default)
+    public virtual async Task<ImmutableDictionary<string, Guid>> GetAccountIdsAsync(IEnumerable<string> displayNames, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(displayNames);
 
         if (!displayNames.Any())
         {
-            return [];
+            return ImmutableDictionary<string, Guid>.Empty;
         }
 
         return await GetJsonAsync($"display-names/account-ids?{string.Join('&', displayNames.Select((x, i) => $"displayName[{i}]={x}"))}",
-            TrackmaniaAPIJsonContext.Default.DictionaryStringGuid, cancellationToken);
+            TrackmaniaAPIJsonContext.Default.ImmutableDictionaryStringGuid, cancellationToken);
     }
 
-    public async Task<Dictionary<string, Guid>> GetAccountIdsAsync(params string[] accountIds)
+    public async Task<ImmutableDictionary<string, Guid>> GetAccountIdsAsync(params string[] accountIds)
     {
         try
         {
@@ -170,7 +171,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         }
         catch (JsonException)
         {
-            return [];
+            return ImmutableDictionary<string, Guid>.Empty;
         }
     }
 

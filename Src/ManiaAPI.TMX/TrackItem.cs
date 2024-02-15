@@ -1,5 +1,6 @@
 ﻿using ManiaAPI.TMX.Attributes;
 using ManiaAPI.TMX.Converters;
+using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 using TmEssentials;
 
@@ -35,7 +36,7 @@ public sealed record TrackItem : IItem
     public bool HasThumbnail { get; set; }
     public WRReplay? WRReplay { get; set; }
     public UserReplay? UserReplay { get; set; }
-    public Author[] Authors { get; set; } = default!;
-    public TrackStyle[] Tags { get; set; } = default!;
-    public Image[]? Images { get; set; }
+    public ImmutableArray<Author> Authors { get; set; }
+    public ImmutableArray<TrackStyle> Tags { get; set; }
+    public ImmutableArray<Image>? Images { get; set; }
 }

@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.NadeoAPI.Converters;
+using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI;
@@ -21,8 +22,8 @@ public sealed record Campaign(int Id,
                               [property: JsonConverter(typeof(NullableIntConverter))] int? Month,
                               [property: JsonConverter(typeof(NullableIntConverter))] int? MonthDay,
                               bool Published,
-                              CampaignMap[] Playlist,
-                              Season[] LatestSeasons,
-                              Category[] Categories,
+                              ImmutableArray<CampaignMap> Playlist,
+                              ImmutableArray<Season> LatestSeasons,
+                              ImmutableArray<Category> Categories,
                               Media Media,
                               [property: JsonConverter(typeof(DateTimeOffsetUnixConverter))] DateTimeOffset EditionTimestamp);

@@ -1,3 +1,5 @@
-﻿namespace ManiaAPI.NadeoAPI;
+﻿using System.Collections.Immutable;
 
-public sealed record MapInfoLiveCollection(MapInfoLive[] MapList);
+namespace ManiaAPI.NadeoAPI;
+
+public sealed record MapInfoLiveCollection(ImmutableArray<MapInfoLive> MapList);

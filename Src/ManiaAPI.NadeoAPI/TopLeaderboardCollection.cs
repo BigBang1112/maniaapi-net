@@ -1,6 +1,8 @@
-﻿namespace ManiaAPI.NadeoAPI;
+﻿using System.Collections.Immutable;
 
-public sealed record TopLeaderboardCollection(string GroupUid, string MapUid, TopLeaderboard[] Tops)
+namespace ManiaAPI.NadeoAPI;
+
+public sealed record TopLeaderboardCollection(string GroupUid, string MapUid, ImmutableArray<TopLeaderboard> Tops)
 {    
     public TopLeaderboard Top => Tops[0];
 }

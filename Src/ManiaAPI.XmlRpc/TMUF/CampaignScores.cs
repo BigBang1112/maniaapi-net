@@ -50,7 +50,7 @@ public sealed class CampaignScores(
                 var zoneName = r.ReadString();
                 var hasRecordUnits = r.ReadBoolean(asByte: true);
 
-                var recordUnits = hasRecordUnits ? ScoresReadUtils.ReadRecordsBuffer(r) : Array.Empty<RecordUnit>();
+                var recordUnits = hasRecordUnits ? ScoresReadUtils.ReadRecordsBuffer(r) : [];
 
                 var (sizeOfRanksInt, sizeOfTimesInt) = ScoresReadUtils.ArchiveSizesMask2(r);
 

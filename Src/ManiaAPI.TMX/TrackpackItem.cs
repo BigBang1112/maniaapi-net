@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.TMX.Attributes;
+using System.Collections.Immutable;
 
 namespace ManiaAPI.TMX;
 
@@ -15,5 +16,5 @@ public sealed record TrackpackItem : IItem
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public User Creator { get; set; } = default!;
-    public Author[] Managers { get; set; } = default!;
+    public ImmutableArray<Author> Managers { get; set; } = default!;
 }

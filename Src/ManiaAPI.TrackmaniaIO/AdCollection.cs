@@ -1,3 +1,5 @@
-﻿namespace ManiaAPI.TrackmaniaIO;
+﻿using System.Collections.Immutable;
 
-public sealed record AdCollection(Ad[] Ads);
+namespace ManiaAPI.TrackmaniaIO;
+
+public sealed record AdCollection(ImmutableArray<Ad> Ads);

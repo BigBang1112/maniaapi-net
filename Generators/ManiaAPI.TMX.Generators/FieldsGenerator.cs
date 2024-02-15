@@ -116,7 +116,7 @@ public class FieldsGenerator : IIncrementalGenerator
         {
             if (accessToProperty is null)
             {
-                accessToProperty = new[] { propSymbol };
+                accessToProperty = [propSymbol];
             }
             else
             {
