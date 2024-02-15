@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -29,7 +29,7 @@ public class TrackmaniaAPITests
             Guid.Parse("faedcf21-d61a-4305-9ffe-680b2ee5d65e")
         ]);
 
-        Assert.IsType<Dictionary<Guid, string>>(displayNames);
+        Assert.IsType<ImmutableDictionary<Guid, string>>(displayNames);
 
     }
 }
