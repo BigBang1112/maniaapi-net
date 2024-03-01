@@ -32,6 +32,8 @@ public abstract class NadeoAPI : INadeoAPI
 {
     private string? accessToken;
     private string? refreshToken;
+    private string? password;
+    private AuthorizationMethod authMethod;
 
     public JwtPayloadNadeoAPI? JWT { get; private set; }
     public UbisoftAuthenticationTicket? UbisoftTicket { get; private set; }
@@ -112,6 +114,9 @@ public abstract class NadeoAPI : INadeoAPI
         using var response = await Client.SendAsync(authRequest, cancellationToken);
 
         await SaveTokenResponseAsync(response, cancellationToken);
+
+        this.password = password;
+        authMethod = method;
     }
 
     /// <summary>
@@ -161,9 +166,27 @@ public abstract class NadeoAPI : INadeoAPI
 
     public virtual async ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default)
     {
-        if (refreshToken is null || RefreshAt is null || DateTimeOffset.UtcNow < RefreshAt.Value)
+        if (refreshToken is null || RefreshAt is null || DateTimeOffset.UtcNow < RefreshAt.Value || ExpirationTime is null)
         {
             return false;
+        }
+
+        if (DateTimeOffset.UtcNow >= ExpirationTime.Value)
+        {
+            if (JWT?.Account is not string account)
+            {
+                // JWT account ('aun') is not available
+                return false;
+            }
+
+            if (password is null)
+            {
+                // {Audience} password is not available
+                return false;
+            }
+
+            await AuthorizeAsync(account, password, authMethod, cancellationToken);
+            return true;
         }
 
         using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh")
