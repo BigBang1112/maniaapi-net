@@ -93,7 +93,7 @@ public partial class TMX : ITMX, IClient
         public long? From { get; init; }
 
         public long[]? Id { get; init; }
-        public string[]? Uid { get; init; }
+        public string[]? UId { get; init; }
         public string? Name { get; init; }
         public string? Author { get; init; }
         public long? AuthorUserId { get; init; }
