@@ -13,6 +13,7 @@ public interface ITrackmaniaIO : IDisposable
     Task<CampaignCollection> GetCampaignsAsync(int page = 0, CancellationToken cancellationToken = default);
     Task<Campaign> GetCustomCampaignAsync(int clubId, int campaignId, CancellationToken cancellationToken = default);
     Task<Leaderboard> GetLeaderboardAsync(string leaderboardUid, string mapUid, CancellationToken cancellationToken = default);
+    Task<Leaderboard> GetLeaderboardAsync(string mapUid, int offset = 0, int length = 15, CancellationToken cancellationToken = default);
     Task<Campaign> GetOfficialCampaignAsync(int campaignId, CancellationToken cancellationToken = default);
     Task<ImmutableArray<WorldRecord>> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default);
     Task<Map> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default);
@@ -67,6 +68,13 @@ public class TrackmaniaIO : ITrackmaniaIO
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
         return await GetJsonAsync($"leaderboard/{leaderboardUid}/{mapUid}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
+    }
+
+    public virtual async Task<Leaderboard> GetLeaderboardAsync(string mapUid, int offset = 0, int length = 15, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+
+        return await GetJsonAsync($"leaderboard/map/{mapUid}?offset={offset}&length={length}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
     }
 
     public virtual async Task<ImmutableArray<WorldRecord>> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default)
