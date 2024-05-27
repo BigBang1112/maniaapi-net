@@ -44,11 +44,7 @@ public class NadeoServicesExtensionsTests
         nadeoServices.SendAsync(Arg.Any<HttpMethod>(), Arg.Any<string>(), Arg.Any<MultipartFormDataContent>(), Arg.Any<CancellationToken>())
                      .Returns(Task.FromResult(new HttpResponseMessage
                      {
-#if NET8_0_OR_GREATER
                          Content = JsonContent.Create(expectedMapInfo, NadeoAPIJsonContext.Default.MapInfo)
-#else
-                         Content = JsonContent.Create(expectedMapInfo, NadeoAPIJsonContext.Default.MapInfo.Type)
-#endif
                      }));
 
         // Act
@@ -86,11 +82,7 @@ public class NadeoServicesExtensionsTests
         nadeoServices.SendAsync(Arg.Any<HttpMethod>(), $"maps/{expectedMapInfo.MapId}", Arg.Any<MultipartFormDataContent>(), Arg.Any<CancellationToken>())
                      .Returns(Task.FromResult(new HttpResponseMessage
                      {
-#if NET8_0_OR_GREATER
                          Content = JsonContent.Create(expectedMapInfo, NadeoAPIJsonContext.Default.MapInfo)
-#else
-                         Content = JsonContent.Create(expectedMapInfo, NadeoAPIJsonContext.Default.MapInfo.Type)
-#endif
                      }));
 
         // Act

@@ -1,18 +1,10 @@
-﻿#if NET8_0_OR_GREATER
-using System.Collections.Frozen;
-#else
-using System.Collections.ObjectModel;
-#endif
+﻿using System.Collections.Frozen;
 
 namespace ManiaAPI.XmlRpc.TMUF;
 
 public static class Zones
 {
-#if NET8_0_OR_GREATER
     public static FrozenDictionary<string, int> ZoneIdsWithDataInTMUF { get; } = new Dictionary<string, int>
-#else
-    public static ReadOnlyDictionary<string, int> ZoneIdsWithDataInTMUF { get; } = new ReadOnlyDictionary<string, int>(new Dictionary<string, int>()
-#endif
     {
         ["World|Algeria"] = 327,
         ["World|Angola"] = 95000,
@@ -547,17 +539,9 @@ public static class Zones
         ["World|Uzbekistan"] = 95035,
         ["World|Venezuela"] = 95037,
         ["World|Vietnam"] = 335
-#if NET8_0_OR_GREATER
     }.ToFrozenDictionary();
-#else
-    });
-#endif
 
-#if NET8_0_OR_GREATER
     public static FrozenDictionary<string, int> ZoneIdsInTMUF { get; } = new Dictionary<string, int>()
-#else
-    public static ReadOnlyDictionary<string, int> ZoneIdsInTMUF { get; } = new ReadOnlyDictionary<string, int>(new Dictionary<string, int>()
-#endif
     {
         ["World"] = 1,
         ["World|Algeria"] = 327,
@@ -1152,9 +1136,5 @@ public static class Zones
         ["World|Uzbekistan"] = 95035,
         ["World|Venezuela"] = 95037,
         ["World|Vietnam"] = 335
-#if NET8_0_OR_GREATER
     }.ToFrozenDictionary();
-#else
-    });
-#endif
 }

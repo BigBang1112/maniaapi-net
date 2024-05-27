@@ -13,11 +13,7 @@ internal class ManiaPlanetAuthenticationHandler(
     IOptionsMonitor<ManiaPlanetAuthenticationOptions> options,
     ILoggerFactory logger,
     UrlEncoder encoder
-#if NET8_0_OR_GREATER
     ) : OAuthHandler<ManiaPlanetAuthenticationOptions>(options, logger, encoder)
-#else
-    , ISystemClock clock) : OAuthHandler<ManiaPlanetAuthenticationOptions>(options, logger, encoder, clock)
-#endif
 {
     protected override async Task<AuthenticationTicket> CreateTicketAsync(ClaimsIdentity identity,
                                                                           AuthenticationProperties properties,
