@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<Product>ManiaAPI.NadeoAPI.Extensions.Gbx</Product>
-		<AssemblyName>ManiaAPI.NadeoAPI.Extensions.Gbx</AssemblyName>
-		<AssemblyTitle>ManiaAPI.NadeoAPI.Extensions.Gbx</AssemblyTitle>
+		<Product>ManiaAPI.TMX.Extensions.Gbx</Product>
+		<AssemblyName>ManiaAPI.TMX.Extensions.Gbx</AssemblyName>
+		<AssemblyTitle>ManiaAPI.TMX.Extensions.Gbx</AssemblyTitle>
 		<Authors>Petr Pivoňka (BigBang1112)</Authors>
 		<Description></Description>
 		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, nadeo, nadeoapi, gbx</PackageTags>
+		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, tmx, mx, exchange, gbx</PackageTags>
 		<IsTrimmable>true</IsTrimmable>
 		<IsAotCompatible>true</IsAotCompatible>
 
-		<Version>2.0.0-alpha6</Version>
+		<Version>2.0.0-alpha10</Version>
 		<PackageReleaseNotes></PackageReleaseNotes>
 
 		<TargetFrameworks>net8.0</TargetFrameworks>
@@ -34,7 +34,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\ManiaAPI.NadeoAPI\ManiaAPI.NadeoAPI.csproj" />
+		<ProjectReference Include="..\ManiaAPI.TMX\ManiaAPI.TMX.csproj" />
 	</ItemGroup>
 
 </Project>
