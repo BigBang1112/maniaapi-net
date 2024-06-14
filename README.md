@@ -42,6 +42,18 @@ foreach (var item in replayCollection.Results)
 })
 ```
 
+Use `ManiaAPI.TMX.Extensions.Gbx` package to load a replay into `CGameCtnReplayRecord`, either just the header or full Gbx:
+
+```cs
+using ManiaAPI.TMX.Extensions.Gbx;
+
+// Just the header
+Gbx<CGameCtnReplayRecord> gbxMapHeader = await tmx.GetReplayGbxHeaderAsync(replayId: 5032240);
+
+// Full Gbx
+Gbx<CGameCtnReplayRecord> gbxMap = await tmx.GetReplayGbxAsync(replayId: 5032240);
+```
+
 ### Search Tracks
 
 ```cs
@@ -114,10 +126,16 @@ Or request it:
 using HttpResponseMessage response = await tmx.GetTrackGbxResponseAsync(trackId: 4808334);
 ```
 
-Or use `ManiaAPI.TMX.Gbx` package to load it into `CGameCtnChallenge`, either just the header or full Gbx:
+Or use `ManiaAPI.TMX.Extensions.Gbx` package to load it into `CGameCtnChallenge`, either just the header or full Gbx:
 
 ```cs
-TODO
+using ManiaAPI.TMX.Extensions.Gbx;
+
+// Just the header
+Gbx<CGameCtnChallenge> gbxMapHeader = await tmx.GetTrackGbxHeaderAsync(trackId: 4808334);
+
+// Full Gbx
+Gbx<CGameCtnChallenge> gbxMap = await tmx.GetTrackGbxAsync(trackId: 4808334);
 ```
 
 ### Get Track Thumbnail
