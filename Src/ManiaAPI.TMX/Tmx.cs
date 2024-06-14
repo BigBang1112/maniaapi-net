@@ -12,6 +12,13 @@ public interface ITMX : IClient
     Task<ItemCollection<TrackpackItem>> SearchTrackpacksAsync(TMX.SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
     Task<ItemCollection<TrackItem>> SearchTracksAsync(TMX.SearchTracksParameters parameters, CancellationToken cancellationToken = default);
     Task<ItemCollection<UserItem>> SearchUsersAsync(TMX.SearchUsersParameters parameters, CancellationToken cancellationToken = default);
+
+    string GetTrackGbxUrl(long trackId);
+    Task<HttpResponseMessage> GetTrackGbxResponseAsync(long trackId, CancellationToken cancellationToken = default);
+    string GetTrackThumbnailUrl(long trackId);
+    Task<HttpResponseMessage> GetTrackThumbnailResponseAsync(long trackId, CancellationToken cancellationToken = default);
+    string GetTrackImageUrl(long trackId, int imageIndex);
+    Task<HttpResponseMessage> GetTrackImageResponseAsync(long trackId, int imageIndex, CancellationToken cancellationToken = default);
 }
 
 public partial class TMX : ITMX, IClient
@@ -225,44 +232,23 @@ public partial class TMX : ITMX, IClient
 
     public string GetTrackGbxUrl(long trackId) => $"{Client.BaseAddress}trackgbx/{trackId}";
 
-    public virtual async Task<HttpResponseMessage> GetTrackGbxAsync(long trackId, CancellationToken cancellationToken = default)
+    public virtual async Task<HttpResponseMessage> GetTrackGbxResponseAsync(long trackId, CancellationToken cancellationToken = default)
     {
         return await Client.GetAsync(GetTrackGbxUrl(trackId), cancellationToken);
     }
 
-    public virtual async Task<Stream> OpenTrackGbxAsync(long trackId, CancellationToken cancellationToken = default)
-    {
-        var response = await GetTrackGbxAsync(trackId, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStreamAsync(cancellationToken);
-    }
-
     public string GetTrackThumbnailUrl(long trackId) => $"{Client.BaseAddress}trackshow/{trackId}/image/0";
 
-    public virtual async Task<HttpResponseMessage> GetTrackThumbnailAsync(long trackId, CancellationToken cancellationToken = default)
+    public virtual async Task<HttpResponseMessage> GetTrackThumbnailResponseAsync(long trackId, CancellationToken cancellationToken = default)
     {
         return await Client.GetAsync(GetTrackThumbnailUrl(trackId), cancellationToken);
     }
 
-    public virtual async Task<Stream> OpenTrackThumbnailAsync(long trackId, CancellationToken cancellationToken = default)
-    {
-        var response = await GetTrackThumbnailAsync(trackId, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStreamAsync(cancellationToken);
-    }
-
     public string GetTrackImageUrl(long trackId, int imageIndex) => $"{Client.BaseAddress}trackshow/{trackId}/image/{imageIndex}";
 
-    public virtual async Task<HttpResponseMessage> GetTrackImageAsync(long trackId, int imageIndex, CancellationToken cancellationToken = default)
+    public virtual async Task<HttpResponseMessage> GetTrackImageResponseAsync(long trackId, int imageIndex, CancellationToken cancellationToken = default)
     {
         return await Client.GetAsync(GetTrackImageUrl(trackId, imageIndex), cancellationToken);
-    }
-
-    public virtual async Task<Stream> OpenTrackImageAsync(long trackId, int imageIndex, CancellationToken cancellationToken = default)
-    {
-        var response = await GetTrackImageAsync(trackId, imageIndex, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
 
     public virtual void Dispose()

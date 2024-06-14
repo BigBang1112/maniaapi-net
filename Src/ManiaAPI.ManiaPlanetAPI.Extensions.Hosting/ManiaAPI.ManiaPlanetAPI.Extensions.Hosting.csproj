@@ -8,7 +8,7 @@
 		<Description>Extension methods of ManiaPlanet API for ASP.NET Core.</Description>
 		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi</PackageTags>
+		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
 		<IsTrimmable>true</IsTrimmable>
 
 		<Version>2.0.0-alpha2</Version>

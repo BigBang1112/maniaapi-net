@@ -8,7 +8,7 @@
 		<Description>Wrapper for the official in-game Nadeo API from Trackmania released in 2020. Part of the ManiaAPI library set.</Description>
 		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, nadeo, nadeoapi</PackageTags>
+		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, nadeo, nadeoapi</PackageTags>
 		<IsTrimmable>true</IsTrimmable>
 		<IsAotCompatible>true</IsAotCompatible>
 

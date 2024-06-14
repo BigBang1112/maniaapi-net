@@ -8,7 +8,7 @@
 		<Description>Wrapper for the official web API from ManiaPlanet (Trackmania 2 and Shootmania). Part of the ManiaAPI library set.</Description>
 		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageTags>trackmania, shootmania, maniaplanet, tm, api, web, maniaapi</PackageTags>
+		<PackageTags>trackmania, shootmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
 		<IsTrimmable>true</IsTrimmable>
 
 		<Version>2.0.0-alpha2</Version>
