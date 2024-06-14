@@ -32,13 +32,13 @@ var tmx = new TMX(TmxSite.TMUF);
 ```cs
 var replayCollection = await tmx.GetReplaysAsync(new()
 {
-	TrackId = 4808334,
-	Count = 20
+    TrackId = 4808334,
+    Count = 20
 });
 
 foreach (var item in replayCollection.Results)
 {
-	Console.WriteLine(item.ReplayTime);
+    Console.WriteLine(item.ReplayTime);
 })
 ```
 
@@ -47,13 +47,13 @@ foreach (var item in replayCollection.Results)
 ```cs
 var trackCollection = await tmx.SearchTracksAsync(new()
 {
-	Name = "wirtual", // tracks that have wirtual in their name
-	Count = 20
+    Name = "wirtual", // tracks that have wirtual in their name
+    Count = 20
 });
 
 foreach (var item in trackCollection.Results)
 {
-	Console.WriteLine(item.TrackName);
+    Console.WriteLine(item.TrackName);
 })
 ```
 
@@ -62,12 +62,12 @@ foreach (var item in trackCollection.Results)
 ```cs
 var leaderboardCollection = await tmx.SearchLeaderboardsAsync(new()
 {
-	Count = 10
+    Count = 10
 });
 
 foreach (var item in leaderboardCollection.Results)
 {
-	Console.WriteLine(item.User.Name);
+    Console.WriteLine(item.User.Name);
 }
 ```
 
@@ -76,12 +76,12 @@ foreach (var item in leaderboardCollection.Results)
 ```cs
 var trackpackCollection = await tmx.SearchTrackpacksAsync(new()
 {
-	Count = 15
+    Count = 15
 });
 
 foreach (var item in trackpackCollection.Results)
 {
-	Console.WriteLine(item.PackName);
+    Console.WriteLine(item.PackName);
 }
 ```
 
@@ -90,13 +90,13 @@ foreach (var item in trackpackCollection.Results)
 ```cs
 var userCollection = await tmx.SearchUsersAsync(new()
 {
-	InModerators = true,
-	Count = 10
+    InModerators = true,
+    Count = 10
 });
 
 foreach (var item in userCollection.Results)
 {
-	Console.WriteLine(item.Name);
+    Console.WriteLine(item.Name);
 }
 ```
 
