@@ -1,28 +1,33 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<Product>ManiaAPI.XmlRpc</Product>
-		<AssemblyName>ManiaAPI.XmlRpc</AssemblyName>
-		<AssemblyTitle>ManiaAPI.XmlRpc</AssemblyTitle>
-		<Authors>Petr Pivoňka (BigBang1112)</Authors>
+		<PackageId>ManiaAPI.XmlRpc</PackageId>
+		<Version>2.0.0-alpha10</Version>
+		<Authors>BigBang1112</Authors>
 		<Description>Wrapper for the XML-RPC API used in TMF and ManiaPlanet. Part of the ManiaAPI library set.</Description>
-		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Copyright>Copyright (c) 2024 Petr Pivoňka</Copyright>
+		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
+		<PackageIcon></PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, xml-rpc, xml, rpc</PackageTags>
+		<PackageReleaseNotes></PackageReleaseNotes>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0</TargetFrameworks>
+		<LangVersion>12</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 		<IsTrimmable>true</IsTrimmable>
 		<IsAotCompatible>true</IsAotCompatible>
 
-		<Version>2.0.0-alpha4</Version>
-		<PackageReleaseNotes></PackageReleaseNotes>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
-		<TargetFrameworks>net8.0</TargetFrameworks>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<LangVersion>12</LangVersion>
-
-		<RepositoryType>git</RepositoryType>
-		<RepositoryUrl>https://github.com/BigBang1112/maniaapi-net</RepositoryUrl>
-		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -31,11 +36,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<InternalsVisibleTo Include="ManiaAPI.XmlRpc.Tests" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="TmEssentials" Version="2.4.2" />
+		<PackageReference Include="TmEssentials" Version="2.4.2" />
 	</ItemGroup>
 
 </Project>

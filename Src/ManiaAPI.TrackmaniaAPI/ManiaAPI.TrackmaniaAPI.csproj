@@ -1,33 +1,42 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<Product>ManiaAPI.TrackmaniaAPI</Product>
-		<AssemblyName>ManiaAPI.TrackmaniaAPI</AssemblyName>
-		<AssemblyTitle>ManiaAPI.TrackmaniaAPI</AssemblyTitle>
-		<Authors>Petr Pivoňka (BigBang1112)</Authors>
+		<PackageId>ManiaAPI.TrackmaniaAPI</PackageId>
+		<Version>2.0.0-alpha10</Version>
+		<Authors>BigBang1112</Authors>
 		<Description>Wrapper for the official web API from Trackmania released in 2020. Part of the ManiaAPI library set.</Description>
-		<Copyright>Copyright © Petr 'BigBang1112' Pivoňka</Copyright>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Copyright>Copyright (c) 2024 Petr Pivoňka</Copyright>
+		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
+		<PackageIcon></PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
+		<PackageReleaseNotes></PackageReleaseNotes>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0</TargetFrameworks>
+		<LangVersion>12</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 		<IsTrimmable>true</IsTrimmable>
 		<IsAotCompatible>true</IsAotCompatible>
 
-		<Version>2.0.0-alpha2</Version>
-		<PackageReleaseNotes></PackageReleaseNotes>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
-		<TargetFrameworks>net8.0</TargetFrameworks>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<LangVersion>12</LangVersion>
-
-		<RepositoryType>git</RepositoryType>
-		<RepositoryUrl>https://github.com/BigBang1112/maniaapi-net</RepositoryUrl>
-		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<NoWarn>1591</NoWarn>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 </Project>
