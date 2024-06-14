@@ -42,18 +42,6 @@ foreach (var item in replayCollection.Results)
 })
 ```
 
-Use `ManiaAPI.TMX.Extensions.Gbx` package to load a replay into `CGameCtnReplayRecord`, either just the header or full Gbx:
-
-```cs
-using ManiaAPI.TMX.Extensions.Gbx;
-
-// Just the header
-Gbx<CGameCtnReplayRecord> gbxMapHeader = await tmx.GetReplayGbxHeaderAsync(replayId: 5032240);
-
-// Full Gbx
-Gbx<CGameCtnReplayRecord> gbxMap = await tmx.GetReplayGbxAsync(replayId: 5032240);
-```
-
 ### Search Tracks
 
 ```cs
@@ -110,6 +98,32 @@ foreach (var item in userCollection.Results)
 {
     Console.WriteLine(item.Name);
 }
+```
+
+### Get Replay Gbx
+
+Just the URL:
+
+```cs
+string url = tmx.GetReplayGbxUrl(replayId: 5032240);
+```
+
+Or request it:
+
+```cs
+using HttpResponseMessage response = await tmx.GetReplayGbxResponseAsync(replayId: 5032240);
+```
+
+Or use `ManiaAPI.TMX.Extensions.Gbx` package to load it into `CGameCtnReplayRecord`, either just the header or full Gbx:
+
+```cs
+using ManiaAPI.TMX.Extensions.Gbx;
+
+// Just the header
+Gbx<CGameCtnReplayRecord> gbxReplayHeader = await tmx.GetReplayGbxHeaderAsync(replayId: 5032240);
+
+// Full Gbx
+Gbx<CGameCtnReplayRecord> gbxReplay = await tmx.GetReplayGbxAsync(replayId: 5032240);
 ```
 
 ### Get Track Gbx
