@@ -1,0 +1,1 @@
+# ManiaAPI.ManiaPlanetAPI.Extensions.Hosting
