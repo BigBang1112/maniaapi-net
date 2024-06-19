@@ -31,10 +31,12 @@ public interface INadeoLiveServices : INadeoAPI
     Task<ClubRoom> GetClubRoomAsync(int clubId, int roomId, CancellationToken cancellationToken = default);
     Task<ClubRoomCollection> GetClubRoomsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
     Task<ClubBucketCollection> GetClubBucketsAsync(ClubBucketType type, int length, int offset = 0, CancellationToken cancellationToken = default);
+    Task<ClubBucketCollection> GetClubBucketsAsync(string type, int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubBucket> GetClubBucketAsync(int clubId, int bucketId, int length = 1, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubCollection> GetClubsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
     Task<ClubPlayerInfo> GetClubPlayerInfoAsync(CancellationToken cancellationToken = default);
     Task<ClubCollection> GetMyClubsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
+    Task EditClubActivityAsync(int clubId, int activityId, ClubActivityEdition edition, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Requests the daily channel join link. It can vary based on server occupancy.
@@ -206,7 +208,12 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
             _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
 
-        return await GetJsonAsync($"token/club/bucket/{typeStr}/all?length={length}&offset={offset}",
+        return await GetClubBucketsAsync(typeStr, length, offset, cancellationToken);
+    }
+
+    public virtual async Task<ClubBucketCollection> GetClubBucketsAsync(string type, int length, int offset = 0, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/bucket/{type}/all?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.ClubBucketCollection, cancellationToken);
     }
 
@@ -231,5 +238,11 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         return await GetJsonAsync($"token/club/mine?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.ClubCollection, cancellationToken);
+    }
+
+    public virtual async Task EditClubActivityAsync(int clubId, int activityId, ClubActivityEdition edition, CancellationToken cancellationToken = default)
+    {
+        var jsonContent = JsonContent.Create(edition, NadeoAPIJsonContext.Default.ClubActivityEdition);
+        await SendAsync(HttpMethod.Post, $"token/club/{clubId}/activity/{activityId}/edit", jsonContent, cancellationToken);
     }
 }
