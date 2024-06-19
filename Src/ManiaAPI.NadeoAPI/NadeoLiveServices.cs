@@ -1,6 +1,7 @@
 ﻿using ManiaAPI.NadeoAPI.JsonContexts;
 using System.Collections.Immutable;
 using System.Net.Http.Json;
+using System.Web;
 
 namespace ManiaAPI.NadeoAPI;
 
@@ -116,7 +117,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
 
     public virtual async Task<ClubCampaignCollection> GetClubCampaignsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"token/club/campaign?offset={offset}&length={length}{(name is null ? "" : $"&name={name}")}",
+        return await GetJsonAsync($"token/club/campaign?offset={offset}&length={length}{(name is null ? "" : $"&name={HttpUtility.UrlEncode(name)}")}",
             NadeoAPIJsonContext.Default.ClubCampaignCollection, cancellationToken);
     }
 }
