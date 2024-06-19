@@ -17,7 +17,8 @@ public interface INadeoLiveServices : INadeoAPI
     Task<TrackOfTheDayInfo> GetTrackOfTheDayInfoAsync(string mapUid, CancellationToken cancellationToken = default);
     Task<CampaignCollection> GetCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<SeasonPlayerRankingCollection> GetPlayerSeasonRankingsAsync(Guid accountId, string groupId, CancellationToken cancellationToken = default);
-    
+    Task<ClubCampaignCollection> GetClubCampaignsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Requests the daily channel join link. It can vary based on server occupancy.
     /// </summary>
@@ -111,5 +112,11 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         using var response = await SendAsync(HttpMethod.Post, "token/channel/daily/join", cancellationToken: cancellationToken);
         return (await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.DailyChannelJoin, cancellationToken))?.JoinLink ?? throw new Exception("This shouldn't be null.");
+    }
+
+    public virtual async Task<ClubCampaignCollection> GetClubCampaignsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/campaign?offset={offset}&length={length}{(name is null ? "" : $"&name={name}")}",
+            NadeoAPIJsonContext.Default.ClubCampaignCollection, cancellationToken);
     }
 }

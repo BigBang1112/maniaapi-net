@@ -27,5 +27,6 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 [JsonSerializable(typeof(Competition))]
 [JsonSerializable(typeof(Challenge))]
 [JsonSerializable(typeof(DailyChannelJoin))]
+[JsonSerializable(typeof(ClubCampaignCollection))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class NadeoAPIJsonContext : JsonSerializerContext { }
