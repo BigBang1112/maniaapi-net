@@ -39,7 +39,7 @@ jobs:
         dotnet user-secrets -p Tests/ManiaAPI.TrackmaniaAPI.Tests --id d864cd9f-edad-4ebf-b6e2-9c0c91bd62f8 set "ClientSecret" "${{ secrets.TRACKMANIA_API_CLIENTSECRET }}"
     
     - name: Build
-      run: dotnet build -c Release --no-restore
+      run: dotnet build -c Release --no-restore /p:ContinuousIntegrationBuild=true
       
     - name: Test
       run: dotnet test -c Release --no-build --verbosity normal
