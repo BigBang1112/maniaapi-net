@@ -5,12 +5,12 @@ using System.Text.Json.Serialization;
 namespace ManiaAPI.NadeoAPI;
 
 public sealed record Campaign(int Id,
-                              Guid SeasonUid,
+                              string SeasonUid,
                               string Name,
                               string Color,
                               int UseCase,
                               int ClubId,
-                              Guid LeaderboardGroupUid,
+                              string LeaderboardGroupUid,
                               [property: JsonConverter(typeof(DateTimeOffsetUnixConverter))] DateTimeOffset PublicationTimestamp,
                               [property: JsonConverter(typeof(DateTimeOffsetUnixConverter))] DateTimeOffset StartTimestamp,
                               [property: JsonConverter(typeof(DateTimeOffsetUnixConverter))] DateTimeOffset EndTimestamp,
