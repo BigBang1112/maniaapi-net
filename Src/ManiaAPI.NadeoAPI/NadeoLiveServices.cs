@@ -1,6 +1,7 @@
 ﻿using ManiaAPI.NadeoAPI.JsonContexts;
 using System.Collections.Immutable;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 using System.Web;
 
 namespace ManiaAPI.NadeoAPI;
@@ -18,7 +19,22 @@ public interface INadeoLiveServices : INadeoAPI
     Task<TrackOfTheDayInfo> GetTrackOfTheDayInfoAsync(string mapUid, CancellationToken cancellationToken = default);
     Task<CampaignCollection> GetCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<SeasonPlayerRankingCollection> GetPlayerSeasonRankingsAsync(Guid accountId, string groupId, CancellationToken cancellationToken = default);
+    Task<ClubMember> GetClubMemberAsync(int clubId, Guid accountId, CancellationToken cancellationToken = default);
+    Task<ClubMember> GetClubMemberAsync(int clubId, string diplayName, CancellationToken cancellationToken = default);
+    Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int length, int offset = 0, bool active = true, CancellationToken cancellationToken = default);
+    Task<Club> GetClubAsync(int clubId, CancellationToken cancellationToken = default);
+    Task<ClubCampaign> GetClubCampaignAsync(int clubId, int campaignId, CancellationToken cancellationToken = default);
     Task<ClubCampaignCollection> GetClubCampaignsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
+    Task<ClubCompetitionCollection> GetClubCompetitionsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
+    Task<ClubMapReviewRoomCollection> GetClubMapReviewRoomsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
+    Task<ClubMemberCollection> GetClubMembersAsync(int clubId, int length, int offset = 0, CancellationToken cancellationToken = default);
+    Task<ClubRoom> GetClubRoomAsync(int clubId, int roomId, CancellationToken cancellationToken = default);
+    Task<ClubRoomCollection> GetClubRoomsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
+    Task<ClubBucketCollection> GetClubBucketsAsync(ClubBucketType type, int length, int offset = 0, CancellationToken cancellationToken = default);
+    Task<ClubBucket> GetClubBucketAsync(int clubId, int bucketId, int length = 1, int offset = 0, CancellationToken cancellationToken = default);
+    Task<ClubCollection> GetClubsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
+    Task<ClubPlayerInfo> GetClubPlayerInfoAsync(CancellationToken cancellationToken = default);
+    Task<ClubCollection> GetMyClubsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Requests the daily channel join link. It can vary based on server occupancy.
@@ -115,9 +131,105 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         return (await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.DailyChannelJoin, cancellationToken))?.JoinLink ?? throw new Exception("This shouldn't be null.");
     }
 
+    public virtual async Task<ClubMember> GetClubMemberAsync(int clubId, Guid accountId, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/{clubId}/member/{accountId}",
+            NadeoAPIJsonContext.Default.ClubMember, cancellationToken);
+    }
+
+    public virtual async Task<ClubMember> GetClubMemberAsync(int clubId, string diplayName, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/{clubId}/member/{diplayName}/from-login",
+            NadeoAPIJsonContext.Default.ClubMember, cancellationToken);
+    }
+
+    public virtual async Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int length, int offset = 0, bool active = true, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/{clubId}/activity?length={length}&offset={offset}&active={active}",
+            NadeoAPIJsonContext.Default.ClubActivityCollection, cancellationToken);
+    }
+
+    public virtual async Task<Club> GetClubAsync(int clubId, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/{clubId}", NadeoAPIJsonContext.Default.Club, cancellationToken);
+    }
+
+    public virtual async Task<ClubCampaign> GetClubCampaignAsync(int clubId, int campaignId, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/{clubId}/campaign/{campaignId}",
+            NadeoAPIJsonContext.Default.ClubCampaign, cancellationToken);
+    }
+
     public virtual async Task<ClubCampaignCollection> GetClubCampaignsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"token/club/campaign?offset={offset}&length={length}{(name is null ? "" : $"&name={HttpUtility.UrlEncode(name)}")}",
+        return await GetJsonAsync($"token/club/campaign?length={length}&offset={offset}{(name is null ? "" : $"&name={HttpUtility.UrlEncode(name)}")}",
             NadeoAPIJsonContext.Default.ClubCampaignCollection, cancellationToken);
+    }
+
+    public virtual async Task<ClubCompetitionCollection> GetClubCompetitionsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/competition?length={length}&offset={offset}{(name is null ? "" : $"&name={HttpUtility.UrlEncode(name)}")}",
+            NadeoAPIJsonContext.Default.ClubCompetitionCollection, cancellationToken);
+    }
+
+    public virtual async Task<ClubMapReviewRoomCollection> GetClubMapReviewRoomsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/map-review?length={length}&offset={offset}{(name is null ? "" : $"&name={HttpUtility.UrlEncode(name)}")}",
+            NadeoAPIJsonContext.Default.ClubMapReviewRoomCollection, cancellationToken);
+    }
+
+    public virtual async Task<ClubMemberCollection> GetClubMembersAsync(int clubId, int length, int offset = 0, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/{clubId}/member?length={length}&offset={offset}",
+            NadeoAPIJsonContext.Default.ClubMemberCollection, cancellationToken);
+    }
+
+    public virtual async Task<ClubRoom> GetClubRoomAsync(int clubId, int roomId, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/{clubId}/room/{roomId}",
+            NadeoAPIJsonContext.Default.ClubRoom, cancellationToken);
+    }
+
+    public virtual async Task<ClubRoomCollection> GetClubRoomsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/room?length={length}&offset={offset}{(name is null ? "" : $"&name={HttpUtility.UrlEncode(name)}")}",
+            NadeoAPIJsonContext.Default.ClubRoomCollection, cancellationToken);
+    }
+
+    public virtual async Task<ClubBucketCollection> GetClubBucketsAsync(ClubBucketType type, int length, int offset = 0, CancellationToken cancellationToken = default)
+    {
+        var typeStr = type switch
+        {
+            ClubBucketType.MapUpload => "map-upload",
+            ClubBucketType.SkinUpload => "skin-upload",
+            ClubBucketType.ItemUpload => "item-upload",
+            _ => throw new ArgumentOutOfRangeException(nameof(type))
+        };
+
+        return await GetJsonAsync($"token/club/bucket/{typeStr}/all?length={length}&offset={offset}",
+            NadeoAPIJsonContext.Default.ClubBucketCollection, cancellationToken);
+    }
+
+    public virtual async Task<ClubBucket> GetClubBucketAsync(int clubId, int bucketId, int length = 1, int offset = 0, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/{clubId}/bucket/{bucketId}?length={length}&offset={offset}",
+            NadeoAPIJsonContext.Default.ClubBucket, cancellationToken);
+    }
+
+    public virtual async Task<ClubCollection> GetClubsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club?length={length}&offset={offset}{(name is null ? "" : $"&name={HttpUtility.UrlEncode(name)}")}",
+            NadeoAPIJsonContext.Default.ClubCollection, cancellationToken);
+    }
+
+    public virtual async Task<ClubPlayerInfo> GetClubPlayerInfoAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/player/info", NadeoAPIJsonContext.Default.ClubPlayerInfo, cancellationToken);
+    }
+
+    public virtual async Task<ClubCollection> GetMyClubsAsync(int length, int offset = 0, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/mine?length={length}&offset={offset}",
+            NadeoAPIJsonContext.Default.ClubCollection, cancellationToken);
     }
 }
