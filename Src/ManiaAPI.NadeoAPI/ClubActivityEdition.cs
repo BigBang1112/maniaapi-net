@@ -6,13 +6,13 @@ namespace ManiaAPI.NadeoAPI;
 public sealed record ClubActivityEdition
 {
     [JsonConverter(typeof(BoolNumberConverter))]
-    public bool Featured { get; init; }
+    public bool? Featured { get; init; }
 
     [JsonConverter(typeof(BoolNumberConverter))]
-    public bool Public { get; init; }
+    public bool? Public { get; init; }
 
     [JsonConverter(typeof(BoolNumberConverter))]
-    public bool Active { get; init; }
+    public bool? Active { get; init; }
 
-    public int Position { get; init; }
+    public int? Position { get; init; }
 }
