@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<PackageId>ManiaAPI.NadeoAPI</PackageId>
-		<Version>2.0.0-alpha14</Version>
+		<Version>2.0.0-alpha15</Version>
 		<Authors>BigBang1112</Authors>
 		<Description>Wrapper for the official in-game Nadeo API from Trackmania released in 2020. Part of the ManiaAPI library set.</Description>
 		<Copyright>Copyright (c) 2024 Petr Pivoňka</Copyright>
