@@ -36,7 +36,7 @@ public interface INadeoLiveServices : INadeoAPI
     Task<ClubCollection> GetClubsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
     Task<ClubPlayerInfo> GetClubPlayerInfoAsync(CancellationToken cancellationToken = default);
     Task<ClubCollection> GetMyClubsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
-    Task EditClubActivityAsync(int clubId, int activityId, ClubActivityEdition edition, CancellationToken cancellationToken = default);
+    Task<ClubActivity> EditClubActivityAsync(int clubId, int activityId, ClubActivityEdition edition, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Requests the daily channel join link. It can vary based on server occupancy.
@@ -240,9 +240,10 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
             NadeoAPIJsonContext.Default.ClubCollection, cancellationToken);
     }
 
-    public virtual async Task EditClubActivityAsync(int clubId, int activityId, ClubActivityEdition edition, CancellationToken cancellationToken = default)
+    public virtual async Task<ClubActivity> EditClubActivityAsync(int clubId, int activityId, ClubActivityEdition edition, CancellationToken cancellationToken = default)
     {
         var jsonContent = JsonContent.Create(edition, NadeoAPIJsonContext.Default.ClubActivityEdition);
-        await SendAsync(HttpMethod.Post, $"token/club/{clubId}/activity/{activityId}/edit", jsonContent, cancellationToken);
+        return await PostJsonAsync($"token/club/{clubId}/activity/{activityId}/edit",
+            jsonContent, NadeoAPIJsonContext.Default.ClubActivity, cancellationToken);
     }
 }
