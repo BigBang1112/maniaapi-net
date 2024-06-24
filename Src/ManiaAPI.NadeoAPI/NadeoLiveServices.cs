@@ -1,7 +1,6 @@
 ﻿using ManiaAPI.NadeoAPI.JsonContexts;
 using System.Collections.Immutable;
 using System.Net.Http.Json;
-using System.Text.RegularExpressions;
 using System.Web;
 
 namespace ManiaAPI.NadeoAPI;
@@ -35,8 +34,17 @@ public interface INadeoLiveServices : INadeoAPI
     Task<ClubBucket> GetClubBucketAsync(int clubId, int bucketId, int length = 1, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubCollection> GetClubsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
     Task<ClubPlayerInfo> GetClubPlayerInfoAsync(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="length">Number of clubs to request. Max allowed is 250, but response provides <see cref="ClubCollection.ItemCount"/> to allow pagination.</param>
+    /// <param name="offset"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<ClubCollection> GetMyClubsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubActivity> EditClubActivityAsync(int clubId, int activityId, ClubActivityEdition edition, CancellationToken cancellationToken = default);
+    Task<ClubCampaign> EditClubCampaignAsync(int clubId, int campaignId, ClubCampaignEdition edition, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Requests the daily channel join link. It can vary based on server occupancy.
@@ -245,5 +253,12 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         var jsonContent = JsonContent.Create(edition, NadeoAPIJsonContext.Default.ClubActivityEdition);
         return await PostJsonAsync($"token/club/{clubId}/activity/{activityId}/edit",
             jsonContent, NadeoAPIJsonContext.Default.ClubActivity, cancellationToken);
+    }
+
+    public virtual async Task<ClubCampaign> EditClubCampaignAsync(int clubId, int campaignId, ClubCampaignEdition edition, CancellationToken cancellationToken = default)
+    {
+        var jsonContent = JsonContent.Create(edition, NadeoAPIJsonContext.Default.ClubCampaignEdition);
+        return await PostJsonAsync($"token/club/{clubId}/campaign/{campaignId}/edit",
+            jsonContent, NadeoAPIJsonContext.Default.ClubCampaign, cancellationToken);
     }
 }
