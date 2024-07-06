@@ -8,7 +8,8 @@ public interface INadeoServices : INadeoAPI
     Task<ImmutableArray<Account>> GetAccountDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<ImmutableArray<Account>> GetAccountDisplayNamesAsync(params Guid[] accountIds);
     Task<ImmutableArray<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default);
-    Task<MapRecord> GetMapRecordByIdAsync(Guid mapRecordId, CancellationToken cancellationToken = default);
+	Task<ImmutableArray<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, Guid mapId, CancellationToken cancellationToken = default);
+	Task<MapRecord> GetMapRecordByIdAsync(Guid mapRecordId, CancellationToken cancellationToken = default);
     Task<ImmutableArray<PlayerZone>> GetPlayerZonesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<ImmutableArray<PlayerZone>> GetPlayerZonesAsync(params Guid[] accountIds);
     Task<Dictionary<string, ApiRoute>> GetApiRoutesAsync(ApiUsage usage, CancellationToken cancellationToken = default);
@@ -32,12 +33,24 @@ public class NadeoServices : NadeoAPI, INadeoServices
 
     public NadeoServices(bool automaticallyAuthorize = true) : this(new HttpClient(), automaticallyAuthorize)
     {
-    }
+	}
 
-    public virtual async Task<ImmutableArray<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
+	public virtual async Task<ImmutableArray<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, Guid mapId, CancellationToken cancellationToken = default)
+	{
+		return await GetJsonAsync($"v2/mapRecords/?accountIdList={string.Join(',', accountIds)}&mapId={mapId}",
+			NadeoAPIJsonContext.Default.ImmutableArrayMapRecord, cancellationToken);
+	}
+
+	public virtual async Task<ImmutableArray<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"mapRecords/?accountIdList={string.Join(',', accountIds)}&mapIdList={string.Join(',', mapIds)}",
-            NadeoAPIJsonContext.Default.ImmutableArrayMapRecord, cancellationToken);
+        var records = ImmutableArray.CreateBuilder<MapRecord>();
+
+        foreach (var mapId in mapIds)
+		{
+			records.AddRange(await GetMapRecordsAsync(accountIds, mapId, cancellationToken));
+		}
+
+        return records.ToImmutable();
     }
 
     public virtual async Task<MapRecord> GetMapRecordByIdAsync(Guid mapRecordId, CancellationToken cancellationToken = default)
