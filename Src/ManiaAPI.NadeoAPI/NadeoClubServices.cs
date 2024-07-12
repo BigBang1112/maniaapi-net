@@ -9,7 +9,7 @@ public interface INadeoClubServices : INadeoAPI
 
 public class NadeoClubServices : NadeoAPI, INadeoClubServices
 {
-    public override string Audience => nameof(NadeoClubServices);
+    public override string Audience => nameof(NadeoLiveServices);
     public override string BaseAddress => "https://meet.trackmania.nadeo.club/api";
 
     public NadeoClubServices(HttpClient client, bool automaticallyAuthorize = true) : base(client, automaticallyAuthorize)
