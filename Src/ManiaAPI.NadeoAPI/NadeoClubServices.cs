@@ -4,7 +4,7 @@ namespace ManiaAPI.NadeoAPI;
 
 public interface INadeoClubServices : INadeoAPI
 {
-    Task<CupOfTheDay> GetCurrentCupOfTheDayAsync(CancellationToken cancellationToken = default);
+    Task<CupOfTheDay?> GetCurrentCupOfTheDayAsync(CancellationToken cancellationToken = default);
 }
 
 public class NadeoClubServices : NadeoAPI, INadeoClubServices
@@ -20,8 +20,8 @@ public class NadeoClubServices : NadeoAPI, INadeoClubServices
     {
     }
 
-    public virtual async Task<CupOfTheDay> GetCurrentCupOfTheDayAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<CupOfTheDay?> GetCurrentCupOfTheDayAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("cup-of-the-day/current", NadeoAPIJsonContext.Default.CupOfTheDay, cancellationToken);
+        return await GetNullableJsonAsync("cup-of-the-day/current", NadeoAPIJsonContext.Default.CupOfTheDay, cancellationToken);
     }
 }

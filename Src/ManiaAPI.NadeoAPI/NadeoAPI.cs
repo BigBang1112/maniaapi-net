@@ -1,5 +1,6 @@
 ﻿using ManiaAPI.NadeoAPI.JsonContexts;
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
@@ -235,6 +236,18 @@ public abstract class NadeoAPI : INadeoAPI
     {
         using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
         return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+    }
+
+    public async Task<T?> GetNullableJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
+        
+        if (response.StatusCode == HttpStatusCode.NoContent)
+        {
+            return default;
+        }
+        
+        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken);
     }
 
     public async Task<T> PostJsonAsync<T>(string? endpoint, JsonContent content, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
