@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<PackageId>ManiaAPI.ManiaPlanetAPI</PackageId>
-		<Version>2.0.0-alpha10</Version>
+		<Version>2.0.0-beta2</Version>
 		<Authors>BigBang1112</Authors>
 		<Description>Wrapper for the official web API from ManiaPlanet (Trackmania 2 and Shootmania). Part of the ManiaAPI library set.</Description>
 		<Copyright>Copyright (c) 2024 Petr Pivoňka</Copyright>

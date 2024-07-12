@@ -110,7 +110,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     private JwtPayloadManiaPlanetAPI? payload;
     private AuthenticationHeaderValue? authorization;
 
-    public const string BaseAddress = "https://maniaplanet.com/webservices/";
+    public const string BaseAddress = "https://maniaplanet.com/webservices";
 
     public DateTimeOffset? ExpirationTime => payload?.ExpirationTime;
 
