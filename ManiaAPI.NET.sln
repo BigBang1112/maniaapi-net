@@ -53,6 +53,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManiaAPI.NadeoAPI.Extension
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManiaAPI.TMX.Extensions.Gbx", "Src\ManiaAPI.TMX.Extensions.Gbx\ManiaAPI.TMX.Extensions.Gbx.csproj", "{D9BCFCDF-41B7-401A-994F-B7ABE1C35304}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{D0C62B54-1D9D-4F31-8B0A-8158C882CF77}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpdateTM2020MapSample", "Samples\UpdateTM2020MapSample\UpdateTM2020MapSample.csproj", "{C5078DA8-4570-4A71-97B1-427DF356E49A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -127,6 +131,10 @@ Global
 		{D9BCFCDF-41B7-401A-994F-B7ABE1C35304}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D9BCFCDF-41B7-401A-994F-B7ABE1C35304}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D9BCFCDF-41B7-401A-994F-B7ABE1C35304}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5078DA8-4570-4A71-97B1-427DF356E49A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5078DA8-4570-4A71-97B1-427DF356E49A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5078DA8-4570-4A71-97B1-427DF356E49A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5078DA8-4570-4A71-97B1-427DF356E49A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -150,6 +158,7 @@ Global
 		{766F17F2-306E-4E4B-89EB-75CDF2907F63} = {4F91FD3F-1931-44A8-B52C-6CE105E2938A}
 		{BAD4BC26-CDE0-4F69-B35B-39A51871A407} = {96BF39EA-937E-400B-AAE6-7729AEEFF976}
 		{D9BCFCDF-41B7-401A-994F-B7ABE1C35304} = {4F91FD3F-1931-44A8-B52C-6CE105E2938A}
+		{C5078DA8-4570-4A71-97B1-427DF356E49A} = {D0C62B54-1D9D-4F31-8B0A-8158C882CF77}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E273F519-B658-4F1C-8132-DF78A841A592}

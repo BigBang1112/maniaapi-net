@@ -9,5 +9,5 @@ internal sealed record MapInfoSubmit(int AuthorScore,
                                      string MapStyle,
                                      string MapType,
                                      string MapUid,
-                                     string MapName,
+                                     string Name,
                                      bool IsPlayable);
