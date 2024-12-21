@@ -82,7 +82,7 @@ public static class NadeoServicesExtensions
 
         return new MultipartFormDataContent
         {
-            { JsonContent.Create(mapInfo, NadeoAPIMapInfoJsonContext.Default.MapInfo), "nadeoservices-core-parameters" },
+            { JsonContent.Create(mapInfo, NadeoAPIMapInfoJsonContext.Default.MapInfoSubmit), "nadeoservices-core-parameters" },
             { new StreamContent(bufferedStream), "data", fileName }
         };
     }

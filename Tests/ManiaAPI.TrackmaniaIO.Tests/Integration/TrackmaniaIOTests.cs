@@ -2,7 +2,7 @@
 using Xunit;
 using Xunit.Abstractions;
 
-namespace ManiaAPI.TrackmaniaIO.Integration;
+namespace ManiaAPI.TrackmaniaIO.Tests.Integration;
 
 public class TrackmaniaIOTests(ITestOutputHelper output)
 {
@@ -20,9 +20,9 @@ public class TrackmaniaIOTests(ITestOutputHelper output)
         output.WriteLine("Rate limit remaining after first request: {0}", rateLimitRemainingAfterFirstRequest);
 
         var customCampaign = await trackmaniaIO.GetCustomCampaignAsync(clubId: 21571, campaignId: 5886);
-       
+
         var rateLimitPerRequest = rateLimitRemainingAfterFirstRequest - TrackmaniaIO.RateLimitRemaining;
-        
+
         var officialCampaign = await trackmaniaIO.GetOfficialCampaignAsync(campaignId: 130);
         var leaderboard = await trackmaniaIO.GetLeaderboardAsync("3987d489-03ae-4645-9903-8f7679c3a418", "XJ_JEjWGoAexDWe8qfaOjEcq5l8");
         var recentWorldRecords = await trackmaniaIO.GetRecentWorldRecordsAsync("3987d489-03ae-4645-9903-8f7679c3a418");
@@ -38,7 +38,7 @@ public class TrackmaniaIOTests(ITestOutputHelper output)
         // Assert
         Assert.Null(startingRateLimitRemaining);
         Assert.Equal(expected: 1, actual: rateLimitPerRequest);
-        
+
         Assert.IsType<CampaignCollection>(campaigns);
         Assert.IsType<Campaign>(customCampaign);
         Assert.IsType<Campaign>(officialCampaign);
