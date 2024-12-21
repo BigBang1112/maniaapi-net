@@ -134,21 +134,6 @@ public static class NadeoServicesExtensions
 
         bufferedStream.Position = 0;
 
-        var mapInfo = new MapInfoSubmit(
-            map.AuthorTime?.TotalMilliseconds ?? -1,
-            map.GoldTime?.TotalMilliseconds ?? -1,
-            map.SilverTime?.TotalMilliseconds ?? -1,
-            map.BronzeTime?.TotalMilliseconds ?? -1,
-            AccountUtils.ToAccountId(map.AuthorLogin),
-            map.Collection.HasValue && map.Collection.Value.Number != 26 ? map.Collection : "Stadium",
-            map.MapStyle ?? string.Empty,
-            map.MapType ?? string.Empty,
-            map.MapUid,
-            map.MapName,
-            true);
-
-        Debug.WriteLine($"Upload/Update map JSON content: {JsonSerializer.Serialize(mapInfo, NadeoAPIMapInfoJsonContext.Default.MapInfoSubmit)}");
-
         return new MultipartFormDataContent
         {
             { new StringContent(map.AuthorTime?.TotalMilliseconds.ToString() ?? "-1"), "authorScore" },
