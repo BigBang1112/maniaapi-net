@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<PackageId>ManiaAPI.TrackmaniaAPI</PackageId>
-		<Version>2.0.0-alpha10</Version>
+		<Version>2.0.0-beta3</Version>
 		<Authors>BigBang1112</Authors>
 		<Description>Wrapper for the official web API from Trackmania released in 2020. Part of the ManiaAPI library set.</Description>
 		<Copyright>Copyright (c) 2024 Petr Pivoňka</Copyright>
@@ -15,8 +15,8 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
-		<LangVersion>12</LangVersion>
+		<TargetFrameworks>net9.0;net8.0</TargetFrameworks>
+		<LangVersion>13</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<IsTrimmable>true</IsTrimmable>
