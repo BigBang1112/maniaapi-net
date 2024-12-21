@@ -39,4 +39,4 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 [JsonSerializable(typeof(ClubActivityEdition))]
 [JsonSerializable(typeof(ClubCampaignEdition))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-internal sealed partial class NadeoAPIJsonContext : JsonSerializerContext { }
+internal sealed partial class NadeoAPIJsonContext : JsonSerializerContext;

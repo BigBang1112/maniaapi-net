@@ -67,19 +67,22 @@ public static class NadeoServicesExtensions
 
         bufferedStream.Position = 0;
 
+        var mapInfo = new MapInfoSubmit(
+            map.AuthorTime.GetValueOrDefault().TotalMilliseconds,
+            map.GoldTime.GetValueOrDefault().TotalMilliseconds,
+            map.SilverTime.GetValueOrDefault().TotalMilliseconds,
+            map.BronzeTime.GetValueOrDefault().TotalMilliseconds,
+            AccountUtils.ToAccountId(map.AuthorLogin),
+            map.Collection.HasValue && map.Collection.Value.Number != 26 ? map.Collection : "Stadium",
+            map.MapStyle ?? string.Empty,
+            map.MapType ?? string.Empty,
+            map.MapUid,
+            map.MapName,
+            true);
+
         return new MultipartFormDataContent
         {
-            { new StringContent(map.AuthorTime.GetValueOrDefault().TotalMilliseconds.ToString()), "authorScore" },
-            { new StringContent(map.GoldTime.GetValueOrDefault().TotalMilliseconds.ToString()), "goldScore" },
-            { new StringContent(map.SilverTime.GetValueOrDefault().TotalMilliseconds.ToString()), "silverScore" },
-            { new StringContent(map.BronzeTime.GetValueOrDefault().TotalMilliseconds.ToString()), "bronzeScore" },
-            { new StringContent(AccountUtils.ToAccountId(map.AuthorLogin).ToString()), "author" },
-            { new StringContent(map.Collection.HasValue && map.Collection.Value.Number != 26 ? map.Collection : "Stadium"), "collectionName" },
-            { new StringContent(map.MapStyle ?? string.Empty), "mapStyle" },
-            { new StringContent(map.MapType ?? string.Empty), "mapType" },
-            { new StringContent(map.MapUid), "mapUid" },
-            { new StringContent(map.MapName), "name" },
-            { new StringContent("true"), "isPlayable" },
+            { JsonContent.Create(mapInfo, NadeoAPIMapInfoJsonContext.Default.MapInfo), "nadeoservices-core-parameters" },
             { new StreamContent(bufferedStream), "data", fileName }
         };
     }
