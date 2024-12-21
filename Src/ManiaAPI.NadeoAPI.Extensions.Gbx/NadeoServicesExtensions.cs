@@ -151,10 +151,10 @@ public static class NadeoServicesExtensions
 
         return new MultipartFormDataContent
         {
-            { new StringContent(map.AuthorTime.GetValueOrDefault().TotalMilliseconds.ToString()), "authorScore" },
-            { new StringContent(map.GoldTime.GetValueOrDefault().TotalMilliseconds.ToString()), "goldScore" },
-            { new StringContent(map.SilverTime.GetValueOrDefault().TotalMilliseconds.ToString()), "silverScore" },
-            { new StringContent(map.BronzeTime.GetValueOrDefault().TotalMilliseconds.ToString()), "bronzeScore" },
+            { new StringContent(map.AuthorTime?.TotalMilliseconds.ToString() ?? "-1"), "authorScore" },
+            { new StringContent(map.GoldTime?.TotalMilliseconds.ToString() ?? "-1"), "goldScore" },
+            { new StringContent(map.SilverTime?.TotalMilliseconds.ToString() ?? "-1"), "silverScore" },
+            { new StringContent(map.BronzeTime?.TotalMilliseconds.ToString() ?? "-1"), "bronzeScore" },
             { new StringContent(AccountUtils.ToAccountId(map.AuthorLogin).ToString()), "author" },
             { new StringContent(map.Collection.HasValue && map.Collection.Value.Number != 26 ? map.Collection : "Stadium"), "collectionName" },
             { new StringContent(map.MapStyle ?? string.Empty), "mapStyle" },
