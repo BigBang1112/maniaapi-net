@@ -10,7 +10,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, io</PackageTags>
 
-		<Version>1.0.9</Version>
+		<Version>1.0.12</Version>
 		<PackageReleaseNotes></PackageReleaseNotes>
 
 		<TargetFrameworks>net6.0</TargetFrameworks>

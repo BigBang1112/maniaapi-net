@@ -33,9 +33,9 @@ public static class TrackmaniaIO
         Client.DefaultRequestHeaders.Add("User-Agent", userAgent);
     }
 
-    public static async Task<CampaignCollection> GetCampaignsAsync(int page = 0, CancellationToken cancellationToken = default)
+    public static async Task<CampaignCollection> GetSeasonalCampaignsAsync(int page = 0, CancellationToken cancellationToken = default)
     {
-        return await GetApiAsync<CampaignCollection>($"campaigns/{page}", cancellationToken);
+        return await GetApiAsync<CampaignCollection>($"campaigns/seasonal/{page}", cancellationToken);
     }
 
     public static async Task<Campaign> GetCustomCampaignAsync(int clubId, int campaignId, CancellationToken cancellationToken = default)
@@ -43,9 +43,9 @@ public static class TrackmaniaIO
         return await GetApiAsync<Campaign>($"campaign/{clubId}/{campaignId}", cancellationToken);
     }
 
-    public static async Task<Campaign> GetOfficialCampaignAsync(int campaignId, CancellationToken cancellationToken = default)
+    public static async Task<Campaign> GetSeasonalCampaignAsync(int campaignId, CancellationToken cancellationToken = default)
     {
-        return await GetApiAsync<Campaign>($"officialcampaign/{campaignId}", cancellationToken);
+        return await GetApiAsync<Campaign>($"campaign/seasonal/{campaignId}", cancellationToken);
     }
 
     public static async Task<Leaderboard> GetLeaderboardAsync(string leaderboardUid, string mapUid, CancellationToken cancellationToken = default)
