@@ -9,6 +9,6 @@ public record OfficialCampaignItem : CampaignItem, IOfficialCampaignItem
 
     public override async Task<ICampaign> GetDetailsAsync(CancellationToken cancellationToken = default)
     {
-        return await TrackmaniaIO.GetOfficialCampaignAsync(Id, cancellationToken);
+        return await TrackmaniaIO.GetSeasonalCampaignAsync(Id, cancellationToken);
     }
 }
