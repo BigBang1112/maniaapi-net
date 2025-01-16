@@ -6,6 +6,8 @@ namespace ManiaAPI.XmlRpc.MP4;
 
 public class MasterServerMP4 : MasterServer
 {
+    private delegate T ProcessContent<T>(ref MiniXmlReader xml);
+
     protected async Task<string> SendAsync(string titleId, string requestName, string parameters, CancellationToken cancellationToken)
     {
         var content = new StringContent(@$"
@@ -42,121 +44,14 @@ public class MasterServerMP4 : MasterServer
             <t></t>
             <z>{zone}</z>
             <s>SkillPoint</s>", cancellationToken);
-        var xml = new MiniXmlReader(responseStr);
-        xml.SkipProcessingInstruction();
-        if (!MemoryExtensions.Equals(xml.ReadStartElement(), "r", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new Exception("<r> (request) not found");
-        }
-
-        var items = new List<LeaderboardItem>();
-
-        while (xml.TryReadStartElement(out var responseElement))
-        {
-            switch (responseElement)
-            {
-                case "r":
-                    while (xml.TryReadStartElement(out var contentElement))
-                    {
-                        switch (contentElement)
-                        {
-                            case "n":
-                                var requestName = xml.ReadContentAsString();
-                                if (requestName != RequestName)
-                                {
-                                    //throw new Exception("Invalid response"); invalid xml will respond with empty request name
-                                }
-                                break;
-                            case "c":
-                                while (xml.TryReadStartElement("i"))
-                                {
-                                    var rank = 0;
-                                    var login = string.Empty;
-                                    var nickname = string.Empty;
-                                    var score = 0u;
-                                    var fileName = string.Empty;
-                                    var downloadUrl = string.Empty;
-
-                                    while (xml.TryReadStartElement(out var itemElement))
-                                    {
-                                        switch (itemElement)
-                                        {
-                                            case "r":
-                                                rank = int.Parse(xml.ReadContent());
-                                                break;
-                                            case "l":
-                                                login = xml.ReadContentAsString();
-                                                break;
-                                            case "n":
-                                                nickname = xml.ReadContentAsString();
-                                                break;
-                                            case "s":
-                                                score = uint.Parse(xml.ReadContent());
-                                                break;
-                                            case "f":
-                                                fileName = xml.ReadContentAsString();
-                                                break;
-                                            case "u":
-                                                downloadUrl = xml.ReadContentAsString();
-                                                break;
-                                            default:
-                                                xml.ReadContent();
-                                                break;
-                                        }
-
-                                        Debug.Assert(xml.SkipEndElement());
-                                    }
-
-                                    items.Add(new LeaderboardItem(rank, login, nickname, score, fileName, downloadUrl));
-
-                                    Debug.Assert(xml.SkipEndElement()); // i
-                                }
-                                break;
-                            case "e":
-                                var value = 0;
-                                var message = string.Empty;
-
-                                while (xml.TryReadStartElement(out var errorElement))
-                                {
-                                    switch (errorElement)
-                                    {
-                                        case "v":
-                                            value = int.Parse(xml.ReadContent());
-                                            break;
-                                        case "m":
-                                            message = xml.ReadContentAsString();
-                                            break;
-                                        default:
-                                            xml.ReadContent();
-                                            break;
-                                    }
-
-                                    Debug.Assert(xml.SkipEndElement());
-                                }
-
-                                throw new Exception($"Error {value}: {message}");
-                        }
-
-                        Debug.Assert(xml.SkipEndElement()); // n, c or e
-                    }
-
-                    break;
-                case "e":
-                    var executionTime = xml.ReadContentAsString();
-                    break;
-            }
-
-            Debug.Assert(xml.SkipEndElement());
-        }
-
-        return items;
+        return ProcessResponseResult(RequestName, responseStr, ReadLeaderboardItems);
     }
 
     public async Task<IEnumerable<LeaderboardItem>> GetMapLeaderBoardAsync(
-        string titleId, 
-        string mapUid, 
-        int count = 10, 
-        int offset = 0, 
+        string titleId,
+        string mapUid,
+        int count = 10,
+        int offset = 0,
         string zone = "World",
         string context = "",
         CancellationToken cancellationToken = default)
@@ -171,54 +66,139 @@ public class MasterServerMP4 : MasterServer
             <c></c>
             <t></t>
             <s>MapRecord</s>", cancellationToken);
+        return ProcessResponseResult(RequestName, responseStr, ReadLeaderboardItems);
+    }
 
+    private static T ProcessResponseResult<T>(string requestName, string responseStr, ProcessContent<T> processContent) where T : notnull
+    {
         var xml = new MiniXmlReader(responseStr);
+
         xml.SkipProcessingInstruction();
 
-        var requestElement = xml.ReadStartElement();
-        var responseElement = xml.ReadStartElement();
-        var requestNameElement = xml.ReadStartElement();
-        var requestName = xml.ReadContentAsString();
-
-        if (requestName != RequestName)
+        if (!MemoryExtensions.Equals(xml.ReadStartElement(), "r", StringComparison.OrdinalIgnoreCase))
         {
-            throw new Exception("Invalid response");
+            throw new Exception("<r> (first one) not found");
         }
 
-        xml.SkipEndElement();
-        var contentElement = xml.ReadStartElement();
+        var content = default(T);
 
+        while (xml.TryReadStartElement(out var responseElement))
+        {
+            switch (responseElement)
+            {
+                case "r":
+                    ProcessResponse(requestName, processContent, ref xml, out content);
+                    break;
+                case "e":
+                    var executionTime = xml.ReadContentAsString();
+                    break;
+            }
+
+            Debug.Assert(xml.SkipEndElement());
+        }
+
+        return content ?? throw new Exception("No response content");
+    }
+
+    private static void ProcessResponse<T>(string requestName, ProcessContent<T> processContent, ref MiniXmlReader xml, out T? content) where T : notnull
+    {
+        content = default;
+
+        while (xml.TryReadStartElement(out var contentElement))
+        {
+            switch (contentElement)
+            {
+                case "n":
+                    var actualRequestName = xml.ReadContentAsString();
+                    if (requestName != actualRequestName)
+                    {
+                        //throw new Exception("Invalid response"); invalid xml will respond with empty request name
+                    }
+                    break;
+                case "c":
+                    content = processContent(ref xml);
+                    break;
+                case "e":
+                    ProcessErrorAndThrowException(xml);
+                    return;
+            }
+
+            Debug.Assert(xml.SkipEndElement()); // n, c or e
+        }
+    }
+
+    private static void ProcessErrorAndThrowException(MiniXmlReader xml)
+    {
+        var value = 0;
+        var message = string.Empty;
+
+        while (xml.TryReadStartElement(out var errorElement))
+        {
+            switch (errorElement)
+            {
+                case "v":
+                    value = int.Parse(xml.ReadContent());
+                    break;
+                case "m":
+                    message = xml.ReadContentAsString();
+                    break;
+                default:
+                    xml.ReadContent();
+                    break;
+            }
+
+            Debug.Assert(xml.SkipEndElement());
+        }
+
+        throw new Exception($"Error {value}: {message}");
+    }
+
+    private static List<LeaderboardItem> ReadLeaderboardItems(ref MiniXmlReader xml)
+    {
         var items = new List<LeaderboardItem>();
 
         while (xml.TryReadStartElement("i"))
         {
-            var rankElement = xml.ReadStartElement();
-            var rank = int.Parse(xml.ReadContent());
-            xml.SkipEndElement();
+            var rank = 0;
+            var login = string.Empty;
+            var nickname = string.Empty;
+            var score = 0u;
+            var fileName = string.Empty;
+            var downloadUrl = string.Empty;
 
-            var loginElement = xml.ReadStartElement();
-            var login = xml.ReadContentAsString();
-            xml.SkipEndElement();
+            while (xml.TryReadStartElement(out var itemElement))
+            {
+                switch (itemElement)
+                {
+                    case "r":
+                        rank = int.Parse(xml.ReadContent());
+                        break;
+                    case "l":
+                        login = xml.ReadContentAsString();
+                        break;
+                    case "n":
+                        nickname = xml.ReadContentAsString();
+                        break;
+                    case "s":
+                        score = uint.Parse(xml.ReadContent());
+                        break;
+                    case "f":
+                        fileName = xml.ReadContentAsString();
+                        break;
+                    case "u":
+                        downloadUrl = xml.ReadContentAsString();
+                        break;
+                    default:
+                        xml.ReadContent();
+                        break;
+                }
 
-            var nicknameElement = xml.ReadStartElement();
-            var nickname = xml.ReadContentAsString();
-            xml.SkipEndElement();
-
-            var scoreElement = xml.ReadStartElement();
-            var score = uint.Parse(xml.ReadContent());
-            xml.SkipEndElement();
-
-            var fileNameElement = xml.ReadStartElement();
-            var fileName = xml.ReadContentAsString();
-            xml.SkipEndElement();
-
-            var downloadUrlElement = xml.ReadStartElement();
-            var downloadUrl = xml.ReadContentAsString();
-            xml.SkipEndElement();
+                Debug.Assert(xml.SkipEndElement());
+            }
 
             items.Add(new LeaderboardItem(rank, login, nickname, score, fileName, downloadUrl));
 
-            xml.SkipEndElement();
+            Debug.Assert(xml.SkipEndElement()); // i
         }
 
         return items;
