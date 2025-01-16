@@ -30,20 +30,22 @@ public class MasterServerMP4 : MasterServer
 
     public async Task<IEnumerable<LeaderboardItem>> GetCampaignLeaderBoardAsync(
         string titleId,
+        string? campaignId = null,
         int count = 10,
         int offset = 0,
         string zone = "World",
+        CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint,
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetCampaignLeaderBoard";
         var responseStr = await SendAsync(titleId, RequestName, @$"
             <f>{offset}</f>
             <n>{count}</n>
-            <c>{titleId}</c>
+            <c>{campaignId ?? titleId}</c>
             <m></m>
             <t></t>
             <z>{zone}</z>
-            <s>SkillPoint</s>", cancellationToken);
+            <s>{type}</s>", cancellationToken);
         return ProcessResponseResult(RequestName, responseStr, ReadLeaderboardItems);
     }
 
@@ -57,14 +59,13 @@ public class MasterServerMP4 : MasterServer
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetMapLeaderBoard";
-
         var responseStr = await SendAsync(titleId, RequestName, @$"
             <m>{mapUid}</m>
             <n>{count}</n>
             <f>{offset}</f>
             <z>{zone}</z>
             <c></c>
-            <t></t>
+            <t>{context}</t>
             <s>MapRecord</s>", cancellationToken);
         return ProcessResponseResult(RequestName, responseStr, ReadLeaderboardItems);
     }
