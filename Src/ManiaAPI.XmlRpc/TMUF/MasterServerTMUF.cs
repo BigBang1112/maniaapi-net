@@ -115,7 +115,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                                     break;
                             }
 
-                            Debug.Assert(xml.SkipEndElement());
+                            _ = xml.SkipEndElement();
                         }
 
                         players.Add(new PlayerRanking(rank, nickname, score, leagueLogoUrl));
@@ -125,7 +125,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                         break;
                 }
 
-                Debug.Assert(xml.SkipEndElement());
+                _ = xml.SkipEndElement();
             }
 
             return new PlayerRankings(playerCount, players);
@@ -195,7 +195,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                                     break;
                             }
 
-                            Debug.Assert(xml.SkipEndElement());
+                            _ = xml.SkipEndElement();
                         }
 
                         leagues.Add(new LeagueRanking(rank, name, score, playerCount));
@@ -205,7 +205,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                         break;
                 }
 
-                Debug.Assert(xml.SkipEndElement());
+                _ = xml.SkipEndElement();
             }
 
             return new LeagueRankings(leagueCount, leagues);

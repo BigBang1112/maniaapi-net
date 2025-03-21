@@ -38,7 +38,7 @@ internal static partial class XmlRpcHelper
                     break;
             }
 
-            Debug.Assert(xml.SkipEndElement());
+            _ = xml.SkipEndElement();
         }
 
         var executionTimeGroup = ExecutionTimeRegex().Match(executionTime).Groups[1].Value;
@@ -73,7 +73,7 @@ internal static partial class XmlRpcHelper
                     return;
             }
 
-            Debug.Assert(xml.SkipEndElement()); // n, c or e
+            _ = xml.SkipEndElement(); // n, c or e
         }
     }
 
@@ -97,7 +97,7 @@ internal static partial class XmlRpcHelper
                     break;
             }
 
-            Debug.Assert(xml.SkipEndElement());
+            _ = xml.SkipEndElement();
         }
 
         throw new Exception($"Error {value}: {message}");

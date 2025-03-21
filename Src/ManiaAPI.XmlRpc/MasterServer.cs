@@ -59,12 +59,12 @@ public abstract class MasterServer : IMasterServer
                             break;
                     }
 
-                    Debug.Assert(xml.SkipEndElement());
+                    _ = xml.SkipEndElement();
                 }
 
                 items.Add(new League(name, path, logoUrl));
 
-                Debug.Assert(xml.SkipEndElement()); // l
+                _ = xml.SkipEndElement(); // l
             }
 
             return (IReadOnlyCollection<League>)items;

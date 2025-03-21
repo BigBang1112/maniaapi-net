@@ -187,12 +187,12 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                             break;
                     }
 
-                    Debug.Assert(xml.SkipEndElement());
+                    _ = xml.SkipEndElement();
                 }
 
                 summaries.Add(new CampaignSummary(campaignId, zone, type, timestamp, count, allRecords, records));
 
-                Debug.Assert(xml.SkipEndElement()); // s
+                _ = xml.SkipEndElement(); // s
             }
 
             return (IReadOnlyCollection<CampaignSummary>)summaries;
@@ -271,12 +271,12 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                             break;
                     }
 
-                    Debug.Assert(xml.SkipEndElement());
+                    _ = xml.SkipEndElement();
                 }
 
                 summaries.Add(new MapSummary(mapUid, zone, type, timestamp, count, allRecords, records));
 
-                Debug.Assert(xml.SkipEndElement()); // s
+                _ = xml.SkipEndElement(); // s
             }
 
             return (IReadOnlyCollection<MapSummary>)summaries;
@@ -331,14 +331,14 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                         break;
                 }
 
-                Debug.Assert(xml.SkipEndElement());
+                _ = xml.SkipEndElement();
             }
 
             ref T scoreValue = ref Unsafe.As<uint, T>(ref score);
 
             items.Add(new LeaderboardItem<T>(rank, login, nickname, scoreValue, fileName, downloadUrl));
 
-            Debug.Assert(xml.SkipEndElement()); // i
+            _ = xml.SkipEndElement(); // i
         }
 
         return items;
