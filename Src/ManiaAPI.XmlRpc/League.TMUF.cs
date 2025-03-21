@@ -1,10 +1,10 @@
 ﻿using System.Collections.Frozen;
 
-namespace ManiaAPI.XmlRpc.TMUF;
+namespace ManiaAPI.XmlRpc;
 
-public static class Zones
+public partial record League
 {
-    public static FrozenDictionary<string, int> ZoneIdsWithDataInTMUF { get; } = new Dictionary<string, int>
+    public static FrozenDictionary<string, int> IdsWithDataInTMUF { get; } = new Dictionary<string, int>
     {
         ["World|Algeria"] = 327,
         ["World|Angola"] = 95000,
@@ -541,7 +541,7 @@ public static class Zones
         ["World|Vietnam"] = 335
     }.ToFrozenDictionary();
 
-    public static FrozenDictionary<string, int> ZoneIdsInTMUF { get; } = new Dictionary<string, int>()
+    public static FrozenDictionary<string, int> IdsInTMUF { get; } = new Dictionary<string, int>()
     {
         ["World"] = 1,
         ["World|Algeria"] = 327,

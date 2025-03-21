@@ -83,7 +83,7 @@ public sealed class CampaignScores(
             var zoneName = r.ReadString();
             var modeCount = r.ReadByte();
 
-            var medalZonesDict = new Dictionary<PlayMode, RecordUnit[]>(modeCount);
+            var medalZonesDict = new Dictionary<PlayMode, RecordUnit<uint>[]>(modeCount);
 
             for (var j = 0; j < modeCount; j++)
             {

@@ -1,12 +1,36 @@
 ﻿using MinimalXmlReader;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
+using TmEssentials;
 
 namespace ManiaAPI.XmlRpc.MP4;
 
-public class MasterServerMP4 : MasterServer
+public interface IMasterServerMP4
 {
-    private delegate T ProcessContent<T>(ref MiniXmlReader xml);
+    Task<IReadOnlyCollection<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<IReadOnlyCollection<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<LeaderboardItem<TimeInt32>>> GetMapLeaderBoardAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<IReadOnlyCollection<LeaderboardItem<TimeInt32>>>> GetMapLeaderBoardResponseAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<IReadOnlyCollection<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<IReadOnlyCollection<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, CancellationToken cancellationToken = default);
+}
+
+public class MasterServerMP4 : MasterServer, IMasterServerMP4
+{
+    public const string DefaultAddress = "http://relay02.v04.maniaplanet.com/game/request.php";
+
+    public MasterServerMP4() : base(new Uri(DefaultAddress))
+    {
+    }
+
+    public MasterServerMP4(HttpClient client) : base(client)
+    {
+    }
 
     protected async Task<string> SendAsync(string titleId, string requestName, string parameters, CancellationToken cancellationToken)
     {
@@ -23,12 +47,17 @@ public class MasterServerMP4 : MasterServer
     </request>
 </root>", Encoding.UTF8, "text/xml");
 
-        using var response = await Client.PostAsync("http://relay02.v04.maniaplanet.com/game/request.php", content, cancellationToken);
+        using var response = await Client.PostAsync(default(Uri), content, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<LeaderboardItem>> GetCampaignLeaderBoardAsync(
+    protected override async Task<string> SendAsync(string requestName, string parameters, CancellationToken cancellationToken)
+    {
+        return await SendAsync(string.Empty, requestName, parameters, cancellationToken);
+    }
+
+    public virtual async Task<MasterServerResponse<IReadOnlyCollection<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(
         string titleId,
         string? campaignId = null,
         int count = 10,
@@ -46,10 +75,22 @@ public class MasterServerMP4 : MasterServer
             <t></t>
             <z>{zone}</z>
             <s>{type}</s>", cancellationToken);
-        return ProcessResponseResult(RequestName, responseStr, ReadLeaderboardItems);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, ReadLeaderboardItems<uint>);
     }
 
-    public async Task<IEnumerable<LeaderboardItem>> GetMapLeaderBoardAsync(
+    public async Task<IReadOnlyCollection<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(
+        string titleId,
+        string? campaignId = null,
+        int count = 10,
+        int offset = 0,
+        string zone = "World",
+        CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint,
+        CancellationToken cancellationToken = default)
+    {
+        return (await GetCampaignLeaderBoardResponseAsync(titleId, campaignId, count, offset, zone, type, cancellationToken)).Result;
+    }
+
+    public virtual async Task<MasterServerResponse<IReadOnlyCollection<LeaderboardItem<TimeInt32>>>> GetMapLeaderBoardResponseAsync(
         string titleId,
         string mapUid,
         int count = 10,
@@ -67,96 +108,192 @@ public class MasterServerMP4 : MasterServer
             <c></c>
             <t>{context}</t>
             <s>MapRecord</s>", cancellationToken);
-        return ProcessResponseResult(RequestName, responseStr, ReadLeaderboardItems);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, ReadLeaderboardItems<TimeInt32>);
     }
 
-    private static T ProcessResponseResult<T>(string requestName, string responseStr, ProcessContent<T> processContent) where T : notnull
+    public async Task<IReadOnlyCollection<LeaderboardItem<TimeInt32>>> GetMapLeaderBoardAsync(
+        string titleId,
+        string mapUid,
+        int count = 10,
+        int offset = 0,
+        string zone = "World",
+        string context = "",
+        CancellationToken cancellationToken = default)
     {
-        var xml = new MiniXmlReader(responseStr);
-
-        xml.SkipProcessingInstruction();
-
-        if (!MemoryExtensions.Equals(xml.ReadStartElement(), "r", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new Exception("<r> (first one) not found");
-        }
-
-        var content = default(T);
-
-        while (xml.TryReadStartElement(out var responseElement))
-        {
-            switch (responseElement)
-            {
-                case "r":
-                    ProcessResponse(requestName, processContent, ref xml, out content);
-                    break;
-                case "e":
-                    var executionTime = xml.ReadContentAsString();
-                    break;
-            }
-
-            Debug.Assert(xml.SkipEndElement());
-        }
-
-        return content ?? throw new Exception("No response content");
+        return (await GetMapLeaderBoardResponseAsync(titleId, mapUid, count, offset, zone, context, cancellationToken)).Result;
     }
 
-    private static void ProcessResponse<T>(string requestName, ProcessContent<T> processContent, ref MiniXmlReader xml, out T? content) where T : notnull
+    public virtual async Task<MasterServerResponse<IReadOnlyCollection<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(
+        string titleId,
+        IEnumerable<CampaignSummaryRequest> summaries,
+        CancellationToken cancellationToken = default)
     {
-        content = default;
+        const string RequestName = "GetCampaignLeaderBoardSummaries";
 
-        while (xml.TryReadStartElement(out var contentElement))
+        var sb = new StringBuilder("\n<b>1</b>");
+        var i = 1;
+        foreach (var summary in summaries)
         {
-            switch (contentElement)
+            sb.Append($"\n<c{i}>{summary.CampaignId ?? titleId}</c{i}>");
+            sb.Append($"\n<m{i}></m{i}>");
+            sb.Append($"\n<t{i}></t{i}>");
+            sb.Append($"\n<z{i}>{summary.Zone}</z{i}>");
+            sb.Append($"\n<s{i}>{summary.Type}</s{i}>");
+            i++;
+        }
+
+        var responseStr = await SendAsync(titleId, RequestName, sb.ToString(), cancellationToken);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
+        {
+            var summaries = new List<CampaignSummary>();
+
+            while (xml.TryReadStartElement("s"))
             {
-                case "n":
-                    var actualRequestName = xml.ReadContentAsString();
-                    if (requestName != actualRequestName)
+                var campaignId = string.Empty;
+                var zone = string.Empty;
+                var type = CampaignLeaderboardType.SkillPoint;
+                var timestamp = DateTimeOffset.UtcNow;
+                var count = 0;
+                var allRecords = Array.Empty<RecordUnit<uint>>();
+                var records = Array.Empty<LeaderboardItem<uint>>();
+
+                while (xml.TryReadStartElement(out var itemElement))
+                {
+                    switch (itemElement)
                     {
-                        //throw new Exception("Invalid response"); invalid xml will respond with empty request name
+                        case "c":
+                            campaignId = xml.ReadContentAsString();
+                            break;
+                        case "z":
+                            zone = xml.ReadContentAsString();
+                            break;
+                        case "s":
+                            _ = Enum.TryParse(xml.ReadContentAsString(), out type);
+                            break;
+                        case "d":
+                            timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                            break;
+                        case "n":
+                            count = int.Parse(xml.ReadContent());
+                            break;
+                        case "i":
+                            allRecords = ReadAllLeaderboardRecords<uint>(ref xml);
+                            break;
+                        case "t":
+                            records = ReadLeaderboardRecords<uint>(ref xml);
+                            break;
+                        default:
+                            xml.ReadContent();
+                            break;
                     }
-                    break;
-                case "c":
-                    content = processContent(ref xml);
-                    break;
-                case "e":
-                    ProcessErrorAndThrowException(xml);
-                    return;
+
+                    Debug.Assert(xml.SkipEndElement());
+                }
+
+                summaries.Add(new CampaignSummary(campaignId, zone, type, timestamp, count, allRecords, records));
+
+                Debug.Assert(xml.SkipEndElement()); // s
             }
 
-            Debug.Assert(xml.SkipEndElement()); // n, c or e
-        }
+            return (IReadOnlyCollection<CampaignSummary>)summaries;
+        });
     }
 
-    private static void ProcessErrorAndThrowException(MiniXmlReader xml)
+    public async Task<IReadOnlyCollection<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(
+        string titleId,
+        IEnumerable<CampaignSummaryRequest> summaries,
+        CancellationToken cancellationToken = default)
     {
-        var value = 0;
-        var message = string.Empty;
+        return (await GetCampaignLeaderBoardSummariesResponseAsync(titleId, summaries, cancellationToken)).Result;
+    }
 
-        while (xml.TryReadStartElement(out var errorElement))
+    public virtual async Task<MasterServerResponse<IReadOnlyCollection<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(
+        string titleId,
+        IEnumerable<MapSummaryRequest> summaries,
+        CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "GetMapLeaderBoardSummaries";
+
+        var sb = new StringBuilder("\n<b>1</b>");
+        var i = 1;
+        foreach (var summary in summaries)
         {
-            switch (errorElement)
-            {
-                case "v":
-                    value = int.Parse(xml.ReadContent());
-                    break;
-                case "m":
-                    message = xml.ReadContentAsString();
-                    break;
-                default:
-                    xml.ReadContent();
-                    break;
-            }
-
-            Debug.Assert(xml.SkipEndElement());
+            sb.Append($"\n<c{i}></c{i}>");
+            sb.Append($"\n<m{i}>{summary.MapUid}</m{i}>");
+            sb.Append($"\n<t{i}></t{i}>");
+            sb.Append($"\n<z{i}>{summary.Zone}</z{i}>");
+            sb.Append($"\n<s{i}>{summary.Type}</s{i}>");
+            i++;
         }
 
-        throw new Exception($"Error {value}: {message}");
+        var responseStr = await SendAsync(titleId, RequestName, sb.ToString(), cancellationToken);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
+        {
+            var summaries = new List<MapSummary>();
+
+            while (xml.TryReadStartElement("s"))
+            {
+                var mapUid = string.Empty;
+                var zone = string.Empty;
+                var type = MapLeaderboardType.MapRecord;
+                var timestamp = DateTimeOffset.UtcNow;
+                var count = 0;
+                var allRecords = Array.Empty<RecordUnit<TimeInt32>>();
+                var records = Array.Empty<LeaderboardItem<TimeInt32>>();
+
+                while (xml.TryReadStartElement(out var itemElement))
+                {
+                    switch (itemElement)
+                    {
+                        case "m":
+                            mapUid = xml.ReadContentAsString();
+                            break;
+                        case "z":
+                            zone = xml.ReadContentAsString();
+                            break;
+                        case "s":
+                            _ = Enum.TryParse(xml.ReadContentAsString(), out type);
+                            break;
+                        case "d":
+                            timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                            break;
+                        case "n":
+                            count = int.Parse(xml.ReadContent());
+                            break;
+                        case "i":
+                            allRecords = ReadAllLeaderboardRecords<TimeInt32>(ref xml);
+                            break;
+                        case "t":
+                            records = ReadLeaderboardRecords<TimeInt32>(ref xml);
+                            break;
+                        default:
+                            xml.ReadContent();
+                            break;
+                    }
+
+                    Debug.Assert(xml.SkipEndElement());
+                }
+
+                summaries.Add(new MapSummary(mapUid, zone, type, timestamp, count, allRecords, records));
+
+                Debug.Assert(xml.SkipEndElement()); // s
+            }
+
+            return (IReadOnlyCollection<MapSummary>)summaries;
+        });
     }
 
-    private static List<LeaderboardItem> ReadLeaderboardItems(ref MiniXmlReader xml)
+    public async Task<IReadOnlyCollection<MapSummary>> GetMapLeaderBoardSummariesAsync(
+        string titleId,
+        IEnumerable<MapSummaryRequest> summaries,
+        CancellationToken cancellationToken = default)
     {
-        var items = new List<LeaderboardItem>();
+        return (await GetMapLeaderBoardSummariesResponseAsync(titleId, summaries, cancellationToken)).Result;
+    }
+
+    private static IReadOnlyCollection<LeaderboardItem<T>> ReadLeaderboardItems<T>(ref MiniXmlReader xml) where T : struct
+    {
+        var items = new List<LeaderboardItem<T>>();
 
         while (xml.TryReadStartElement("i"))
         {
@@ -197,11 +334,51 @@ public class MasterServerMP4 : MasterServer
                 Debug.Assert(xml.SkipEndElement());
             }
 
-            items.Add(new LeaderboardItem(rank, login, nickname, score, fileName, downloadUrl));
+            ref T scoreValue = ref Unsafe.As<uint, T>(ref score);
+
+            items.Add(new LeaderboardItem<T>(rank, login, nickname, scoreValue, fileName, downloadUrl));
 
             Debug.Assert(xml.SkipEndElement()); // i
         }
 
         return items;
+    }
+
+    private static RecordUnit<T>[] ReadAllLeaderboardRecords<T>(ref MiniXmlReader xml) where T : struct
+    {
+        var scoreData = Convert.FromBase64String(xml.ReadContentAsString());
+
+        if (scoreData.Length <= 4)
+        {
+            return [];
+        }
+
+        var uniqueScoreDataCount = BitConverter.ToInt32(scoreData, 0);
+
+        return MemoryMarshal.Cast<byte, RecordUnit<T>>(scoreData.AsSpan().Slice(4)).ToArray();
+    }
+
+    private static LeaderboardItem<T>[] ReadLeaderboardRecords<T>(ref MiniXmlReader xml) where T : struct
+    {
+        using var ms = new MemoryStream(Convert.FromBase64String(xml.ReadContentAsString()));
+        using var r = new GbxBasedReader(ms, leaveOpen: false);
+
+        var records = new LeaderboardItem<T>[r.ReadUInt32()];
+
+        for (int i = 0; i < records.Length; i++)
+        {
+            var rank = r.ReadInt32();
+            var score = r.ReadUInt32();
+            var login = r.ReadString();
+            var nickname = r.ReadString();
+            var fileName = r.ReadString();
+            var replayUrl = r.ReadString();
+
+            ref T scoreValue = ref Unsafe.As<uint, T>(ref score);
+
+            records[i] = new LeaderboardItem<T>(rank, login, nickname, scoreValue, fileName, replayUrl);
+        }
+
+        return records;
     }
 }

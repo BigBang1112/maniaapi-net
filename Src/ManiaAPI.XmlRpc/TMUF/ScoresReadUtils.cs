@@ -2,7 +2,7 @@
 
 internal static class ScoresReadUtils
 {    
-    public static RecordUnit[] ReadRecordsBuffer(GbxBasedReader r)
+    public static RecordUnit<uint>[] ReadRecordsBuffer(GbxBasedReader r)
     {
         var (sizeOfScoreInt, sizeOfCountsInt) = ArchiveSizesMask2(r);
 
@@ -15,14 +15,14 @@ internal static class ScoresReadUtils
         Span<byte> scoreData = r.ReadBytes(recordUnitCount * sizeOfScoreInt);
         Span<byte> countsData = r.ReadBytes(recordUnitCount * sizeOfCountsInt);
 
-        var array = new RecordUnit[recordUnitCount];
+        var array = new RecordUnit<uint>[recordUnitCount];
 
         for (var i = 0; i < recordUnitCount; i++)
         {
             var scoreSlice = scoreData.Slice(i * sizeOfScoreInt, sizeOfScoreInt);
             var countSlice = countsData.Slice(i * sizeOfCountsInt, sizeOfCountsInt);
 
-            var score = BitConverter.ToInt32(scoreSlice);
+            var score = BitConverter.ToUInt32(scoreSlice);
             var count = BitConverter.ToInt32(countSlice);
 
             array[i] = new(score, count);

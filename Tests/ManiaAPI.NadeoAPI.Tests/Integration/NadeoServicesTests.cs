@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace ManiaAPI.NadeoAPI.Tests.Integration;
@@ -7,7 +8,7 @@ namespace ManiaAPI.NadeoAPI.Tests.Integration;
 public class NadeoServicesTests
 {
     [Fact]
-    public async void RequestManagement()
+    public async Task RequestManagement()
     {
         // Arrange
         var configuration = new ConfigurationBuilder()

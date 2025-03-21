@@ -1,3 +1,3 @@
 ﻿namespace ManiaAPI.XmlRpc.MP4;
 
-public record LeaderboardItem(int Rank, string Login, string Nickname, uint Score, string FileName, string DownloadUrl);
+public record LeaderboardItem<T>(int Rank, string Login, string Nickname, T Score, string FileName, string DownloadUrl) where T : struct;

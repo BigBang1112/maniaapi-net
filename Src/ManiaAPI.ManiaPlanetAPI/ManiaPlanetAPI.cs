@@ -144,7 +144,6 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     {
         ArgumentException.ThrowIfNullOrEmpty(clientId);
         ArgumentException.ThrowIfNullOrEmpty(clientSecret);
-        ArgumentNullException.ThrowIfNull(refresh);
 
         if (refresh && refreshToken is null)
         {
@@ -186,7 +185,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     public async Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
     {
-        await AuthorizeAsync(clientId, clientSecret, ImmutableArray<string>.Empty, cancellationToken);
+        await AuthorizeAsync(clientId, clientSecret, [], cancellationToken);
     }
 
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
