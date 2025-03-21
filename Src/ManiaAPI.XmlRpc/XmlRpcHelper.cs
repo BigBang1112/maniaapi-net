@@ -12,6 +12,8 @@ internal static partial class XmlRpcHelper
 
     internal static MasterServerResponse<T> ProcessResponseResult<T>(string requestName, string responseStr, XmlRpcProcessContent<T> processContent) where T : notnull
     {
+        Debug.WriteLine(responseStr);
+
         var xml = new MiniXmlReader(responseStr);
 
         xml.SkipProcessingInstruction();
