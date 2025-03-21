@@ -39,7 +39,11 @@ internal static partial class XmlRpcHelper
             Debug.Assert(xml.SkipEndElement());
         }
 
-        var executionTimeSpan = TimeSpan.FromSeconds(double.Parse(ExecutionTimeRegex().Match(executionTime).Groups[1].Value, CultureInfo.InvariantCulture));
+        var executionTimeGroup = ExecutionTimeRegex().Match(executionTime).Groups[1].Value;
+
+        var executionTimeSpan = string.IsNullOrEmpty(executionTimeGroup)
+            ? default(TimeSpan?)
+            : TimeSpan.FromSeconds(double.Parse(executionTimeGroup, CultureInfo.InvariantCulture));
 
         return new MasterServerResponse<T>(content ?? throw new Exception("No response content"), executionTimeSpan);
     }
