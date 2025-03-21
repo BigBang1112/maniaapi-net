@@ -1,24 +1,45 @@
 # ManiaAPI.NET
 
-Currently a wrapper for these web APIs:
+A wrapper for these web APIs:
 
 - Nadeo API (official TM2020 ingame API)
 - Trackmania web API
+- ManiaPlanet web API
 - Trackmania.io
 - Trackmania Exchange
-
-Soon:
-
-- ManiaPlanet web API
 - XML-RPC (for TMF and ManiaPlanet)
 
-This set of libraries was made to be very easy and straight-forward to use, but also easily mocked, so that it can be integrated into the real world in no time.
+This set of libraries was made to be very easy and straightforward to use, but also easily mocked, so that it can be integrated into the real world in no time.
+
+## ManiaAPI.NadeoAPI
+
+TBD
+
+### ManiaAPI.NadeoAPI.Extensions.Gbx
+
+TBD
+
+## ManiaAPI.TrackmaniaAPI
+
+TBD
+
+## ManiaAPI.ManiaPlanetAPI
+
+TBD
+
+### ManiaAPI.ManiaPlanetAPI.Extensions.Hosting
+
+TBD
+
+## ManiaAPI.TrackmaniaIO
+
+TBD
 
 ## ManiaAPI.TMX
 
 Wraps https://tm-exchange.com/ (old TMX).
 
-### Setup
+#### Setup
 
 ```cs
 using ManiaAPI.TMX;
@@ -27,7 +48,7 @@ using ManiaAPI.TMX;
 var tmx = new TMX(TmxSite.TMUF);
 ```
 
-### Methods
+#### Methods
 
 ```cs
 Task<ItemCollection<ReplayItem>> GetReplaysAsync(TMX.GetReplaysParameters parameters, CancellationToken cancellationToken = default);
@@ -52,3 +73,11 @@ string GetTrackImageUrl(TrackItem track, int imageIndex);
 Task<HttpResponseMessage> GetTrackImageResponseAsync(long trackId, int imageIndex, CancellationToken cancellationToken = default);
 Task<HttpResponseMessage> GetTrackImageResponseAsync(TrackItem track, int imageIndex, CancellationToken cancellationToken = default);
 ```
+
+### ManiaAPI.TMX.Extensions.Gbx
+
+TBD
+
+## ManiaAPI.XmlRpc
+
+TBD
