@@ -6,5 +6,5 @@ public sealed record CampaignSummary(
     CampaignLeaderboardType Type, 
     DateTimeOffset Timestamp, 
     int Count, 
-    RecordUnit<uint>[] AllRecords, 
-    LeaderboardItem<uint>[] Records);
+    RecordUnit<uint>[] Skillpoints, 
+    LeaderboardItem<uint>[] HighScores);

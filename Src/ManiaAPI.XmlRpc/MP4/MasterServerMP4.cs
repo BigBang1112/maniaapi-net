@@ -1,6 +1,4 @@
 ﻿using MinimalXmlReader;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -154,8 +152,8 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                 var type = CampaignLeaderboardType.SkillPoint;
                 var timestamp = DateTimeOffset.UtcNow;
                 var count = 0;
-                var allRecords = Array.Empty<RecordUnit<uint>>();
-                var records = Array.Empty<LeaderboardItem<uint>>();
+                var skillpoints = Array.Empty<RecordUnit<uint>>();
+                var highScores = Array.Empty<LeaderboardItem<uint>>();
 
                 while (xml.TryReadStartElement(out var itemElement))
                 {
@@ -177,10 +175,10 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                             count = int.Parse(xml.ReadContent());
                             break;
                         case "i":
-                            allRecords = ReadAllLeaderboardRecords<uint>(ref xml);
+                            skillpoints = ReadAllLeaderboardRecords<uint>(ref xml);
                             break;
                         case "t":
-                            records = ReadLeaderboardRecords<uint>(ref xml);
+                            highScores = ReadLeaderboardRecords<uint>(ref xml);
                             break;
                         default:
                             xml.ReadContent();
@@ -190,7 +188,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                     _ = xml.SkipEndElement();
                 }
 
-                summaries.Add(new CampaignSummary(campaignId, zone, type, timestamp, count, allRecords, records));
+                summaries.Add(new CampaignSummary(campaignId, zone, type, timestamp, count, skillpoints, highScores));
 
                 _ = xml.SkipEndElement(); // s
             }
@@ -238,8 +236,8 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                 var type = MapLeaderboardType.MapRecord;
                 var timestamp = DateTimeOffset.UtcNow;
                 var count = 0;
-                var allRecords = Array.Empty<RecordUnit<TimeInt32>>();
-                var records = Array.Empty<LeaderboardItem<TimeInt32>>();
+                var skillpoints = Array.Empty<RecordUnit<TimeInt32>>();
+                var highScores = Array.Empty<LeaderboardItem<TimeInt32>>();
 
                 while (xml.TryReadStartElement(out var itemElement))
                 {
@@ -261,10 +259,10 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                             count = int.Parse(xml.ReadContent());
                             break;
                         case "i":
-                            allRecords = ReadAllLeaderboardRecords<TimeInt32>(ref xml);
+                            skillpoints = ReadAllLeaderboardRecords<TimeInt32>(ref xml);
                             break;
                         case "t":
-                            records = ReadLeaderboardRecords<TimeInt32>(ref xml);
+                            highScores = ReadLeaderboardRecords<TimeInt32>(ref xml);
                             break;
                         default:
                             xml.ReadContent();
@@ -274,7 +272,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                     _ = xml.SkipEndElement();
                 }
 
-                summaries.Add(new MapSummary(mapUid, zone, type, timestamp, count, allRecords, records));
+                summaries.Add(new MapSummary(mapUid, zone, type, timestamp, count, skillpoints, highScores));
 
                 _ = xml.SkipEndElement(); // s
             }

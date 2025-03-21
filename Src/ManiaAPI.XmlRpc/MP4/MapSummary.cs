@@ -8,5 +8,5 @@ public sealed record MapSummary(
     MapLeaderboardType Type, 
     DateTimeOffset Timestamp, 
     int Count, 
-    RecordUnit<TimeInt32>[] AllRecords, 
-    LeaderboardItem<TimeInt32>[] Records);
+    RecordUnit<TimeInt32>[] Skillpoints, 
+    LeaderboardItem<TimeInt32>[] HighScores);
