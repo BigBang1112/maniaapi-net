@@ -2,13 +2,14 @@
 
 namespace ManiaAPI.NadeoAPI;
 
-public sealed record Room(int Id,
+public sealed record Room(int? Id,
                           string Name,
-                          string Region,
+                          string? Region,
                           string ServerAccountId,
                           int MaxPlayers,
                           int PlayerCount,
                           ImmutableArray<string> Maps,
                           string Script,
-                          bool Scalable,
-                          ImmutableDictionary<string, ScriptSetting> ScriptSettings);
+                          bool Scalable
+                          //ImmutableDictionary<string, ScriptSetting> ScriptSettings bugged atm
+    );
