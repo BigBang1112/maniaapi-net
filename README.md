@@ -176,32 +176,21 @@ For DI setup with multiple platforms, you can use keyed services:
 using ManiaAPI.XmlRpc;
 
 // Register the services
-builder.Services.AddKeyedScoped<InitServerTMT>(Platform.PC, (provider, key) => new InitServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient("PC")));
-builder.Services.AddKeyedScoped<InitServerTMT>(Platform.XB1, (provider, key) => new InitServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient("XB1")));
-builder.Services.AddKeyedScoped<InitServerTMT>(Platform.PS4), (provider, key) => new InitServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient("PS4")));
-builder.Services.AddKeyedScoped<MasterServerTMT>(Platform.PC);
-builder.Services.AddKeyedScoped<MasterServerTMT>(Platform.XB1);
-builder.Services.AddKeyedScoped<MasterServerTMT>(Platform.PS4);
-builder.Services.AddHttpClient<InitServerTMT>("PC", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(Platform.PC)));
-builder.Services.AddHttpClient<InitServerTMT>("XB1", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(Platform.XB1)));
-builder.Services.AddHttpClient<InitServerTMT>("PS4", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(Platform.PS4)));
-builder.Services.AddHttpClient<MasterServerTMT>("PC");
-builder.Services.AddHttpClient<MasterServerTMT>("XB1");
-builder.Services.AddHttpClient<MasterServerTMT>("PS4");
+
+foreach (Platform platform in Enum.GetValues(typeof(Platform)))
+{
+    builder.Services.AddKeyedScoped<InitServerTMT>(platform, (provider, key) => new InitServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient(platform.ToString())));
+    builder.Services.AddKeyedScoped<MasterServerTMT>(platform, (provider, key) => new MasterServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient(platform.ToString())));
+    builder.Services.AddHttpClient<InitServerTMT>(platform.ToString(), client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(platform)));
+    builder.Services.AddHttpClient<MasterServerTMT>(platform.ToString());
+}
 
 // Do the setup
-var initServerPC = provider.GetRequiredService<InitServerTMT>(Platform.PC);
-var waitingParamsPC = await initServerPC.GetWaitingParamsAsync();
-var masterServerPC = provider.GetRequiredService<MasterServerTMT>(Platform.PC);
-masterServerPC.Client.BaseAddress = waitingParamsPC.MasterServers.First().GetUri();
-
-var initServerXB1 = provider.GetRequiredService<InitServerTMT>(Platform.XB1);
-var waitingParamsXB1 = await initServerXB1.GetWaitingParamsAsync();
-var masterServerXB1 = provider.GetRequiredService<MasterServerTMT>(Platform.XB1);
-masterServerXB1.Client.BaseAddress = waitingParamsXB1.MasterServers.First().GetUri();
-
-var initServerPS4 = provider.GetRequiredService<InitServerTMT>(Platform.PS4);
-var waitingParamsPS4 = await initServerPS4.GetWaitingParamsAsync();
-var masterServerPS4 = provider.GetRequiredService<MasterServerTMT>(Platform.PS4);
-masterServerPS4.Client.BaseAddress = waitingParamsPS4.MasterServers.First().GetUri();
+foreach (Platform platform in Enum.GetValues(typeof(Platform)))
+{
+    var initServer = provider.GetRequiredService<InitServerTMT>(platform);
+    var waitingParams = await initServer.GetWaitingParamsAsync();
+    var masterServer = provider.GetRequiredService<MasterServerTMT>(platform);
+    masterServer.Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
+}
 ```
