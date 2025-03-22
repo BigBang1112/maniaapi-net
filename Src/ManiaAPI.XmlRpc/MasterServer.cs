@@ -1,5 +1,4 @@
 ﻿using MinimalXmlReader;
-using System.Diagnostics;
 
 namespace ManiaAPI.XmlRpc;
 
@@ -15,6 +14,8 @@ public abstract class MasterServer : IMasterServer
 {
     public HttpClient Client { get; }
 
+    protected abstract string GameXml { get; }
+
     protected MasterServer(HttpClient client)
     {
         Client = client;
@@ -25,12 +26,10 @@ public abstract class MasterServer : IMasterServer
     {
     }
 
-    protected abstract Task<string> SendAsync(string requestName, string parameters, CancellationToken cancellationToken);
-
     public virtual async Task<MasterServerResponse<IReadOnlyCollection<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetLeagues";
-        var responseStr = await SendAsync(RequestName, string.Empty, cancellationToken);
+        var responseStr = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, string.Empty, cancellationToken);
         return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
         {
             var items = new List<League>();

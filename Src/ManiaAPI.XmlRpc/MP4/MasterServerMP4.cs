@@ -6,8 +6,11 @@ using TmEssentials;
 
 namespace ManiaAPI.XmlRpc.MP4;
 
-public interface IMasterServerMP4
+public interface IMasterServerMP4 : IMasterServer
 {
+    Task ValidateAsync(InitServerMP4 initServer, CancellationToken cancellationToken = default);
+    Task ValidateAsync(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyCollection<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
     Task<MasterServerResponse<IReadOnlyCollection<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
     Task<IReadOnlyCollection<LeaderboardItem<TimeInt32>>> GetMapLeaderBoardAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
@@ -22,37 +25,56 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
 {
     public const string DefaultAddress = "http://relay02.v04.maniaplanet.com/game/request.php";
 
+    protected override string GameXml => XmlRpcHelperMP4.GameXml;
+
+    /// <summary>
+    /// Creates a new instance of <see cref="MasterServerMP4"/> using the expected master server address (relay02). In case it's offline, you need to check <see cref="InitServerMP4"/>.
+    /// </summary>
     public MasterServerMP4() : base(new Uri(DefaultAddress))
     {
     }
 
+    /// <summary>
+    /// Creates a new instance of <see cref="MasterServerMP4"/> using a <see cref="MasterServerInfo"/> object. Be careful to use the correct object given from the correct init server.
+    /// </summary>
+    /// <param name="info">Info about the master server, usually given from <see cref="InitServerMP4"/>.</param>
+    public MasterServerMP4(MasterServerInfo info) : base(info.GetUri())
+    {
+    }
+
+    /// <summary>
+    /// Creates a new instance of <see cref="MasterServerMP4"/> using any <see cref="HttpClient"/>. You need to set the base address yourself.
+    /// </summary>
+    /// <param name="client">HTTP client.</param>
     public MasterServerMP4(HttpClient client) : base(client)
     {
     }
 
-    protected async Task<string> SendAsync(string titleId, string requestName, string parameters, CancellationToken cancellationToken)
-    {
-        var content = new StringContent(@$"
-<root>
-    <game>
-        <version>3.3.0</version>
-        <build>2019-11-19_18_50</build>
-        <title>{titleId}</title>
-    </game>
-    <request>
-        <name>{requestName}</name>
-        <params>{parameters}</params>
-    </request>
-</root>", Encoding.UTF8, "text/xml");
+    protected string GetGameXml(string titleId) => @$"{GameXml}
+<title>{titleId}</title>";
 
-        using var response = await Client.PostAsync(default(Uri), content, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+    public virtual async Task ValidateAsync(InitServerMP4 initServer, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await GetApplicationConfigAsync(cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            var waitingParams = await initServer.GetWaitingParamsAsync(cancellationToken);
+            Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
+        }
     }
 
-    protected override async Task<string> SendAsync(string requestName, string parameters, CancellationToken cancellationToken)
+    public async Task ValidateAsync(CancellationToken cancellationToken = default)
     {
-        return await SendAsync(string.Empty, requestName, parameters, cancellationToken);
+        await ValidateAsync(new InitServerMP4(), cancellationToken);
+    }
+
+    private async Task GetApplicationConfigAsync(CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "GetApplicationConfig";
+        _ = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, string.Empty, cancellationToken);
     }
 
     public virtual async Task<MasterServerResponse<IReadOnlyCollection<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(
@@ -65,7 +87,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetCampaignLeaderBoard";
-        var responseStr = await SendAsync(titleId, RequestName, @$"
+        var responseStr = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, @$"
             <f>{offset}</f>
             <n>{count}</n>
             <c>{campaignId ?? titleId}</c>
@@ -98,7 +120,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetMapLeaderBoard";
-        var responseStr = await SendAsync(titleId, RequestName, @$"
+        var responseStr = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, @$"
             <m>{mapUid}</m>
             <n>{count}</n>
             <f>{offset}</f>
@@ -140,7 +162,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
             i++;
         }
 
-        var responseStr = await SendAsync(titleId, RequestName, sb.ToString(), cancellationToken);
+        var responseStr = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, sb.ToString(), cancellationToken);
         return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
         {
             var summaries = new List<CampaignSummary>();
@@ -224,7 +246,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
             i++;
         }
 
-        var responseStr = await SendAsync(titleId, RequestName, sb.ToString(), cancellationToken);
+        var responseStr = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, sb.ToString(), cancellationToken);
         return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
         {
             var summaries = new List<MapSummary>();

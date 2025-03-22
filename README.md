@@ -48,31 +48,15 @@ using ManiaAPI.TMX;
 var tmx = new TMX(TmxSite.TMUF);
 ```
 
-#### Methods
+#### Possibilities
 
-```cs
-Task<ItemCollection<ReplayItem>> GetReplaysAsync(TMX.GetReplaysParameters parameters, CancellationToken cancellationToken = default);
-Task<ItemCollection<LeaderboardItem>> SearchLeaderboardsAsync(TMX.SearchLeaderboardsParameters parameters, CancellationToken cancellationToken = default);
-Task<ItemCollection<TrackpackItem>> SearchTrackpacksAsync(TMX.SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
-Task<ItemCollection<TrackItem>> SearchTracksAsync(TMX.SearchTracksParameters parameters, CancellationToken cancellationToken = default);
-Task<ItemCollection<UserItem>> SearchUsersAsync(TMX.SearchUsersParameters parameters, CancellationToken cancellationToken = default);
-string GetReplayGbxUrl(long replayId);
-string GetReplayGbxUrl(ReplayItem replay);
-Task<HttpResponseMessage> GetReplayGbxResponseAsync(long replayId, CancellationToken cancellationToken = default);
-Task<HttpResponseMessage> GetReplayGbxResponseAsync(ReplayItem replay, CancellationToken cancellationToken = default);
-string GetTrackGbxUrl(long trackId);
-string GetTrackGbxUrl(TrackItem track);
-Task<HttpResponseMessage> GetTrackGbxResponseAsync(long trackId, CancellationToken cancellationToken = default);
-Task<HttpResponseMessage> GetTrackGbxResponseAsync(TrackItem track, CancellationToken cancellationToken = default);
-string GetTrackThumbnailUrl(long trackId);
-string GetTrackThumbnailUrl(TrackItem track);
-Task<HttpResponseMessage> GetTrackThumbnailResponseAsync(long trackId, CancellationToken cancellationToken = default);
-Task<HttpResponseMessage> GetTrackThumbnailResponseAsync(TrackItem track, CancellationToken cancellationToken = default);
-string GetTrackImageUrl(long trackId, int imageIndex);
-string GetTrackImageUrl(TrackItem track, int imageIndex);
-Task<HttpResponseMessage> GetTrackImageResponseAsync(long trackId, int imageIndex, CancellationToken cancellationToken = default);
-Task<HttpResponseMessage> GetTrackImageResponseAsync(TrackItem track, int imageIndex, CancellationToken cancellationToken = default);
-```
+- Get replays
+- Search leaderboards
+- Search trackpacks
+- Search tracks
+- Search users
+- Get Gbx URLs and HTTP responses
+- Get image URLs and HTTP responses
 
 ### ManiaAPI.TMX.Extensions.Gbx
 
@@ -80,4 +64,144 @@ TBD
 
 ## ManiaAPI.XmlRpc
 
-TBD
+Wraps TMF, TMT, and ManiaPlanet XML-RPC ingame APIs. **Does not include dedicated server XML-RPC.**
+
+#### Setup for TMUF
+
+```cs
+using ManiaAPI.XmlRpc;
+
+var masterServer = new MasterServerTMUF();
+```
+
+or with DI, using an injected `HttpClient`:
+
+```cs
+using ManiaAPI.XmlRpc;
+
+builder.Services.AddScoped<MasterServerTMUF>();
+builder.Services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new(MasterServerTMUF.DefaultAddress));
+```
+
+#### Setup for ManiaPlanet
+
+First examples assume `Maniaplanet relay 2` master server is still running.
+
+```cs
+using ManiaAPI.XmlRpc;
+
+var masterServer = new MasterServerMP4();
+```
+
+or with DI, using an injected `HttpClient`:
+
+```cs
+using ManiaAPI.XmlRpc;
+
+builder.Services.AddScoped<MasterServerMP4>();
+builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress));
+```
+
+in case `Maniaplanet relay 2` shuts down, you have to reach out to `InitServerMP4` with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
+
+To be most inline with the game client, you should validate the master server first with `ValidateAsync`. Behind the scenes, it first requests `GetApplicationConfig`, then on catched HTTP exception, it requests `GetWaitingParams` from the init server and use the available master server instead.
+
+```cs
+using ManiaAPI.XmlRpc;
+
+var masterServer = new MasterServerMP4();
+
+await masterServer.ValidateAsync(); // Do this for reliability
+
+// The master server is now ready to use
+```
+
+with DI, it is recommended to separate the init server's `HttpClient` from the master server.
+
+```cs
+using ManiaAPI.XmlRpc;
+
+// Register the services
+builder.Services.AddScoped<InitServerMP4>();
+builder.Services.AddScoped<MasterServerMP4>();
+builder.Services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultAddress));
+builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress));
+
+// Do the setup
+var initServer = provider.GetRequiredService<InitServerMP4>();
+var masterServer = provider.GetRequiredService<MasterServerMP4>();
+
+await masterServer.ValidateAsync(initServer); // Do this for reliability
+
+// The master server is now ready to use
+```
+
+#### Setup for TMT
+
+TMT handles 3 platforms: PC, XB1, and PS4. Each have their own init server and master server. Nadeo still tends to change the master servers, so it's recommended to first go through the init server.
+
+```cs
+using ManiaAPI.XmlRpc;
+
+var initServer = new InitServerTMT(Platform.PC);
+var waitingParams = await initServer.GetWaitingParamsAsync();
+
+var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+
+// You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
+```
+
+or with DI, using an injected `HttpClient` (not viable for multiple platforms):
+
+```cs
+using ManiaAPI.XmlRpc;
+
+// Register the services
+builder.Services.AddScoped<InitServerTMT>();
+builder.Services.AddScoped<MasterServerTMT>();
+builder.Services.AddHttpClient<InitServerTMT>(client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(Platform.PC)));
+builder.Services.AddHttpClient<MasterServerTMT>();
+
+// Do the setup
+var initServer = provider.GetRequiredService<InitServerTMT>();
+var waitingParams = await initServer.GetWaitingParamsAsync();
+
+var masterServer = provider.GetRequiredService<MasterServerTMT>();
+masterServer.Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
+```
+
+For DI setup with multiple platforms, you can use keyed services:
+
+```cs
+using ManiaAPI.XmlRpc;
+
+// Register the services
+builder.Services.AddKeyedScoped<InitServerTMT>(Platform.PC, (provider, key) => new InitServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient("PC")));
+builder.Services.AddKeyedScoped<InitServerTMT>(Platform.XB1, (provider, key) => new InitServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient("XB1")));
+builder.Services.AddKeyedScoped<InitServerTMT>(Platform.PS4), (provider, key) => new InitServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient("PS4")));
+builder.Services.AddKeyedScoped<MasterServerTMT>(Platform.PC);
+builder.Services.AddKeyedScoped<MasterServerTMT>(Platform.XB1);
+builder.Services.AddKeyedScoped<MasterServerTMT>(Platform.PS4);
+builder.Services.AddHttpClient<InitServerTMT>("PC", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(Platform.PC)));
+builder.Services.AddHttpClient<InitServerTMT>("XB1", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(Platform.XB1)));
+builder.Services.AddHttpClient<InitServerTMT>("PS4", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(Platform.PS4)));
+builder.Services.AddHttpClient<MasterServerTMT>("PC");
+builder.Services.AddHttpClient<MasterServerTMT>("XB1");
+builder.Services.AddHttpClient<MasterServerTMT>("PS4");
+
+// Do the setup
+var initServerPC = provider.GetRequiredService<InitServerTMT>(Platform.PC);
+var waitingParamsPC = await initServerPC.GetWaitingParamsAsync();
+var masterServerPC = provider.GetRequiredService<MasterServerTMT>(Platform.PC);
+masterServerPC.Client.BaseAddress = waitingParamsPC.MasterServers.First().GetUri();
+
+var initServerXB1 = provider.GetRequiredService<InitServerTMT>(Platform.XB1);
+var waitingParamsXB1 = await initServerXB1.GetWaitingParamsAsync();
+var masterServerXB1 = provider.GetRequiredService<MasterServerTMT>(Platform.XB1);
+masterServerXB1.Client.BaseAddress = waitingParamsXB1.MasterServers.First().GetUri();
+
+var initServerPS4 = provider.GetRequiredService<InitServerTMT>(Platform.PS4);
+var waitingParamsPS4 = await initServerPS4.GetWaitingParamsAsync();
+var masterServerPS4 = provider.GetRequiredService<MasterServerTMT>(Platform.PS4);
+masterServerPS4.Client.BaseAddress = waitingParamsPS4.MasterServers.First().GetUri();
+```

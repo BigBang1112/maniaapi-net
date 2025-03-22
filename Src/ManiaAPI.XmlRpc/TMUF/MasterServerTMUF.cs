@@ -1,6 +1,4 @@
 ﻿using MinimalXmlReader;
-using System.Diagnostics;
-using System.Text;
 using TmEssentials;
 
 namespace ManiaAPI.XmlRpc.TMUF;
@@ -35,30 +33,18 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
     private const string GeneralScoresName = "General";
     private const string LadderScoresName = "Multi";
 
+    protected override string GameXml => "<version>2.11.25</version>";
+
     public MasterServerTMUF() : base(new Uri(DefaultAddress))
     {
     }
 
+    /// <summary>
+    /// Creates a new instance of <see cref="MasterServerTMUF"/> using any <see cref="HttpClient"/>. You need to set the base address yourself.
+    /// </summary>
+    /// <param name="client">HTTP client.</param>
     public MasterServerTMUF(HttpClient client) : base(client)
     {
-    }
-
-    protected override async Task<string> SendAsync(string requestName, string parameters, CancellationToken cancellationToken)
-    {
-        var content = new StringContent(@$"
-<root>
-    <game>
-        <version>2.11.25</version>
-    </game>
-    <request>
-        <name>{requestName}</name>
-        <params>{parameters}</params>
-    </request>
-</root>", Encoding.UTF8, "text/xml");
-
-        using var response = await Client.PostAsync(default(Uri), content, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
     }
 
     public virtual async Task<MasterServerResponse<PlayerRankings>> GetLadderPlayerRankingsResponseAsync(
@@ -68,7 +54,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetRankingsNew";
-        var responseStr = await SendAsync(RequestName, @$"
+        var responseStr = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, @$"
             <t>0</t>
             <st>g</st>
             <f>{zone}</f>
@@ -148,7 +134,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetRankingsNew";
-        var responseStr = await SendAsync(RequestName, @$"
+        var responseStr = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, @$"
             <t>1</t>
             <st>g</st>
             <f>{zone}</f>

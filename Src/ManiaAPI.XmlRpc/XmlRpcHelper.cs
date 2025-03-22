@@ -1,6 +1,7 @@
 ﻿using MinimalXmlReader;
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ManiaAPI.XmlRpc;
@@ -9,6 +10,24 @@ internal static partial class XmlRpcHelper
 {
     [GeneratedRegex(@"execution time\s*:\s*(\d+\.\d+)\s*s")]
     private static partial Regex ExecutionTimeRegex();
+
+    internal static async Task<string> SendAsync(HttpClient client, string gameXml, string requestName, string parametersXml, CancellationToken cancellationToken)
+    {
+        using var content = new StringContent(@$"
+<root>
+    <game>
+        {gameXml}
+    </game>
+    <request>
+        <name>{requestName}</name>
+        <params>{parametersXml}</params>
+    </request>
+</root>", Encoding.UTF8, "text/xml");
+
+        using var response = await client.PostAsync(default(Uri), content, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStringAsync(cancellationToken);
+    }
 
     internal static MasterServerResponse<T> ProcessResponseResult<T>(string requestName, string responseStr, XmlRpcProcessContent<T> processContent) where T : notnull
     {
