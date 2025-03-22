@@ -17,6 +17,7 @@ public interface ITrackmaniaAPI : IDisposable
     Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(params Guid[] accountIds);
     Task<User> GetUserAsync(CancellationToken cancellationToken = default);
+    Task<ImmutableArray<MapRecord>> GetUserMapRecordsAsync(IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default);
 }
 
 public class TrackmaniaAPI : ITrackmaniaAPI
@@ -173,6 +174,19 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         {
             return ImmutableDictionary<string, Guid>.Empty;
         }
+    }
+
+    public virtual async Task<ImmutableArray<MapRecord>> GetUserMapRecordsAsync(IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(mapIds);
+
+        if (!mapIds.Any())
+        {
+            return [];
+        }
+
+        return await GetJsonAsync($"user/map-records?{string.Join('&', mapIds.Select((x, i) => $"mapId[{i}]={x}"))}",
+            TrackmaniaAPIJsonContext.Default.ImmutableArrayMapRecord, cancellationToken);
     }
 
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
