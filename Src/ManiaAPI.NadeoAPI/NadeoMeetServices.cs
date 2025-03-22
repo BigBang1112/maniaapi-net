@@ -2,21 +2,21 @@
 
 namespace ManiaAPI.NadeoAPI;
 
-public interface INadeoClubServices : INadeoAPI
+public interface INadeoMeetServices : INadeoAPI
 {
     Task<CupOfTheDay?> GetCurrentCupOfTheDayAsync(CancellationToken cancellationToken = default);
 }
 
-public class NadeoClubServices : NadeoAPI, INadeoClubServices
+public class NadeoMeetServices : NadeoAPI, INadeoMeetServices
 {
     public override string Audience => nameof(NadeoLiveServices);
     public override string BaseAddress => "https://meet.trackmania.nadeo.club/api";
 
-    public NadeoClubServices(HttpClient client, bool automaticallyAuthorize = true) : base(client, automaticallyAuthorize)
+    public NadeoMeetServices(HttpClient client, bool automaticallyAuthorize = true) : base(client, automaticallyAuthorize)
     {
     }
 
-    public NadeoClubServices(bool automaticallyAuthorize = true) : this(new HttpClient(), automaticallyAuthorize)
+    public NadeoMeetServices(bool automaticallyAuthorize = true) : this(new HttpClient(), automaticallyAuthorize)
     {
     }
 

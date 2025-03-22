@@ -5,7 +5,9 @@ namespace ManiaAPI.NadeoAPI;
 
 public interface INadeoServices : INadeoAPI
 {
+    [Obsolete("Use ManiaAPI.TrackmaniaAPI to get the display names instead.")]
     Task<ImmutableArray<Account>> GetAccountDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
+    [Obsolete("Use ManiaAPI.TrackmaniaAPI to get the display names instead.")]
     Task<ImmutableArray<Account>> GetAccountDisplayNamesAsync(params Guid[] accountIds);
     Task<ImmutableArray<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default);
 	Task<ImmutableArray<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, Guid mapId, CancellationToken cancellationToken = default);
@@ -65,12 +67,14 @@ public class NadeoServices : NadeoAPI, INadeoServices
         return await GetJsonAsync($"mapRecords/{mapRecordId}", NadeoAPIJsonContext.Default.MapRecord, cancellationToken);
     }
 
+    [Obsolete("Use ManiaAPI.TrackmaniaAPI to get the display names instead.")]
     public virtual async Task<ImmutableArray<Account>> GetAccountDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"accounts/displayNames/?accountIdList={string.Join(',', accountIds)}",
             NadeoAPIJsonContext.Default.ImmutableArrayAccount, cancellationToken);
     }
 
+    [Obsolete("Use ManiaAPI.TrackmaniaAPI to get the display names instead.")]
     public async Task<ImmutableArray<Account>> GetAccountDisplayNamesAsync(params Guid[] accountIds)
     {
         return await GetAccountDisplayNamesAsync(accountIds, CancellationToken.None);

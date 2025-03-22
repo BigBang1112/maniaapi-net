@@ -18,11 +18,11 @@ public class NadeoClubServicesTests
         var login = configuration.GetValue<string>("DedicatedServer:Login") ?? throw new Exception("DedicatedServer:Login user secret is required");
         var password = configuration.GetValue<string>("DedicatedServer:Password") ?? throw new Exception("DedicatedServer:Password user secret is required");
 
-        INadeoClubServices nadeoLiveServices = new NadeoClubServices();
+        INadeoMeetServices nadeoMeetServices = new NadeoMeetServices();
 
         // Act
-        await nadeoLiveServices.AuthorizeAsync(login, password, AuthorizationMethod.DedicatedServer);
+        await nadeoMeetServices.AuthorizeAsync(login, password, AuthorizationMethod.DedicatedServer);
 
-        var result = await nadeoLiveServices.GetCurrentCupOfTheDayAsync();
+        var result = await nadeoMeetServices.GetCurrentCupOfTheDayAsync();
     }
 }
