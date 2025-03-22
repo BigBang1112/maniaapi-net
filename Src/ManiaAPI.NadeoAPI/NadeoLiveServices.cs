@@ -16,8 +16,9 @@ public interface INadeoLiveServices : INadeoAPI
     Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, string groupId, int length = 10, int offset = 0, bool onlyWorld = true, CancellationToken cancellationToken = default);
     Task<TrackOfTheDayCollection> GetTrackOfTheDaysAsync(int length, int offset = 0, bool royal = false, CancellationToken cancellationToken = default);
     Task<TrackOfTheDayInfo> GetTrackOfTheDayInfoAsync(string mapUid, CancellationToken cancellationToken = default);
-    Task<CampaignCollection> GetCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
+    Task<CampaignCollection> GetSeasonalCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<SeasonPlayerRankingCollection> GetPlayerSeasonRankingsAsync(Guid accountId, string groupId, CancellationToken cancellationToken = default);
+    Task<CampaignCollection> GetWeeklyCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubMember> GetClubMemberAsync(int clubId, Guid accountId, CancellationToken cancellationToken = default);
     Task<ClubMember> GetClubMemberAsync(int clubId, string diplayName, CancellationToken cancellationToken = default);
     Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int length, int offset = 0, bool active = true, CancellationToken cancellationToken = default);
@@ -123,9 +124,9 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         return await GetJsonAsync($"campaign/map/{mapUid}", NadeoAPIJsonContext.Default.TrackOfTheDayInfo, cancellationToken);
     }
 
-    public virtual async Task<CampaignCollection> GetCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default)
+    public virtual async Task<CampaignCollection> GetSeasonalCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"token/campaign/official?offset={offset}&length={length}",
+        return await GetJsonAsync($"campaign/official?offset={offset}&length={length}",
             NadeoAPIJsonContext.Default.CampaignCollection, cancellationToken);
     }
 
@@ -135,10 +136,10 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
             NadeoAPIJsonContext.Default.SeasonPlayerRankingCollection, cancellationToken);
     }
 
-    public virtual async Task<string> JoinDailyChannelAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<CampaignCollection> GetWeeklyCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default)
     {
-        using var response = await SendAsync(HttpMethod.Post, "token/channel/daily/join", cancellationToken: cancellationToken);
-        return (await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.DailyChannelJoin, cancellationToken))?.JoinLink ?? throw new Exception("This shouldn't be null.");
+        return await GetJsonAsync($"campaign/weekly-shorts?offset={offset}&length={length}",
+            NadeoAPIJsonContext.Default.CampaignCollection, cancellationToken);
     }
 
     public virtual async Task<ClubMember> GetClubMemberAsync(int clubId, Guid accountId, CancellationToken cancellationToken = default)
@@ -260,5 +261,11 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         var jsonContent = JsonContent.Create(edition, NadeoAPIJsonContext.Default.ClubCampaignEdition);
         return await PostJsonAsync($"token/club/{clubId}/campaign/{campaignId}/edit",
             jsonContent, NadeoAPIJsonContext.Default.ClubCampaign, cancellationToken);
+    }
+
+    public virtual async Task<string> JoinDailyChannelAsync(CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Post, "token/channel/daily/join", cancellationToken: cancellationToken);
+        return (await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.DailyChannelJoin, cancellationToken))?.JoinLink ?? throw new Exception("This shouldn't be null.");
     }
 }

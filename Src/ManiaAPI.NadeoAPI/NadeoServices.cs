@@ -9,7 +9,8 @@ public interface INadeoServices : INadeoAPI
     Task<ImmutableArray<Account>> GetAccountDisplayNamesAsync(params Guid[] accountIds);
     Task<ImmutableArray<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default);
 	Task<ImmutableArray<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, Guid mapId, CancellationToken cancellationToken = default);
-	Task<MapRecord> GetMapRecordByIdAsync(Guid mapRecordId, CancellationToken cancellationToken = default);
+    Task<ImmutableArray<MapRecord>> GetAccountRecordsAsync(Guid accountId, string? gamemode = null, CancellationToken cancellationToken = default);
+    Task<MapRecord> GetMapRecordByIdAsync(Guid mapRecordId, CancellationToken cancellationToken = default);
     Task<ImmutableArray<PlayerZone>> GetPlayerZonesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<ImmutableArray<PlayerZone>> GetPlayerZonesAsync(params Guid[] accountIds);
     Task<Dictionary<string, ApiRoute>> GetApiRoutesAsync(ApiUsage usage, CancellationToken cancellationToken = default);
@@ -51,6 +52,12 @@ public class NadeoServices : NadeoAPI, INadeoServices
 		}
 
         return records.ToImmutable();
+    }
+
+    public virtual async Task<ImmutableArray<MapRecord>> GetAccountRecordsAsync(Guid accountId, string? gamemode = null, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords{(gamemode is null ? null : $"?gameMode={gamemode}")}",
+            NadeoAPIJsonContext.Default.ImmutableArrayMapRecord, cancellationToken);
     }
 
     public virtual async Task<MapRecord> GetMapRecordByIdAsync(Guid mapRecordId, CancellationToken cancellationToken = default)
