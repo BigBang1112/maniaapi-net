@@ -2,12 +2,12 @@
 
 	<PropertyGroup>
 		<PackageId>ManiaAPI.TMX</PackageId>
-		<Version>2.0.0-beta3</Version>
+		<Version>2.0.0</Version>
 		<Authors>BigBang1112</Authors>
 		<Description>Wrapper for the TMX API, currently only on tm-exchange.com. Part of the ManiaAPI library set.</Description>
 		<Copyright>Copyright (c) 2024 Petr Pivoňka</Copyright>
 		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
-		<PackageIcon></PackageIcon>
+		<PackageIcon>logo_icon_outline.png</PackageIcon>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, tmx, mx, exchange</PackageTags>
 		<PackageReleaseNotes></PackageReleaseNotes>
@@ -36,6 +36,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+        <None Include="../../logo_icon_outline.png" Pack="true" PackagePath="\" />
 		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 

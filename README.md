@@ -1,5 +1,7 @@
 # ManiaAPI.NET
 
+[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/BigBang1112/maniaapi-net?include_prereleases&style=for-the-badge&logo=github)](https://github.com/BigBang1112/maniaapi-net/releases)
+
 A wrapper for these web APIs:
 
 - Nadeo API (official TM2020 ingame API)
@@ -13,7 +15,9 @@ This set of libraries was made to be very easy and straightforward to use, but a
 
 ## ManiaAPI.NadeoAPI
 
-Wraps the official Nadeo API used in the latest Trackmania (2020). **This API requires authentication.**
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.NadeoAPI?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.NadeoAPI/)
+
+Wraps the official Nadeo API used in the latest Trackmania (2020). **This API requires authorization.**
 
 After ínitial authentication, the connectivity is managed by the library, so you don't have to worry about refreshing the token.
 
@@ -132,6 +136,8 @@ await nms.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
 
 ### ManiaAPI.NadeoAPI.Extensions.Gbx
 
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.NadeoAPI.Extensions.Gbx?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.NadeoAPI.Extensions.Gbx/)
+
 Connects `ManiaAPI.NadeoAPI` with [GBX.NET](https://github.com/BigBang1112/gbx-net) features to provide convenient map upload and **map update**.
 
 #### Possibilities
@@ -169,21 +175,134 @@ You can also pass the `CGameCtnChallenge` instance directly, but it is not recom
 
 ## ManiaAPI.TrackmaniaAPI
 
-TBD
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaAPI?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaAPI/)
+
+Wraps https://api.trackmania.com/doc (ManiaPlanet web API). **This API requires authorization.**
+
+#### Possibilities
+
+- Get display names
+- Get account IDs from display names
+- Get user's map records
+
+More will be added in the future.
+
+#### Setup
+
+For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Generate your credentials [here](https://api.trackmania.com/manager).
+
+```cs
+using ManiaAPI.TrackmaniaAPI;
+
+var tm = new TrackmaniaAPI();
+
+await tm.AuthorizeAsync("clientId", "clientSecret", new[] { "clubs", "read_favorite" });
+
+// Ready to use
+```
+
+or with DI, using an injected `HttpClient`:
+
+```cs
+using ManiaAPI.TrackmaniaAPI;
+
+builder.Services.AddScoped<TrackmaniaAPI>();
+builder.Services.AddHttpClient<TrackmaniaAPI>();
+
+// Do the setup
+var tm = provider.GetRequiredService<TrackmaniaAPI>();
+await tm.AuthorizeAsync("clientId", "clientSecret", new[] { "clubs", "read_favorite" });
+
+// Ready to use
+```
+
+### ManiaAPI.TrackmaniaAPI.Extensions.Hosting
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaAPI.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaAPI.Extensions.Hosting/)
+
+Provides Trackmania OAuth2 authorization for ASP.NET Core applications.
+
+#### Setup
+
+For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Generate your credentials [here](https://api.trackmania.com/manager).
+
+```cs
+using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddTrackmania(options =>
+    {
+        options.ClientId = config["OAuth2:Trackmania:Id"];
+        options.ClientSecret = config["OAuth2:Trackmania:Secret"];
+
+        options.Scope.Add("clubs");
+    });
+```
 
 ## ManiaAPI.ManiaPlanetAPI
 
-TBD
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.ManiaPlanetAPI?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.ManiaPlanetAPI/)
+
+Wraps https://maniaplanet.com/swagger (ManiaPlanet web API). This API does not require authorization, but you can authorize to have more methods available.
+
+#### Possibilities
+
+[All available on Swagger.](https://maniaplanet.com/swagger)
+
+#### Setup
+
+For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager).
+
+```cs
+using ManiaAPI.ManiaPlanetAPI;
+
+var mp = new ManiaPlanetAPI();
+
+// You can optionally authorize to do more things, and possibly be less limited
+await mp.AuthorizeAsync("clientId", "clientSecret", ["basic", "dedicated", "maps"]);
+
+// Ready to use
+```
+
+or with DI, using an injected `HttpClient`:
+
+```cs
+using ManiaAPI.ManiaPlanetAPI;
+
+builder.Services.AddScoped<ManiaPlanetAPI>();
+builder.Services.AddHttpClient<ManiaPlanetAPI>();
+```
 
 ### ManiaAPI.ManiaPlanetAPI.Extensions.Hosting
 
-TBD
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting/)
+
+Provides ManiaPlanet OAuth2 authorization for ASP.NET Core applications.
+
+#### Setup
+
+For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager).
+
+```cs
+using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddManiaPlanet(options =>
+    {
+        options.ClientId = config["OAuth2:ManiaPlanet:Id"];
+        options.ClientSecret = config["OAuth2:ManiaPlanet:Secret"];
+
+        Array.ForEach(new[] { "basic", "dedicated", "titles" }, options.Scope.Add);
+    });
+```
 
 ## ManiaAPI.TrackmaniaIO
 
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaIO?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaIO/)
+
 Wraps the https://trackmania.io/ API which provides services around the Nadeo API.
 
-This API is more moderated and cached, but doesn't require you to authenticate with it.
+This API is more moderated and cached, but doesn't require you to authorize with it.
 
 #### Possibilities
 
@@ -216,6 +335,8 @@ builder.Services.AddHttpClient<TrackmaniaIO>();
 
 ## ManiaAPI.TMX
 
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TMX?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TMX/)
+
 Wraps https://tm-exchange.com/ (old TMX).
 
 #### Possibilities
@@ -238,6 +359,8 @@ var tmx = new TMX(TmxSite.TMUF);
 ```
 
 ### ManiaAPI.TMX.Extensions.Gbx
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TMX.Extensions.Gbx?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TMX.Extensions.Gbx/)
 
 Connects `ManiaAPI.TMX` with [GBX.NET](https://github.com/BigBang1112/gbx-net) features.
 
@@ -264,6 +387,8 @@ Console.WriteLine("Number of blocks: " + map.GetBlocks().Count());
 ```
 
 ## ManiaAPI.XmlRpc
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.XmlRpc?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.XmlRpc/)
 
 Wraps TMF, TMT, and ManiaPlanet XML-RPC ingame APIs. **Does not include dedicated server XML-RPC.**
 

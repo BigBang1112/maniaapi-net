@@ -2,12 +2,12 @@
 
 	<PropertyGroup>
 		<PackageId>ManiaAPI.ManiaPlanetAPI.Extensions.Hosting</PackageId>
-		<Version>2.0.0-alpha10</Version>
+		<Version>2.0.0</Version>
 		<Authors>BigBang1112</Authors>
-		<Description>Extension methods of ManiaPlanet API for ASP.NET Core.</Description>
+		<Description>Extension methods of ManiaPlanet API for ASP.NET Core. Part of the ManiaAPI library set.</Description>
 		<Copyright>Copyright (c) 2024 Petr Pivoňka</Copyright>
 		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
-		<PackageIcon></PackageIcon>
+		<PackageIcon>logo_icon_outline.png</PackageIcon>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
 		<PackageReleaseNotes></PackageReleaseNotes>
@@ -15,8 +15,8 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
-		<LangVersion>12</LangVersion>
+		<TargetFrameworks>net9.0;net8.0</TargetFrameworks>
+		<LangVersion>13</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<IsTrimmable>true</IsTrimmable>
@@ -36,6 +36,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+        <None Include="../../logo_icon_outline.png" Pack="true" PackagePath="\" />
 		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 

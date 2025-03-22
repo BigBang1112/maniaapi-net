@@ -1,5 +1,7 @@
 # ManiaAPI.TMX
 
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TMX?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TMX/)
+
 Wraps https://tm-exchange.com/ (old TMX).
 
 ### Setup

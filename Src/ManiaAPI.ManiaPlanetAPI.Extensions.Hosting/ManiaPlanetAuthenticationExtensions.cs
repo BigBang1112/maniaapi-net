@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
-using System.Diagnostics.CodeAnalysis;
 
-namespace ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Authentication;
+namespace ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 
 public static class ManiaPlanetAuthenticationExtensions
 {
