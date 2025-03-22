@@ -13,7 +13,7 @@ This set of libraries was made to be very easy and straightforward to use, but a
 
 ## ManiaAPI.NadeoAPI
 
-TBD
+Wraps the official Nadeo API used in the latest Trackmania (2020). **This API requires authentication.**
 
 ### ManiaAPI.NadeoAPI.Extensions.Gbx
 
@@ -33,20 +33,25 @@ TBD
 
 ## ManiaAPI.TrackmaniaIO
 
-TBD
+Wraps the https://trackmania.io/ API which provides services around the Nadeo API.
+
+This API is more moderated and cached, but doesn't require you to authenticate with it.
+
+#### Possibilities
+
+- Get various campaigns (including weekly shorts)
+- Get leaderboards
+- Get recent world records
+- Get map info
+- Get clubs, including their members and activities
+- Get club rooms
+- Get track of the days
+- Get advertisements
+- Get competitions
 
 ## ManiaAPI.TMX
 
 Wraps https://tm-exchange.com/ (old TMX).
-
-#### Setup
-
-```cs
-using ManiaAPI.TMX;
-
-// Pick one from TMUF, TMNF, Nations, Sunrise, Original
-var tmx = new TMX(TmxSite.TMUF);
-```
 
 #### Possibilities
 
@@ -58,6 +63,15 @@ var tmx = new TMX(TmxSite.TMUF);
 - Get Gbx URLs and HTTP responses
 - Get image URLs and HTTP responses
 
+#### Setup
+
+```cs
+using ManiaAPI.TMX;
+
+// Pick one from TMUF, TMNF, Nations, Sunrise, Original
+var tmx = new TMX(TmxSite.TMUF);
+```
+
 ### ManiaAPI.TMX.Extensions.Gbx
 
 TBD
@@ -65,6 +79,40 @@ TBD
 ## ManiaAPI.XmlRpc
 
 Wraps TMF, TMT, and ManiaPlanet XML-RPC ingame APIs. **Does not include dedicated server XML-RPC.**
+
+#### Possibilities
+
+For TMUF:
+
+- Get scores
+  - Top 10 leaderboards
+  - All records (without identities)
+  - Skillpoints
+  - Medals
+- Get ladder zone rankings
+- Get ladder player rankings
+- Get available master servers
+
+For ManiaPlanet:
+
+- Get campaign and map leaderboard from multiple campaigns/maps at once
+  - Top 10 leaderboards
+  - All records (without identities)
+  - Skillpoints
+  - Medals
+- Get campaign and map leaderboards
+ - **Any range of records**
+ - Skillpoints
+ - Medals
+- Get available master servers
+
+For TMT:
+
+- TODO
+
+For all games:
+
+- Get all available zones
 
 #### Setup for TMUF
 
@@ -102,7 +150,7 @@ builder.Services.AddScoped<MasterServerMP4>();
 builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress));
 ```
 
-in case `Maniaplanet relay 2` shuts down, you have to reach out to `InitServerMP4` with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
+In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
 
 To be most inline with the game client, you should validate the master server first with `ValidateAsync`. Behind the scenes, it first requests `GetApplicationConfig`, then on catched HTTP exception, it requests `GetWaitingParams` from the init server and use the available master server instead.
 
@@ -138,7 +186,7 @@ await masterServer.ValidateAsync(initServer); // Do this for reliability
 
 #### Setup for TMT
 
-TMT handles 3 platforms: PC, XB1, and PS4. Each have their own init server and master server. Nadeo still tends to change the master servers, so it's recommended to first go through the init server.
+TMT handles 3 platforms: PC, XB1, and PS4. Each have their own init server and master server. Nadeo still tends to change these master servers, so it's recommended to first go through the init server.
 
 ```cs
 using ManiaAPI.XmlRpc;
@@ -193,37 +241,3 @@ foreach (Platform platform in Enum.GetValues(typeof(Platform)))
     masterServer.Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
 }
 ```
-
-#### Possibilities
-
-For TMUF:
-
-- Get scores
-  - Top 10 leaderboards
-  - All records (without identities)
-  - Skillpoints
-  - Medals
-- Get ladder zone rankings
-- Get ladder player rankings
-- Get available master servers
-
-For ManiaPlanet:
-
-- Get campaign and map leaderboard from multiple campaigns/maps at once
-  - Top 10 leaderboards
-  - All records (without identities)
-  - Skillpoints
-  - Medals
-- Get campaign and map leaderboards
- - **Any range of records**
- - Skillpoints
- - Medals
-- Get available master servers
-
-For TMT:
-
-- TODO
-
-For any:
-
-- Get all available zones

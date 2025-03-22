@@ -9,8 +9,13 @@ public sealed record CampaignItem(int Id,
                                   [property: JsonPropertyName("mapcount")] int MapCount,
                                   bool Tracked,
                                   bool Official,
-                                  int ClubId,
-                                  string ClubName)
+                                  bool Seasonal,
+                                  bool Weekly,
+                                  [property: JsonPropertyName("clubid")] int? ClubId,
+                                  [property: JsonPropertyName("clubname")] string? ClubName,
+                                  [property: JsonPropertyName("mediaurl")] string? MediaUrl,
+                                  [property: JsonPropertyName("creatorplayer")] Player? CreatorPlayer,
+                                  [property: JsonPropertyName("latesteditorplayer")] Player? LatestEditorPlayer)
 {
     public override string ToString() => Name;
 }
