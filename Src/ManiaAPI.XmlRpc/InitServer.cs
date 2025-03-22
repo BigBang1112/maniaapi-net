@@ -5,6 +5,9 @@ namespace ManiaAPI.XmlRpc;
 public interface IInitServer : IDisposable
 {
     HttpClient Client { get; }
+
+    Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(CancellationToken cancellationToken = default);
+    Task<WaitingParams> GetWaitingParamsAsync(CancellationToken cancellationToken = default);
 }
 
 public abstract class InitServer : IInitServer

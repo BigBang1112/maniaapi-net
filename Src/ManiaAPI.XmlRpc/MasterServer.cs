@@ -6,8 +6,8 @@ public interface IMasterServer : IDisposable
 {
     HttpClient Client { get; }
 
-    Task<IReadOnlyCollection<League>> GetLeaguesAsync(CancellationToken cancellationToken = default);
     Task<MasterServerResponse<IReadOnlyCollection<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<League>> GetLeaguesAsync(CancellationToken cancellationToken = default);
 }
 
 public abstract class MasterServer : IMasterServer

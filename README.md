@@ -176,7 +176,6 @@ For DI setup with multiple platforms, you can use keyed services:
 using ManiaAPI.XmlRpc;
 
 // Register the services
-
 foreach (Platform platform in Enum.GetValues(typeof(Platform)))
 {
     builder.Services.AddKeyedScoped<InitServerTMT>(platform, (provider, key) => new InitServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient(platform.ToString())));
@@ -194,3 +193,37 @@ foreach (Platform platform in Enum.GetValues(typeof(Platform)))
     masterServer.Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
 }
 ```
+
+#### Possibilities
+
+For TMUF:
+
+- Get scores
+  - Top 10 leaderboards
+  - All records (without identities)
+  - Skillpoints
+  - Medals
+- Get ladder zone rankings
+- Get ladder player rankings
+- Get available master servers
+
+For ManiaPlanet:
+
+- Get campaign and map leaderboard from multiple campaigns/maps at once
+  - Top 10 leaderboards
+  - All records (without identities)
+  - Skillpoints
+  - Medals
+- Get campaign and map leaderboards
+ - **Any range of records**
+ - Skillpoints
+ - Medals
+- Get available master servers
+
+For TMT:
+
+- TODO
+
+For any:
+
+- Get all available zones
