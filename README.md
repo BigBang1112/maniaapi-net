@@ -13,6 +13,21 @@ A wrapper for these web APIs:
 
 This set of libraries was made to be very easy and straightforward to use, but also easily mocked, so that it can be integrated into the real world in no time.
 
+## Packages
+
+Everything you can imagine!
+
+- [ManiaAPI.NadeoAPI](#maniaapinadeoapi)
+- [ManiaAPI.NadeoAPI.Extensions.Gbx](#maniaapinadeoapiextensionsgbx)
+- [ManiaAPI.TrackmaniaAPI](#maniaapitrackmaniaapi)
+- [ManiaAPI.TrackmaniaAPI.Extensions.Hosting](#maniaapitrackmaniaapiextensionshosting)
+- [ManiaAPI.ManiaPlanetAPI](#maniaapimaniaplanetapi)
+- [ManiaAPI.ManiaPlanetAPI.Extensions.Hosting](#maniaapimaniaplanetapiextensionshosting)
+- [ManiaAPI.TrackmaniaIO](#maniaapitrackmaniaio)
+- [ManiaAPI.TMX](#maniaapitmx)
+- [ManiaAPI.TMX.Extensions.Gbx](#maniaapitmxextensionsgbx)
+- [ManiaAPI.XmlRpc](#maniaapixmlrpc)
+
 ## ManiaAPI.NadeoAPI
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.NadeoAPI?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.NadeoAPI/)
