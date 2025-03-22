@@ -1,3 +1,6 @@
-﻿namespace ManiaAPI.TrackmaniaIO;
+﻿using System.Collections.Immutable;
+using System.Text.Json.Serialization;
 
-public record Leaderboard(Record[] Tops);
+namespace ManiaAPI.TrackmaniaIO;
+
+public sealed record Leaderboard(ImmutableArray<Record> Tops, [property: JsonPropertyName("playercount")] int PlayerCount);

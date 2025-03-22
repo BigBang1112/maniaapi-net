@@ -1,3 +1,5 @@
-﻿namespace ManiaAPI.TrackmaniaAPI;
+﻿using System.Text.Json.Serialization;
 
-public record ErrorResponse(string Message);
+namespace ManiaAPI.TrackmaniaAPI;
+
+public sealed record ErrorResponse(string? Error, string Message, [property: JsonPropertyName("error_description")] string? ErrorDescription);

@@ -1,108 +1,300 @@
-﻿using ManiaAPI.Base;
-using ManiaAPI.Base.Converters;
-using System.Net;
-using System.Reflection;
-using System.Text.Json.Serialization;
+﻿using ManiaAPI.TMX.Attributes;
 
 namespace ManiaAPI.TMX;
 
-public class TMX : JsonAPI
+public interface ITMX : IClient
 {
-    private static readonly Dictionary<Type, string> fieldQueryStrings = new();
+    TmxSite Site { get; }
+    string SiteName { get; }
 
-    private const string ApiRoute = "api";
-    private const string BaseUrl = "https://{0}.tm-exchange.com";
-    private const string BaseApiUrl = $"{BaseUrl}/{ApiRoute}/";
+    Task<ItemCollection<ReplayItem>> GetReplaysAsync(TMX.GetReplaysParameters parameters, CancellationToken cancellationToken = default);
+    Task<ItemCollection<LeaderboardItem>> SearchLeaderboardsAsync(TMX.SearchLeaderboardsParameters parameters, CancellationToken cancellationToken = default);
+    Task<ItemCollection<TrackpackItem>> SearchTrackpacksAsync(TMX.SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
+    Task<ItemCollection<TrackItem>> SearchTracksAsync(TMX.SearchTracksParameters parameters, CancellationToken cancellationToken = default);
+    Task<ItemCollection<UserItem>> SearchUsersAsync(TMX.SearchUsersParameters parameters, CancellationToken cancellationToken = default);
 
+    string GetReplayGbxUrl(long replayId);
+    string GetReplayGbxUrl(ReplayItem replay);
+    Task<HttpResponseMessage> GetReplayGbxResponseAsync(long replayId, CancellationToken cancellationToken = default);
+    Task<HttpResponseMessage> GetReplayGbxResponseAsync(ReplayItem replay, CancellationToken cancellationToken = default);
+    string GetTrackGbxUrl(long trackId);
+    string GetTrackGbxUrl(TrackItem track);
+    Task<HttpResponseMessage> GetTrackGbxResponseAsync(long trackId, CancellationToken cancellationToken = default);
+    Task<HttpResponseMessage> GetTrackGbxResponseAsync(TrackItem track, CancellationToken cancellationToken = default);
+    string GetTrackThumbnailUrl(long trackId);
+    string GetTrackThumbnailUrl(TrackItem track);
+    Task<HttpResponseMessage> GetTrackThumbnailResponseAsync(long trackId, CancellationToken cancellationToken = default);
+    Task<HttpResponseMessage> GetTrackThumbnailResponseAsync(TrackItem track, CancellationToken cancellationToken = default);
+    string GetTrackImageUrl(long trackId, int imageIndex);
+    string GetTrackImageUrl(TrackItem track, int imageIndex);
+    Task<HttpResponseMessage> GetTrackImageResponseAsync(long trackId, int imageIndex, CancellationToken cancellationToken = default);
+    Task<HttpResponseMessage> GetTrackImageResponseAsync(TrackItem track, int imageIndex, CancellationToken cancellationToken = default);
+}
+
+public partial class TMX : ITMX, IClient
+{
+    public HttpClient Client { get; }
     public TmxSite Site { get; }
-
     public string SiteName { get; }
 
-    public TMX(TmxSite site) : base(string.Format(BaseApiUrl, site.ToString().ToLower()), automaticallyAuthorize: true)
+    public TMX(HttpClient client, TmxSite site)
     {
+        Client = client ?? throw new ArgumentNullException(nameof(client));
+        Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (TMX) by BigBang1112");
+
         Site = site;
         SiteName = site.ToString();
 
-        Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (TMX) by BigBang1112");
-
-        JsonSerializerOptionsInObject.Converters.Add(new DateTimeUtcFixConverter());
-    }
-
-    public async Task<ItemCollection<TrackSearchItem>> SearchAsync(TrackSearchFilters? filters = default, CancellationToken cancellationToken = default)
-    {
-        var route = "tracks";
-
-        if (filters is not null)
+        var url = site switch
         {
-            route += filters.ToQuery() + "&";
-        }
-        else
-        {
-            route += "?";
-        }
+            TmxSite.TMUF => "https://tmuf.exchange/",
+            TmxSite.TMNF => "https://tmnf.exchange/",
+            TmxSite.Original => "https://original.tm-exchange.com/",
+            TmxSite.Sunrise => "https://sunrise.tm-exchange.com/",
+            TmxSite.Nations => "https://nations.tm-exchange.com/",
+            _ => throw new NotImplementedException()
+        };
 
-        route += "fields=" + GetFieldsQuery<TrackSearchItem>();
-
-        return await GetApiAsync<ItemCollection<TrackSearchItem>>(route, cancellationToken);
+        Client.BaseAddress = new Uri(url);
     }
 
-    public async Task<ItemCollection<ReplayItem>> GetReplaysAsync(TrackSearchItem track, CancellationToken cancellationToken = default)
+    public TMX(TmxSite site) : this(new HttpClient(), site) { }
+
+    [Parameters<ReplayItem>]
+    public readonly partial record struct GetReplaysParameters
     {
-        return await GetReplaysAsync(track.TrackId, cancellationToken);
+        public required long TrackId { get; init; }
+        public int? Count { get; init; }
+
+        /// <summary>
+        /// After a certain replay ID.
+        /// </summary>
+        public long? After { get; init; }
+
+        /// <summary>
+        /// Before a certain replay ID.
+        /// </summary>
+        public long? Before { get; init; }
+
+        /// <summary>
+        /// Like <see cref="After"/>, but includes the specified replay ID as well.
+        /// </summary>
+        public long? From { get; init; }
+
+        [AsNumber] public bool? Best { get; init; }
+        public long? UserId { get; init; }
     }
 
-    public async Task<ItemCollection<ReplayItem>> GetReplaysAsync(int trackId, CancellationToken cancellationToken = default)
-    {
-        var route = $"replays?trackid={trackId}&count=1000";
-        
-        route += "&fields=" + GetFieldsQuery<ReplayItem>();
+    [GetMethod("api/replays")]
+    public virtual partial Task<ItemCollection<ReplayItem>> GetReplaysAsync(GetReplaysParameters parameters, CancellationToken cancellationToken = default);
 
-        return await base.GetApiAsync<ItemCollection<ReplayItem>>(route, cancellationToken);
+    [Parameters<TrackItem>]
+    public readonly partial record struct SearchTracksParameters
+    {
+        public TrackOrder? Order1 { get; init; }
+        public int? Count { get; init; }
+
+        /// <summary>
+        /// After a certain track ID.
+        /// </summary>
+        public long? After { get; init; }
+
+        /// <summary>
+        /// Before a certain track ID.
+        /// </summary>
+        public long? Before { get; init; }
+
+        /// <summary>
+        /// Like <see cref="After"/>, but includes the specified track ID as well.
+        /// </summary>
+        public long? From { get; init; }
+
+        public long[]? Id { get; init; }
+        public string[]? UId { get; init; }
+        public string? Name { get; init; }
+        public string? Author { get; init; }
+        public long? AuthorUserId { get; init; }
+        public long? VideoId { get; init; }
+        public long? PackId { get; init; }
+        public string? AwardedBy { get; init; }
+        public string? CommentedBy { get; init; }
+        public TrackStyle[]? Tag { get; init; }
+        public TrackStyle[]? ETag { get; init; }
+        public bool? TagInclusive { get; init; }
+        public TrackType? PrimaryType { get; init; }
+        public LeaderboardType? LbType { get; init; }
+        public DateTimeOffset? UploadedAfter { get; init; }
+        public DateTimeOffset? UploadedBefore { get; init; }
+        public int? AuthorTimeMin { get; init; }
+        public int? AuthorTimeMax { get; init; }
+        public Environment[]? Environment { get; init; }
+        public Environment[]? Vehicle { get; init; }
+        public Mood[]? Mood { get; init; }
+        public Difficulty[]? Difficulty { get; init; }
+        public TrackRoutes[]? Routes { get; init; }
+        public int? AntiSpam { get; init; }
+        [AsNumber] public bool? InScreenshot { get; init; }
+        [AsNumber] public bool? InLatestAuthor { get; init; }
+        [AsNumber] public bool? InLatestAwardedAuthor { get; init; }
+        [AsNumber] public bool? InSupporter { get; init; }
+        [AsNumber] public bool? InHasRecord { get; init; }
+        [AsNumber] public bool? InEnvMix { get; init; }
+        public TrackOrder? Order2 { get; init; } // no longer?
     }
 
-    private static IEnumerable<string> GetFields(Type type)
+    [GetMethod("api/tracks")]
+    public virtual partial Task<ItemCollection<TrackItem>> SearchTracksAsync(SearchTracksParameters parameters, CancellationToken cancellationToken = default);
+
+    [Parameters<LeaderboardItem>]
+    public readonly partial record struct SearchLeaderboardsParameters
     {
-        foreach (var prop in type.GetProperties())
-        {
-            var name = prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? prop.Name;
+        public int? Order1 { get; init; }
+        public int? Count { get; init; }
 
-            if (prop.PropertyType.IsArray)
-            {
-                name += "[]";
-            }
+        /// <summary>
+        /// After a certain user ID.
+        /// </summary>
+        public long? After { get; init; }
 
-            var hadInnerFields = false;
+        /// <summary>
+        /// Before a certain user ID.
+        /// </summary>
+        public long? Before { get; init; }
 
-            // If property type is record
-            if (prop.PropertyType.GetMethod("<Clone>$") is not null)
-            {
-                foreach (var innerField in GetFields(prop.PropertyType))
-                {
-                    yield return $"{name}.{innerField}";
-                    hadInnerFields = true;
-                }
-            }
-
-            if (!hadInnerFields)
-            {
-                yield return name;
-            }
-        }
+        /// <summary>
+        /// Like <see cref="After"/>, but includes the specified user ID as well.
+        /// </summary>
+        public long? From { get; init; }
+        public int? LbId { get; init; }
+        public int? LbEnv { get; init; }
     }
 
-    private static string GetFieldsQuery<T>()
+    [GetMethod("api/leaderboards")]
+    public virtual partial Task<ItemCollection<LeaderboardItem>> SearchLeaderboardsAsync(SearchLeaderboardsParameters parameters, CancellationToken cancellationToken = default);
+
+    [Parameters<TrackpackItem>]
+    public readonly partial record struct SearchTrackpacksParameters
     {
-        var type = typeof(T);
+        public int? Order1 { get; init; }
+        public int? Count { get; init; }
 
-        if (fieldQueryStrings.TryGetValue(type, out string? query))
-        {
-            return query;
-        }
+        /// <summary>
+        /// After a certain trackpack ID.
+        /// </summary>
+        public long? After { get; init; }
 
-        query = WebUtility.UrlEncode(string.Join(',', GetFields(type)));
+        /// <summary>
+        /// Before a certain trackpack ID.
+        /// </summary>
+        public long? Before { get; init; }
 
-        fieldQueryStrings.Add(type, query);
+        /// <summary>
+        /// Like <see cref="After"/>, but includes the specified trackpack ID as well.
+        /// </summary>
+        public long? From { get; init; }
 
-        return query;
+        public long[]? Id { get; init; }
+        public string? Name { get; init; }
+        public string? Creator { get; init; }
+    }
+
+    [GetMethod("api/trackpacks")]
+    public virtual partial Task<ItemCollection<TrackpackItem>> SearchTrackpacksAsync(SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
+
+    [Parameters<UserItem>]
+    public readonly partial record struct SearchUsersParameters
+    {
+        public int? Order1 { get; init; }
+        public int? Count { get; init; }
+
+        /// <summary>
+        /// After a certain user ID.
+        /// </summary>
+        public long? After { get; init; }
+
+        /// <summary>
+        /// Before a certain user ID.
+        /// </summary>
+        public long? Before { get; init; }
+
+        /// <summary>
+        /// Like <see cref="After"/>, but includes the specified user ID as well.
+        /// </summary>
+        public long? From { get; init; }
+
+        public long[]? Id { get; init; }
+        public string? Name { get; init; }
+        public long[]? MxId { get; init; }
+        public int? TracksMin { get; init; }
+        public int? TracksMax { get; init; }
+        public int? AwardsMin { get; init; }
+        public int? AwardsMax { get; init; }
+        public int? AwardsGivenMin { get; init; }
+        public int? AwardsGivenMax { get; init; }
+        public DateTimeOffset? RegisteredAfter { get; init; }
+        public DateTimeOffset? RegisteredBefore { get; init; }
+        [AsNumber] public bool? InSupporters { get; init; }
+        [AsNumber] public bool? InModerators { get; init; }
+    }
+
+    [GetMethod("api/users")]
+    public virtual partial Task<ItemCollection<UserItem>> SearchUsersAsync(SearchUsersParameters parameters, CancellationToken cancellationToken = default);
+
+    public string GetReplayGbxUrl(long replayId) => $"{Client.BaseAddress}recordgbx/{replayId}";
+    public string GetReplayGbxUrl(ReplayItem replay) => GetReplayGbxUrl(replay.ReplayId);
+
+    public async Task<HttpResponseMessage> GetReplayGbxResponseAsync(long replayId, CancellationToken cancellationToken = default)
+    {
+        return await Client.GetAsync(GetReplayGbxUrl(replayId), cancellationToken);
+    }
+
+    public async Task<HttpResponseMessage> GetReplayGbxResponseAsync(ReplayItem replay, CancellationToken cancellationToken = default)
+    {
+        return await GetReplayGbxResponseAsync(replay.ReplayId, cancellationToken);
+    }
+
+    public string GetTrackGbxUrl(long trackId) => $"{Client.BaseAddress}trackgbx/{trackId}";
+    public string GetTrackGbxUrl(TrackItem track) => GetTrackGbxUrl(track.TrackId);
+
+    public virtual async Task<HttpResponseMessage> GetTrackGbxResponseAsync(long trackId, CancellationToken cancellationToken = default)
+    {
+        return await Client.GetAsync(GetTrackGbxUrl(trackId), cancellationToken);
+    }
+
+    public virtual async Task<HttpResponseMessage> GetTrackGbxResponseAsync(TrackItem track, CancellationToken cancellationToken = default)
+    {
+        return await GetTrackGbxResponseAsync(track.TrackId, cancellationToken);
+    }
+
+    public string GetTrackThumbnailUrl(long trackId) => $"{Client.BaseAddress}trackshow/{trackId}/image/0";
+    public string GetTrackThumbnailUrl(TrackItem track) => GetTrackThumbnailUrl(track.TrackId);
+
+    public virtual async Task<HttpResponseMessage> GetTrackThumbnailResponseAsync(long trackId, CancellationToken cancellationToken = default)
+    {
+        return await Client.GetAsync(GetTrackThumbnailUrl(trackId), cancellationToken);
+    }
+
+    public virtual async Task<HttpResponseMessage> GetTrackThumbnailResponseAsync(TrackItem track, CancellationToken cancellationToken = default)
+    {
+        return await GetTrackThumbnailResponseAsync(track.TrackId, cancellationToken);
+    }
+
+    public string GetTrackImageUrl(long trackId, int imageIndex) => $"{Client.BaseAddress}trackshow/{trackId}/image/{imageIndex}";
+    public string GetTrackImageUrl(TrackItem track, int imageIndex) => GetTrackImageUrl(track.TrackId, imageIndex);
+
+    public virtual async Task<HttpResponseMessage> GetTrackImageResponseAsync(long trackId, int imageIndex, CancellationToken cancellationToken = default)
+    {
+        return await Client.GetAsync(GetTrackImageUrl(trackId, imageIndex), cancellationToken);
+    }
+
+    public virtual async Task<HttpResponseMessage> GetTrackImageResponseAsync(TrackItem track, int imageIndex, CancellationToken cancellationToken = default)
+    {
+        return await GetTrackImageResponseAsync(track.TrackId, imageIndex, cancellationToken);
+    }
+
+    public virtual void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

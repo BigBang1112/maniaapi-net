@@ -1,36 +1,30 @@
-﻿using TmEssentials;
+﻿using ManiaAPI.TrackmaniaIO.Converters;
+using System.Text.Json.Serialization;
+using TmEssentials;
 
 namespace ManiaAPI.TrackmaniaIO;
 
-public record Map
+public sealed record Map(Guid Author,
+                         string Name,
+                         string MapType,
+                         string MapStyle,
+                         [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 AuthorScore,
+                         [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 GoldScore,
+                         [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 SilverScore,
+                         [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 BronzeScore,
+                         string CollectionName,
+                         [property: JsonPropertyName("filename")] string FileName,
+                         bool IsPlayable,
+                         Guid MapId,
+                         string MapUid,
+                         Guid Submitter,
+                         DateTimeOffset Timestamp,
+                         string FileUrl,
+                         string ThumbnailUrl,
+                         [property: JsonPropertyName("authorplayer")] Author AuthorPlayer,
+                         [property: JsonPropertyName("submitterplayer")] Author SubmitterPlayer,
+                         int ExchangeId)
 {
-    public Guid Author { get; init; }
-    public string Name { get; init; } = "";
-    public string MapType { get; init; } = "";
-    public string MapStyle { get; init; } = "";
-    public TimeInt32 AuthorScore { get; init; }
-    public TimeInt32 GoldScore { get; init; }
-    public TimeInt32 SilverScore { get; init; }
-    public TimeInt32 BronzeScore { get; init; }
-    public string CollectionName { get; init; } = "";
-    public string FileName { get; init; } = "";
-    public bool IsPlayable { get; init; }
-    public Guid MapId { get; init; }
-    public string MapUid { get; init; } = "";
-    public Guid Submitter { get; init; }
-    public DateTimeOffset Timestamp { get; init; }
-    public string FileUrl { get; init; } = "";
-    public string ThumbnailUrl { get; init; } = "";
-    public Author AuthorPlayer { get; init; }
-    public Author SubmitterPlayer { get; init; }
-    public int ExchangeId { get; init; }
-
-    public Map(Author authorPlayer, Author submitterPlayer)
-    {
-        AuthorPlayer = authorPlayer;
-        SubmitterPlayer = submitterPlayer;
-    }
-
     public override string ToString()
     {
         return $"{Name} by {AuthorPlayer.Name}";

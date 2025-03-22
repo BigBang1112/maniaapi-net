@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, dev ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          9.0.x
+          8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Set Nadeo API secrets
+      run: |
+        dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests --id d7b44d16-a183-42ef-95f5-cdcb6be7869a set "DedicatedServer:Login" "${{ secrets.NADEO_API_LOGIN }}"
+        dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests --id d7b44d16-a183-42ef-95f5-cdcb6be7869a set "DedicatedServer:Password" "${{ secrets.NADEO_API_PASSWORD }}"
+    - name: Set Trackmania API secrets
+      run: |
+        dotnet user-secrets -p Tests/ManiaAPI.TrackmaniaAPI.Tests --id d864cd9f-edad-4ebf-b6e2-9c0c91bd62f8 set "ClientId" "${{ secrets.TRACKMANIA_API_CLIENTID }}"
+        dotnet user-secrets -p Tests/ManiaAPI.TrackmaniaAPI.Tests --id d864cd9f-edad-4ebf-b6e2-9c0c91bd62f8 set "ClientSecret" "${{ secrets.TRACKMANIA_API_CLIENTSECRET }}"
+    - name: Build
+      run: dotnet build --no-restore /p:ContinuousIntegrationBuild=true
+    - name: Test
+      run: dotnet test --no-build --verbosity normal

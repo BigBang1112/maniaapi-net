@@ -1,19 +1,13 @@
 ﻿using System.IO.Compression;
-using System.Runtime.InteropServices;
-using TmEssentials;
 
 namespace ManiaAPI.XmlRpc.TMUF;
 
-public class CampaignScores : Scores
+public sealed class CampaignScores(
+    IReadOnlyDictionary<string, CampaignScoresLeaderboard> maps,
+    IReadOnlyDictionary<string, CampaignScoresMedalZone> medalZones) : IScores
 {
-    public IReadOnlyDictionary<string, CampaignScoresLeaderboard> Maps { get; }
-    public IReadOnlyDictionary<string, CampaignScoresMedalZone> MedalZones { get; }
-
-    public CampaignScores(Dictionary<string, CampaignScoresLeaderboard> maps, Dictionary<string, CampaignScoresMedalZone> medalZones)
-    {
-        Maps = maps;
-        MedalZones = medalZones;
-    }
+    public IReadOnlyDictionary<string, CampaignScoresLeaderboard> Maps { get; } = maps;
+    public IReadOnlyDictionary<string, CampaignScoresMedalZone> MedalZones { get; } = medalZones;
 
     public static CampaignScores Parse(string fileName)
     {
@@ -56,14 +50,14 @@ public class CampaignScores : Scores
                 var zoneName = r.ReadString();
                 var hasRecordUnits = r.ReadBoolean(asByte: true);
 
-                var recordUnits = hasRecordUnits ? ReadRecordsBuffer(r) : Array.Empty<RecordUnit>();
+                var recordUnits = hasRecordUnits ? ScoresReadUtils.ReadRecordsBuffer(r) : [];
 
-                var (sizeOfRanksInt, sizeOfTimesInt) = ArchiveSizesMask2(r);
+                var (sizeOfRanksInt, sizeOfTimesInt) = ScoresReadUtils.ArchiveSizesMask2(r);
 
                 var highScoreCount = r.ReadInt32();
 
-                var ranks = ReadIntBuffer(r, highScoreCount, sizeOfRanksInt);
-                var times = ReadIntBuffer(r, highScoreCount, sizeOfTimesInt);
+                var ranks = ScoresReadUtils.ReadIntBuffer(r, highScoreCount, sizeOfRanksInt);
+                var times = ScoresReadUtils.ReadIntBuffer(r, highScoreCount, sizeOfTimesInt);
                 var logins = r.ReadArray(highScoreCount, r => r.ReadString());
                 var nicknames = r.ReadArray(highScoreCount, r => r.ReadString());
 
@@ -89,12 +83,12 @@ public class CampaignScores : Scores
             var zoneName = r.ReadString();
             var modeCount = r.ReadByte();
 
-            var medalZonesDict = new Dictionary<PlayMode, RecordUnit[]>(modeCount);
+            var medalZonesDict = new Dictionary<PlayMode, RecordUnit<uint>[]>(modeCount);
 
             for (var j = 0; j < modeCount; j++)
             {
                 var playMode = (PlayMode)r.ReadByte(); // play mode
-                var medals = ReadRecordsBuffer(r);
+                var medals = ScoresReadUtils.ReadRecordsBuffer(r);
 
                 medalZonesDict.Add(playMode, medals);
             }

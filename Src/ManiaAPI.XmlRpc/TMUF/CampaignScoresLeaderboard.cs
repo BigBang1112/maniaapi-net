@@ -1,11 +1,6 @@
 ﻿namespace ManiaAPI.XmlRpc.TMUF;
 
-public class CampaignScoresLeaderboard
+public sealed class CampaignScoresLeaderboard(IReadOnlyDictionary<string, Leaderboard> challengeScores)
 {
-    public IReadOnlyDictionary<string, Leaderboard> ChallengeScores { get; }
-
-    public CampaignScoresLeaderboard(Dictionary<string, Leaderboard> challengeScores)
-    {
-        ChallengeScores = challengeScores;
-    }
+    public IReadOnlyDictionary<string, Leaderboard> ChallengeScores { get; } = challengeScores;
 }

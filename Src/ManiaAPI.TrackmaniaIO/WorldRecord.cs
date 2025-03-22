@@ -2,4 +2,4 @@
 
 namespace ManiaAPI.TrackmaniaIO;
 
-public record WorldRecord(Map Map, Player Player, DateTimeOffset DrivenAt, TimeInt32 Time, int TimeDiff);
+public sealed record WorldRecord(int Id, string Group, Map Map, Player Player, DateTimeOffset DrivenAt, TimeInt32 Time, int TimeDiff, int Type);

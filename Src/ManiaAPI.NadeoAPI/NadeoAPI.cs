@@ -1,93 +1,284 @@
-﻿using ManiaAPI.Base;
-using ManiaAPI.Base.Extensions;
+﻿using ManiaAPI.NadeoAPI.JsonContexts;
+using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json.Serialization.Metadata;
 
 namespace ManiaAPI.NadeoAPI;
 
-public interface INadeoAPI
+public interface INadeoAPI : IDisposable
 {
+    Task AuthorizeAsync(string login, string password, AuthorizationMethod method, CancellationToken cancellationToken = default);
     ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default);
+
+    HttpClient Client { get; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="method"></param>
+    /// <param name="endpoint"></param>
+    /// <param name="content"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="NadeoAPIResponseException"></exception>
+    Task<HttpResponseMessage> SendAsync(HttpMethod method, string? endpoint, HttpContent? content = null, CancellationToken cancellationToken = default);
+    Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default);
+    Task<T> PostJsonAsync<T>(string? endpoint, JsonContent content, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default);
 }
 
-public abstract class NadeoAPI : JsonAPI, INadeoAPI
+public abstract class NadeoAPI : INadeoAPI
 {
     private string? accessToken;
     private string? refreshToken;
+    private string? password;
+    private AuthorizationMethod authMethod;
 
-    public JwtPayloadNadeoAPI? Payload { get; private set; }
+    public JwtPayloadNadeoAPI? JWT { get; private set; }
+    public UbisoftAuthenticationTicket? UbisoftTicket { get; private set; }
 
-    public DateTimeOffset? RefreshAt => Payload?.RefreshAt;
-    public DateTimeOffset? ExpirationTime => Payload?.ExpirationTime;
+    public DateTimeOffset? RefreshAt => JWT?.RefreshAt;
+    public DateTimeOffset? ExpirationTime => JWT?.ExpirationTime;
 
-    protected NadeoAPI(HttpClientHandler handler, string baseUrl, bool automaticallyAuthorize) : base(handler, baseUrl, automaticallyAuthorize)
+    public HttpClient Client { get; }
+    public bool AutomaticallyAuthorize { get; }
+
+    public abstract string BaseAddress { get; }
+    public abstract string Audience { get; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="client"></param>
+    /// <param name="automaticallyAuthorize"></param>
+    /// <exception cref="ArgumentNullException"></exception>
+    protected NadeoAPI(HttpClient client, bool automaticallyAuthorize = true)
     {
-        SetUserAgent();
+        Client = client ?? throw new ArgumentNullException(nameof(client));
+        AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
-    protected NadeoAPI(string baseUrl, bool automaticallyAuthorize) : base(baseUrl, automaticallyAuthorize)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="login"></param>
+    /// <param name="password"></param>
+    /// <param name="method"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public virtual async Task AuthorizeAsync(string login, string password, AuthorizationMethod method, CancellationToken cancellationToken = default)
     {
-        SetUserAgent();
-    }
+        ArgumentException.ThrowIfNullOrEmpty(login);
+        ArgumentException.ThrowIfNullOrEmpty(password);
 
-    private void SetUserAgent()
-    {
-        Client.DefaultRequestHeaders.Add("User-Agent", $"ManiaAPI.NET ({GetType().Name}) by BigBang1112");
-    }
-
-    public async Task AuthorizeAsync(string login, string password, CancellationToken cancellationToken = default)
-    {
+        // TODO: Try optimize with Span
         var authenticationValue = $"{login}:{password}";
         var encodedAuthenticationValue = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationValue));
 
-        using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/basic");
+        if (method == AuthorizationMethod.UbisoftAccount)
+        {
+            using var ubiRequest = new HttpRequestMessage(HttpMethod.Post, "https://public-ubiservices.ubi.com/v3/profiles/sessions")
+            {
+                Headers = { Authorization = new AuthenticationHeaderValue("Basic", encodedAuthenticationValue) },
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
 
-        message.Headers.Authorization = new AuthenticationHeaderValue("Basic", encodedAuthenticationValue);
-        message.Content = JsonContent.Create(new AuthorizationBody(GetType().Name));
+            ubiRequest.Headers.Add("Ubi-AppId", "86263886-327a-4328-ac69-527f0d20a237");
 
-        using var httpResponse = await Client.SendAsync(message, cancellationToken);
+            using var ubiResponse = await Client.SendAsync(ubiRequest, cancellationToken);
 
-        await SaveTokenResponseAsync(httpResponse, cancellationToken);
+            UbisoftTicket = await ubiResponse.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.UbisoftAuthenticationTicket, cancellationToken);
+        }
+
+        var payload = new AuthorizationBody(Audience);
+        var content = JsonContent.Create(payload, NadeoAPIJsonContext.Default.AuthorizationBody);
+        
+        var authRequest = method switch
+        {
+            AuthorizationMethod.UbisoftAccount => new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/ubiservices")
+            {
+                Headers = { Authorization = new AuthenticationHeaderValue("ubi_v1", $"t={UbisoftTicket?.Ticket ?? throw new Exception("Ticket not available")}") },
+                Content = content
+            },
+            AuthorizationMethod.DedicatedServer => new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/basic")
+            {
+                Headers = { Authorization = new AuthenticationHeaderValue("Basic", encodedAuthenticationValue) },
+                Content = content
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(method), method, null),
+        };
+
+        using var response = await Client.SendAsync(authRequest, cancellationToken);
+
+        await SaveTokenResponseAsync(response, cancellationToken);
+
+        this.password = password;
+        authMethod = method;
     }
 
-    internal async Task SaveTokenResponseAsync(HttpResponseMessage httpResponse, CancellationToken cancellationToken)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="response"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="NadeoAPIResponseException"></exception>
+    private static async ValueTask ValidateResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        await httpResponse.EnsureSuccessStatusCodeAsync(cancellationToken);
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
 
-        (accessToken, refreshToken) = await httpResponse.Content.ReadFromJsonAsync<AuthorizationResponse>(JsonSerializerOptionsInObject, cancellationToken)
+        var errorStr = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        try
+        {
+            response.EnsureSuccessStatusCode();
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new NadeoAPIResponseException(errorStr, inner: ex);
+        }
+
+        throw new NadeoAPIResponseException(errorStr);
+    }
+
+    internal async Task SaveTokenResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        response.EnsureSuccessStatusCode();
+
+#if DEBUG
+        var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
+#endif
+
+        (accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.AuthorizationResponse, cancellationToken)
             ?? throw new Exception("This shouldn't be null.");
 
-        Payload = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);
+        _ = accessToken ?? throw new Exception("accessToken is null");
+        _ = refreshToken ?? throw new Exception("refreshToken is null");
 
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
+        JWT = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);
     }
 
-    public async ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default)
+    public virtual async ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default)
     {
-        if (refreshToken is null || RefreshAt is null || DateTimeOffset.UtcNow < RefreshAt.Value)
+        if (refreshToken is null || RefreshAt is null || DateTimeOffset.UtcNow < RefreshAt.Value || ExpirationTime is null)
         {
             return false;
         }
 
-        using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh");
+        if (DateTimeOffset.UtcNow >= ExpirationTime.Value)
+        {
+            if (JWT?.Account is not string account)
+            {
+                // JWT account ('aun') is not available
+                return false;
+            }
 
-        message.Headers.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={refreshToken}");
+            if (password is null)
+            {
+                // {Audience} password is not available
+                return false;
+            }
 
-        using var httpResponse = await Client.SendAsync(message, cancellationToken);
+            await AuthorizeAsync(account, password, authMethod, cancellationToken);
+            return true;
+        }
 
-        await SaveTokenResponseAsync(httpResponse, cancellationToken);
+        using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh")
+        {
+            Headers = { Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={refreshToken}") }
+        };
+
+        using var response = await Client.SendAsync(message, cancellationToken);
+
+        await SaveTokenResponseAsync(response, cancellationToken);
 
         return true;
     }
 
-    protected override async Task<T> GetApiAsync<T>(string endpoint, CancellationToken cancellationToken = default)
+    public async Task<HttpResponseMessage> SendAsync(HttpMethod method, string? endpoint, HttpContent? content = null, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(method);
+
         if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime)
         {
             await RefreshAsync(cancellationToken);
         }
 
-        return await base.GetApiAsync<T>(endpoint, cancellationToken);
+        using var request = new HttpRequestMessage(method, $"{BaseAddress}/{endpoint}");
+
+        if (accessToken is not null)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
+        }
+
+        if (content is not null)
+        {
+            request.Content = content;
+        }
+
+        var response = await Client.SendAsync(request, cancellationToken);
+
+        Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {response.StatusCode} {await response.Content.ReadAsStringAsync(cancellationToken)}");
+
+        await ValidateResponseAsync(response, cancellationToken);
+
+        return response;
+    }
+
+    public async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
+        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+    }
+
+    public async Task<T?> GetNullableJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
+        
+        if (response.StatusCode == HttpStatusCode.NoContent)
+        {
+            return default;
+        }
+        
+        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken);
+    }
+
+    public async Task<T> PostJsonAsync<T>(string? endpoint, JsonContent content, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Post, endpoint, content, cancellationToken: cancellationToken);
+        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+    }
+
+#if DEBUG
+    protected async Task<string> GetAsync(string? endpoint, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
+
+        if (accessToken is not null)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
+        }
+
+        using var response = await Client.SendAsync(request, cancellationToken);
+
+        var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        await ValidateResponseAsync(response, cancellationToken);
+
+        return responseString;
+    }
+#endif
+
+    public virtual void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

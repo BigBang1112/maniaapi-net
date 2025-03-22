@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.TMX;
 
-public enum TrackStyle
+public enum TrackStyle : byte
 {
     Normal,
     Stunts,

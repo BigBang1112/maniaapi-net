@@ -1,11 +1,11 @@
-﻿namespace ManiaAPI.TrackmaniaIO;
+﻿using System.Text.Json.Serialization;
 
-public record Meta
-{
-    public string Vanity { get; init; } = "";
-    public string Comment { get; init; } = "";
-    public bool Nadeo { get; init; }
-    public string Twitch { get; init; } = "";
-    public string YouTube { get; init; } = "";
-    public string Twitter { get; init; } = "";
-}
+namespace ManiaAPI.TrackmaniaIO;
+
+public sealed record Meta(string? Vanity,
+                          string? Comment,
+                          bool Nadeo,
+                          string? Twitch,
+                          [property: JsonPropertyName("youtube")] string? YouTube,
+                          string? Mastodon,
+                          string? Twitter);

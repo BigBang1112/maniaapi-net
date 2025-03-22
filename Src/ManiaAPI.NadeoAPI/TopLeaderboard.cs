@@ -1,3 +1,5 @@
-﻿namespace ManiaAPI.NadeoAPI;
+﻿using System.Collections.Immutable;
 
-public record TopLeaderboard(Guid ZoneId, string ZoneName, Record[] Top);
+namespace ManiaAPI.NadeoAPI;
+
+public sealed record TopLeaderboard(Guid ZoneId, string ZoneName, ImmutableArray<Record> Top);

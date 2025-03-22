@@ -1,3 +1,3 @@
 ﻿namespace ManiaAPI.NadeoAPI;
 
-internal record AuthorizationBody(string Audience);
+internal sealed record AuthorizationBody(string Audience);

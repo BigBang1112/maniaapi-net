@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<PackageId>ManiaAPI.TMX.Extensions.Gbx</PackageId>
+		<Version>2.0.0</Version>
+		<Authors>BigBang1112</Authors>
+        <Description>Extension methods of TMX API for GBX.NET features. Part of the ManiaAPI library set.</Description>
+		<Copyright>Copyright (c) 2024 Petr Pivoňka</Copyright>
+		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
+		<PackageIcon>logo_icon_outline.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, tmx, mx, exchange, gbx</PackageTags>
+		<PackageReleaseNotes></PackageReleaseNotes>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFrameworks>net9.0;net8.0</TargetFrameworks>
+		<LangVersion>13</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsTrimmable>true</IsTrimmable>
+		<IsAotCompatible>true</IsAotCompatible>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+		<NoWarn>1591</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+        <None Include="../../logo_icon_outline.png" Pack="true" PackagePath="\" />
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GBX.NET" Version="2.0.9" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ManiaAPI.TMX\ManiaAPI.TMX.csproj" />
+	</ItemGroup>
+
+</Project>
