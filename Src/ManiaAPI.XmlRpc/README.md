@@ -74,7 +74,7 @@ Because the responses can be quite large sometimes, it's **recommended to accept
 ```cs
 using ManiaAPI.XmlRpc;
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate })
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
     BaseAddress = new System.Uri(MasterServerMP4.DefaultAddress)
 };
@@ -89,7 +89,7 @@ using ManiaAPI.XmlRpc;
 builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress))
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
-        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        AutomaticDecompression = DecompressionMethods.GZip
     });
 ```
 
@@ -100,7 +100,7 @@ To be most inline with the game client, you should validate the master server fi
 ```cs
 using ManiaAPI.XmlRpc;
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate })
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
     BaseAddress = new System.Uri(MasterServerMP4.DefaultAddress)
 };
@@ -123,7 +123,7 @@ builder.Services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new
 builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress))
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
-        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        AutomaticDecompression = DecompressionMethods.GZip
     });
 builder.Services.AddSingleton<MasterServerMP4>();
 
@@ -162,7 +162,7 @@ using ManiaAPI.XmlRpc;
 var initServer = new InitServerTMT(Platform.PC);
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate })
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
     BaseAddress = waitingParams.MasterServers.First().GetUri()
 };
@@ -181,7 +181,7 @@ builder.Services.AddHttpClient<InitServerTMT>(client => client.BaseAddress = new
 builder.Services.AddHttpClient<MasterServerTMT>()
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
-        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        AutomaticDecompression = DecompressionMethods.GZip
     });
 builder.Services.AddSingleton<MasterServerTMT>();
 
@@ -205,10 +205,10 @@ using ManiaAPI.XmlRpc;
 foreach (var platform in Enum.GetValues<Platform>())
 {
     builder.Services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(platform)));
-    builder.Services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}")
+    builder.Services.AddHttpClient($"{nameof(MasterServerTMT)}_{platform}")
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
         {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            AutomaticDecompression = DecompressionMethods.GZip
         });
 
     builder.Services.AddKeyedScoped(platform, (provider, key) => new InitServerTMT(

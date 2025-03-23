@@ -91,7 +91,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetCampaignLeaderBoard";
-        var responseStr = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, @$"
+        var response = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, @$"
             <f>{offset}</f>
             <n>{count}</n>
             <c>{campaignId ?? titleId}</c>
@@ -99,7 +99,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
             <t></t>
             <z>{zone}</z>
             <s>{type}</s>", cancellationToken);
-        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, ReadLeaderboardItems<uint>);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, response, ReadLeaderboardItems<uint>);
     }
 
     public async Task<IReadOnlyCollection<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(
@@ -124,7 +124,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetMapLeaderBoard";
-        var responseStr = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, @$"
+        var response = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, @$"
             <m>{mapUid}</m>
             <n>{count}</n>
             <f>{offset}</f>
@@ -132,7 +132,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
             <c></c>
             <t>{context}</t>
             <s>MapRecord</s>", cancellationToken);
-        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, ReadLeaderboardItems<TimeInt32>);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, response, ReadLeaderboardItems<TimeInt32>);
     }
 
     public async Task<IReadOnlyCollection<LeaderboardItem<TimeInt32>>> GetMapLeaderBoardAsync(
@@ -166,8 +166,8 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
             i++;
         }
 
-        var responseStr = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, sb.ToString(), cancellationToken);
-        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
+        var response = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, sb.ToString(), cancellationToken);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
             var summaries = new List<CampaignSummary>();
 
@@ -264,8 +264,8 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
             i++;
         }
 
-        var responseStr = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, sb.ToString(), cancellationToken);
-        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
+        var response = await XmlRpcHelper.SendAsync(Client, GetGameXml(titleId), RequestName, sb.ToString(), cancellationToken);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
             var summaries = new List<MapSummary>();
 

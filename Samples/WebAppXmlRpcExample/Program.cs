@@ -1,6 +1,5 @@
 using System.Net;
 using WebAppXmlRpcExample.Components;
-using ManiaAPI.XmlRpc;
 using ManiaAPI.XmlRpc.TMT;
 using WebAppXmlRpcExample;
 using System.Collections.Immutable;
@@ -16,10 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 foreach (Platform platform in Enum.GetValues<Platform>())
 {
     builder.Services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(platform)));
-    builder.Services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}")
+    builder.Services.AddHttpClient($"{nameof(MasterServerTMT)}_{platform}")
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
         {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            AutomaticDecompression = DecompressionMethods.GZip
         });
 
     builder.Services.AddKeyedScoped(platform, (provider, key) => new InitServerTMT(

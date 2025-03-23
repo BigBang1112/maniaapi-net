@@ -62,8 +62,8 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
             i++;
         }
 
-        var responseStr = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, sb.ToString(), cancellationToken);
-        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, ReadSummaries<int>);
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, sb.ToString(), cancellationToken);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, response, ReadSummaries<int>);
     }
 
     public async Task<MasterServerResponse<IReadOnlyCollection<Summary<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(string zone = "World", CancellationToken cancellationToken = default)
@@ -103,8 +103,8 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
             i++;
         }
 
-        var responseStr = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, sb.ToString(), cancellationToken);
-        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, ReadSummaries<TimeInt32>);
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, sb.ToString(), cancellationToken);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, response, ReadSummaries<TimeInt32>);
     }
 
     public async Task<MasterServerResponse<IReadOnlyCollection<Summary<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default)

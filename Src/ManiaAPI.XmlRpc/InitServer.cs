@@ -1,4 +1,5 @@
 ﻿using MinimalXmlReader;
+using System.Diagnostics;
 
 namespace ManiaAPI.XmlRpc;
 
@@ -29,8 +30,9 @@ public abstract class InitServer : IInitServer
     public virtual async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetWaitingParams";
-        var responseStr = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, string.Empty, cancellationToken);
-        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
+        var startTime = Stopwatch.GetTimestamp();
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, string.Empty, cancellationToken);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
             var masterServers = new List<MasterServerInfo>();
 

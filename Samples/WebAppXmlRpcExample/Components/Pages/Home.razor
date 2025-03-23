@@ -4,6 +4,7 @@
 @using Microsoft.Extensions.Caching.Hybrid
 
 @rendermode InteractiveServer
+@attribute [StreamRendering]
 
 @* inject the master server TMTs for each platform *@
 @inject ImmutableDictionary<Platform, MasterServerTMT> MasterServerTMTs
@@ -22,7 +23,8 @@
         <div style="flex:1">
             <h2>@platform</h2>
 
-            <p>Execution time: @(summaries.ExecutionTime?.TotalMilliseconds.ToString() ?? "???") ms</p>
+            <p>Execution time: @(summaries.ExecutionTime?.TotalSeconds.ToString() ?? "???") s</p>
+            <p>Request time: @(summaries.Details.RequestTime.TotalSeconds) s</p>
 
             <p>Summaries:</p>
 
@@ -51,7 +53,7 @@
             var response = await Cache.GetOrCreateAsync($"CampaignLeaderBoardSummaries_{platform}", async (token) =>
             {
                 return await masterServerTMT.GetCampaignLeaderBoardSummariesResponseAsync(["World", "World|Japan"], token);
-            }, new() { Expiration = TimeSpan.FromMinutes(10) });
+            }, new() { Expiration = TimeSpan.FromMinutes(1) });
 
             return KeyValuePair.Create(platform, response);
         }))).ToDictionary(x => x.Key, x => x.Value);

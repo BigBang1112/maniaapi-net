@@ -54,14 +54,14 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetRankingsNew";
-        var responseStr = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, @$"
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, @$"
             <t>0</t>
             <st>g</st>
             <f>{zone}</f>
             <b>0</b>
             <p>{page}</p>
             <c>{count}</c>", cancellationToken);
-        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
+        return XmlRpcHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
             var players = new List<PlayerRanking>();
 
@@ -134,14 +134,14 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetRankingsNew";
-        var responseStr = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, @$"
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, @$"
             <t>1</t>
             <st>g</st>
             <f>{zone}</f>
             <b>0</b>
             <p>{page}</p>
             <c>{count}</c>", cancellationToken);
-        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
+        return XmlRpcHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
             var leagues = new List<LeagueRanking>();
 
