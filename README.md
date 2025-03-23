@@ -15,7 +15,7 @@ This set of libraries was made to be very easy and straightforward to use, but a
 
 ## Packages
 
-Everything you can imagine!
+Anything you can imagine!
 
 - [ManiaAPI.NadeoAPI](#maniaapinadeoapi)
 - [ManiaAPI.NadeoAPI.Extensions.Gbx](#maniaapinadeoapiextensionsgbx)
@@ -439,7 +439,8 @@ For ManiaPlanet:
 
 For TMT:
 
-- TODO
+- Get all map records (without identities)
+- Get campaign medal rankings (without identities)
 
 For all games:
 
