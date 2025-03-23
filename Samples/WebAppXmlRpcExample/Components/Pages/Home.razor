@@ -1,0 +1,59 @@
+﻿@using ManiaAPI.XmlRpc
+@using ManiaAPI.XmlRpc.TMT
+@using System.Collections.Immutable
+@using Microsoft.Extensions.Caching.Hybrid
+
+@rendermode InteractiveServer
+
+@* inject the master server TMTs for each platform *@
+@inject ImmutableDictionary<Platform, MasterServerTMT> MasterServerTMTs
+
+@inject HybridCache Cache
+
+@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<div style="display: flex;gap:1rem">
+    @foreach (var (platform, summaries) in summariesPerPlatform)
+    {
+        <div style="flex:1">
+            <h2>@platform</h2>
+
+            <p>Execution time: @(summaries.ExecutionTime?.TotalMilliseconds.ToString() ?? "???") ms</p>
+
+            <p>Summaries:</p>
+
+            @foreach (var summary in summaries.Result)
+            {
+                <p>@summary.Zone</p>
+                <div style="height: 200px;overflow-y:auto">
+                    <Virtualize Items="summary.Scores" Context="score">
+                        <div>@score.Score @score.Count</div>
+                    </Virtualize>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private Dictionary<Platform, MasterServerResponse<IReadOnlyCollection<Summary<int>>>> summariesPerPlatform = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        summariesPerPlatform = (await Task.WhenAll(MasterServerTMTs.Select(async platformMasterServerPair =>
+        {
+            var (platform, masterServerTMT) = platformMasterServerPair;
+
+            var response = await Cache.GetOrCreateAsync($"CampaignLeaderBoardSummaries_{platform}", async (token) =>
+            {
+                return await masterServerTMT.GetCampaignLeaderBoardSummariesResponseAsync(["World", "World|Japan"], token);
+            }, new() { Expiration = TimeSpan.FromMinutes(10) });
+
+            return KeyValuePair.Create(platform, response);
+        }))).ToDictionary(x => x.Key, x => x.Value);
+    }
+}
