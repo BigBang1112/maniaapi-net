@@ -9,7 +9,7 @@ A wrapper for these web APIs:
 - ManiaPlanet web API
 - Trackmania.io
 - Trackmania Exchange
-- XML-RPC (for TMF and ManiaPlanet)
+- XML-RPC (for TMF, TMT, and ManiaPlanet)
 
 This set of libraries was made to be very easy and straightforward to use, but also easily mocked, so that it can be integrated into the real world in no time.
 
