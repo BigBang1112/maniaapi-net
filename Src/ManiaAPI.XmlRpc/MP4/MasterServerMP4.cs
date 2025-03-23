@@ -11,14 +11,18 @@ public interface IMasterServerMP4 : IMasterServer
     Task ValidateAsync(InitServerMP4 initServer, CancellationToken cancellationToken = default);
     Task ValidateAsync(CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyCollection<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
     Task<MasterServerResponse<IReadOnlyCollection<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
-    Task<IReadOnlyCollection<LeaderboardItem<TimeInt32>>> GetMapLeaderBoardAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
     Task<MasterServerResponse<IReadOnlyCollection<LeaderboardItem<TimeInt32>>>> GetMapLeaderBoardResponseAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
-    Task<IReadOnlyCollection<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<LeaderboardItem<TimeInt32>>> GetMapLeaderBoardAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
     Task<MasterServerResponse<IReadOnlyCollection<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
-    Task<IReadOnlyCollection<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<IReadOnlyCollection<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<CampaignSummaryRequest> summaries);
+    Task<IReadOnlyCollection<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, params IEnumerable<CampaignSummaryRequest> summaries);
     Task<MasterServerResponse<IReadOnlyCollection<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<IReadOnlyCollection<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
+    Task<IReadOnlyCollection<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
 }
 
 public class MasterServerMP4 : MasterServer, IMasterServerMP4
@@ -219,12 +223,26 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         });
     }
 
+    public async Task<MasterServerResponse<IReadOnlyCollection<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(
+        string titleId,
+        params IEnumerable<CampaignSummaryRequest> summaries)
+    {
+        return await GetCampaignLeaderBoardSummariesResponseAsync(titleId, summaries, default);
+    }
+
     public async Task<IReadOnlyCollection<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(
         string titleId,
         IEnumerable<CampaignSummaryRequest> summaries,
         CancellationToken cancellationToken = default)
     {
         return (await GetCampaignLeaderBoardSummariesResponseAsync(titleId, summaries, cancellationToken)).Result;
+    }
+
+    public async Task<IReadOnlyCollection<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(
+        string titleId,
+        params IEnumerable<CampaignSummaryRequest> summaries)
+    {
+        return await GetCampaignLeaderBoardSummariesAsync(titleId, summaries, default);
     }
 
     public virtual async Task<MasterServerResponse<IReadOnlyCollection<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(
@@ -303,12 +321,26 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         });
     }
 
+    public async Task<MasterServerResponse<IReadOnlyCollection<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(
+        string titleId,
+        params IEnumerable<MapSummaryRequest> summaries)
+    {
+        return await GetMapLeaderBoardSummariesResponseAsync(titleId, summaries, default);
+    }
+
     public async Task<IReadOnlyCollection<MapSummary>> GetMapLeaderBoardSummariesAsync(
         string titleId,
         IEnumerable<MapSummaryRequest> summaries,
         CancellationToken cancellationToken = default)
     {
         return (await GetMapLeaderBoardSummariesResponseAsync(titleId, summaries, cancellationToken)).Result;
+    }
+
+    public async Task<IReadOnlyCollection<MapSummary>> GetMapLeaderBoardSummariesAsync(
+        string titleId,
+        params IEnumerable<MapSummaryRequest> summaries)
+    {
+        return await GetMapLeaderBoardSummariesAsync(titleId, summaries, default);
     }
 
     private static IReadOnlyCollection<LeaderboardItem<T>> ReadLeaderboardItems<T>(ref MiniXmlReader xml) where T : struct
