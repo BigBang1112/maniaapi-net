@@ -28,6 +28,5 @@ or with DI, using an injected `HttpClient`:
 ```cs
 using ManiaAPI.ManiaPlanetAPI;
 
-builder.Services.AddScoped<ManiaPlanetAPI>();
 builder.Services.AddHttpClient<ManiaPlanetAPI>();
 ```

@@ -99,9 +99,6 @@ or with DI, using an injected `HttpClient`:
 ```cs
 using ManiaAPI.NadeoAPI;
 
-builder.Services.AddScoped<NadeoServices>();
-builder.Services.AddScoped<NadeoLiveServices>();
-builder.Services.AddScoped<NadeoMeetServices>();
 builder.Services.AddHttpClient<NadeoServices>();
 builder.Services.AddHttpClient<NadeoLiveServices>();
 builder.Services.AddHttpClient<NadeoMeetServices>();

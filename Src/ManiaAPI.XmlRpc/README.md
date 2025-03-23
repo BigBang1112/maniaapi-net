@@ -56,8 +56,7 @@ or with DI, using an injected `HttpClient`:
 ```cs
 using ManiaAPI.XmlRpc;
 
-builder.Services.AddScoped<MasterServerTMUF>();
-builder.Services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new(MasterServerTMUF.DefaultAddress));
+builder.Services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultAddress));
 ```
 
 ## Setup for ManiaPlanet
@@ -87,7 +86,6 @@ or with DI, using an injected `HttpClient`:
 ```cs
 using ManiaAPI.XmlRpc;
 
-builder.Services.AddScoped<MasterServerMP4>();
 builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress))
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
@@ -113,7 +111,7 @@ await masterServer.ValidateAsync(); // Do this for reliability
 // The master server is now ready to use
 ```
 
-with DI, it is recommended to separate the init server's `HttpClient` from the master server.
+With DI, it is recommended to separate the init server's `HttpClient` from the master server. Note how `MasterServerMP4` is registered as a singleton, so that it remembers the address.
 
 You don't have to enable decompression for the init server, as it does not return large responses.
 
@@ -121,20 +119,22 @@ You don't have to enable decompression for the init server, as it does not retur
 using ManiaAPI.XmlRpc;
 
 // Register the services
-builder.Services.AddScoped<InitServerMP4>();
-builder.Services.AddScoped<MasterServerMP4>();
 builder.Services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultAddress));
 builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress))
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
         AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
     });
+builder.Services.AddSingleton<MasterServerMP4>();
 
 // Do the setup
-var initServer = provider.GetRequiredService<InitServerMP4>();
-var masterServer = provider.GetRequiredService<MasterServerMP4>();
+// This should run at the start of your application, or when you need to refresh the master servers
+await using var scope = provider.CreateScopeAsync();
 
-await masterServer.ValidateAsync(initServer); // Do this for reliability
+var initServer = scope.ServiceProvider.GetRequiredService<InitServerMP4>();
+var masterServer = scope.ServiceProvider.GetRequiredService<MasterServerMP4>();
+
+await masterServer.ValidateAsync(initServer);
 
 // The master server is now ready to use
 ```
@@ -171,26 +171,28 @@ var masterServer = new MasterServerTMT(httpClient);
 // You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
 ```
 
-or with DI, using an injected `HttpClient` (not viable for multiple platforms):
+or with DI, using an injected `HttpClient` (not viable for multiple platforms). Note how `MasterServerTMT` is registered as a singleton, so that it remembers the address.
 
 ```cs
 using ManiaAPI.XmlRpc;
 
 // Register the services
-builder.Services.AddScoped<InitServerTMT>();
-builder.Services.AddScoped<MasterServerTMT>();
 builder.Services.AddHttpClient<InitServerTMT>(client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(Platform.PC)));
 builder.Services.AddHttpClient<MasterServerTMT>()
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
         AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
     });
+builder.Services.AddSingleton<MasterServerTMT>();
 
 // Do the setup
-var initServer = provider.GetRequiredService<InitServerTMT>();
+// This should run at the start of your application, or when you need to refresh the master servers
+await using var scope = provider.CreateScopeAsync();
+
+var initServer = scope.ServiceProvider.GetRequiredService<InitServerTMT>();
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var masterServer = provider.GetRequiredService<MasterServerTMT>();
+var masterServer = scope.ServiceProvider.GetRequiredService<MasterServerTMT>();
 masterServer.Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
 ```
 
@@ -200,24 +202,44 @@ For DI setup with multiple platforms, you can use keyed services:
 using ManiaAPI.XmlRpc;
 
 // Register the services
-foreach (Platform platform in Enum.GetValues(typeof(Platform)))
+foreach (var platform in Enum.GetValues<Platform>())
 {
-    builder.Services.AddKeyedScoped<InitServerTMT>(platform, (provider, key) => new InitServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient(platform.ToString())));
-    builder.Services.AddKeyedScoped<MasterServerTMT>(platform, (provider, key) => new MasterServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient(platform.ToString())));
-    builder.Services.AddHttpClient<InitServerTMT>(platform.ToString(), client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(platform)));
-    builder.Services.AddHttpClient<MasterServerTMT>(platform.ToString())
+    builder.Services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(platform)));
+    builder.Services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}")
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
         {
             AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
         });
+
+    builder.Services.AddKeyedScoped(platform, (provider, key) => new InitServerTMT(
+        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(InitServerTMT)}_{key}")));
+
+    builder.Services.AddKeyedSingleton(platform, (provider, key) => new MasterServerTMT(
+        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(MasterServerTMT)}_{key}")));
+    builder.Services.AddSingleton(provider => provider.GetRequiredKeyedService<MasterServerTMT>(platform));
 }
 
+builder.Services.AddSingleton(provider => Enum.GetValues<Platform>()
+    .ToImmutableDictionary(platform => platform, platform => provider.GetRequiredKeyedService<MasterServerTMT>(platform)));
+
 // Do the setup
-foreach (Platform platform in Enum.GetValues(typeof(Platform)))
+// This should run at the start of your application, or when you need to refresh the master servers
+await using var scope = provider.CreateScopeAsync();
+
+foreach (var platform in Enum.GetValues<Platform>())
 {
-    var initServer = provider.GetRequiredService<InitServerTMT>(platform);
-    var waitingParams = await initServer.GetWaitingParamsAsync();
-    var masterServer = provider.GetRequiredService<MasterServerTMT>(platform);
+    var initServer = scope.ServiceProvider.GetRequiredKeyedService<InitServerTMT>(platform);
+    var waitingParams = await initServer.GetWaitingParamsAsync(cancellationToken);
+    var masterServer = scope.ServiceProvider.GetRequiredKeyedService<MasterServerTMT>(platform);
     masterServer.Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
 }
 ```
+
+Features this last setup brings:
+
+- You can inject `ImmutableDictionary<Platform, MasterServerTMT>` to get all master servers
+- If you don't need specific platform context, you can inject `IEnumerable<MasterServerTMT>` to get all master servers
+- Specific `InitServerTMT` and `MasterServerTMT` can be injected using `[FromKeyedServices(Platform.PC)]`
+
+> [!WARNING]
+> If you just inject `MasterServerTMT` alone, it will give the last-registered one (in this case, PS4). If you need a specific platform, use `[FromKeyedServices(...)]`.
