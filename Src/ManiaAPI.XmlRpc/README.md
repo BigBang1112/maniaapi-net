@@ -36,7 +36,8 @@ For ManiaPlanet:
 
 For TMT:
 
-- TODO
+- Get all map records (without identities)
+- Get campaign medal rankings (without identities)
 
 For all games:
 
@@ -69,13 +70,29 @@ using ManiaAPI.XmlRpc;
 var masterServer = new MasterServerMP4();
 ```
 
+Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client.
+
+```cs
+using ManiaAPI.XmlRpc;
+
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate })
+{
+    BaseAddress = new System.Uri(MasterServerMP4.DefaultAddress)
+};
+var masterServer = new MasterServerMP4(httpClient);
+```
+
 or with DI, using an injected `HttpClient`:
 
 ```cs
 using ManiaAPI.XmlRpc;
 
 builder.Services.AddScoped<MasterServerMP4>();
-builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress));
+builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress))
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+    });
 ```
 
 In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
@@ -85,7 +102,11 @@ To be most inline with the game client, you should validate the master server fi
 ```cs
 using ManiaAPI.XmlRpc;
 
-var masterServer = new MasterServerMP4();
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate })
+{
+    BaseAddress = new System.Uri(MasterServerMP4.DefaultAddress)
+};
+var masterServer = new MasterServerMP4(httpClient);
 
 await masterServer.ValidateAsync(); // Do this for reliability
 
@@ -94,6 +115,8 @@ await masterServer.ValidateAsync(); // Do this for reliability
 
 with DI, it is recommended to separate the init server's `HttpClient` from the master server.
 
+You don't have to enable decompression for the init server, as it does not return large responses.
+
 ```cs
 using ManiaAPI.XmlRpc;
 
@@ -101,7 +124,11 @@ using ManiaAPI.XmlRpc;
 builder.Services.AddScoped<InitServerMP4>();
 builder.Services.AddScoped<MasterServerMP4>();
 builder.Services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultAddress));
-builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress));
+builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress))
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+    });
 
 // Do the setup
 var initServer = provider.GetRequiredService<InitServerMP4>();
@@ -127,6 +154,23 @@ var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
 // You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
 ```
 
+Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client for the **master server**. Init server does not return large responses, so it's not necessary for that one.
+
+```cs
+using ManiaAPI.XmlRpc;
+
+var initServer = new InitServerTMT(Platform.PC);
+var waitingParams = await initServer.GetWaitingParamsAsync();
+
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate })
+{
+    BaseAddress = waitingParams.MasterServers.First().GetUri()
+};
+var masterServer = new MasterServerTMT(httpClient);
+
+// You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
+```
+
 or with DI, using an injected `HttpClient` (not viable for multiple platforms):
 
 ```cs
@@ -136,7 +180,11 @@ using ManiaAPI.XmlRpc;
 builder.Services.AddScoped<InitServerTMT>();
 builder.Services.AddScoped<MasterServerTMT>();
 builder.Services.AddHttpClient<InitServerTMT>(client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(Platform.PC)));
-builder.Services.AddHttpClient<MasterServerTMT>();
+builder.Services.AddHttpClient<MasterServerTMT>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+    });
 
 // Do the setup
 var initServer = provider.GetRequiredService<InitServerTMT>();
@@ -157,7 +205,11 @@ foreach (Platform platform in Enum.GetValues(typeof(Platform)))
     builder.Services.AddKeyedScoped<InitServerTMT>(platform, (provider, key) => new InitServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient(platform.ToString())));
     builder.Services.AddKeyedScoped<MasterServerTMT>(platform, (provider, key) => new MasterServerTMT(provider.GetRequiredService<IHttpClientFactory>().CreateClient(platform.ToString())));
     builder.Services.AddHttpClient<InitServerTMT>(platform.ToString(), client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(platform)));
-    builder.Services.AddHttpClient<MasterServerTMT>(platform.ToString());
+    builder.Services.AddHttpClient<MasterServerTMT>(platform.ToString())
+        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        });
 }
 
 // Do the setup
