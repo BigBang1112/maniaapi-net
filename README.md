@@ -34,7 +34,7 @@ Anything you can imagine!
 
 Wraps the official Nadeo API used in the latest Trackmania (2020). **This API requires authorization.**
 
-After ínitial authentication, the connectivity is managed by the library, so you don't have to worry about refreshing the token.
+After initial authentication, the connectivity is managed by the library, so you don't have to worry about refreshing the token.
 
 The game provides 3 domains, and they are split into 3 separate services:
 
@@ -42,7 +42,7 @@ The game provides 3 domains, and they are split into 3 separate services:
 - `NadeoLiveServices` for leaderboards, clubs, and other live content
 - `NadeoMeetServices` for getting the current Cup of the Day
 
-#### Possibilities
+#### Features
 
 For `NadeoServices`:
 
@@ -155,7 +155,7 @@ await nms.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
 
 Connects `ManiaAPI.NadeoAPI` with [GBX.NET](https://github.com/BigBang1112/gbx-net) features to provide convenient map upload and **map update**.
 
-#### Possibilities
+#### Features
 
 - Upload a map
 - Update a map
@@ -194,7 +194,7 @@ You can also pass the `CGameCtnChallenge` instance directly, but it is not recom
 
 Wraps https://api.trackmania.com/doc (ManiaPlanet web API). **This API requires authorization.**
 
-#### Possibilities
+#### Features
 
 - Get display names
 - Get account IDs from display names
@@ -260,7 +260,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 Wraps https://maniaplanet.com/swagger (ManiaPlanet web API). This API does not require authorization, but you can authorize to have more methods available.
 
-#### Possibilities
+#### Features
 
 [All available on Swagger.](https://maniaplanet.com/swagger)
 
@@ -319,7 +319,7 @@ Wraps the https://trackmania.io/ API which provides services around the Nadeo AP
 
 This API is more moderated and cached, but doesn't require you to authorize with it.
 
-#### Possibilities
+#### Features
 
 - Get various campaigns (including weekly shorts)
 - Get leaderboards
@@ -354,7 +354,7 @@ builder.Services.AddHttpClient<TrackmaniaIO>();
 
 Wraps https://tm-exchange.com/ (old TMX).
 
-#### Possibilities
+#### Features
 
 - Get replays
 - Search leaderboards
@@ -379,7 +379,7 @@ var tmx = new TMX(TmxSite.TMUF);
 
 Connects `ManiaAPI.TMX` with [GBX.NET](https://github.com/BigBang1112/gbx-net) features.
 
-#### Possibilities
+#### Features
 
 - Get track Gbx header
 - Get track Gbx object
@@ -411,7 +411,7 @@ It currently **does not support any authentication** for its complexity and secu
 
 For dedicated server XML-RPC, use the [GbxRemote.Net](https://github.com/EvoEsports/GbxRemote.Net) library.
 
-#### Possibilities
+#### Features
 
 For TMUF:
 
@@ -422,7 +422,6 @@ For TMUF:
   - Medals
 - Get ladder zone rankings
 - Get ladder player rankings
-- Get available master servers
 
 For ManiaPlanet:
 
@@ -441,6 +440,7 @@ For TMT:
 
 - Get all map records (without identities)
 - Get campaign medal rankings (without identities)
+- Get available master servers
 
 For all games:
 

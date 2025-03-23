@@ -6,7 +6,7 @@ Wraps the https://trackmania.io/ API which provides services around the Nadeo AP
 
 This API is more moderated and cached, but doesn't require you to authenticate with it.
 
-## Possibilities
+## Features
 
 - Get various campaigns (including weekly shorts)
 - Get leaderboards

@@ -4,7 +4,7 @@
 
 Wraps https://api.trackmania.com/doc (ManiaPlanet web API). **This API requires authorization.**
 
-## Possibilities
+## Features
 
 - Get display names
 - Get account IDs from display names

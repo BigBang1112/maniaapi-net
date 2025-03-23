@@ -4,7 +4,7 @@
 
 Wraps the official Nadeo API used in the latest Trackmania (2020). **This API requires authentication.**
 
-After ínitial authentication, the connectivity is managed by the library, so you don't have to worry about refreshing the token.
+After initial authentication, the connectivity is managed by the library, so you don't have to worry about refreshing the token.
 
 The game provides 3 domains, and they are split into 3 separate services:
 
@@ -12,7 +12,7 @@ The game provides 3 domains, and they are split into 3 separate services:
 - `NadeoLiveServices` for leaderboards, clubs, and other live content
 - `NadeoMeetServices` for getting the current Cup of the Day
 
-## Possibilities
+## Features
 
 For `NadeoServices`:
 

@@ -8,7 +8,7 @@ It currently **does not support any authentication** for its complexity and secu
 
 For dedicated server XML-RPC, use the [GbxRemote.Net](https://github.com/EvoEsports/GbxRemote.Net) library.
 
-## Possibilities
+## Features
 
 For TMUF:
 
@@ -19,7 +19,6 @@ For TMUF:
   - Medals
 - Get ladder zone rankings
 - Get ladder player rankings
-- Get available master servers
 
 For ManiaPlanet:
 
@@ -38,6 +37,7 @@ For TMT:
 
 - Get all map records (without identities)
 - Get campaign medal rankings (without identities)
+- Get available master servers
 
 For all games:
 

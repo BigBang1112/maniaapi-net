@@ -4,7 +4,7 @@
 
 Connects `ManiaAPI.TMX` with [GBX.NET](https://github.com/BigBang1112/gbx-net) features.
 
-## Possibilities
+## Features
 
 - Get track Gbx header
 - Get track Gbx object

@@ -4,7 +4,7 @@
 
 Connects `ManiaAPI.NadeoAPI` with [GBX.NET](https://github.com/BigBang1112/gbx-net) features to provide convenient map upload and **map update**.
 
-## Possibilities
+## Features
 
 - Upload a map
 - Update a map

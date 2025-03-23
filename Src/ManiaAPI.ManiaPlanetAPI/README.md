@@ -4,7 +4,7 @@
 
 Wraps https://maniaplanet.com/swagger (ManiaPlanet web API). This API does not require authorization, but you can authorize to have more methods available.
 
-## Possibilities
+## Features
 
 [All available on Swagger.](https://maniaplanet.com/swagger)
 
