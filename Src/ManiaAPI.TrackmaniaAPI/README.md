@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaAPI?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaAPI/)
 
-Wraps https://api.trackmania.com/doc (ManiaPlanet web API). **This API requires authorization.**
+Wraps https://api.trackmania.com/doc (Trackmania web API). **This API requires authorization.**
 
 ## Features
 
