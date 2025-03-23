@@ -31,7 +31,7 @@ public interface ITMX : IClient
     Task<HttpResponseMessage> GetTrackImageResponseAsync(TrackItem track, int imageIndex, CancellationToken cancellationToken = default);
 }
 
-public partial class TMX : ITMX, IClient
+public partial class TMX : ITMX
 {
     public HttpClient Client { get; }
     public TmxSite Site { get; }
@@ -243,12 +243,12 @@ public partial class TMX : ITMX, IClient
     public string GetReplayGbxUrl(long replayId) => $"{Client.BaseAddress}recordgbx/{replayId}";
     public string GetReplayGbxUrl(ReplayItem replay) => GetReplayGbxUrl(replay.ReplayId);
 
-    public async Task<HttpResponseMessage> GetReplayGbxResponseAsync(long replayId, CancellationToken cancellationToken = default)
+    public virtual async Task<HttpResponseMessage> GetReplayGbxResponseAsync(long replayId, CancellationToken cancellationToken = default)
     {
         return await Client.GetAsync(GetReplayGbxUrl(replayId), cancellationToken);
     }
 
-    public async Task<HttpResponseMessage> GetReplayGbxResponseAsync(ReplayItem replay, CancellationToken cancellationToken = default)
+    public virtual async Task<HttpResponseMessage> GetReplayGbxResponseAsync(ReplayItem replay, CancellationToken cancellationToken = default)
     {
         return await GetReplayGbxResponseAsync(replay.ReplayId, cancellationToken);
     }
