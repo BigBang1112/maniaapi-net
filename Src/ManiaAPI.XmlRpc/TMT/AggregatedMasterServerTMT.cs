@@ -133,6 +133,17 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
                 {
                     existing.Scores.Sort((x, y) =>
                     {
+                        // in case of -1, it should be at the end
+                        if (x.Score is TimeInt32 timeX && timeX == new TimeInt32(-1))
+                        {
+                            return 1;
+                        }
+
+                        if (y.Score is TimeInt32 timeY && timeY == new TimeInt32(-1))
+                        {
+                            return -1;
+                        }
+
                         var scoreComparison = x.Score.CompareTo(y.Score);
                         return scoreComparison == 0 ? x.Platform.CompareTo(y.Platform) : scoreComparison;
                     });

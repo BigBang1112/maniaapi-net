@@ -153,7 +153,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
                         timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
                         break;
                     case "i":
-                        var score = 0;
+                        var score = 0u;
                         var count = 0;
 
                         while (xml.TryReadStartElement(out var medalElement))
@@ -161,7 +161,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
                             switch (medalElement)
                             {
                                 case "s":
-                                    score = int.Parse(xml.ReadContent());
+                                    score = uint.Parse(xml.ReadContent());
                                     break;
                                 case "c":
                                     count = int.Parse(xml.ReadContent());
@@ -174,7 +174,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
                             _ = xml.SkipEndElement();
                         }
 
-                        ref T scoreValue = ref Unsafe.As<int, T>(ref score);
+                        ref T scoreValue = ref Unsafe.As<uint, T>(ref score);
 
                         medals.Add(new RecordUnit<T>(scoreValue, count));
                         break;
