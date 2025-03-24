@@ -1,0 +1,40 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+@if (user?.Identity?.IsAuthenticated ?? false)
+{
+    <p>
+        Welcome, @TmEssentials.TextFormatter.Deformat(user.Identity.Name ?? user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "[unnamed]")!
+        <a href="logout">Logout</a>
+    </p>
+
+    <ul>
+        @foreach (var claim in user.Claims)
+        {
+            <li>@claim.Type: @claim.Value</li>
+        }
+    </ul>
+
+    <a href="dedicated-servers">Dedicated servers</a>
+}
+else
+{
+    <p><a href="login/maniaplanet">Login with ManiaPlanet</a></p>
+    <p><a href="login/trackmania">Login with Trackmania</a></p>
+}
+
+@code {
+    private ClaimsPrincipal? user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+    }
+}

@@ -13,6 +13,41 @@ using ManiaAPI.TMX;
 var tmx = new TMX(TmxSite.TMUF);
 ```
 
+or with DI, for a specific site, using an injected `HttpClient`:
+
+```cs
+using ManiaAPI.TMX;
+
+builder.Services.AddHttpClient("TMX_TMNF");
+builder.Services.AddScoped<TMX>(provider => new TMX(
+    provider.GetRequiredService<IHttpClientFactory>().CreateClient("TMX_TMNF"), TmxSite.TMNF));
+```
+
+For multiple sites in DI, you can use keyed services:
+
+```cs
+foreach (TmxSite site in Enum.GetValues<TmxSite>())
+{
+    builder.Services.AddHttpClient($"{nameof(TMX)}_{site}");
+
+    builder.Services.AddKeyedScoped(site, (provider, key) => new TMX(
+        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(TMX)}_{key}"), site));
+    builder.Services.AddScoped(provider => provider.GetRequiredKeyedService<TMX>(site));
+}
+
+builder.Services.AddScoped(provider => Enum.GetValues<TmxSite>()
+    .ToImmutableDictionary(site => site, site => provider.GetRequiredKeyedService<TMX>(site)));
+```
+
+Features this last setup brings:
+
+- You can inject `ImmutableDictionary<TmxSite, TMX>` to get all TMX sites as individual instances
+- If you don't need specific site context, you can inject `IEnumerable<TMX>` to get all TMX sites
+- Specific `TMX` can be injected using `[FromKeyedServices(TmxSite.TMNF)]`
+
+> [!WARNING]
+> If you just inject `TMX` alone, it will give the last-registered one (in this case, Original). If you need a specific site, use `[FromKeyedServices(...)]`.
+
 ### Get Replays
 
 ```cs

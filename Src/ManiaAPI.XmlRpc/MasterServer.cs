@@ -1,4 +1,5 @@
 ﻿using MinimalXmlReader;
+using System.Collections.Immutable;
 
 namespace ManiaAPI.XmlRpc;
 
@@ -6,8 +7,8 @@ public interface IMasterServer : IDisposable
 {
     HttpClient Client { get; }
 
-    Task<MasterServerResponse<IReadOnlyCollection<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default);
-    Task<IReadOnlyCollection<League>> GetLeaguesAsync(CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableArray<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default);
+    Task<ImmutableArray<League>> GetLeaguesAsync(CancellationToken cancellationToken = default);
 }
 
 public abstract class MasterServer : IMasterServer
@@ -26,13 +27,13 @@ public abstract class MasterServer : IMasterServer
     {
     }
 
-    public virtual async Task<MasterServerResponse<IReadOnlyCollection<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<MasterServerResponse<ImmutableArray<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetLeagues";
-        var responseStr = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, string.Empty, cancellationToken);
-        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, string.Empty, cancellationToken);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
-            var items = new List<League>();
+            var items = ImmutableArray.CreateBuilder<League>();
 
             while (xml.TryReadStartElement("l"))
             {
@@ -66,11 +67,11 @@ public abstract class MasterServer : IMasterServer
                 _ = xml.SkipEndElement(); // l
             }
 
-            return (IReadOnlyCollection<League>)items;
+            return items.ToImmutable();
         });
     }
 
-    public async Task<IReadOnlyCollection<League>> GetLeaguesAsync(CancellationToken cancellationToken = default)
+    public async Task<ImmutableArray<League>> GetLeaguesAsync(CancellationToken cancellationToken = default)
     {
         return (await GetLeaguesResponseAsync(cancellationToken)).Result;
     }

@@ -31,7 +31,6 @@ or with DI, using an injected `HttpClient`:
 ```cs
 using ManiaAPI.TrackmaniaAPI;
 
-builder.Services.AddScoped<TrackmaniaAPI>();
 builder.Services.AddHttpClient<TrackmaniaAPI>();
 
 // Do the setup

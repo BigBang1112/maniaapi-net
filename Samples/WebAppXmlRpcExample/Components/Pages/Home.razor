@@ -1,0 +1,122 @@
+﻿@using ManiaAPI.XmlRpc
+@using ManiaAPI.XmlRpc.TMT
+@using System.Collections.Immutable
+@using Microsoft.Extensions.Caching.Hybrid
+@using TmEssentials
+
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+@* inject the master server TMTs for each platform *@
+@inject ImmutableDictionary<Platform, MasterServerTMT> MasterServerTMTs
+
+@inject HybridCache Cache
+
+@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<a href="aggregated">Aggregated</a>
+
+<h1>Medals</h1>
+
+@if (medalsPerPlatform.Count == 0)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div style="display: flex;gap:5rem">
+        @foreach (var (platform, summaries) in medalsPerPlatform)
+        {
+            <div style="flex:1">
+                <h2>@platform</h2>
+
+                <p>Execution time: @(summaries.ExecutionTime?.TotalSeconds.ToString() ?? "???") s</p>
+                <p>Request time: @(summaries.Details.RequestTime.TotalSeconds) s</p>
+
+                <h3>Summaries:</h3>
+
+                @foreach (var summary in summaries.Result)
+                {
+                    <p>@summary.Zone</p>
+                    <p>@summary.Timestamp</p>
+                    <div style="height: 200px;overflow-y:auto">
+                        <Virtualize Items="summary.Scores" Context="score">
+                            <div>@score.Score @score.Count</div>
+                        </Virtualize>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+<h1>Records</h1>
+
+<InputText @bind-Value="mapUid" />
+
+@if (recordsPerPlatform.Count == 0)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div style="display: flex;gap:5rem">
+        @foreach (var (platform, records) in recordsPerPlatform)
+        {
+            <div style="flex:1">
+                <h2>@platform</h2>
+                <p>Execution time: @(records.ExecutionTime?.TotalSeconds.ToString() ?? "???") s</p>
+                <p>Request time: @(records.Details.RequestTime.TotalSeconds) s</p>
+                <h3>Records:</h3>
+                @foreach (var record in records.Result)
+                {
+                    <p>@record.Zone</p>
+                    <p>@record.Timestamp</p>
+                    <div style="height: 200px;overflow-y:auto">
+                        <Virtualize Items="record.Scores" Context="score">
+                            <div>@score.Score @score.Count</div>
+                        </Virtualize>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private Dictionary<Platform, MasterServerResponse<ImmutableArray<Summary<int>>>> medalsPerPlatform = [];
+
+    private string mapUid = "XUuBzeBgKAx0m6MMstYeTuWZGdb";
+    private Dictionary<Platform, MasterServerResponse<ImmutableArray<Summary<TimeInt32>>>> recordsPerPlatform = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        medalsPerPlatform = (await Task.WhenAll(MasterServerTMTs.Select(platformMasterServerPair => Task.Run(async () =>
+        {
+            var (platform, masterServerTMT) = platformMasterServerPair;
+
+            var response = await Cache.GetOrCreateAsync($"CampaignLeaderBoardSummaries_{platform}", async (token) =>
+            {
+                return await masterServerTMT.GetCampaignLeaderBoardSummariesResponseAsync(["World", "World|Japan"], token);
+            }, new() { Expiration = TimeSpan.FromMinutes(1) });
+
+            return KeyValuePair.Create(platform, response);
+        })))).ToDictionary(x => x.Key, x => x.Value);
+
+        recordsPerPlatform = (await Task.WhenAll(MasterServerTMTs.Select(platformMasterServerPair => Task.Run(async () =>
+        {
+            var (platform, masterServerTMT) = platformMasterServerPair;
+
+            var response = await Cache.GetOrCreateAsync($"MapLeaderBoardSummaries_{platform}_{mapUid}", async (token) =>
+            {
+                return await masterServerTMT.GetMapLeaderBoardSummariesResponseAsync(mapUid, ["World", "World|Japan"], token);
+            }, new() { Expiration = TimeSpan.FromMinutes(1) });
+
+            return KeyValuePair.Create(platform, response);
+        })))).ToDictionary(x => x.Key, x => x.Value);
+    }
+}

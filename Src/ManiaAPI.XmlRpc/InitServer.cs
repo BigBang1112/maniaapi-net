@@ -1,4 +1,6 @@
 ﻿using MinimalXmlReader;
+using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace ManiaAPI.XmlRpc;
 
@@ -29,10 +31,10 @@ public abstract class InitServer : IInitServer
     public virtual async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetWaitingParams";
-        var responseStr = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, string.Empty, cancellationToken);
-        return XmlRpcHelper.ProcessResponseResult(RequestName, responseStr, (ref MiniXmlReader xml) =>
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, string.Empty, cancellationToken);
+        return XmlRpcHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
-            var masterServers = new List<MasterServerInfo>();
+            var masterServers = ImmutableArray.CreateBuilder<MasterServerInfo>();
 
             while (xml.TryReadStartElement(out var element))
             {
@@ -74,7 +76,7 @@ public abstract class InitServer : IInitServer
                 _ = xml.SkipEndElement();
             }
 
-            return new WaitingParams(masterServers);
+            return new WaitingParams(masterServers.ToImmutable());
         });
     }
 

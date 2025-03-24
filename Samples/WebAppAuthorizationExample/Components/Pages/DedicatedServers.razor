@@ -1,0 +1,40 @@
+﻿@page "/dedicated-servers"
+@using ManiaAPI.ManiaPlanetAPI
+@using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Authentication;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ManiaPlanetAPI ManiaPlanetAPI
+@attribute [Authorize(AuthenticationSchemes = ManiaPlanetAuthenticationDefaults.AuthenticationScheme)]
+@attribute [StreamRendering]
+
+<PageTitle>Dedicated servers</PageTitle>
+
+<a href="/">Home</a>
+<a href="logout">Logout</a>
+
+<h3>Dedicated servers</h3>
+
+@if (dedicatedAccounts is not null)
+{
+    <ul>
+        @foreach (var dedicatedAccount in dedicatedAccounts)
+        {
+            <li>@dedicatedAccount.Login</li>
+        }
+    </ul>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    private IEnumerable<DedicatedAccount>? dedicatedAccounts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        dedicatedAccounts = await ManiaPlanetAPI.GetDedicatedAccountsAsync();
+    }
+}

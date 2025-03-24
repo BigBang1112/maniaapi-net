@@ -11,10 +11,9 @@ internal static partial class XmlRpcHelper
     [GeneratedRegex(@"execution time\s*:\s*(\d+\.\d+)\s*s")]
     private static partial Regex ExecutionTimeRegex();
 
-    internal static async Task<string> SendAsync(HttpClient client, string gameXml, string requestName, string parametersXml, CancellationToken cancellationToken)
+    internal static async Task<XmlRpcResponse> SendAsync(HttpClient client, string gameXml, string requestName, string parametersXml, CancellationToken cancellationToken)
     {
-        using var content = new StringContent(@$"
-<root>
+        var formedXml = @$"<root>
     <game>
         {gameXml}
     </game>
@@ -22,18 +21,31 @@ internal static partial class XmlRpcHelper
         <name>{requestName}</name>
         <params>{parametersXml}</params>
     </request>
-</root>", Encoding.UTF8, "text/xml");
+</root>";
 
-        using var response = await client.PostAsync(default(Uri), content, cancellationToken);
+        Debug.WriteLine(formedXml);
+
+        using var content = new StringContent(formedXml, Encoding.UTF8, "text/xml");
+
+        var startTime = Stopwatch.GetTimestamp();
+
+        var response = await client.PostAsync(default(Uri), content, cancellationToken);
+
+        var requestTime = Stopwatch.GetElapsedTime(startTime);
+
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+
+        return new XmlRpcResponse(await response.Content.ReadAsStringAsync(cancellationToken), new XmlRpcResponseDetails(requestTime));
     }
 
-    internal static MasterServerResponse<T> ProcessResponseResult<T>(string requestName, string responseStr, XmlRpcProcessContent<T> processContent) where T : notnull
+    internal static MasterServerResponse<T> ProcessResponseResult<T>(
+        string requestName,
+        XmlRpcResponse response, 
+        XmlRpcProcessContent<T> processContent) where T : notnull
     {
-        Debug.WriteLine(responseStr);
+        Debug.WriteLine(response.XmlResponse);
 
-        var xml = new MiniXmlReader(responseStr);
+        var xml = new MiniXmlReader(response.XmlResponse);
 
         xml.SkipProcessingInstruction();
 
@@ -66,7 +78,7 @@ internal static partial class XmlRpcHelper
             ? default(TimeSpan?)
             : TimeSpan.FromSeconds(double.Parse(executionTimeGroup, CultureInfo.InvariantCulture));
 
-        return new MasterServerResponse<T>(content ?? throw new Exception("No response content"), executionTimeSpan);
+        return new MasterServerResponse<T>(content ?? throw new Exception("No response content"), executionTimeSpan, response.Details);
     }
 
     private static void ProcessResponse<T>(string requestName, XmlRpcProcessContent<T> processContent, ref MiniXmlReader xml, out T? content) where T : notnull

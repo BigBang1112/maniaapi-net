@@ -1,3 +1,5 @@
-﻿namespace ManiaAPI.XmlRpc;
+﻿using System.Collections.Immutable;
 
-public sealed record WaitingParams(IReadOnlyCollection<MasterServerInfo> MasterServers);
+namespace ManiaAPI.XmlRpc;
+
+public sealed record WaitingParams(ImmutableArray<MasterServerInfo> MasterServers);
