@@ -4,6 +4,16 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>ae432675-7f00-4c63-a5d7-201c8f28a645</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TmEssentials" Version="2.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Src\ManiaAPI.ManiaPlanetAPI.Extensions.Hosting\ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.csproj" />
+    <ProjectReference Include="..\..\Src\ManiaAPI.TrackmaniaAPI.Extensions.Hosting\ManiaAPI.TrackmaniaAPI.Extensions.Hosting.csproj" />
+  </ItemGroup>
 
 </Project>

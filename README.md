@@ -239,15 +239,28 @@ For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Gene
 
 ```cs
 using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
+using ManiaAPI.TrackmaniaAPI.Extensions.Hosting.Authentication;
+
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie()
     .AddTrackmania(options =>
     {
-        options.ClientId = config["OAuth2:Trackmania:Id"];
-        options.ClientSecret = config["OAuth2:Trackmania:Secret"];
-
+        options.ClientId = builder.Configuration["OAuth2:Trackmania:Id"]!;
+        options.ClientSecret = builder.Configuration["OAuth2:Trackmania:Secret"]!;
+        
         options.Scope.Add("clubs");
     });
+
+var app = builder.Build();
+
+app.MapGet("/login", () =>
+{
+    return TypedResults.Challenge(new() { RedirectUri = "/" }, [TrackmaniaAuthenticationDefaults.AuthenticationScheme]);
+});
+
+app.Run();
 ```
 
 ## ManiaAPI.ManiaPlanetAPI
@@ -295,15 +308,28 @@ For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web
 
 ```cs
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
+using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Authentication;
+
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie()
     .AddManiaPlanet(options =>
     {
-        options.ClientId = config["OAuth2:ManiaPlanet:Id"];
-        options.ClientSecret = config["OAuth2:ManiaPlanet:Secret"];
+        options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:Id"]!;
+        options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:Secret"]!;
 
         Array.ForEach(["basic", "dedicated", "titles"], options.Scope.Add);
     });
+
+var app = builder.Build();
+
+app.MapGet("/login", () =>
+{
+    return TypedResults.Challenge(new() { RedirectUri = "/" }, [ManiaPlanetAuthenticationDefaults.AuthenticationScheme]);
+});
+
+app.Run();
 ```
 
 ## ManiaAPI.TrackmaniaIO
