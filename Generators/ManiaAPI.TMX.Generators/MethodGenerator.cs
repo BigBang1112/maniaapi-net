@@ -25,7 +25,7 @@ public class MethodGenerator : IIncrementalGenerator
                 .FirstOrDefault(x => x.Name == "TMX");
 
             return maniaApiTmxNamespace.GetTypeMembers()
-                .Where(x => x.Interfaces.Any(x => x.Name == "IClient"))
+                .Where(x => x.Interfaces.Any(x => x.Name == "ITMX"))
                 .SelectMany(clientSymbol => clientSymbol.GetMembers()
                     .OfType<IMethodSymbol>()
                     .Where(methodSymbol => methodSymbol.GetAttributes().Any(x => x.AttributeClass?.Name == "GetMethodAttribute")));
