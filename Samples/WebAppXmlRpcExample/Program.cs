@@ -31,6 +31,9 @@ foreach (Platform platform in Enum.GetValues<Platform>())
 
 builder.Services.AddSingleton(provider => Enum.GetValues<Platform>()
     .ToImmutableDictionary(platform => platform, platform => provider.GetRequiredKeyedService<MasterServerTMT>(platform)));
+
+builder.Services.AddScoped(provider => new AggregatedMasterServerTMT(
+    provider.GetRequiredService<ImmutableDictionary<Platform, MasterServerTMT>>()));
 //
 //
 

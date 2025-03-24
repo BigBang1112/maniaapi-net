@@ -645,6 +645,9 @@ foreach (var platform in Enum.GetValues<Platform>())
 builder.Services.AddSingleton(provider => Enum.GetValues<Platform>()
     .ToImmutableDictionary(platform => platform, platform => provider.GetRequiredKeyedService<MasterServerTMT>(platform)));
 
+builder.Services.AddScoped(provider => new AggregatedMasterServerTMT(
+    provider.GetRequiredService<ImmutableDictionary<Platform, MasterServerTMT>>()));
+
 // Do the setup
 // This should run at the start of your application, or when you need to refresh the master servers
 await using var scope = provider.CreateScopeAsync();

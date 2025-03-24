@@ -1,0 +1,80 @@
+﻿@using ManiaAPI.XmlRpc
+@using ManiaAPI.XmlRpc.TMT
+@using System.Collections.Immutable
+@using Microsoft.Extensions.Caching.Hybrid
+
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+@* use aggregated master servers for simplicity *@
+@inject AggregatedMasterServerTMT AggregatedMasterServerTMT
+
+@inject HybridCache Cache
+
+@page "/aggregated"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<div style="display: flex;gap:1rem">
+    @foreach (var summary in summaries)
+    {
+        <div style="flex:1">
+            <h2>@summary.Zone</h2>
+
+            <div style="display:flex;gap:1rem">
+                @foreach (var (platform, timestamp) in summary.Timestamps)
+                {
+                    <div style="flex:1">
+                        <h2>@platform</h2>
+                        <p>@timestamp</p>
+                    </div>
+                }
+            </div>
+
+            <div style="display: flex;gap:1rem">
+                <div style="height: 200px;overflow-y:auto;flex:1">
+                    <Virtualize Items="summary.Scores" Context="score">
+                        <div>@score.Score @score.Count @score.Platform</div>
+                    </Virtualize>
+                </div>
+                <div style="height: 200px;overflow-y:auto;flex:1">
+                    <Virtualize ItemsProvider="request => LoadGroupedScoresWithoutPlatform(request, summary)" Context="score">
+                        <div>@score.Score @score.Count</div>
+                    </Virtualize>
+                </div>
+                <div style="height: 200px;overflow-y:auto;flex:1">
+                    <Virtualize ItemsProvider="request => LoadGroupedScoresWithPlatform(request, summary)" Context="score">
+                        <div>@score.Score @score.Count</div>
+                    </Virtualize>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private ImmutableArray<AggregatedSummary<int>> summaries = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        summaries = await AggregatedMasterServerTMT.GetCampaignLeaderBoardSummariesAsync("World", "World|Japan");
+    }
+
+    private ValueTask<ItemsProviderResult<RecordUnit<int>>> LoadGroupedScoresWithoutPlatform(ItemsProviderRequest request, AggregatedSummary<int> summary)
+    {
+        var groupedScores = summary.Scores
+            .GroupBy(x => x.Score)
+            .Select(x => new RecordUnit<int>(x.Key, x.Sum(x => x.Count)));
+
+        var items = groupedScores.Skip(request.StartIndex).Take(request.Count);
+
+        return ValueTask.FromResult(new ItemsProviderResult<RecordUnit<int>>(items, groupedScores.Count()));
+    }
+
+    private ValueTask<ItemsProviderResult<RecordUnit<int>>> LoadGroupedScoresWithPlatform(ItemsProviderRequest request, AggregatedSummary<int> summary)
+    {
+        return ValueTask.FromResult(new ItemsProviderResult<RecordUnit<int>>([], 0));
+    }
+}
