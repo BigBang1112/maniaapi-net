@@ -8,9 +8,15 @@ namespace ManiaAPI.XmlRpc.TMT;
 /// </summary>
 public interface IAggregatedMasterServerTMT
 {
+    Task<AggregatedSummaryResponse<int>> GetCampaignLeaderBoardSummariesResponseAsync(IEnumerable<string> zones, IProgress<AggregatedSummaryProgress<int>>? progress = null, CancellationToken cancellationToken = default);
+    Task<AggregatedSummaryResponse<int>> GetCampaignLeaderBoardSummariesResponseAsync(string zone = "World", IProgress<AggregatedSummaryProgress<int>>? progress = null, CancellationToken cancellationToken = default);
+    Task<AggregatedSummaryResponse<int>> GetCampaignLeaderBoardSummariesResponseAsync(params IEnumerable<string> zones);
     Task<ImmutableArray<AggregatedSummary<int>>> GetCampaignLeaderBoardSummariesAsync(IEnumerable<string> zones, IProgress<AggregatedSummaryProgress<int>>? progress = null, CancellationToken cancellationToken = default);
     Task<ImmutableArray<AggregatedSummary<int>>> GetCampaignLeaderBoardSummariesAsync(string zone = "World", IProgress<AggregatedSummaryProgress<int>>? progress = null, CancellationToken cancellationToken = default);
     Task<ImmutableArray<AggregatedSummary<int>>> GetCampaignLeaderBoardSummariesAsync(params IEnumerable<string> zones);
+    Task<AggregatedSummaryResponse<TimeInt32>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, IEnumerable<string> zones, IProgress<AggregatedSummaryProgress<TimeInt32>>? progress = null, CancellationToken cancellationToken = default);
+    Task<AggregatedSummaryResponse<TimeInt32>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, string zone = "World", IProgress<AggregatedSummaryProgress<TimeInt32>>? progress = null, CancellationToken cancellationToken = default);
+    Task<AggregatedSummaryResponse<TimeInt32>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, params IEnumerable<string> zones);
     Task<ImmutableArray<AggregatedSummary<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, IEnumerable<string> zones, IProgress<AggregatedSummaryProgress<TimeInt32>>? progress = null, CancellationToken cancellationToken = default);
     Task<ImmutableArray<AggregatedSummary<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, string zone = "World", IProgress<AggregatedSummaryProgress<TimeInt32>>? progress = null, CancellationToken cancellationToken = default);
     Task<ImmutableArray<AggregatedSummary<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, params IEnumerable<string> zones);
@@ -28,9 +34,24 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
         this.masterServers = masterServers;
     }
 
+    public async Task<AggregatedSummaryResponse<int>> GetCampaignLeaderBoardSummariesResponseAsync(IEnumerable<string> zones, IProgress<AggregatedSummaryProgress<int>>? progress = null, CancellationToken cancellationToken = default)
+    {
+        return await AggregateSummariesAsync(async x => await x.GetCampaignLeaderBoardSummariesResponseAsync(zones, cancellationToken), progress);
+    }
+
+    public async Task<AggregatedSummaryResponse<int>> GetCampaignLeaderBoardSummariesResponseAsync(string zone = "World", IProgress<AggregatedSummaryProgress<int>>? progress = null, CancellationToken cancellationToken = default)
+    {
+        return await GetCampaignLeaderBoardSummariesResponseAsync([zone], progress, cancellationToken);
+    }
+
+    public async Task<AggregatedSummaryResponse<int>> GetCampaignLeaderBoardSummariesResponseAsync(params IEnumerable<string> zones)
+    {
+        return await GetCampaignLeaderBoardSummariesResponseAsync(zones, default);
+    }
+
     public async Task<ImmutableArray<AggregatedSummary<int>>> GetCampaignLeaderBoardSummariesAsync(IEnumerable<string> zones, IProgress<AggregatedSummaryProgress<int>>? progress = null, CancellationToken cancellationToken = default)
     {
-        return await AggregateSummaries(async x => await x.GetCampaignLeaderBoardSummariesResponseAsync(zones, cancellationToken), progress);
+        return (await GetCampaignLeaderBoardSummariesResponseAsync(zones, progress, cancellationToken)).Summaries;
     }
 
     public async Task<ImmutableArray<AggregatedSummary<int>>> GetCampaignLeaderBoardSummariesAsync(string zone = "World", IProgress<AggregatedSummaryProgress<int>>? progress = null, CancellationToken cancellationToken = default)
@@ -43,9 +64,24 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
         return await GetCampaignLeaderBoardSummariesAsync(zones, default);
     }
 
+    public async Task<AggregatedSummaryResponse<TimeInt32>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, IEnumerable<string> zones, IProgress<AggregatedSummaryProgress<TimeInt32>>? progress = null, CancellationToken cancellationToken = default)
+    {
+        return await AggregateSummariesAsync(async x => await x.GetMapLeaderBoardSummariesResponseAsync(mapUid, zones, cancellationToken), progress);
+    }
+
+    public async Task<AggregatedSummaryResponse<TimeInt32>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, string zone = "World", IProgress<AggregatedSummaryProgress<TimeInt32>>? progress = null, CancellationToken cancellationToken = default)
+    {
+        return await GetMapLeaderBoardSummariesResponseAsync(mapUid, [zone], progress, cancellationToken);
+    }
+
+    public async Task<AggregatedSummaryResponse<TimeInt32>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, params IEnumerable<string> zones)
+    {
+        return await GetMapLeaderBoardSummariesResponseAsync(mapUid, zones, default);
+    }
+
     public async Task<ImmutableArray<AggregatedSummary<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, IEnumerable<string> zones, IProgress<AggregatedSummaryProgress<TimeInt32>>? progress = null, CancellationToken cancellationToken = default)
     {
-        return await AggregateSummaries(async x => await x.GetMapLeaderBoardSummariesResponseAsync(mapUid, zones, cancellationToken), progress);
+        return (await GetMapLeaderBoardSummariesResponseAsync(mapUid, zones, progress, cancellationToken)).Summaries;
     }
 
     public async Task<ImmutableArray<AggregatedSummary<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, string zone = "World", IProgress<AggregatedSummaryProgress<TimeInt32>>? progress = null, CancellationToken cancellationToken = default)
@@ -58,13 +94,14 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
         return await GetMapLeaderBoardSummariesAsync(mapUid, zones, default);
     }
 
-    private async Task<ImmutableArray<AggregatedSummary<T>>> AggregateSummaries<T>(
+    private async Task<AggregatedSummaryResponse<T>> AggregateSummariesAsync<T>(
         Func<MasterServerTMT, Task<MasterServerResponse<ImmutableArray<Summary<T>>>>> getResponse,
         IProgress<AggregatedSummaryProgress<T>>? progress)
         where T : struct, IComparable // Change this to IComparable<T> once TimeInt32 is fixed
     {
         var tasks = masterServers.ToDictionary(async x => await getResponse(x.Value), x => x.Key);
 
+        var platforms = ImmutableDictionary.CreateBuilder<Platform, AggregatedSummaryInfo>();
         var aggregated = new Dictionary<string, (ImmutableDictionary<Platform, DateTimeOffset>.Builder Timestamps, ImmutableArray<AggregatedRecordUnit<T>>.Builder Scores)>();
 
         while (tasks.Count > 0)
@@ -74,6 +111,8 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
             tasks.Remove(task);
 
             var response = await task;
+
+            platforms[platform] = new AggregatedSummaryInfo(response.ExecutionTime, response.Details);
 
             progress?.Report(new AggregatedSummaryProgress<T>(platform, response));
 
@@ -109,8 +148,8 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
             }
         }
 
-        return aggregated.Select(x =>
+        return new AggregatedSummaryResponse<T>(platforms.ToImmutable(), aggregated.Select(x =>
             new AggregatedSummary<T>(x.Key, x.Value.Timestamps.ToImmutable(), x.Value.Scores.ToImmutable()))
-            .ToImmutableArray();
+            .ToImmutableArray());
     }
 }

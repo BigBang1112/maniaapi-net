@@ -17,53 +17,76 @@
 
 <h1>Hello, world!</h1>
 
-<div style="display: flex;gap:1rem">
-    @foreach (var summary in summaries)
-    {
-        <div style="flex:1">
-            <h2>@summary.Zone</h2>
+@if (summariesResponse is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div style="display: flex;gap:1rem">
+        @foreach (var (platform, info) in summariesResponse.Platforms)
+        {
+            <div style="flex:1">
+                <h2>@platform</h2>
+                <ul>
+                    <li>Execution time: @(info.ExecutionTime?.TotalSeconds.ToString() ?? "???") s</li>
+                    <li>Request time: @info.Details.RequestTime.TotalSeconds s</li>
+                </ul>
+            </div>
+        }
+    </div>
 
-            <div style="display:flex;gap:1rem">
-                @foreach (var (platform, timestamp) in summary.Timestamps)
-                {
-                    <div style="flex:1">
-                        <h2>@platform</h2>
-                        <p>@timestamp</p>
+    <div style="display: flex;gap:5rem">
+        @foreach (var summary in summariesResponse.Summaries)
+        {
+            <div style="flex:1">
+                <h2>@summary.Zone</h2>
+
+                <ul>
+                    @foreach (var (platform, timestamp) in summary.Timestamps)
+                    {
+                        <li>@platform: @timestamp</li>
+                    }
+                </ul>
+
+                <div style="display: flex;gap:1rem">
+                    <div style="height: 200px;overflow-y:auto;flex:1">
+                        <Virtualize Items="summary.Scores" Context="score">
+                            <div>@score.Score @score.Count @score.Platform</div>
+                        </Virtualize>
                     </div>
-                }
-            </div>
-
-            <div style="display: flex;gap:1rem">
-                <div style="height: 200px;overflow-y:auto;flex:1">
-                    <Virtualize Items="summary.Scores" Context="score">
-                        <div>@score.Score @score.Count @score.Platform</div>
-                    </Virtualize>
-                </div>
-                <div style="height: 200px;overflow-y:auto;flex:1">
-                    <Virtualize ItemsProvider="request => LoadGroupedScoresWithoutPlatform(request, summary)" Context="score">
-                        <div>@score.Score @score.Count</div>
-                    </Virtualize>
-                </div>
-                <div style="height: 200px;overflow-y:auto;flex:1">
-                    <Virtualize ItemsProvider="request => LoadGroupedScoresWithPlatform(request, summary)" Context="score">
-                        <div>@score.Score @score.Count</div>
-                    </Virtualize>
+                    <div style="height: 200px;overflow-y:auto;flex:1">
+                        <Virtualize ItemsProvider="request => LoadGroupedScoresWithoutPlatform(request, summary)" Context="score">
+                            <div>@score.Score @score.Count</div>
+                        </Virtualize>
+                    </div>
+                    <div style="height: 200px;overflow-y:auto;flex:1">
+                        <Virtualize ItemsProvider="request => LoadGroupedScoresWithPlatform(request, summary)" Context="score">
+                            <div>@score.Score @(score.CountPC + score.CountXB1 + score.CountPS4) | PC @score.CountPC, XB1 @score.CountXB1, PS4 @score.CountPS4</div>
+                        </Virtualize>
+                    </div>
                 </div>
             </div>
-        </div>
-    }
-</div>
+        }
+    </div>
+}
 
 @code {
-    private ImmutableArray<AggregatedSummary<int>> summaries = [];
+    private AggregatedSummaryResponse<int>? summariesResponse;
 
     protected override async Task OnInitializedAsync()
     {
-        summaries = await AggregatedMasterServerTMT.GetCampaignLeaderBoardSummariesAsync("World", "World|Japan");
+        summariesResponse = await Cache.GetOrCreateAsync("CampaignLeaderBoardSummaries", async (token) =>
+        {
+            return await AggregatedMasterServerTMT.GetCampaignLeaderBoardSummariesResponseAsync(["World", "World|Japan"], cancellationToken: token);
+        }, new() { Expiration = TimeSpan.FromMinutes(1) });
     }
 
     private ValueTask<ItemsProviderResult<RecordUnit<int>>> LoadGroupedScoresWithoutPlatform(ItemsProviderRequest request, AggregatedSummary<int> summary)
     {
+        // This is not well optimized, it groups the scores multiple times before returning the result
+        // Cache the groupings and reuse the cache for this listing for better performance, take this only as a simple example
+
         var groupedScores = summary.Scores
             .GroupBy(x => x.Score)
             .Select(x => new RecordUnit<int>(x.Key, x.Sum(x => x.Count)));
@@ -73,8 +96,20 @@
         return ValueTask.FromResult(new ItemsProviderResult<RecordUnit<int>>(items, groupedScores.Count()));
     }
 
-    private ValueTask<ItemsProviderResult<RecordUnit<int>>> LoadGroupedScoresWithPlatform(ItemsProviderRequest request, AggregatedSummary<int> summary)
+    private ValueTask<ItemsProviderResult<RecordUnitPlatformCount<int>>> LoadGroupedScoresWithPlatform(ItemsProviderRequest request, AggregatedSummary<int> summary)
     {
-        return ValueTask.FromResult(new ItemsProviderResult<RecordUnit<int>>([], 0));
+        // This is not well optimized, it groups the scores multiple times before returning the result
+        // Cache the groupings and reuse the cache for this listing for better performance, take this only as a simple example
+
+        var groupedScores = summary.Scores
+            .GroupBy(x => x.Score)
+            .Select(x => new RecordUnitPlatformCount<int>(x.Key,
+                x.FirstOrDefault(x => x.Platform == Platform.PC).Count,
+                x.FirstOrDefault(x => x.Platform == Platform.XB1).Count,
+                x.FirstOrDefault(x => x.Platform == Platform.PS4).Count));
+
+        var items = groupedScores.Skip(request.StartIndex).Take(request.Count);
+
+        return ValueTask.FromResult(new ItemsProviderResult<RecordUnitPlatformCount<int>>(items, groupedScores.Count()));
     }
 }
