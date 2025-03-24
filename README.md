@@ -42,7 +42,7 @@ The game provides 3 domains, and they are split into 3 separate services:
 - `NadeoLiveServices` for leaderboards, clubs, and other live content
 - `NadeoMeetServices` for getting the current Cup of the Day
 
-#### Features
+### Features
 
 For `NadeoServices`:
 
@@ -77,7 +77,7 @@ For `NadeoMeetServices`:
 
 - Get the current Cup of the Day
 
-#### Setup for a single service
+### Setup for a single service
 
 ```cs
 using ManiaAPI.NadeoAPI;
@@ -98,7 +98,7 @@ await ns.AuthorizeAsync("my_dedicated_server", "ls>97jO>e3>>D/Ce", Authorization
 
 For other services, just replace `NadeoServices` with `NadeoLiveServices` or `NadeoMeetServices`.
 
-#### Setup for multiple services
+### Setup for multiple services
 
 ```cs
 using ManiaAPI.NadeoAPI;
@@ -146,18 +146,18 @@ await nls.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
 await nms.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
 ```
 
-### ManiaAPI.NadeoAPI.Extensions.Gbx
+## ManiaAPI.NadeoAPI.Extensions.Gbx
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.NadeoAPI.Extensions.Gbx?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.NadeoAPI.Extensions.Gbx/)
 
 Connects `ManiaAPI.NadeoAPI` with [GBX.NET](https://github.com/BigBang1112/gbx-net) features to provide convenient map upload and **map update**.
 
-#### Features
+### Features
 
 - Upload a map
 - Update a map
 
-#### Example
+### Example
 
 A bit more advanced example to show how you can update a map without having to manually specify the map ID:
 
@@ -191,7 +191,7 @@ You can also pass the `CGameCtnChallenge` instance directly, but it is not recom
 
 Wraps https://api.trackmania.com/doc (Trackmania web API). **This API requires authorization.**
 
-#### Features
+### Features
 
 - Get display names
 - Get account IDs from display names
@@ -199,7 +199,7 @@ Wraps https://api.trackmania.com/doc (Trackmania web API). **This API requires a
 
 More will be added in the future.
 
-#### Setup
+### Setup
 
 For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Generate your credentials [here](https://api.trackmania.com/manager).
 
@@ -227,13 +227,13 @@ await tm.AuthorizeAsync("clientId", "clientSecret", ["clubs", "read_favorite"]);
 // Ready to use
 ```
 
-### ManiaAPI.TrackmaniaAPI.Extensions.Hosting
+## ManiaAPI.TrackmaniaAPI.Extensions.Hosting
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaAPI.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaAPI.Extensions.Hosting/)
 
 Provides Trackmania OAuth2 authorization for ASP.NET Core applications.
 
-#### Setup
+### Setup
 
 For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Generate your credentials [here](https://api.trackmania.com/manager).
 
@@ -269,11 +269,11 @@ app.Run();
 
 Wraps https://maniaplanet.com/swagger (ManiaPlanet web API). This API does not require authorization, but you can authorize to have more methods available.
 
-#### Features
+### Features
 
 [All available on Swagger.](https://maniaplanet.com/swagger)
 
-#### Setup
+### Setup
 
 For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager).
 
@@ -296,13 +296,13 @@ using ManiaAPI.ManiaPlanetAPI;
 builder.Services.AddHttpClient<ManiaPlanetAPI>();
 ```
 
-### ManiaAPI.ManiaPlanetAPI.Extensions.Hosting
+## ManiaAPI.ManiaPlanetAPI.Extensions.Hosting
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting/)
 
 Provides ManiaPlanet OAuth2 authorization for ASP.NET Core applications.
 
-#### Setup
+### Setup
 
 For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager).
 
@@ -340,7 +340,7 @@ Wraps the https://trackmania.io/ API which provides services around the Nadeo AP
 
 This API is more moderated and cached, but doesn't require you to authorize with it.
 
-#### Features
+### Features
 
 - Get various campaigns (including weekly shorts)
 - Get leaderboards
@@ -352,7 +352,7 @@ This API is more moderated and cached, but doesn't require you to authorize with
 - Get advertisements
 - Get competitions
 
-#### Setup
+### Setup
 
 ```cs
 using ManiaAPI.TrackmaniaIO;
@@ -374,7 +374,7 @@ builder.Services.AddHttpClient<TrackmaniaIO>();
 
 Wraps https://tm-exchange.com/ (old TMX).
 
-#### Features
+### Features
 
 - Get replays
 - Search leaderboards
@@ -384,7 +384,7 @@ Wraps https://tm-exchange.com/ (old TMX).
 - Get Gbx URLs and HTTP responses
 - Get image URLs and HTTP responses
 
-#### Setup
+### Setup
 
 ```cs
 using ManiaAPI.TMX;
@@ -393,20 +393,20 @@ using ManiaAPI.TMX;
 var tmx = new TMX(TmxSite.TMUF);
 ```
 
-### ManiaAPI.TMX.Extensions.Gbx
+## ManiaAPI.TMX.Extensions.Gbx
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TMX.Extensions.Gbx?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TMX.Extensions.Gbx/)
 
 Connects `ManiaAPI.TMX` with [GBX.NET](https://github.com/BigBang1112/gbx-net) features.
 
-#### Features
+### Features
 
 - Get track Gbx header
 - Get track Gbx object
 - Get replay Gbx header
 - Get replay Gbx object
 
-#### Example
+### Example
 
 ```cs
 using ManiaAPI.TMX;
@@ -431,7 +431,7 @@ It currently **does not support any authentication** for its complexity and secu
 
 For dedicated server XML-RPC, use the [GbxRemote.Net](https://github.com/EvoEsports/GbxRemote.Net) library.
 
-#### Features
+### Features
 
 For TMUF:
 
@@ -466,7 +466,7 @@ For all games:
 
 - Get all available zones
 
-#### Setup for TMUF
+### Setup for TMUF
 
 ```cs
 using ManiaAPI.XmlRpc;
@@ -482,7 +482,7 @@ using ManiaAPI.XmlRpc;
 builder.Services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultAddress));
 ```
 
-#### Setup for ManiaPlanet
+### Setup for ManiaPlanet
 
 First examples assume `Maniaplanet relay 2` master server is still running.
 
@@ -562,7 +562,7 @@ await masterServer.ValidateAsync(initServer);
 // The master server is now ready to use
 ```
 
-#### Setup for TMT
+### Setup for TMT
 
 TMT handles 3 platforms: PC, XB1, and PS4. Each have their own init server and master server. Nadeo still tends to change these master servers, so it's recommended to first go through the init server.
 
