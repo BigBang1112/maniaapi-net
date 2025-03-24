@@ -201,37 +201,20 @@ masterServer.Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
 ```cs
 using ManiaAPI.XmlRpc;
 
-var initServerPC = new InitServerTMT(Platform.PC);
-var initServerXB1 = new InitServerTMT(Platform.XB1);
-var initServerPS4 = new InitServerTMT(Platform.PS4);
+var waitingParams = Enum.GetValues<Platform>().ToDictionary(
+    platform => platform, 
+    platform => new InitServerTMT(platform).GetWaitingParamsAsync(cancellationToken));
 
-var waitingParamsPC = await initServerPC.GetWaitingParamsAsync();
-var waitingParamsXB1 = await initServerXB1.GetWaitingParamsAsync();
-var waitingParamsPS4 = await initServerPS4.GetWaitingParamsAsync();
+await Task.WhenAll(waitingParams.Values);
 
-var httpClientPC = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-{
-    BaseAddress = waitingParams.MasterServers.First().GetUri()
-};
-var httpClientXB1 = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-{
-    BaseAddress = waitingParams.MasterServers.First().GetUri()
-};
-var httpClientPS4 = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-{
-    BaseAddress = waitingParams.MasterServers.First().GetUri()
-};
-
-var masterServerPC = new MasterServerTMT(httpClientPC);
-var masterServerXB1 = new MasterServerTMT(httpClientXB1);
-var masterServerPS4 = new MasterServerTMT(httpClientPS4);
-
-var aggregatedMasterServer = new AggregatedMasterServerTMT(new Dictionary<Platform, MasterServerTMT>
-{
-    { Platform.PC, masterServerPC },
-    { Platform.XB1, masterServerXB1 },
-    { Platform.PS4, masterServerPS4 }
-});
+var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDictionary(
+    pair => pair.Key,
+    pair => new MasterServerTMT(
+        new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
+        {
+            BaseAddress = pair.Value.Result.MasterServers.First().GetUri()
+        })
+    ));
 
 // You can now use aggregatedMasterServer to work with all master servers at once
 ```
