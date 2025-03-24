@@ -25,7 +25,7 @@ public class ParametersGenerator : IIncrementalGenerator
                 .FirstOrDefault(x => x.Name == "TMX");
 
             return maniaApiTmxNamespace.GetTypeMembers()
-                .Where(x => x.Interfaces.Any(x => x.Name == "IClient"))
+                .Where(x => x.Interfaces.Any(x => x.Name == "ITMX"))
                 .SelectMany(clientSymbol => clientSymbol.GetTypeMembers()
                     .Where(typeSymbol => typeSymbol.GetAttributes().Any(x => x.AttributeClass?.Name == "ParametersAttribute")));
         });
