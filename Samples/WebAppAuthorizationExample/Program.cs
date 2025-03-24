@@ -4,7 +4,6 @@ using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Authentication;
 using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 using ManiaAPI.TrackmaniaAPI.Extensions.Hosting.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Components;
 using WebAppAuthorizationExample;
 using WebAppAuthorizationExample.Components;
 

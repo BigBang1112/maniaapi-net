@@ -1,0 +1,56 @@
+﻿@page "/"
+@using ManiaAPI.TMX
+@using System.Collections.Immutable
+@using Microsoft.Extensions.Caching.Hybrid
+
+@attribute [StreamRendering]
+
+@* use ImmutableDictionary<TmxSite, TMX> for easiest multi-TMX management *@
+@inject ImmutableDictionary<TmxSite, TMX> TmxSites
+
+@inject HybridCache Cache
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+@if (tracksPerSite is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div style="display:flex;gap:1rem">
+        @foreach (var (site, tracks) in tracksPerSite)
+        {
+            <div style="flex:1">
+                <h2>@site</h2>
+                <ul>
+                    @foreach (var track in tracks.Results)
+                    {
+                        <li>@track.TrackName</li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private Dictionary<TmxSite, ItemCollection<TrackItem>>? tracksPerSite;
+
+    protected override async Task OnInitializedAsync()
+    {
+        tracksPerSite = (await Task.WhenAll(TmxSites.Select(site => Task.Run(async () =>
+        {
+            var tmx = site.Value;
+
+            var tracks = await Cache.GetOrCreateAsync($"Tracks_{site.Key}", async (token) =>
+            {
+                return await tmx.SearchTracksAsync(new() { }, token);
+            }, new() { Expiration = TimeSpan.FromMinutes(1) });
+
+            return (site.Key, tracks);
+        })))).ToDictionary(x => x.Key, x => x.tracks);
+    }
+}

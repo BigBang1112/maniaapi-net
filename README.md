@@ -1,6 +1,7 @@
 # ManiaAPI.NET
 
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/BigBang1112/maniaapi-net?include_prereleases&style=for-the-badge&logo=github)](https://github.com/BigBang1112/maniaapi-net/releases)
+[![GitHub last commit (branch)](https://img.shields.io/github/last-commit/bigbang1112/maniaapi-net/main?style=for-the-badge&logo=github)](#)
 
 A wrapper for these web APIs:
 
@@ -13,7 +14,7 @@ A wrapper for these web APIs:
 
 This set of libraries was made to be very easy and straightforward to use, but also easily mocked, so that it can be integrated into the real world in no time.
 
-## Packages
+### Packages
 
 Anything you can imagine!
 
@@ -27,6 +28,14 @@ Anything you can imagine!
 - [ManiaAPI.TMX](#maniaapitmx)
 - [ManiaAPI.TMX.Extensions.Gbx](#maniaapitmxextensionsgbx)
 - [ManiaAPI.XmlRpc](#maniaapixmlrpc)
+
+### Samples
+
+- [WebAppXmlRpcExample](Samples/WebAppXmlRpcExample) - Blazor Server web application that demonstrates the use of the ManiaAPI.XmlRpc API, currently only TMTurbo.
+- [WebAppTmxExample](Samples/WebAppTmxExample) - Blazor Server web application that demonstrates the use of the ManiaAPI.TMX API.
+- [WebAppAuthorizationExample](Samples/WebAppAuthorizationExample) - Simple ASP.NET Core web application to show how to conveniently use the OAuth2 from `ManiaAPI.TrackmaniaAPI.Extensions.Hosting` and `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting`.
+
+See the [Samples](Samples) folder for more.
 
 ## ManiaAPI.NadeoAPI
 
@@ -393,6 +402,41 @@ using ManiaAPI.TMX;
 var tmx = new TMX(TmxSite.TMUF);
 ```
 
+or with DI, for a specific site, using an injected `HttpClient`:
+
+```cs
+using ManiaAPI.TMX;
+
+builder.Services.AddHttpClient("TMX_TMNF");
+builder.Services.AddScoped<TMX>(provider => new TMX(
+    provider.GetRequiredService<IHttpClientFactory>().CreateClient("TMX_TMNF"), TmxSite.TMNF));
+```
+
+For multiple sites in DI, you can use keyed services:
+
+```cs
+foreach (TmxSite site in Enum.GetValues<TmxSite>())
+{
+    builder.Services.AddHttpClient($"{nameof(TMX)}_{site}");
+
+    builder.Services.AddKeyedScoped(site, (provider, key) => new TMX(
+        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(TMX)}_{key}"), site));
+    builder.Services.AddScoped(provider => provider.GetRequiredKeyedService<TMX>(site));
+}
+
+builder.Services.AddScoped(provider => Enum.GetValues<TmxSite>()
+    .ToImmutableDictionary(site => site, site => provider.GetRequiredKeyedService<TMX>(site)));
+```
+
+Features this last setup brings:
+
+- You can inject `ImmutableDictionary<TmxSite, TMX>` to get all TMX sites as individual instances
+- If you don't need specific site context, you can inject `IEnumerable<TMX>` to get all TMX sites
+- Specific `TMX` can be injected using `[FromKeyedServices(TmxSite.TMNF)]`
+
+> [!WARNING]
+> If you just inject `TMX` alone, it will give the last-registered one (in this case, Original). If you need a specific site, use `[FromKeyedServices(...)]`.
+
 ## ManiaAPI.TMX.Extensions.Gbx
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TMX.Extensions.Gbx?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TMX.Extensions.Gbx/)
@@ -693,6 +737,30 @@ Features this last setup brings:
 
 > [!WARNING]
 > If you just inject `MasterServerTMT` alone, it will give the last-registered one (in this case, PS4). If you need a specific platform, use `[FromKeyedServices(...)]`.
+
+## Build
+
+> [!NOTE]
+> You don't need to build the solution/repository to use ManiaAPI.NET, **NuGet packages have been made for you**. This is only for internal development purposes.
+
+Make sure you have these framework SDKs available:
+
+- .NET 9
+- .NET 8
+
+**Visual Studio 2022** should be able to install those with default installation settings. Using Visual Studio 2019 will not work.
+
+In Visual Studio, you can just use Build Solution and everything should build. JetBrains Rider has been tested and also works.
+
+In .NET CLI, run `dotnet build` on the solution (`.sln`) level.
+
+## Contributing
+
+Contributions are welcome! Please fork the repository and submit a pull request with your changes.
+
+## License
+
+ManiaAPI.NET is entirely MIT Licensed.
 
 ## PLEASE do not use this library to spam the APIs!
 

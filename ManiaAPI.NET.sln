@@ -65,6 +65,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAppXmlRpcExample", "Samp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtendApiSample", "Samples\ExtendApiSample\ExtendApiSample.csproj", "{9B82CCD2-182E-4F65-AA1F-85150FD05BEC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAppTmxExample", "Samples\WebAppTmxExample\WebAppTmxExample.csproj", "{2D579111-8DFA-4EEE-ACAA-84D8BF9D88B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -159,6 +161,10 @@ Global
 		{9B82CCD2-182E-4F65-AA1F-85150FD05BEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B82CCD2-182E-4F65-AA1F-85150FD05BEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B82CCD2-182E-4F65-AA1F-85150FD05BEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D579111-8DFA-4EEE-ACAA-84D8BF9D88B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D579111-8DFA-4EEE-ACAA-84D8BF9D88B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D579111-8DFA-4EEE-ACAA-84D8BF9D88B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D579111-8DFA-4EEE-ACAA-84D8BF9D88B7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -187,6 +193,7 @@ Global
 		{47A33D55-3265-414E-8C5C-CAF74A3F34BB} = {D0C62B54-1D9D-4F31-8B0A-8158C882CF77}
 		{B3FADC7F-B255-4500-B73A-A9EA31041678} = {D0C62B54-1D9D-4F31-8B0A-8158C882CF77}
 		{9B82CCD2-182E-4F65-AA1F-85150FD05BEC} = {D0C62B54-1D9D-4F31-8B0A-8158C882CF77}
+		{2D579111-8DFA-4EEE-ACAA-84D8BF9D88B7} = {D0C62B54-1D9D-4F31-8B0A-8158C882CF77}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E273F519-B658-4F1C-8132-DF78A841A592}

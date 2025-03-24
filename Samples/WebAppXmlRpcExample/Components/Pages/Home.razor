@@ -95,7 +95,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        medalsPerPlatform = (await Task.WhenAll(MasterServerTMTs.Select(async platformMasterServerPair =>
+        medalsPerPlatform = (await Task.WhenAll(MasterServerTMTs.Select(platformMasterServerPair => Task.Run(async () =>
         {
             var (platform, masterServerTMT) = platformMasterServerPair;
 
@@ -105,9 +105,9 @@ else
             }, new() { Expiration = TimeSpan.FromMinutes(1) });
 
             return KeyValuePair.Create(platform, response);
-        }))).ToDictionary(x => x.Key, x => x.Value);
+        })))).ToDictionary(x => x.Key, x => x.Value);
 
-        recordsPerPlatform = (await Task.WhenAll(MasterServerTMTs.Select(async platformMasterServerPair =>
+        recordsPerPlatform = (await Task.WhenAll(MasterServerTMTs.Select(platformMasterServerPair => Task.Run(async () =>
         {
             var (platform, masterServerTMT) = platformMasterServerPair;
 
@@ -117,6 +117,6 @@ else
             }, new() { Expiration = TimeSpan.FromMinutes(1) });
 
             return KeyValuePair.Create(platform, response);
-        }))).ToDictionary(x => x.Key, x => x.Value);
+        })))).ToDictionary(x => x.Key, x => x.Value);
     }
 }
