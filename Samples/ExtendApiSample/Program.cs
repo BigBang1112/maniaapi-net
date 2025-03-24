@@ -12,6 +12,8 @@ var password = AnsiConsole.Prompt(
         .PromptStyle("red")
         .Secret());
 
+await ens.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
+
 var submittedMaps = await ens.GetSubmittedMapsAsync();
 
 foreach (var map in submittedMaps)
