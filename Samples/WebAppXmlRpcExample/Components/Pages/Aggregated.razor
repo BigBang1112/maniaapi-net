@@ -2,6 +2,7 @@
 @using ManiaAPI.XmlRpc.TMT
 @using System.Collections.Immutable
 @using Microsoft.Extensions.Caching.Hybrid
+@using TmEssentials
 
 @rendermode InteractiveServer
 @attribute [StreamRendering]
@@ -13,18 +14,20 @@
 
 @page "/aggregated"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Aggregated</PageTitle>
 
 <h1>Hello, world!</h1>
 
-@if (summariesResponse is null)
+<h1>Medals</h1>
+
+@if (medalsResponse is null)
 {
     <p>Loading...</p>
 }
 else
 {
     <div style="display: flex;gap:1rem">
-        @foreach (var (platform, info) in summariesResponse.Platforms)
+        @foreach (var (platform, info) in medalsResponse.Platforms)
         {
             <div style="flex:1">
                 <h2>@platform</h2>
@@ -37,7 +40,65 @@ else
     </div>
 
     <div style="display: flex;gap:5rem">
-        @foreach (var summary in summariesResponse.Summaries)
+        @foreach (var summary in medalsResponse.Summaries)
+        {
+            <div style="flex:1">
+                <h2>@summary.Zone</h2>
+
+                <ul>
+                    @foreach (var (platform, timestamp) in summary.Timestamps)
+                    {
+                        <li>@platform: @timestamp</li>
+                    }
+                </ul>
+
+                <div style="display: flex;gap:1rem">
+                    <div style="height: 200px;overflow-y:auto;flex:1">
+                        <Virtualize Items="summary.Scores" Context="score">
+                            <div>@score.Score @score.Count @score.Platform</div>
+                        </Virtualize>
+                    </div>
+                    <div style="height: 200px;overflow-y:auto;flex:1">
+                        <Virtualize ItemsProvider="request => LoadGroupedScoresWithoutPlatform(request, summary)" Context="score">
+                            <div>@score.Score @score.Count</div>
+                        </Virtualize>
+                    </div>
+                    <div style="height: 200px;overflow-y:auto;flex:1">
+                        <Virtualize ItemsProvider="request => LoadGroupedScoresWithPlatform(request, summary)" Context="score">
+                            <div>@score.Score @(score.CountPC + score.CountXB1 + score.CountPS4) | PC @score.CountPC, XB1 @score.CountXB1, PS4 @score.CountPS4</div>
+                        </Virtualize>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<h1>Records</h1>
+
+<InputText @bind-Value="mapUid" />
+
+@if (recordsResponse is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div style="display: flex;gap:1rem">
+        @foreach (var (platform, info) in recordsResponse.Platforms)
+        {
+            <div style="flex:1">
+                <h2>@platform</h2>
+                <ul>
+                    <li>Execution time: @(info.ExecutionTime?.TotalSeconds.ToString() ?? "???") s</li>
+                    <li>Request time: @info.Details.RequestTime.TotalSeconds s</li>
+                </ul>
+            </div>
+        }
+    </div>
+
+    <div style="display: flex;gap:5rem">
+        @foreach (var summary in recordsResponse.Summaries)
         {
             <div style="flex:1">
                 <h2>@summary.Zone</h2>
@@ -72,44 +133,52 @@ else
 }
 
 @code {
-    private AggregatedSummaryResponse<int>? summariesResponse;
+    private AggregatedSummaryResponse<int>? medalsResponse;
+
+    private string mapUid = "XUuBzeBgKAx0m6MMstYeTuWZGdb";
+    private AggregatedSummaryResponse<TimeInt32>? recordsResponse;
 
     protected override async Task OnInitializedAsync()
     {
-        summariesResponse = await Cache.GetOrCreateAsync("CampaignLeaderBoardSummaries", async (token) =>
+        medalsResponse = await Cache.GetOrCreateAsync("CampaignLeaderBoardSummaries", async (token) =>
         {
             return await AggregatedMasterServerTMT.GetCampaignLeaderBoardSummariesResponseAsync(["World", "World|Japan"], cancellationToken: token);
         }, new() { Expiration = TimeSpan.FromMinutes(1) });
+
+        recordsResponse = await Cache.GetOrCreateAsync($"MapLeaderBoardSummaries_{mapUid}", async (token) =>
+        {
+            return await AggregatedMasterServerTMT.GetMapLeaderBoardSummariesResponseAsync(mapUid, ["World", "World|Japan"], cancellationToken: token);
+        }, new() { Expiration = TimeSpan.FromMinutes(1) });
     }
 
-    private ValueTask<ItemsProviderResult<RecordUnit<int>>> LoadGroupedScoresWithoutPlatform(ItemsProviderRequest request, AggregatedSummary<int> summary)
+    private ValueTask<ItemsProviderResult<RecordUnit<T>>> LoadGroupedScoresWithoutPlatform<T>(ItemsProviderRequest request, AggregatedSummary<T> summary) where T : struct
     {
         // This is not well optimized, it groups the scores multiple times before returning the result
         // Cache the groupings and reuse the cache for this listing for better performance, take this only as a simple example
 
         var groupedScores = summary.Scores
             .GroupBy(x => x.Score)
-            .Select(x => new RecordUnit<int>(x.Key, x.Sum(x => x.Count)));
+            .Select(x => new RecordUnit<T>(x.Key, x.Sum(x => x.Count)));
 
         var items = groupedScores.Skip(request.StartIndex).Take(request.Count);
 
-        return ValueTask.FromResult(new ItemsProviderResult<RecordUnit<int>>(items, groupedScores.Count()));
+        return ValueTask.FromResult(new ItemsProviderResult<RecordUnit<T>>(items, groupedScores.Count()));
     }
 
-    private ValueTask<ItemsProviderResult<RecordUnitPlatformCount<int>>> LoadGroupedScoresWithPlatform(ItemsProviderRequest request, AggregatedSummary<int> summary)
+    private ValueTask<ItemsProviderResult<RecordUnitPlatformCount<T>>> LoadGroupedScoresWithPlatform<T>(ItemsProviderRequest request, AggregatedSummary<T> summary) where T : struct
     {
         // This is not well optimized, it groups the scores multiple times before returning the result
         // Cache the groupings and reuse the cache for this listing for better performance, take this only as a simple example
 
         var groupedScores = summary.Scores
             .GroupBy(x => x.Score)
-            .Select(x => new RecordUnitPlatformCount<int>(x.Key,
+            .Select(x => new RecordUnitPlatformCount<T>(x.Key,
                 x.FirstOrDefault(x => x.Platform == Platform.PC).Count,
                 x.FirstOrDefault(x => x.Platform == Platform.XB1).Count,
                 x.FirstOrDefault(x => x.Platform == Platform.PS4).Count));
 
         var items = groupedScores.Skip(request.StartIndex).Take(request.Count);
 
-        return ValueTask.FromResult(new ItemsProviderResult<RecordUnitPlatformCount<int>>(items, groupedScores.Count()));
+        return ValueTask.FromResult(new ItemsProviderResult<RecordUnitPlatformCount<T>>(items, groupedScores.Count()));
     }
 }
