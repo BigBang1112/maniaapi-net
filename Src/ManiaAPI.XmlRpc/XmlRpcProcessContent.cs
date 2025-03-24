@@ -2,4 +2,4 @@
 
 namespace ManiaAPI.XmlRpc;
 
-internal delegate T XmlRpcProcessContent<T>(ref MiniXmlReader xml);
+public delegate T XmlRpcProcessContent<T>(ref MiniXmlReader xml);

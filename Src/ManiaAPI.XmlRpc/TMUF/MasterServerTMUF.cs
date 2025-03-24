@@ -55,7 +55,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetRankingsNew";
-        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, @$"
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
             <t>0</t>
             <st>g</st>
             <f>{zone}</f>
@@ -135,7 +135,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetRankingsNew";
-        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, @$"
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
             <t>1</t>
             <st>g</st>
             <f>{zone}</f>

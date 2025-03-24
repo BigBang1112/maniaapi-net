@@ -27,10 +27,21 @@ public abstract class MasterServer : IMasterServer
     {
     }
 
+    protected async Task<MasterServerResponse<T>> RequestAsync<T>(
+        string? authorXml,
+        string requestName,
+        string parametersXml,
+        XmlRpcProcessContent<T> processContent,
+        CancellationToken cancellationToken = default) where T : notnull
+    {
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, authorXml, requestName, parametersXml, cancellationToken);
+        return XmlRpcHelper.ProcessResponseResult(requestName, response, processContent);
+    }
+
     public virtual async Task<MasterServerResponse<ImmutableArray<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetLeagues";
-        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, string.Empty, cancellationToken);
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
         return XmlRpcHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
             var items = ImmutableArray.CreateBuilder<League>();

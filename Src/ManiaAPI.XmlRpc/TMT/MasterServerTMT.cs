@@ -62,7 +62,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
             i++;
         }
 
-        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, sb.ToString(), cancellationToken);
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, sb.ToString(), cancellationToken);
         return XmlRpcHelper.ProcessResponseResult(RequestName, response, ReadSummaries<int>);
     }
 
@@ -103,7 +103,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
             i++;
         }
 
-        var response = await XmlRpcHelper.SendAsync(Client, GameXml, RequestName, sb.ToString(), cancellationToken);
+        var response = await XmlRpcHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, sb.ToString(), cancellationToken);
         return XmlRpcHelper.ProcessResponseResult(RequestName, response, ReadSummaries<TimeInt32>);
     }
 
