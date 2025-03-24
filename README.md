@@ -1,4 +1,4 @@
-# ManiaAPI.NET
+<div style="text-align:center"><img src="logo_icon_title.png" /></div>
 
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/BigBang1112/maniaapi-net?include_prereleases&style=for-the-badge&logo=github)](https://github.com/BigBang1112/maniaapi-net/releases)
 [![GitHub last commit (branch)](https://img.shields.io/github/last-commit/bigbang1112/maniaapi-net/main?style=for-the-badge&logo=github)](#)
