@@ -43,7 +43,7 @@
 </div>
 
 @code {
-    private Dictionary<Platform, MasterServerResponse<IReadOnlyCollection<Summary<int>>>> summariesPerPlatform = [];
+    private Dictionary<Platform, MasterServerResponse<ImmutableArray<Summary<int>>>> summariesPerPlatform = [];
 
     protected override async Task OnInitializedAsync()
     {

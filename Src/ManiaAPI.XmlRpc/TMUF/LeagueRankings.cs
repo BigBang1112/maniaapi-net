@@ -1,3 +1,5 @@
-﻿namespace ManiaAPI.XmlRpc.TMUF;
+﻿using System.Collections.Immutable;
 
-public sealed record LeagueRankings(int Count, IReadOnlyCollection<LeagueRanking> Leagues);
+namespace ManiaAPI.XmlRpc.TMUF;
+
+public sealed record LeagueRankings(int Count, ImmutableArray<LeagueRanking> Leagues);

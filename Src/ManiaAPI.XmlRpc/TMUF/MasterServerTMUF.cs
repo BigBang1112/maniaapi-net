@@ -1,4 +1,5 @@
 ﻿using MinimalXmlReader;
+using System.Collections.Immutable;
 using TmEssentials;
 
 namespace ManiaAPI.XmlRpc.TMUF;
@@ -63,7 +64,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
             <c>{count}</c>", cancellationToken);
         return XmlRpcHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
-            var players = new List<PlayerRanking>();
+            var players = ImmutableArray.CreateBuilder<PlayerRanking>();
 
             var playerCount = 0;
 
@@ -114,7 +115,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                 _ = xml.SkipEndElement();
             }
 
-            return new PlayerRankings(playerCount, players);
+            return new PlayerRankings(playerCount, players.ToImmutable());
         });
     }
 
@@ -143,7 +144,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
             <c>{count}</c>", cancellationToken);
         return XmlRpcHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
-            var leagues = new List<LeagueRanking>();
+            var leagues = ImmutableArray.CreateBuilder<LeagueRanking>();
 
             var leagueCount = 0;
 
@@ -194,7 +195,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                 _ = xml.SkipEndElement();
             }
 
-            return new LeagueRankings(leagueCount, leagues);
+            return new LeagueRankings(leagueCount, leagues.ToImmutable());
         });
     }
 
