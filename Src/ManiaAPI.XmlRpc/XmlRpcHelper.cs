@@ -13,7 +13,7 @@ internal static partial class XmlRpcHelper
 
     internal static async Task<XmlRpcResponse> SendAsync(HttpClient client, string gameXml, string? authorXml, string requestName, string parametersXml, CancellationToken cancellationToken)
     {
-        var formedXml = $"<root><game>{gameXml}</game>{authorXml}<request>{authorXml}<name>{requestName}</name><params>{parametersXml}</params></request></root>";
+        var formedXml = $"<root><game>{gameXml}</game>{authorXml}<request><name>{requestName}</name><params>{parametersXml}</params></request></root>";
 
         Debug.WriteLine(formedXml);
 

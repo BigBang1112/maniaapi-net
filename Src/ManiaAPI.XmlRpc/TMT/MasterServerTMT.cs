@@ -139,7 +139,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
         while (xml.TryReadStartElement("s"))
         {
             var zone = string.Empty;
-            var timestamp = DateTimeOffset.UtcNow;
+            var timestamp = default(DateTimeOffset);
             var medals = ImmutableArray.CreateBuilder<RecordUnit<T>>();
 
             while (xml.TryReadStartElement(out var itemElement))
