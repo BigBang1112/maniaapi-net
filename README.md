@@ -246,7 +246,7 @@ Provides Trackmania OAuth2 authorization for ASP.NET Core applications.
 
 ### Setup
 
-For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Generate your credentials [here](https://api.trackmania.com/manager).
+For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Generate your credentials [here](https://api.trackmania.com/manager). **The redirect URL is the `/signin-trackmania` relative to the web root**, for example: `https://localhost:7864/signin-trackmania`.
 
 ```cs
 using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
@@ -273,6 +273,8 @@ app.MapGet("/login", () =>
 
 app.Run();
 ```
+
+You can inject `TrackmaniaAPI` if you add HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options - see the [sample](Samples/WebAppAuthorizationExample).
 
 ## ManiaAPI.ManiaPlanetAPI
 
@@ -315,7 +317,7 @@ Provides ManiaPlanet OAuth2 authorization for ASP.NET Core applications.
 
 ### Setup
 
-For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager).
+For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager). **The redirect URL is the `/signin-maniaplanet` relative to the web root**, for example: `https://localhost:7864/signin-maniaplanet`.
 
 ```cs
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
@@ -342,6 +344,8 @@ app.MapGet("/login", () =>
 
 app.Run();
 ```
+
+You can inject `ManiaPlanetAPI` if you add HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options - see the [sample](Samples/WebAppAuthorizationExample).
 
 ## ManiaAPI.TrackmaniaIO
 
