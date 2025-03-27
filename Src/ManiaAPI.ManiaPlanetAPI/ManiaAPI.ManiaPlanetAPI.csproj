@@ -5,7 +5,7 @@
 		<Version>2.1.0</Version>
 		<Authors>BigBang1112</Authors>
 		<Description>Wrapper for the official web API from ManiaPlanet (Trackmania 2 and Shootmania). Part of the ManiaAPI library set.</Description>
-		<Copyright>Copyright (c) 2024 Petr Pivoňka</Copyright>
+		<Copyright>Copyright (c) 2025 Petr Pivoňka</Copyright>
 		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
 		<PackageIcon>logo_icon_outline.png</PackageIcon>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
