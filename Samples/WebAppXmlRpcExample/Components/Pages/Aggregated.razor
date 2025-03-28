@@ -33,8 +33,15 @@ else
                 <h2>@platform</h2>
                 <ul>
                     <li>Execution time: @(info.ExecutionTime?.TotalSeconds.ToString() ?? "???") s</li>
-                    <li>Request time: @info.Details.RequestTime.TotalSeconds s</li>
+                    @if (info.Details is not null)
+                    {
+                        <li>Request time: @info.Details.RequestTime.TotalSeconds s</li>
+                    }
                     <li>XML parse time: @info.XmlParseTime.TotalSeconds s</li>
+                    @if (info.ErrorMessage is not null)
+                    {
+                        <li>@info.ErrorMessage</li>
+                    }
                 </ul>
             </div>
         }
@@ -93,8 +100,15 @@ else
                 <h2>@platform</h2>
                 <ul>
                     <li>Execution time: @(info.ExecutionTime?.TotalSeconds.ToString() ?? "???") s</li>
-                    <li>Request time: @info.Details.RequestTime.TotalSeconds s</li>
+                    @if (info.Details is not null)
+                    {
+                        <li>Request time: @info.Details.RequestTime.TotalSeconds s</li>
+                    }
                     <li>XML parse time: @info.XmlParseTime.TotalSeconds s</li>
+                    @if (info.ErrorMessage is not null)
+                    {
+                        <li>@info.ErrorMessage</li>
+                    }
                 </ul>
             </div>
         }
@@ -146,7 +160,7 @@ else
         medalsResponse = await Cache.GetOrCreateAsync("CampaignLeaderBoardSummaries", async (token) =>
         {
             return await AggregatedMasterServerTMT.GetCampaignLeaderBoardSummariesResponseAsync(["World", "World|Japan"], cancellationToken: token);
-        }, new() { Expiration = TimeSpan.FromMinutes(1) });
+        });
 
         await LoadRecordsAsync();
     }
@@ -156,7 +170,7 @@ else
         recordsResponse = await Cache.GetOrCreateAsync($"MapLeaderBoardSummaries_{mapUid}", async (token) =>
         {
             return await AggregatedMasterServerTMT.GetMapLeaderBoardSummariesResponseAsync(mapUid, ["World", "World|Japan"], cancellationToken: token);
-        }, new() { Expiration = TimeSpan.FromMinutes(1) });
+        });
     }
 
     private ValueTask<ItemsProviderResult<RecordUnit<T>>> LoadGroupedScoresWithoutPlatform<T>(ItemsProviderRequest request, AggregatedSummary<T> summary) where T : struct

@@ -110,52 +110,63 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
             var platform = tasks[task];
             tasks.Remove(task);
 
-            var response = await task;
-
-            platforms[platform] = new AggregatedSummaryInfo(response.ExecutionTime, response.XmlParseTime, response.Details);
-
-            progress?.Report(new AggregatedSummaryProgress<T>(platform, response));
-
-            foreach (var summary in response.Result)
+            try
             {
-                if (!aggregated.TryGetValue(summary.Zone, out var existing))
-                {
-                    var timestamps = ImmutableDictionary.CreateBuilder<Platform, DateTimeOffset>();
-                    var scores = ImmutableArray.CreateBuilder<AggregatedRecordUnit<T>>();
-                    aggregated[summary.Zone] = existing = (timestamps, scores);
-                }
+                var response = await task;
 
-                existing.Timestamps[platform] = summary.Timestamp;
-                existing.Scores.AddRange(summary.Scores.Select(x => new AggregatedRecordUnit<T>(x.Score, x.Count, platform)));
+                progress?.Report(new AggregatedSummaryProgress<T>(platform, response));
 
-                // sort by score then by platform, in ascending order for TimeInt32 and descending order for int
-                if (typeof(T) == typeof(TimeInt32))
+                foreach (var summary in response.Result)
                 {
-                    existing.Scores.Sort((x, y) =>
+                    if (!aggregated.TryGetValue(summary.Zone, out var existing))
                     {
-                        // in case of -1, it should be at the end
-                        if (x.Score is TimeInt32 timeX && timeX == new TimeInt32(-1))
-                        {
-                            return 1;
-                        }
+                        var timestamps = ImmutableDictionary.CreateBuilder<Platform, DateTimeOffset>();
+                        var scores = ImmutableArray.CreateBuilder<AggregatedRecordUnit<T>>();
+                        aggregated[summary.Zone] = existing = (timestamps, scores);
+                    }
 
-                        if (y.Score is TimeInt32 timeY && timeY == new TimeInt32(-1))
-                        {
-                            return -1;
-                        }
+                    existing.Timestamps[platform] = summary.Timestamp;
+                    existing.Scores.AddRange(summary.Scores.Select(x => new AggregatedRecordUnit<T>(x.Score, x.Count, platform)));
 
-                        var scoreComparison = x.Score.CompareTo(y.Score);
-                        return scoreComparison == 0 ? x.Platform.CompareTo(y.Platform) : scoreComparison;
-                    });
-                }
-                else
-                {
-                    existing.Scores.Sort((x, y) =>
+                    // sort by score then by platform, in ascending order for TimeInt32 and descending order for int
+                    if (typeof(T) == typeof(TimeInt32))
                     {
-                        var scoreComparison = y.Score.CompareTo(x.Score);
-                        return scoreComparison == 0 ? x.Platform.CompareTo(y.Platform) : scoreComparison;
-                    });
+                        existing.Scores.Sort((x, y) =>
+                        {
+                            // in case of -1, it should be at the end
+                            if (x.Score is TimeInt32 timeX && timeX == new TimeInt32(-1))
+                            {
+                                return 1;
+                            }
+
+                            if (y.Score is TimeInt32 timeY && timeY == new TimeInt32(-1))
+                            {
+                                return -1;
+                            }
+
+                            var scoreComparison = x.Score.CompareTo(y.Score);
+                            return scoreComparison == 0 ? x.Platform.CompareTo(y.Platform) : scoreComparison;
+                        });
+                    }
+                    else
+                    {
+                        existing.Scores.Sort((x, y) =>
+                        {
+                            var scoreComparison = y.Score.CompareTo(x.Score);
+                            return scoreComparison == 0 ? x.Platform.CompareTo(y.Platform) : scoreComparison;
+                        });
+                    }
                 }
+
+                platforms[platform] = new AggregatedSummaryInfo(response.ExecutionTime, response.XmlParseTime, response.Details, ErrorMessage: null);
+            }
+            catch (XmlRpcException ex)
+            {
+                platforms[platform] = new AggregatedSummaryInfo(ExecutionTime: null, ex.XmlParseTime, ex.Details, ex.ErrorMessage);
+            }
+            catch (Exception ex)
+            {
+                platforms[platform] = new AggregatedSummaryInfo(ExecutionTime: null, default, null, ex.Message);
             }
         }
 

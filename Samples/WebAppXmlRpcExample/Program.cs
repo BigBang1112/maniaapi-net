@@ -3,6 +3,7 @@ using WebAppXmlRpcExample.Components;
 using ManiaAPI.XmlRpc.TMT;
 using WebAppXmlRpcExample;
 using System.Collections.Immutable;
+using Microsoft.Extensions.Caching.Hybrid;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +40,15 @@ builder.Services.AddScoped(provider => new AggregatedMasterServerTMT(
 
 builder.Services.AddHostedService<StartupHostedService>();
 
-builder.Services.AddHybridCache();
+builder.Services.AddHybridCache(options =>
+{
+    options.MaximumPayloadBytes = 1024 * 1024 * 16;
+    options.DefaultEntryOptions = new HybridCacheEntryOptions
+    {
+        Expiration = TimeSpan.FromMinutes(1),
+        LocalCacheExpiration = TimeSpan.FromMinutes(1)
+    };
+});
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

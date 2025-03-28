@@ -1,3 +1,3 @@
 ﻿namespace ManiaAPI.XmlRpc.TMT;
 
-public sealed record AggregatedSummaryInfo(TimeSpan? ExecutionTime, TimeSpan XmlParseTime, XmlRpcResponseDetails Details);
+public sealed record AggregatedSummaryInfo(TimeSpan? ExecutionTime, TimeSpan XmlParseTime, XmlRpcResponseDetails? Details, string? ErrorMessage);

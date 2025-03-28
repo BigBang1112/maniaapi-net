@@ -56,7 +56,7 @@ internal static partial class XmlRpcHelper
             switch (responseElement)
             {
                 case "r":
-                    ProcessResponse(requestName, processContent, ref xml, out content);
+                    ProcessResponse(requestName, processContent, ref xml, startTime, response.Details, out content);
                     break;
                 case "e":
                     executionTime = xml.ReadContentAsString();
@@ -66,18 +66,24 @@ internal static partial class XmlRpcHelper
             _ = xml.SkipEndElement();
         }
 
+        var xmlParseTime = Stopwatch.GetElapsedTime(startTime);
+
         var executionTimeGroup = ExecutionTimeRegex().Match(executionTime).Groups[1].Value;
 
         var executionTimeSpan = string.IsNullOrEmpty(executionTimeGroup)
             ? default(TimeSpan?)
             : TimeSpan.FromSeconds(double.Parse(executionTimeGroup, CultureInfo.InvariantCulture));
 
-        var xmlParseTime = Stopwatch.GetElapsedTime(startTime);
-
         return new MasterServerResponse<T>(content ?? throw new Exception("No response content"), executionTimeSpan, xmlParseTime, response.Details);
     }
 
-    private static void ProcessResponse<T>(string requestName, XmlRpcProcessContent<T> processContent, ref MiniXmlReader xml, out T? content) where T : notnull
+    private static void ProcessResponse<T>(
+        string requestName, 
+        XmlRpcProcessContent<T> processContent, 
+        ref MiniXmlReader xml, 
+        long startTime,
+        XmlRpcResponseDetails details,
+        out T? content) where T : notnull
     {
         content = default;
 
@@ -96,7 +102,7 @@ internal static partial class XmlRpcHelper
                     content = processContent(ref xml);
                     break;
                 case "e":
-                    ProcessErrorAndThrowException(xml);
+                    ProcessErrorAndThrowException(ref xml, startTime, details);
                     return;
             }
 
@@ -104,7 +110,7 @@ internal static partial class XmlRpcHelper
         }
     }
 
-    private static void ProcessErrorAndThrowException(MiniXmlReader xml)
+    private static void ProcessErrorAndThrowException(ref MiniXmlReader xml, long startTime, XmlRpcResponseDetails details)
     {
         var value = 0;
         var message = string.Empty;
@@ -127,6 +133,6 @@ internal static partial class XmlRpcHelper
             _ = xml.SkipEndElement();
         }
 
-        throw new Exception($"Error {value}: {message}");
+        throw new XmlRpcException(value, message, Stopwatch.GetElapsedTime(startTime), details);
     }
 }

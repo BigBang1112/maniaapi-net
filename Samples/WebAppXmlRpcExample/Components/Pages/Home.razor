@@ -105,7 +105,7 @@ else
             var response = await Cache.GetOrCreateAsync($"CampaignLeaderBoardSummaries_{platform}", async (token) =>
             {
                 return await masterServerTMT.GetCampaignLeaderBoardSummariesResponseAsync(["World", "World|Japan"], token);
-            }, new() { Expiration = TimeSpan.FromMinutes(1) });
+            });
 
             return KeyValuePair.Create(platform, response);
         })))).ToDictionary(x => x.Key, x => x.Value);
@@ -122,7 +122,7 @@ else
             var response = await Cache.GetOrCreateAsync($"MapLeaderBoardSummaries_{platform}_{mapUid}", async (token) =>
             {
                 return await masterServerTMT.GetMapLeaderBoardSummariesResponseAsync(mapUid, ["World", "World|Japan"], token);
-            }, new() { Expiration = TimeSpan.FromMinutes(1) });
+            });
 
             return KeyValuePair.Create(platform, response);
         })))).ToDictionary(x => x.Key, x => x.Value);
