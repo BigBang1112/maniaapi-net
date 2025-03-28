@@ -97,7 +97,7 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
     private async Task<AggregatedSummaryResponse<T>> AggregateSummariesAsync<T>(
         Func<MasterServerTMT, Task<MasterServerResponse<ImmutableArray<Summary<T>>>>> getResponse,
         IProgress<AggregatedSummaryProgress<T>>? progress)
-        where T : struct, IComparable // Change this to IComparable<T> once TimeInt32 is fixed
+        where T : struct, IComparable<T>
     {
         var tasks = masterServers.ToDictionary(async x => await getResponse(x.Value), x => x.Key);
 
