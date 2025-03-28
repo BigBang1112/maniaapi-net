@@ -112,7 +112,7 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
 
             var response = await task;
 
-            platforms[platform] = new AggregatedSummaryInfo(response.ExecutionTime, response.Details);
+            platforms[platform] = new AggregatedSummaryInfo(response.ExecutionTime, response.XmlParseTime, response.Details);
 
             progress?.Report(new AggregatedSummaryProgress<T>(platform, response));
 

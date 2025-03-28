@@ -37,6 +37,8 @@ internal static partial class XmlRpcHelper
     {
         Debug.WriteLine(response.XmlResponse);
 
+        var startTime = Stopwatch.GetTimestamp();
+
         var xml = new MiniXmlReader(response.XmlResponse);
 
         xml.SkipProcessingInstruction();
@@ -70,7 +72,9 @@ internal static partial class XmlRpcHelper
             ? default(TimeSpan?)
             : TimeSpan.FromSeconds(double.Parse(executionTimeGroup, CultureInfo.InvariantCulture));
 
-        return new MasterServerResponse<T>(content ?? throw new Exception("No response content"), executionTimeSpan, response.Details);
+        var xmlParseTime = Stopwatch.GetElapsedTime(startTime);
+
+        return new MasterServerResponse<T>(content ?? throw new Exception("No response content"), executionTimeSpan, xmlParseTime, response.Details);
     }
 
     private static void ProcessResponse<T>(string requestName, XmlRpcProcessContent<T> processContent, ref MiniXmlReader xml, out T? content) where T : notnull

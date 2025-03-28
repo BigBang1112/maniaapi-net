@@ -34,6 +34,7 @@ else
                 <ul>
                     <li>Execution time: @(info.ExecutionTime?.TotalSeconds.ToString() ?? "???") s</li>
                     <li>Request time: @info.Details.RequestTime.TotalSeconds s</li>
+                    <li>XML parse time: @info.XmlParseTime.TotalSeconds s</li>
                 </ul>
             </div>
         }
@@ -77,6 +78,7 @@ else
 <h1>Records</h1>
 
 <InputText @bind-Value="mapUid" />
+<button @onclick="LoadRecordsAsync">Load</button>
 
 @if (recordsResponse is null)
 {
@@ -92,6 +94,7 @@ else
                 <ul>
                     <li>Execution time: @(info.ExecutionTime?.TotalSeconds.ToString() ?? "???") s</li>
                     <li>Request time: @info.Details.RequestTime.TotalSeconds s</li>
+                    <li>XML parse time: @info.XmlParseTime.TotalSeconds s</li>
                 </ul>
             </div>
         }
@@ -145,6 +148,11 @@ else
             return await AggregatedMasterServerTMT.GetCampaignLeaderBoardSummariesResponseAsync(["World", "World|Japan"], cancellationToken: token);
         }, new() { Expiration = TimeSpan.FromMinutes(1) });
 
+        await LoadRecordsAsync();
+    }
+
+    private async Task LoadRecordsAsync()
+    {
         recordsResponse = await Cache.GetOrCreateAsync($"MapLeaderBoardSummaries_{mapUid}", async (token) =>
         {
             return await AggregatedMasterServerTMT.GetMapLeaderBoardSummariesResponseAsync(mapUid, ["World", "World|Japan"], cancellationToken: token);

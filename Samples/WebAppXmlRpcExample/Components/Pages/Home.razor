@@ -36,6 +36,7 @@ else
 
                 <p>Execution time: @(summaries.ExecutionTime?.TotalSeconds.ToString() ?? "???") s</p>
                 <p>Request time: @(summaries.Details.RequestTime.TotalSeconds) s</p>
+                <p>XML parse time: @summaries.XmlParseTime.TotalSeconds s</p>
 
                 <h3>Summaries:</h3>
 
@@ -57,6 +58,7 @@ else
 <h1>Records</h1>
 
 <InputText @bind-Value="mapUid" />
+<button @onclick="LoadRecordsPerPlatformAsync">Load</button>
 
 @if (recordsPerPlatform.Count == 0)
 {
@@ -71,6 +73,7 @@ else
                 <h2>@platform</h2>
                 <p>Execution time: @(records.ExecutionTime?.TotalSeconds.ToString() ?? "???") s</p>
                 <p>Request time: @(records.Details.RequestTime.TotalSeconds) s</p>
+                <p>XML parse time: @records.XmlParseTime.TotalSeconds s</p>
                 <h3>Records:</h3>
                 @foreach (var record in records.Result)
                 {
@@ -107,6 +110,11 @@ else
             return KeyValuePair.Create(platform, response);
         })))).ToDictionary(x => x.Key, x => x.Value);
 
+        await LoadRecordsPerPlatformAsync();
+    }
+
+    public async Task LoadRecordsPerPlatformAsync()
+    {
         recordsPerPlatform = (await Task.WhenAll(MasterServerTMTs.Select(platformMasterServerPair => Task.Run(async () =>
         {
             var (platform, masterServerTMT) = platformMasterServerPair;
