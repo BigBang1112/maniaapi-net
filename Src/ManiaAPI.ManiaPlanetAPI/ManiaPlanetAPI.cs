@@ -26,7 +26,7 @@ public interface IManiaPlanetAPI : IDisposable
 
     /// <summary>
     /// If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.
-    /// This is only considered after calling <see cref="AuthorizeAsync(string, string, ImmutableArray{string}, CancellationToken)"/>.
+    /// This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.
     /// </summary>
     bool AutomaticallyAuthorize { get; }
 
@@ -47,14 +47,7 @@ public interface IManiaPlanetAPI : IDisposable
     /// <param name="scopes">Scopes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
-    Task AuthorizeAsync(string clientId, string clientSecret, ImmutableArray<string> scopes, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Refreshes the access token.
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
-    Task RefreshAsync(CancellationToken cancellationToken = default);
+    Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all dedicated server accounts owned by the authorized player.
@@ -101,18 +94,11 @@ public interface IManiaPlanetAPI : IDisposable
 /// </summary>
 public class ManiaPlanetAPI : IManiaPlanetAPI
 {
-    private string? clientId;
-    private string? clientSecret;
-
-    private string? accessToken;
-    private string? refreshToken;
-    private ImmutableArray<string> scopes;
-    private JwtPayloadManiaPlanetAPI? payload;
-    private AuthenticationHeaderValue? authorization;
-
     public const string BaseAddress = "https://maniaplanet.com/webservices";
 
-    public DateTimeOffset? ExpirationTime => payload?.ExpirationTime;
+    public ManiaPlanetAPIHandler Handler { get; }
+
+    public DateTimeOffset? ExpirationTime => Handler.Payload?.ExpirationTime;
 
     public HttpClient Client { get; }
 
@@ -122,46 +108,33 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     /// Creates a new instance of the ManiaPlanet API client.
     /// </summary>
     /// <param name="client">HTTP client to reuse. It is not intentionally mutated for better usage on backend.</param>
-    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, ImmutableArray{string}, CancellationToken)"/>.</param>
-    public ManiaPlanetAPI(HttpClient client, bool automaticallyAuthorize = true)
+    /// <param name="handler">Handler to use for the ManiaPlanet API.</param>
+    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.</param>
+    public ManiaPlanetAPI(HttpClient client, ManiaPlanetAPIHandler handler, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
+        Handler = handler;
         AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
     /// <summary>
     /// Creates a new instance of the ManiaPlanet API client.
     /// </summary>
-    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, ImmutableArray{string}, CancellationToken)"/>.</param>
-    public ManiaPlanetAPI(bool automaticallyAuthorize = true) : this(new HttpClient(), automaticallyAuthorize) { }
+    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.</param>
+    public ManiaPlanetAPI(bool automaticallyAuthorize = true) : this(new HttpClient(), new ManiaPlanetAPIHandler(), automaticallyAuthorize) { }
 
-    public virtual async Task AuthorizeAsync(string clientId, string clientSecret, ImmutableArray<string> scopes, CancellationToken cancellationToken = default)
-    {
-        await AuthorizeAsync(clientId, clientSecret, scopes, refresh: false, cancellationToken);
-    }
-
-    internal async Task AuthorizeAsync(string clientId, string clientSecret, ImmutableArray<string> scopes, bool refresh, CancellationToken cancellationToken)
+    public virtual async Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(clientId);
         ArgumentException.ThrowIfNullOrEmpty(clientSecret);
 
-        if (refresh && refreshToken is null)
-        {
-            throw new MissingRefreshTokenException();
-        }
-
         var values = new Dictionary<string, string>
         {
-            { "grant_type", refresh ? "refresh_token" : "client_credentials" },
+            { "grant_type", "client_credentials" },
             { "client_id", clientId },
             { "client_secret", clientSecret },
             { "scope", string.Join("%20", scopes) }
         };
-
-        if (refresh && refreshToken is not null)
-        {
-            values.Add("refresh_token", refreshToken);
-        }
 
         using var response = await Client.PostAsync("https://prod.live.maniaplanet.com/login/oauth2/access_token", new FormUrlEncodedContent(values), cancellationToken);
 
@@ -171,31 +144,21 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
         await ValidateResponseAsync(response, cancellationToken);
 
-        (_, _, accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        var (_, _, accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new Exception("This shouldn't be null.");
 
-        payload = JwtPayloadManiaPlanetAPI.DecodeFromAccessToken(accessToken);
+        Handler.Payload = JwtPayloadManiaPlanetAPI.DecodeFromAccessToken(accessToken);
 
         // set afterwards in case the task cancels
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-        this.scopes = scopes;
+        Handler.ClientId = clientId;
+        Handler.ClientSecret = clientSecret;
+        Handler.Scopes = scopes is ImmutableArray<string> immutableArray ? immutableArray : scopes.ToImmutableArray();
 
-        authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        Handler.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
     }
 
     public async Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
     {
         await AuthorizeAsync(clientId, clientSecret, [], cancellationToken);
-    }
-
-    public async Task RefreshAsync(CancellationToken cancellationToken = default)
-    {
-        if (clientId is null || clientSecret is null || refreshToken is null)
-        {
-            throw new MissingRefreshTokenException();
-        }
-
-        await AuthorizeAsync(clientId, clientSecret, scopes, refresh: true, cancellationToken);
     }
 
     /// <summary>
@@ -451,17 +414,17 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     protected internal async Task<HttpResponseMessage> GetResponseAsync(string endpoint, CancellationToken cancellationToken = default)
     {
-        if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime && clientId is not null && clientSecret is not null)
+        if (AutomaticallyAuthorize
+            && ExpirationTime.HasValue
+            && DateTimeOffset.UtcNow >= ExpirationTime
+            && Handler.ClientId is not null
+            && Handler.ClientSecret is not null)
         {
-            await RefreshAsync(cancellationToken);
+            await AuthorizeAsync(Handler.ClientId, Handler.ClientSecret, Handler.Scopes, cancellationToken);
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
-
-        if (accessToken is not null)
-        {
-            request.Headers.Authorization = authorization;
-        }
+        request.Headers.Authorization = Handler.Authorization;
 
         var response = await Client.SendAsync(request, cancellationToken);
 

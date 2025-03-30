@@ -22,15 +22,11 @@ public interface ITrackmaniaAPI : IDisposable
 
 public class TrackmaniaAPI : ITrackmaniaAPI
 {
-    private string? accessToken;
-    private string? clientId;
-    private string? clientSecret;
-
     public const string BaseAddress = "https://api.trackmania.com/api";
 
-    public JwtPayloadTrackmaniaAPI? Payload { get; private set; }
+    public TrackmaniaAPIHandler Handler { get; }
 
-    public DateTimeOffset? ExpirationTime => Payload?.ExpirationTime;
+    public DateTimeOffset? ExpirationTime => Handler.Payload?.ExpirationTime;
 
     public HttpClient Client { get; }
     public bool AutomaticallyAuthorize { get; }
@@ -39,15 +35,17 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// Creates a new instance of the Trackmania API client.
     /// </summary>
     /// <param name="client">HTTP client.</param>
+    /// <param name="handler">Handler to use for the Trackmania API.</param>
     /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.</param>
     /// <exception cref="ArgumentNullException"></exception>
-    public TrackmaniaAPI(HttpClient client, bool automaticallyAuthorize = true)
+    public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
+        Handler = handler;
         AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
-    public TrackmaniaAPI(bool automaticallyAuthorize = true) : this(new HttpClient(), automaticallyAuthorize) { }
+    public TrackmaniaAPI(bool automaticallyAuthorize = true) : this(new HttpClient(), new TrackmaniaAPIHandler(), automaticallyAuthorize) { }
 
     /// <summary>
     /// Authorizes with the official API using OAuth2 client credentials.
@@ -80,12 +78,13 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
         await ValidateResponseAsync(response, cancellationToken);
 
-        (_, _, accessToken) = await response.Content.ReadFromJsonAsync(TrackmaniaAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        var (_, _, accessToken) = await response.Content.ReadFromJsonAsync(TrackmaniaAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new Exception("This shouldn't be null.");
 
-        Payload = JwtPayloadTrackmaniaAPI.DecodeFromAccessToken(accessToken);
+        Handler.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        Handler.Payload = JwtPayloadTrackmaniaAPI.DecodeFromAccessToken(accessToken);
 
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
+        Handler.ClientId = clientId;
+        Handler.ClientSecret = clientSecret;
     }
 
     public async Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
@@ -191,17 +190,13 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
-        if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime && clientId is not null && clientSecret is not null)
+        if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime && Handler.ClientId is not null && Handler.ClientSecret is not null)
         {
-            await AuthorizeAsync(clientId, clientSecret, cancellationToken);
+            await AuthorizeAsync(Handler.ClientId, Handler.ClientSecret, cancellationToken);
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
-
-        if (accessToken is not null)
-        {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        }
+        request.Headers.Authorization = Handler.Authorization;
 
         using var response = await Client.SendAsync(request, cancellationToken);
 

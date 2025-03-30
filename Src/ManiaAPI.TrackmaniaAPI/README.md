@@ -21,21 +21,9 @@ using ManiaAPI.TrackmaniaAPI;
 
 var tm = new TrackmaniaAPI();
 
-await tm.AuthorizeAsync("clientId", "clientSecret", new[] { "clubs", "read_favorite" });
+await tm.AuthorizeAsync("clientId", "clientSecret", ["clubs", "read_favorite"]);
 
 // Ready to use
 ```
 
-or with DI, using an injected `HttpClient`:
-
-```cs
-using ManiaAPI.TrackmaniaAPI;
-
-builder.Services.AddHttpClient<TrackmaniaAPI>();
-
-// Do the setup
-var tm = provider.GetRequiredService<TrackmaniaAPI>();
-await tm.AuthorizeAsync("clientId", "clientSecret", new[] { "clubs", "read_favorite" });
-
-// Ready to use
-```
+For DI, consider using the `ManiaAPI.TrackmaniaAPI.Extensions.Hosting` package.

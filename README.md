@@ -224,27 +224,25 @@ await tm.AuthorizeAsync("clientId", "clientSecret", ["clubs", "read_favorite"]);
 // Ready to use
 ```
 
-or with DI, using an injected `HttpClient`:
-
-```cs
-using ManiaAPI.TrackmaniaAPI;
-
-builder.Services.AddHttpClient<TrackmaniaAPI>();
-
-// Do the setup
-var tm = provider.GetRequiredService<TrackmaniaAPI>();
-await tm.AuthorizeAsync("clientId", "clientSecret", ["clubs", "read_favorite"]);
-
-// Ready to use
-```
+For DI, consider using the `ManiaAPI.TrackmaniaAPI.Extensions.Hosting` package.
 
 ## ManiaAPI.TrackmaniaAPI.Extensions.Hosting
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaAPI.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaAPI.Extensions.Hosting/)
 
-Provides Trackmania OAuth2 authorization for ASP.NET Core applications.
+Provides Trackmania OAuth2 authorization for ASP.NET Core applications and an efficient way to inject `TrackmaniaAPI` into your application.
 
-### Setup
+## Setup `TrackmaniaAPI` injection
+
+`TrackmaniaAPI` will be available as a transient, with a singleton handling of credentials. This will make sure the `HttpClient` beneath is handled properly.
+
+```cs
+using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
+
+builder.Services.AddTrackmaniaAPI();
+```
+
+## Setup OAuth2
 
 For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Generate your credentials [here](https://api.trackmania.com/manager). **The redirect URL is the `/signin-trackmania` relative to the web root**, for example: `https://localhost:7864/signin-trackmania`.
 
@@ -274,7 +272,7 @@ app.MapGet("/login", () =>
 app.Run();
 ```
 
-You can inject `TrackmaniaAPI` if you add HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options - see the [sample](Samples/WebAppAuthorizationExample).
+You can inject `TrackmaniaAPI` if you create a special HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options - see the [sample](Samples/WebAppAuthorizationExample).
 
 ## ManiaAPI.ManiaPlanetAPI
 
@@ -301,21 +299,25 @@ await mp.AuthorizeAsync("clientId", "clientSecret", ["basic", "dedicated", "maps
 // Ready to use
 ```
 
-or with DI, using an injected `HttpClient`:
-
-```cs
-using ManiaAPI.ManiaPlanetAPI;
-
-builder.Services.AddHttpClient<ManiaPlanetAPI>();
-```
+For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package.
 
 ## ManiaAPI.ManiaPlanetAPI.Extensions.Hosting
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting/)
 
-Provides ManiaPlanet OAuth2 authorization for ASP.NET Core applications.
+Provides ManiaPlanet OAuth2 authorization for ASP.NET Core applications and an efficient way to inject `ManiaPlanetAPI` into your application.
 
-### Setup
+## Setup `ManiaPlanetAPI` injection
+
+`ManiaPlanetAPI` will be available as a transient, with a singleton handling of credentials. This will make sure the `HttpClient` beneath is handled properly.
+
+```cs
+using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
+
+builder.Services.AddManiaPlanetAPI();
+```
+
+## Setup OAuth2
 
 For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager). **The redirect URL is the `/signin-maniaplanet` relative to the web root**, for example: `https://localhost:7864/signin-maniaplanet`.
 
@@ -345,7 +347,7 @@ app.MapGet("/login", () =>
 app.Run();
 ```
 
-You can inject `ManiaPlanetAPI` if you add HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options - see the [sample](Samples/WebAppAuthorizationExample).
+You can inject `ManiaPlanetAPI` if you create a special HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options - see the [sample](Samples/WebAppAuthorizationExample).
 
 ## ManiaAPI.TrackmaniaIO
 
@@ -549,7 +551,7 @@ using ManiaAPI.XmlRpc;
 
 var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
-    BaseAddress = new System.Uri(MasterServerMP4.DefaultAddress)
+    BaseAddress = new Uri(MasterServerMP4.DefaultAddress)
 };
 var masterServer = new MasterServerMP4(httpClient);
 ```
@@ -575,7 +577,7 @@ using ManiaAPI.XmlRpc;
 
 var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
-    BaseAddress = new System.Uri(MasterServerMP4.DefaultAddress)
+    BaseAddress = new Uri(MasterServerMP4.DefaultAddress)
 };
 var masterServer = new MasterServerMP4(httpClient);
 

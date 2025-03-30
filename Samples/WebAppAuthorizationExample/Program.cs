@@ -1,4 +1,3 @@
-using ManiaAPI.ManiaPlanetAPI;
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Authentication;
 using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
@@ -29,9 +28,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddHttpClient<ManiaPlanetAPI>()
-    .AddHttpMessageHandler<UserDelegatingHandler>();
 builder.Services.AddTransient<UserDelegatingHandler>();
+
+builder.Services.AddManiaPlanetAPI().AddHttpMessageHandler<UserDelegatingHandler>();
+builder.Services.AddTrackmaniaAPI().AddHttpMessageHandler<UserDelegatingHandler>();
+
+builder.Services.AddHostedService<AuthorizeHostedService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
