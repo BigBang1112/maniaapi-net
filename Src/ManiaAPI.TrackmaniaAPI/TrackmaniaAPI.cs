@@ -41,7 +41,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
-        Handler = handler;
+        Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         AutomaticallyAuthorize = automaticallyAuthorize;
     }
 

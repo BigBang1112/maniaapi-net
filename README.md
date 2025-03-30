@@ -21,6 +21,7 @@ This set of libraries was made to be very easy and straightforward to use, but a
 Anything you can imagine!
 
 - [ManiaAPI.NadeoAPI](#maniaapinadeoapi)
+- [ManiaAPI.NadeoAPI.Extensions.Hosting](#maniaapinadeoapiextensionshosting)
 - [ManiaAPI.NadeoAPI.Extensions.Gbx](#maniaapinadeoapiextensionsgbx)
 - [ManiaAPI.TrackmaniaAPI](#maniaapitrackmaniaapi)
 - [ManiaAPI.TrackmaniaAPI.Extensions.Hosting](#maniaapitrackmaniaapiextensionshosting)
@@ -135,27 +136,32 @@ var mapLeaderboard = await nls.GetTopLeaderboardAsync(campaignMap.MapUid);
 var records = await ns.GetMapRecordsAsync(mapLeaderboard.Top.Top.Select(x => x.AccountId), mapInfo.MapId);
 ```
 
-or with DI, using an injected `HttpClient`:
+For DI, consider using the `ManiaAPI.NadeoAPI.Extensions.Hosting` package. It handles the authorization for you without additional startup code.
+
+## ManiaAPI.NadeoAPI.Extensions.Hosting
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.NadeoAPI.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.NadeoAPI.Extensions.Hosting/)
+
+Provides an efficient way to inject all Nadeo services into your application.
+
+### Setup
 
 ```cs
-using ManiaAPI.NadeoAPI;
+using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 
-builder.Services.AddHttpClient<NadeoServices>();
-builder.Services.AddHttpClient<NadeoLiveServices>();
-builder.Services.AddHttpClient<NadeoMeetServices>();
-
-// Do the setup
-var login = "mylogin";
-var password = "mypassword";
-
-var ns = provider.GetRequiredService<NadeoServices>();
-var nls = provider.GetRequiredService<NadeoLiveServices>();
-var nms = provider.GetRequiredService<NadeoMeetServices>();
-
-await ns.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
-await nls.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
-await nms.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
+builder.Services.AddNadeoAPI(options =>
+{
+    options.Credentials = new NadeoAPICredentials(
+        builder.Configuration["NadeoAPI:Login"]!,
+        builder.Configuration["NadeoAPI:Password"]!,
+        AuthorizationMethod.DedicatedServer);
+});
 ```
+
+Features this setup brings:
+- `NadeoServices`, `NadeoLiveServices`, and `NadeoMeetServices` will be available as transients
+- HTTP client will be handled properly
+- Credentials will be handled as a singleton
 
 ## ManiaAPI.NadeoAPI.Extensions.Gbx
 
@@ -232,7 +238,7 @@ For DI, consider using the `ManiaAPI.TrackmaniaAPI.Extensions.Hosting` package.
 
 Provides Trackmania OAuth2 authorization for ASP.NET Core applications and an efficient way to inject `TrackmaniaAPI` into your application.
 
-## Setup `TrackmaniaAPI` injection
+### Setup `TrackmaniaAPI` injection
 
 `TrackmaniaAPI` will be available as a transient, with a singleton handling of credentials. This will make sure the `HttpClient` beneath is handled properly.
 
@@ -242,7 +248,7 @@ using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 builder.Services.AddTrackmaniaAPI();
 ```
 
-## Setup OAuth2
+### Setup OAuth2
 
 For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Generate your credentials [here](https://api.trackmania.com/manager). **The redirect URL is the `/signin-trackmania` relative to the web root**, for example: `https://localhost:7864/signin-trackmania`.
 
@@ -307,7 +313,7 @@ For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package.
 
 Provides ManiaPlanet OAuth2 authorization for ASP.NET Core applications and an efficient way to inject `ManiaPlanetAPI` into your application.
 
-## Setup `ManiaPlanetAPI` injection
+### Setup `ManiaPlanetAPI` injection
 
 `ManiaPlanetAPI` will be available as a transient, with a singleton handling of credentials. This will make sure the `HttpClient` beneath is handled properly.
 
@@ -317,7 +323,7 @@ using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 builder.Services.AddManiaPlanetAPI();
 ```
 
-## Setup OAuth2
+### Setup OAuth2
 
 For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager). **The redirect URL is the `/signin-maniaplanet` relative to the web root**, for example: `https://localhost:7864/signin-maniaplanet`.
 

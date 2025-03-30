@@ -73,6 +73,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManiaAPI.TrackmaniaWS", "Sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrackmaniaWsSample", "Samples\TrackmaniaWsSample\TrackmaniaWsSample.csproj", "{A1A192DD-5A1F-4460-85E3-65D1C857DEFB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManiaAPI.NadeoAPI.Extensions.Hosting", "Src\ManiaAPI.NadeoAPI.Extensions.Hosting\ManiaAPI.NadeoAPI.Extensions.Hosting.csproj", "{86444184-825A-FFC3-E922-22DD26182571}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAppNadeoAPIExample", "Samples\WebAppNadeoAPIExample\WebAppNadeoAPIExample.csproj", "{A661B00B-0F8C-4453-AB67-8FC78657EB07}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -183,6 +187,14 @@ Global
 		{A1A192DD-5A1F-4460-85E3-65D1C857DEFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1A192DD-5A1F-4460-85E3-65D1C857DEFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1A192DD-5A1F-4460-85E3-65D1C857DEFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86444184-825A-FFC3-E922-22DD26182571}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86444184-825A-FFC3-E922-22DD26182571}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86444184-825A-FFC3-E922-22DD26182571}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86444184-825A-FFC3-E922-22DD26182571}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A661B00B-0F8C-4453-AB67-8FC78657EB07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A661B00B-0F8C-4453-AB67-8FC78657EB07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A661B00B-0F8C-4453-AB67-8FC78657EB07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A661B00B-0F8C-4453-AB67-8FC78657EB07}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -215,6 +227,8 @@ Global
 		{F2AA0F45-9878-4549-A33E-80FF1FC16C6E} = {D0C62B54-1D9D-4F31-8B0A-8158C882CF77}
 		{D96BB193-CD4F-4244-9F81-D6D2EBE38975} = {4F91FD3F-1931-44A8-B52C-6CE105E2938A}
 		{A1A192DD-5A1F-4460-85E3-65D1C857DEFB} = {D0C62B54-1D9D-4F31-8B0A-8158C882CF77}
+		{86444184-825A-FFC3-E922-22DD26182571} = {4F91FD3F-1931-44A8-B52C-6CE105E2938A}
+		{A661B00B-0F8C-4453-AB67-8FC78657EB07} = {D0C62B54-1D9D-4F31-8B0A-8158C882CF77}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E273F519-B658-4F1C-8132-DF78A841A592}
