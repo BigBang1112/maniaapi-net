@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="TmEssentials" Version="2.5.2" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.3.0" />
     </ItemGroup>
 
     <ItemGroup>

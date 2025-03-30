@@ -6,6 +6,8 @@ Provides an efficient way to inject all Nadeo services into your application.
 
 ## Setup
 
+Providing `options.Credentials` is optional, but setting it will automatically authorize on the first request and maintain that connection, so you don't have to call `AuthorizeAsync`.
+
 ```cs
 using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 

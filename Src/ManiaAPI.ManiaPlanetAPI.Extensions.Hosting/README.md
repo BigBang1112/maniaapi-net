@@ -8,10 +8,17 @@ Provides ManiaPlanet OAuth2 authorization for ASP.NET Core applications and an e
 
 `ManiaPlanetAPI` will be available as a transient, with a singleton handling of credentials. This will make sure the `HttpClient` beneath is handled properly.
 
+Providing `options.Credentials` is optional, but setting it will automatically authorize on the first request and maintain that connection, so you don't have to call `AuthorizeAsync`.
+
 ```cs
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 
-builder.Services.AddManiaPlanetAPI();
+builder.Services.AddManiaPlanetAPI(options =>
+{
+    options.Credentials = new ManiaPlanetAPICredentials(
+        builder.Configuration["ManiaPlanet:ClientId"]!,
+        builder.Configuration["ManiaPlanet:ClientSecret"]!);
+});
 ```
 
 ## Setup OAuth2
@@ -28,8 +35,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie()
     .AddManiaPlanet(options =>
     {
-        options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:Id"]!;
-        options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:Secret"]!;
+        options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:ClientId"]!;
+        options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:ClientSecret"]!;
 
         Array.ForEach(["basic", "dedicated", "titles"], options.Scope.Add);
     });

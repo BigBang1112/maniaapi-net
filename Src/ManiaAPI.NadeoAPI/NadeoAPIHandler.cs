@@ -4,7 +4,10 @@ namespace ManiaAPI.NadeoAPI;
 
 public sealed class NadeoAPIHandler
 {
-    public NadeoAPICredentials? PendingConnection { get; set; }
+    /// <summary>
+    /// Credentials used for initial authentication. They are discarded after the first successful authentication.
+    /// </summary>
+    public NadeoAPICredentials? PendingCredentials { get; set; }
 
     internal AuthenticationHeaderValue? Authorization { get; set; }
 

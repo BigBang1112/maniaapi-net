@@ -12,6 +12,7 @@ public interface ITrackmaniaAPI : IDisposable
 {
     Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default);
     Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default);
+    Task AuthorizeAsync(TrackmaniaAPICredentials credentials, CancellationToken cancellationToken = default);
     Task<ImmutableDictionary<string, Guid>> GetAccountIdsAsync(IEnumerable<string> displayNames, CancellationToken cancellationToken = default);
     Task<ImmutableDictionary<string, Guid>> GetAccountIdsAsync(params string[] accountIds);
     Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
@@ -30,6 +31,8 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
     public HttpClient Client { get; }
     public bool AutomaticallyAuthorize { get; }
+
+    private readonly SemaphoreSlim semaphore = new(1, 1);
 
     /// <summary>
     /// Creates a new instance of the Trackmania API client.
@@ -83,13 +86,20 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         Handler.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         Handler.Payload = JwtPayloadTrackmaniaAPI.DecodeFromAccessToken(accessToken);
 
-        Handler.ClientId = clientId;
-        Handler.ClientSecret = clientSecret;
+        Handler.Credentials = new TrackmaniaAPICredentials(
+            clientId, 
+            clientSecret, 
+            scopes is ImmutableArray<string> immutableArray ? immutableArray : scopes.ToImmutableArray());
     }
 
     public async Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
     {
         await AuthorizeAsync(clientId, clientSecret, [], cancellationToken);
+    }
+
+    public async Task AuthorizeAsync(TrackmaniaAPICredentials credentials, CancellationToken cancellationToken = default)
+    {
+        await AuthorizeAsync(credentials.ClientId, credentials.ClientSecret, credentials.Scopes, cancellationToken);
     }
 
     private static async ValueTask ValidateResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
@@ -190,9 +200,19 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
-        if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime && Handler.ClientId is not null && Handler.ClientSecret is not null)
+        await semaphore.WaitAsync(cancellationToken);
+
+        try
         {
-            await AuthorizeAsync(Handler.ClientId, Handler.ClientSecret, cancellationToken);
+            if (AutomaticallyAuthorize && Handler.Credentials is not null
+                && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime))
+            {
+                await AuthorizeAsync(Handler.Credentials, cancellationToken);
+            }
+        }
+        finally
+        {
+            semaphore.Release();
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");

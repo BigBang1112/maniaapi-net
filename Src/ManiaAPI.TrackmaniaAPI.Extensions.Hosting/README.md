@@ -8,10 +8,17 @@ Provides Trackmania OAuth2 authorization for ASP.NET Core applications and an ef
 
 `TrackmaniaAPI` will be available as a transient, with a singleton handling of credentials. This will make sure the `HttpClient` beneath is handled properly.
 
+Providing `options.Credentials` is optional, but setting it will automatically authorize on the first request and maintain that connection, so you don't have to call `AuthorizeAsync`.
+
 ```cs
 using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 
-builder.Services.AddTrackmaniaAPI();
+builder.Services.AddTrackmaniaAPI(options =>
+{
+    options.Credentials = new ManiaPlanetAPICredentials(
+        builder.Configuration["Trackmania:ClientId"]!,
+        builder.Configuration["Trackmania:ClientSecret"]!);
+});
 ```
 
 ## Setup OAuth2
@@ -28,8 +35,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie()
     .AddTrackmania(options =>
     {
-        options.ClientId = builder.Configuration["OAuth2:Trackmania:Id"]!;
-        options.ClientSecret = builder.Configuration["OAuth2:Trackmania:Secret"]!;
+        options.ClientId = builder.Configuration["OAuth2:Trackmania:ClientId"]!;
+        options.ClientSecret = builder.Configuration["OAuth2:Trackmania:ClientSecret"]!;
         
         options.Scope.Add("clubs");
     });

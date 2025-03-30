@@ -187,18 +187,18 @@ public abstract class NadeoAPI : INadeoAPI
     {
         ArgumentNullException.ThrowIfNull(method);
 
-        try
+        if (Handler.PendingCredentials is not null)
         {
-            if (Handler.PendingConnection is not null)
+            await semaphore.WaitAsync(cancellationToken);
+            try
             {
-                await semaphore.WaitAsync(cancellationToken);
-                await AuthorizeAsync(Handler.PendingConnection, cancellationToken);
-                Handler.PendingConnection = null;
+                if (Handler.PendingCredentials is not null)
+                {
+                    await AuthorizeAsync(Handler.PendingCredentials, cancellationToken);
+                    Handler.PendingCredentials = null;
+                }
             }
-        }
-        finally
-        {
-            if (semaphore.CurrentCount == 0)
+            finally
             {
                 semaphore.Release();
             }

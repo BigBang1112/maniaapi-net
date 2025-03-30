@@ -1,8 +1,11 @@
+using ManiaAPI.ManiaPlanetAPI;
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Authentication;
+using ManiaAPI.TrackmaniaAPI;
 using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 using ManiaAPI.TrackmaniaAPI.Extensions.Hosting.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Caching.Hybrid;
 using WebAppAuthorizationExample;
 using WebAppAuthorizationExample.Components;
 
@@ -30,10 +33,28 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<UserDelegatingHandler>();
 
-builder.Services.AddManiaPlanetAPI().AddHttpMessageHandler<UserDelegatingHandler>();
-builder.Services.AddTrackmaniaAPI().AddHttpMessageHandler<UserDelegatingHandler>();
+builder.Services.AddManiaPlanetAPI(options =>
+{
+    options.Credentials = new ManiaPlanetAPICredentials(
+        builder.Configuration["OAuth2:ManiaPlanet:ClientId"]!,
+        builder.Configuration["OAuth2:ManiaPlanet:ClientSecret"]!);
+}).AddHttpMessageHandler<UserDelegatingHandler>();
 
-builder.Services.AddHostedService<AuthorizeHostedService>();
+builder.Services.AddTrackmaniaAPI(options =>
+{
+    options.Credentials = new TrackmaniaAPICredentials(
+        builder.Configuration["OAuth2:Trackmania:ClientId"]!,
+        builder.Configuration["OAuth2:Trackmania:ClientSecret"]!);
+}).AddHttpMessageHandler<UserDelegatingHandler>();
+
+builder.Services.AddHybridCache(options =>
+{
+    options.DefaultEntryOptions = new HybridCacheEntryOptions
+    {
+        Expiration = TimeSpan.FromMinutes(1),
+        LocalCacheExpiration = TimeSpan.FromMinutes(1)
+    };
+});
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

@@ -11,11 +11,16 @@ public static class NadeoAPIServiceExtensions
 
         services.AddSingleton(new NadeoAPIHandler
         {
-            PendingConnection = o.Credentials
+            PendingCredentials = o.Credentials
         });
 
         services.AddHttpClient<NadeoServices>();
         services.AddHttpClient<NadeoLiveServices>();
         services.AddHttpClient<NadeoMeetServices>();
+    }
+
+    public static void AddNadeoAPI(this IServiceCollection services)
+    {
+        AddNadeoAPI(services, _ => { });
     }
 }

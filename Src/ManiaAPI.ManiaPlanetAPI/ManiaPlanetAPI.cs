@@ -50,6 +50,14 @@ public interface IManiaPlanetAPI : IDisposable
     Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Authorizes with the API using the OAuth2 client credentials.
+    /// </summary>
+    /// <param name="credentials">Credentials.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
+    Task AuthorizeAsync(ManiaPlanetAPICredentials credentials, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all dedicated server accounts owned by the authorized player.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -104,6 +112,8 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     public bool AutomaticallyAuthorize { get; }
 
+    private readonly SemaphoreSlim semaphore = new(1, 1);
+
     /// <summary>
     /// Creates a new instance of the ManiaPlanet API client.
     /// </summary>
@@ -149,9 +159,10 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         Handler.Payload = JwtPayloadManiaPlanetAPI.DecodeFromAccessToken(accessToken);
 
         // set afterwards in case the task cancels
-        Handler.ClientId = clientId;
-        Handler.ClientSecret = clientSecret;
-        Handler.Scopes = scopes is ImmutableArray<string> immutableArray ? immutableArray : scopes.ToImmutableArray();
+        Handler.Credentials = new ManiaPlanetAPICredentials(
+            clientId, 
+            clientSecret, 
+            scopes is ImmutableArray<string> immutableArray ? immutableArray : scopes.ToImmutableArray());
 
         Handler.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
     }
@@ -159,6 +170,11 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     public async Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
     {
         await AuthorizeAsync(clientId, clientSecret, [], cancellationToken);
+    }
+
+    public async Task AuthorizeAsync(ManiaPlanetAPICredentials credentials, CancellationToken cancellationToken = default)
+    {
+        await AuthorizeAsync(credentials.ClientId, credentials.ClientSecret, credentials.Scopes, cancellationToken);
     }
 
     /// <summary>
@@ -414,13 +430,19 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     protected internal async Task<HttpResponseMessage> GetResponseAsync(string endpoint, CancellationToken cancellationToken = default)
     {
-        if (AutomaticallyAuthorize
-            && ExpirationTime.HasValue
-            && DateTimeOffset.UtcNow >= ExpirationTime
-            && Handler.ClientId is not null
-            && Handler.ClientSecret is not null)
+        await semaphore.WaitAsync(cancellationToken);
+
+        try
         {
-            await AuthorizeAsync(Handler.ClientId, Handler.ClientSecret, Handler.Scopes, cancellationToken);
+            if (AutomaticallyAuthorize && Handler.Credentials is not null
+                && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime))
+            {
+                await AuthorizeAsync(Handler.Credentials, cancellationToken);
+            }
+        }
+        finally
+        {
+            semaphore.Release();
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
