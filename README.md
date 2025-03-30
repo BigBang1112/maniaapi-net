@@ -12,7 +12,7 @@ A wrapper for these web APIs:
 - ManiaPlanet web API
 - Trackmania.io
 - Trackmania Exchange
-- XML-RPC (for TMF, TMT, and ManiaPlanet)
+- XML protocol (for TMF, TMT, and ManiaPlanet)
 
 This set of libraries was made to be very easy and straightforward to use, but also easily mocked, so that it can be integrated into the real world in no time.
 
@@ -30,11 +30,11 @@ Anything you can imagine!
 - [ManiaAPI.TrackmaniaIO](#maniaapitrackmaniaio)
 - [ManiaAPI.TMX](#maniaapitmx)
 - [ManiaAPI.TMX.Extensions.Gbx](#maniaapitmxextensionsgbx)
-- [ManiaAPI.XmlRpc](#maniaapixmlrpc)
+- [ManiaAPI.Xml](#maniaapixml)
 
 ### Samples
 
-- [WebAppXmlRpcExample](Samples/WebAppXmlRpcExample) - Blazor Server web application that demonstrates the use of the ManiaAPI.XmlRpc API, currently only TMTurbo.
+- [WebAppXmlExample](Samples/WebAppXmlExample) - Blazor Server web application that demonstrates the use of the ManiaAPI.Xml API, currently only TMTurbo.
 - [WebAppTmxExample](Samples/WebAppTmxExample) - Blazor Server web application that demonstrates the use of the ManiaAPI.TMX API.
 - [WebAppAuthorizationExample](Samples/WebAppAuthorizationExample) - Simple ASP.NET Core web application to show how to conveniently use the OAuth2 from `ManiaAPI.TrackmaniaAPI.Extensions.Hosting` and `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting`.
 
@@ -479,11 +479,11 @@ var map = await tmx.GetTrackGbxNodeAsync(12345);
 Console.WriteLine("Number of blocks: " + map.GetBlocks().Count());
 ```
 
-## ManiaAPI.XmlRpc
+## ManiaAPI.Xml
 
-[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.XmlRpc?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.XmlRpc/)
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.Xml?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.Xml/)
 
-Wraps TMF, TMT, and ManiaPlanet XML-RPC ingame APIs. **Does not include dedicated server XML-RPC.**
+Wraps TMF, TMT, and ManiaPlanet XML ingame APIs. **Does not relate to the dedicated server XML-RPC.**
 
 It currently **does not support any authentication** for its complexity and security reasons. If some of the leaderboard methods will become secured with authentication though, this will be considered. For authenticated functionality in TMUF, use the [TMF.NET](https://github.com/Laiteux/TMF.NET) library.
 
@@ -527,7 +527,7 @@ For all games:
 ### Setup for TMUF
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var masterServer = new MasterServerTMUF();
 ```
@@ -535,7 +535,7 @@ var masterServer = new MasterServerTMUF();
 or with DI, using an injected `HttpClient`:
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 builder.Services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultAddress));
 ```
@@ -545,7 +545,7 @@ builder.Services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = 
 First examples assume `Maniaplanet relay 2` master server is still running.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var masterServer = new MasterServerMP4();
 ```
@@ -553,7 +553,7 @@ var masterServer = new MasterServerMP4();
 Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
@@ -565,7 +565,7 @@ var masterServer = new MasterServerMP4(httpClient);
 or with DI, using an injected `HttpClient`:
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress))
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
@@ -579,7 +579,7 @@ In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to 
 To be most inline with the game client, you should validate the master server first with `ValidateAsync`. Behind the scenes, it first requests `GetApplicationConfig`, then on catched HTTP exception, it requests `GetWaitingParams` from the init server and use the available master server instead.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
@@ -597,7 +597,7 @@ With DI, it is recommended to separate the init server's `HttpClient` from the m
 You don't have to enable decompression for the init server, as it does not return large responses.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 // Register the services
 builder.Services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultAddress));
@@ -625,7 +625,7 @@ await masterServer.ValidateAsync(initServer);
 TMT handles 3 platforms: PC, XB1, and PS4. Each have their own init server and master server. Nadeo still tends to change these master servers, so it's recommended to first go through the init server.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var initServer = new InitServerTMT(Platform.PC);
 var waitingParams = await initServer.GetWaitingParamsAsync();
@@ -638,7 +638,7 @@ var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
 Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client for the **master server**. Init server does not return large responses, so it's not necessary for that one.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var initServer = new InitServerTMT(Platform.PC);
 var waitingParams = await initServer.GetWaitingParamsAsync();
@@ -655,7 +655,7 @@ var masterServer = new MasterServerTMT(httpClient);
 or with DI, using an injected `HttpClient` (not viable for multiple platforms). Note how `MasterServerTMT` is registered as a singleton, so that it remembers the address.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 // Register the services
 builder.Services.AddHttpClient<InitServerTMT>(client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(Platform.PC)));
@@ -680,7 +680,7 @@ masterServer.Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
 **For a simple setup with multiple platforms, the `AggregatedMasterServerTMT` is recommended:**
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var waitingParams = Enum.GetValues<Platform>().ToDictionary(
     platform => platform, 
@@ -703,7 +703,7 @@ var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDicti
 For DI setup with multiple platforms, you can use keyed services:
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 // Register the services
 foreach (var platform in Enum.GetValues<Platform>())
