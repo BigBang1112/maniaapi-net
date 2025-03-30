@@ -17,8 +17,9 @@ foreach (Platform platform in Enum.GetValues<Platform>())
 {
     builder.Services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(platform)));
     builder.Services.AddHttpClient($"{nameof(MasterServerTMT)}_{platform}")
-        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
         {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(10),
             AutomaticDecompression = DecompressionMethods.GZip
         });
 
