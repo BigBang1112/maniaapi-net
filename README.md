@@ -442,23 +442,23 @@ builder.Services.AddScoped<TMX>(provider => new TMX(
     provider.GetRequiredService<IHttpClientFactory>().CreateClient("TMX_TMNF"), TmxSite.TMNF));
 ```
 
-For multiple sites in DI, you can use keyed services:
+For advanced DI, consider using the `ManiaAPI.TMX.Extensions.Hosting` package.
+
+## ManiaAPI.TMX.Extensions.Hosting
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TMX.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TMX.Extensions.Hosting/)
+
+Provides an efficient way to inject all TMX services into your application.
+
+### Setup
 
 ```cs
-foreach (TmxSite site in Enum.GetValues<TmxSite>())
-{
-    builder.Services.AddHttpClient($"{nameof(TMX)}_{site}");
+using ManiaAPI.TMX.Extensions.Hosting;
 
-    builder.Services.AddKeyedScoped(site, (provider, key) => new TMX(
-        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(TMX)}_{key}"), site));
-    builder.Services.AddScoped(provider => provider.GetRequiredKeyedService<TMX>(site));
-}
-
-builder.Services.AddScoped(provider => Enum.GetValues<TmxSite>()
-    .ToImmutableDictionary(site => site, site => provider.GetRequiredKeyedService<TMX>(site)));
+builder.Services.AddTMX();
 ```
 
-Features this last setup brings:
+Features this setup brings:
 
 - You can inject `ImmutableDictionary<TmxSite, TMX>` to get all TMX sites as individual instances
 - If you don't need specific site context, you can inject `IEnumerable<TMX>` to get all TMX sites
