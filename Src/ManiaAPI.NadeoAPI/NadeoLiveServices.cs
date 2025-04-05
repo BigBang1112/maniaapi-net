@@ -60,11 +60,11 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     public override string Audience => nameof(NadeoLiveServices);
     public override string BaseAddress => "https://live-services.trackmania.nadeo.live/api";
 
-    public NadeoLiveServices(HttpClient client, bool automaticallyAuthorize = true) : base(client, automaticallyAuthorize)
+    public NadeoLiveServices(HttpClient client, NadeoAPIHandler handler, bool automaticallyAuthorize = true) : base(client, handler, automaticallyAuthorize)
     {
     }
 
-    public NadeoLiveServices(bool automaticallyAuthorize = true) : this(new HttpClient(), automaticallyAuthorize)
+    public NadeoLiveServices(bool automaticallyAuthorize = true) : this(new HttpClient(), new NadeoAPIHandler(), automaticallyAuthorize)
     {
     }
 

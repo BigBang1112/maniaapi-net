@@ -12,6 +12,7 @@ public interface ITrackmaniaAPI : IDisposable
 {
     Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default);
     Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default);
+    Task AuthorizeAsync(TrackmaniaAPICredentials credentials, CancellationToken cancellationToken = default);
     Task<ImmutableDictionary<string, Guid>> GetAccountIdsAsync(IEnumerable<string> displayNames, CancellationToken cancellationToken = default);
     Task<ImmutableDictionary<string, Guid>> GetAccountIdsAsync(params string[] accountIds);
     Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
@@ -22,32 +23,32 @@ public interface ITrackmaniaAPI : IDisposable
 
 public class TrackmaniaAPI : ITrackmaniaAPI
 {
-    private string? accessToken;
-    private string? clientId;
-    private string? clientSecret;
-
     public const string BaseAddress = "https://api.trackmania.com/api";
 
-    public JwtPayloadTrackmaniaAPI? Payload { get; private set; }
+    public TrackmaniaAPIHandler Handler { get; }
 
-    public DateTimeOffset? ExpirationTime => Payload?.ExpirationTime;
+    public DateTimeOffset? ExpirationTime => Handler.Payload?.ExpirationTime;
 
     public HttpClient Client { get; }
     public bool AutomaticallyAuthorize { get; }
+
+    private readonly SemaphoreSlim semaphore = new(1, 1);
 
     /// <summary>
     /// Creates a new instance of the Trackmania API client.
     /// </summary>
     /// <param name="client">HTTP client.</param>
+    /// <param name="handler">Handler to use for the Trackmania API.</param>
     /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.</param>
     /// <exception cref="ArgumentNullException"></exception>
-    public TrackmaniaAPI(HttpClient client, bool automaticallyAuthorize = true)
+    public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
+        Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         AutomaticallyAuthorize = automaticallyAuthorize;
     }
 
-    public TrackmaniaAPI(bool automaticallyAuthorize = true) : this(new HttpClient(), automaticallyAuthorize) { }
+    public TrackmaniaAPI(bool automaticallyAuthorize = true) : this(new HttpClient(), new TrackmaniaAPIHandler(), automaticallyAuthorize) { }
 
     /// <summary>
     /// Authorizes with the official API using OAuth2 client credentials.
@@ -80,17 +81,25 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
         await ValidateResponseAsync(response, cancellationToken);
 
-        (_, _, accessToken) = await response.Content.ReadFromJsonAsync(TrackmaniaAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        var (_, _, accessToken) = await response.Content.ReadFromJsonAsync(TrackmaniaAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new Exception("This shouldn't be null.");
 
-        Payload = JwtPayloadTrackmaniaAPI.DecodeFromAccessToken(accessToken);
+        Handler.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        Handler.Payload = JwtPayloadTrackmaniaAPI.DecodeFromAccessToken(accessToken);
 
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
+        Handler.Credentials = new TrackmaniaAPICredentials(
+            clientId, 
+            clientSecret, 
+            scopes is ImmutableArray<string> immutableArray ? immutableArray : scopes.ToImmutableArray());
     }
 
     public async Task AuthorizeAsync(string clientId, string clientSecret, CancellationToken cancellationToken = default)
     {
         await AuthorizeAsync(clientId, clientSecret, [], cancellationToken);
+    }
+
+    public async Task AuthorizeAsync(TrackmaniaAPICredentials credentials, CancellationToken cancellationToken = default)
+    {
+        await AuthorizeAsync(credentials.ClientId, credentials.ClientSecret, credentials.Scopes, cancellationToken);
     }
 
     private static async ValueTask ValidateResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
@@ -191,17 +200,23 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
-        if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime && clientId is not null && clientSecret is not null)
+        await semaphore.WaitAsync(cancellationToken);
+
+        try
         {
-            await AuthorizeAsync(clientId, clientSecret, cancellationToken);
+            if (AutomaticallyAuthorize && Handler.Credentials is not null
+                && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime))
+            {
+                await AuthorizeAsync(Handler.Credentials, cancellationToken);
+            }
+        }
+        finally
+        {
+            semaphore.Release();
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
-
-        if (accessToken is not null)
-        {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        }
+        request.Headers.Authorization = Handler.Authorization;
 
         using var response = await Client.SendAsync(request, cancellationToken);
 

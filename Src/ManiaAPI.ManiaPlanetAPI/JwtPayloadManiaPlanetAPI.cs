@@ -1,5 +1,6 @@
 ﻿using ManiaAPI.ManiaPlanetAPI.Converters;
 using ManiaAPI.ManiaPlanetAPI.JsonContexts;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
@@ -14,7 +15,7 @@ public sealed record JwtPayloadManiaPlanetAPI(
     [property: JsonPropertyName("nbf"), JsonConverter(typeof(DateTimeOffsetUnixConverter))] DateTimeOffset NotBefore,
     [property: JsonPropertyName("exp"), JsonConverter(typeof(DateTimeOffsetUnixConverter))] DateTimeOffset ExpirationTime,
     [property: JsonPropertyName("sub")] string Subject,
-    [property: JsonPropertyName("scopes")] string[] Scopes)
+    [property: JsonPropertyName("scopes")] ImmutableArray<string> Scopes)
 {
     public static JwtPayloadManiaPlanetAPI DecodeFromAccessToken(string accessToken)
     {

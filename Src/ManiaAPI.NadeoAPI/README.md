@@ -94,24 +94,4 @@ var mapLeaderboard = await nls.GetTopLeaderboardAsync(campaignMap.MapUid);
 var records = await ns.GetMapRecordsAsync(mapLeaderboard.Top.Top.Select(x => x.AccountId), mapInfo.MapId);
 ```
 
-or with DI, using an injected `HttpClient`:
-
-```cs
-using ManiaAPI.NadeoAPI;
-
-builder.Services.AddHttpClient<NadeoServices>();
-builder.Services.AddHttpClient<NadeoLiveServices>();
-builder.Services.AddHttpClient<NadeoMeetServices>();
-
-// Do the setup
-var login = "mylogin";
-var password = "mypassword";
-
-var ns = provider.GetRequiredService<NadeoServices>();
-var nls = provider.GetRequiredService<NadeoLiveServices>();
-var nms = provider.GetRequiredService<NadeoMeetServices>();
-
-await ns.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
-await nls.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
-await nms.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
-```
+For DI, consider using the `ManiaAPI.NadeoAPI.Extensions.Hosting` package. It also handles the authorization for you without additional startup code.

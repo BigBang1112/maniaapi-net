@@ -1,7 +1,12 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
+@using ManiaAPI.ManiaPlanetAPI
+@using Microsoft.Extensions.Caching.Hybrid
+
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ManiaPlanetAPI ManiaPlanetAPI
+@inject HybridCache Cache
 
 <PageTitle>Home</PageTitle>
 
@@ -29,12 +34,31 @@ else
     <p><a href="login/trackmania">Login with Trackmania</a></p>
 }
 
+<h2>Zones</h2>
+
+@if (zones is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <ul>
+        @foreach (var zone in zones)
+        {
+            <li>@zone</li>
+        }
+    </ul>
+}
+
 @code {
     private ClaimsPrincipal? user;
+    private IEnumerable<string>? zones;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         user = authState.User;
+
+        zones = await Cache.GetOrCreateAsync("zones", async token => await ManiaPlanetAPI.GetZonesAsync(token));
     }
 }
