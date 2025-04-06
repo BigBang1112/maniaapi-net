@@ -69,6 +69,8 @@ jobs:
           - ManiaPlanetAPI.Extensions.Hosting
           - Xml
           - Xml.Extensions.Hosting
+          - TrackmaniaWS
+          - TrackmaniaWS.Extensions.Hosting
         
     runs-on: ubuntu-latest
     

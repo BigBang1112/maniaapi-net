@@ -39,6 +39,14 @@ public class TrackmaniaWS : ITrackmaniaWS
     {
     }
 
+    public TrackmaniaWS(TrackmaniaWSCredentials credentials, HttpClient client) : this(credentials.ApiUsername, credentials.ApiPassword, client)
+    {
+    }
+
+    public TrackmaniaWS(TrackmaniaWSCredentials credentials) : this(credentials.ApiUsername, credentials.ApiPassword)
+    {
+    }
+
     public virtual async Task<Player> GetPlayerAsync(string login, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"tmf/players/{login}/", TrackmaniaWSJsonContext.Default.Player, cancellationToken);
