@@ -2,7 +2,7 @@
 
 namespace ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 
-public static class ManiaPlanetServiceExtensions
+public static class ManiaPlanetAPIServiceExtensions
 {
     public static IHttpClientBuilder AddManiaPlanetAPI(this IServiceCollection services, Action<ManiaPlanetAPIOptions> options)
     {

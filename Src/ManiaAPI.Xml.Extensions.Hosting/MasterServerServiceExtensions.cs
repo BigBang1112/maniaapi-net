@@ -7,7 +7,7 @@ using System.Net;
 
 namespace ManiaAPI.Xml.Extensions.Hosting;
 
-public static class XmlServiceExtensions
+public static class MasterServerServiceExtensions
 {
     public static IHttpClientBuilder AddMasterServerTMUF(this IServiceCollection services)
     {

@@ -2,10 +2,10 @@
 
 	<PropertyGroup>
 		<PackageId>ManiaAPI.TrackmaniaAPI.Extensions.Hosting</PackageId>
-		<Version>2.1.0</Version>
+		<Version>2.2.0</Version>
 		<Authors>BigBang1112</Authors>
 		<Description>Extension methods of Trackmania API for ASP.NET Core. Part of the ManiaAPI.NET library set.</Description>
-		<Copyright>Copyright (c) 2025 Petr Pivoňka</Copyright>
+		<Copyright>Copyright (c) 2022-2025 Petr Pivoňka</Copyright>
 		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
 		<PackageIcon>logo_icon_outline.png</PackageIcon>
 		<PackageReadmeFile>README.md</PackageReadmeFile>

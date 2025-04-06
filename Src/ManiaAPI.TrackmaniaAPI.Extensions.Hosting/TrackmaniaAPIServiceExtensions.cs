@@ -2,7 +2,7 @@
 
 namespace ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 
-public static class TrackmaniaServiceExtensions
+public static class TrackmaniaAPIServiceExtensions
 {
     public static IHttpClientBuilder AddTrackmaniaAPI(this IServiceCollection services, Action<TrackmaniaAPIOptions> options)
     {

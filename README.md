@@ -11,6 +11,7 @@ A wrapper for these web APIs:
 - Trackmania web API
 - ManiaPlanet web API
 - Trackmania.io
+- [Trackmania Web Services](http://developers.trackmania.com/webservices/) (old TMF web API)
 - Trackmania Exchange
 - XML protocol (for TMF, TMT, and ManiaPlanet)
 
@@ -28,6 +29,8 @@ Anything you can imagine!
 - [ManiaAPI.ManiaPlanetAPI](#maniaapimaniaplanetapi)
 - [ManiaAPI.ManiaPlanetAPI.Extensions.Hosting](#maniaapimaniaplanetapiextensionshosting)
 - [ManiaAPI.TrackmaniaIO](#maniaapitrackmaniaio)
+- [ManiaAPI.TrackmaniaWS](#maniaapitrackmaniaws)
+- [ManiaAPI.TrackmaniaWS.Extensions.Hosting](#maniaapitrackmaniawsextensionshosting)
 - [ManiaAPI.TMX](#maniaapitmx)
 - [ManiaAPI.TMX.Extensions.Gbx](#maniaapitmxextensionsgbx)
 - [ManiaAPI.Xml](#maniaapixml)
@@ -405,6 +408,44 @@ or with DI, using an injected `HttpClient`:
 using ManiaAPI.TrackmaniaIO;
 
 builder.Services.AddHttpClient<TrackmaniaIO>();
+```
+
+## ManiaAPI.TrackmaniaWS
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaWS?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaWS/)
+
+Wraps https://ws.trackmania.com/ (old TMF web API). **This API requires authorization (via constructor).**
+
+### Features
+
+- Get player info (registration ID from login for example)
+
+More will be added in the future.
+
+### Setup
+
+```cs
+using ManiaAPI.TrackmaniaWS;
+
+var ws = new TrackmaniaWS("tmf_yourapp", "password");
+
+// Ready to use
+```
+
+For DI, consider using the `ManiaAPI.TrackmaniaWS.Extensions.Hosting` package.
+
+## ManiaAPI.TrackmaniaWS.Extensions.Hosting
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaWS.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaWS.Extensions.Hosting/)
+
+Provides an efficient way to inject `TrackmaniaWS` into your application.
+
+### Setup
+
+```cs
+using ManiaAPI.TrackmaniaWS.Extensions.Hosting;
+
+builder.Services.AddTrackmaniaWS();
 ```
 
 ## ManiaAPI.TMX
