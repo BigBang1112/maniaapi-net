@@ -7,12 +7,12 @@
 
 A wrapper for these web APIs:
 
-- Nadeo API (official TM2020 ingame API)
-- Trackmania web API
-- ManiaPlanet web API
-- Trackmania.io
+- [Nadeo API](https://webservices.openplanet.dev/) (official TM2020 ingame API)
+- [Trackmania web API](https://doc.trackmania.com/web/web-services/)
+- [ManiaPlanet web API](https://doc.maniaplanet.com/web-services)
+- [Trackmania.io](https://openplanet.dev/tmio/api)
 - [Trackmania Web Services](http://developers.trackmania.com/webservices/) (old TMF web API)
-- Trackmania Exchange
+- [Trackmania Exchange](https://api2.mania.exchange/)
 - XML protocol (for TMF, TMT, and ManiaPlanet)
 
 This set of libraries was made to be very easy and straightforward to use, but also easily mocked, so that it can be integrated into the real world in no time.
