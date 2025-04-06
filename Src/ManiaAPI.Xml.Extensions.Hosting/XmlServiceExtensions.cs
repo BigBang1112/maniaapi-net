@@ -9,14 +9,14 @@ namespace ManiaAPI.Xml.Extensions.Hosting;
 
 public static class XmlServiceExtensions
 {
-    public static void AddMasterServerTMUF(this IServiceCollection services)
+    public static IHttpClientBuilder AddMasterServerTMUF(this IServiceCollection services)
     {
-        services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultAddress));
+        return services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultAddress));
     }
 
-    public static void AddInitServerMP4(this IServiceCollection services)
+    public static IHttpClientBuilder AddInitServerMP4(this IServiceCollection services)
     {
-        services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultAddress));
+        return services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultAddress));
     }
 
     public static void AddMasterServerMP4(this IServiceCollection services)
