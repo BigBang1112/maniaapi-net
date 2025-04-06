@@ -11,8 +11,9 @@ A wrapper for these web APIs:
 - Trackmania web API
 - ManiaPlanet web API
 - Trackmania.io
+- [Trackmania Web Services](http://developers.trackmania.com/webservices/) (old TMF web API)
 - Trackmania Exchange
-- XML-RPC (for TMF, TMT, and ManiaPlanet)
+- XML protocol (for TMF, TMT, and ManiaPlanet)
 
 This set of libraries was made to be very easy and straightforward to use, but also easily mocked, so that it can be integrated into the real world in no time.
 
@@ -21,19 +22,23 @@ This set of libraries was made to be very easy and straightforward to use, but a
 Anything you can imagine!
 
 - [ManiaAPI.NadeoAPI](#maniaapinadeoapi)
+- [ManiaAPI.NadeoAPI.Extensions.Hosting](#maniaapinadeoapiextensionshosting)
 - [ManiaAPI.NadeoAPI.Extensions.Gbx](#maniaapinadeoapiextensionsgbx)
 - [ManiaAPI.TrackmaniaAPI](#maniaapitrackmaniaapi)
 - [ManiaAPI.TrackmaniaAPI.Extensions.Hosting](#maniaapitrackmaniaapiextensionshosting)
 - [ManiaAPI.ManiaPlanetAPI](#maniaapimaniaplanetapi)
 - [ManiaAPI.ManiaPlanetAPI.Extensions.Hosting](#maniaapimaniaplanetapiextensionshosting)
 - [ManiaAPI.TrackmaniaIO](#maniaapitrackmaniaio)
+- [ManiaAPI.TrackmaniaWS](#maniaapitrackmaniaws)
+- [ManiaAPI.TrackmaniaWS.Extensions.Hosting](#maniaapitrackmaniawsextensionshosting)
 - [ManiaAPI.TMX](#maniaapitmx)
+- [ManiaAPI.TMX.Extensions.Hosting](#maniaapitmxextensionshosting)
 - [ManiaAPI.TMX.Extensions.Gbx](#maniaapitmxextensionsgbx)
-- [ManiaAPI.XmlRpc](#maniaapixmlrpc)
+- [ManiaAPI.Xml](#maniaapixml)
 
 ### Samples
 
-- [WebAppXmlRpcExample](Samples/WebAppXmlRpcExample) - Blazor Server web application that demonstrates the use of the ManiaAPI.XmlRpc API, currently only TMTurbo.
+- [WebAppXmlExample](Samples/WebAppXmlExample) - Blazor Server web application that demonstrates the use of the ManiaAPI.Xml API, currently only TMTurbo.
 - [WebAppTmxExample](Samples/WebAppTmxExample) - Blazor Server web application that demonstrates the use of the ManiaAPI.TMX API.
 - [WebAppAuthorizationExample](Samples/WebAppAuthorizationExample) - Simple ASP.NET Core web application to show how to conveniently use the OAuth2 from `ManiaAPI.TrackmaniaAPI.Extensions.Hosting` and `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting`.
 
@@ -135,27 +140,34 @@ var mapLeaderboard = await nls.GetTopLeaderboardAsync(campaignMap.MapUid);
 var records = await ns.GetMapRecordsAsync(mapLeaderboard.Top.Top.Select(x => x.AccountId), mapInfo.MapId);
 ```
 
-or with DI, using an injected `HttpClient`:
+For DI, consider using the `ManiaAPI.NadeoAPI.Extensions.Hosting` package. It handles the authorization for you without additional startup code.
+
+## ManiaAPI.NadeoAPI.Extensions.Hosting
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.NadeoAPI.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.NadeoAPI.Extensions.Hosting/)
+
+Provides an efficient way to inject all Nadeo services into your application.
+
+### Setup
+
+Providing `options.Credentials` is optional, but setting it will automatically authorize on the first request and maintain that connection, so you don't have to call `AuthorizeAsync`.
 
 ```cs
-using ManiaAPI.NadeoAPI;
+using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 
-builder.Services.AddHttpClient<NadeoServices>();
-builder.Services.AddHttpClient<NadeoLiveServices>();
-builder.Services.AddHttpClient<NadeoMeetServices>();
-
-// Do the setup
-var login = "mylogin";
-var password = "mypassword";
-
-var ns = provider.GetRequiredService<NadeoServices>();
-var nls = provider.GetRequiredService<NadeoLiveServices>();
-var nms = provider.GetRequiredService<NadeoMeetServices>();
-
-await ns.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
-await nls.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
-await nms.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
+builder.Services.AddNadeoAPI(options =>
+{
+    options.Credentials = new NadeoAPICredentials(
+        builder.Configuration["NadeoAPI:Login"]!,
+        builder.Configuration["NadeoAPI:Password"]!,
+        AuthorizationMethod.DedicatedServer);
+});
 ```
+
+Features this setup brings:
+- `NadeoServices`, `NadeoLiveServices`, and `NadeoMeetServices` will be available as transients
+- HTTP client will be handled properly
+- Credentials will be handled as a singleton
 
 ## ManiaAPI.NadeoAPI.Extensions.Gbx
 
@@ -224,29 +236,34 @@ await tm.AuthorizeAsync("clientId", "clientSecret", ["clubs", "read_favorite"]);
 // Ready to use
 ```
 
-or with DI, using an injected `HttpClient`:
-
-```cs
-using ManiaAPI.TrackmaniaAPI;
-
-builder.Services.AddHttpClient<TrackmaniaAPI>();
-
-// Do the setup
-var tm = provider.GetRequiredService<TrackmaniaAPI>();
-await tm.AuthorizeAsync("clientId", "clientSecret", ["clubs", "read_favorite"]);
-
-// Ready to use
-```
+For DI, consider using the `ManiaAPI.TrackmaniaAPI.Extensions.Hosting` package.
 
 ## ManiaAPI.TrackmaniaAPI.Extensions.Hosting
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaAPI.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaAPI.Extensions.Hosting/)
 
-Provides Trackmania OAuth2 authorization for ASP.NET Core applications.
+Provides Trackmania OAuth2 authorization for ASP.NET Core applications and an efficient way to inject `TrackmaniaAPI` into your application.
 
-### Setup
+### Setup `TrackmaniaAPI` injection
 
-For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Generate your credentials [here](https://api.trackmania.com/manager).
+`TrackmaniaAPI` will be available as a transient, with a singleton handling of credentials. This will make sure the `HttpClient` beneath is handled properly.
+
+Providing `options.Credentials` is optional, but setting it will automatically authorize on the first request and maintain that connection, so you don't have to call `AuthorizeAsync`.
+
+```cs
+using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
+
+builder.Services.AddTrackmaniaAPI(options =>
+{
+    options.Credentials = new ManiaPlanetAPICredentials(
+        builder.Configuration["Trackmania:ClientId"]!,
+        builder.Configuration["Trackmania:ClientSecret"]!);
+});
+```
+
+### Setup OAuth2
+
+For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Generate your credentials [here](https://api.trackmania.com/manager). **The redirect URL is the `/signin-trackmania` relative to the web root**, for example: `https://localhost:7864/signin-trackmania`.
 
 ```cs
 using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
@@ -258,8 +275,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie()
     .AddTrackmania(options =>
     {
-        options.ClientId = builder.Configuration["OAuth2:Trackmania:Id"]!;
-        options.ClientSecret = builder.Configuration["OAuth2:Trackmania:Secret"]!;
+        options.ClientId = builder.Configuration["OAuth2:Trackmania:ClientId"]!;
+        options.ClientSecret = builder.Configuration["OAuth2:Trackmania:ClientSecret"]!;
         
         options.Scope.Add("clubs");
     });
@@ -273,6 +290,8 @@ app.MapGet("/login", () =>
 
 app.Run();
 ```
+
+You can inject `TrackmaniaAPI` if you create a special HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options - see the [sample](Samples/WebAppAuthorizationExample).
 
 ## ManiaAPI.ManiaPlanetAPI
 
@@ -299,23 +318,34 @@ await mp.AuthorizeAsync("clientId", "clientSecret", ["basic", "dedicated", "maps
 // Ready to use
 ```
 
-or with DI, using an injected `HttpClient`:
-
-```cs
-using ManiaAPI.ManiaPlanetAPI;
-
-builder.Services.AddHttpClient<ManiaPlanetAPI>();
-```
+For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package.
 
 ## ManiaAPI.ManiaPlanetAPI.Extensions.Hosting
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting/)
 
-Provides ManiaPlanet OAuth2 authorization for ASP.NET Core applications.
+Provides ManiaPlanet OAuth2 authorization for ASP.NET Core applications and an efficient way to inject `ManiaPlanetAPI` into your application.
 
-### Setup
+### Setup `ManiaPlanetAPI` injection
 
-For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager).
+`ManiaPlanetAPI` will be available as a transient, with a singleton handling of credentials. This will make sure the `HttpClient` beneath is handled properly.
+
+Providing `options.Credentials` is optional, but setting it will automatically authorize on the first request and maintain that connection, so you don't have to call `AuthorizeAsync`.
+
+```cs
+using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
+
+builder.Services.AddManiaPlanetAPI(options =>
+{
+    options.Credentials = new ManiaPlanetAPICredentials(
+        builder.Configuration["ManiaPlanet:ClientId"]!,
+        builder.Configuration["ManiaPlanet:ClientSecret"]!);
+});
+```
+
+### Setup OAuth2
+
+For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager). **The redirect URL is the `/signin-maniaplanet` relative to the web root**, for example: `https://localhost:7864/signin-maniaplanet`.
 
 ```cs
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
@@ -327,8 +357,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie()
     .AddManiaPlanet(options =>
     {
-        options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:Id"]!;
-        options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:Secret"]!;
+        options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:ClientId"]!;
+        options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:ClientSecret"]!;
 
         Array.ForEach(["basic", "dedicated", "titles"], options.Scope.Add);
     });
@@ -342,6 +372,8 @@ app.MapGet("/login", () =>
 
 app.Run();
 ```
+
+You can inject `ManiaPlanetAPI` if you create a special HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options - see the [sample](Samples/WebAppAuthorizationExample).
 
 ## ManiaAPI.TrackmaniaIO
 
@@ -379,6 +411,44 @@ using ManiaAPI.TrackmaniaIO;
 builder.Services.AddHttpClient<TrackmaniaIO>();
 ```
 
+## ManiaAPI.TrackmaniaWS
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaWS?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaWS/)
+
+Wraps https://ws.trackmania.com/ (old TMF web API). **This API requires authorization (via constructor).**
+
+### Features
+
+- Get player info (registration ID from login for example)
+
+More will be added in the future.
+
+### Setup
+
+```cs
+using ManiaAPI.TrackmaniaWS;
+
+var ws = new TrackmaniaWS("tmf_yourapp", "password");
+
+// Ready to use
+```
+
+For DI, consider using the `ManiaAPI.TrackmaniaWS.Extensions.Hosting` package.
+
+## ManiaAPI.TrackmaniaWS.Extensions.Hosting
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaWS.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaWS.Extensions.Hosting/)
+
+Provides an efficient way to inject `TrackmaniaWS` into your application.
+
+### Setup
+
+```cs
+using ManiaAPI.TrackmaniaWS.Extensions.Hosting;
+
+builder.Services.AddTrackmaniaWS();
+```
+
 ## ManiaAPI.TMX
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TMX?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TMX/)
@@ -414,23 +484,23 @@ builder.Services.AddScoped<TMX>(provider => new TMX(
     provider.GetRequiredService<IHttpClientFactory>().CreateClient("TMX_TMNF"), TmxSite.TMNF));
 ```
 
-For multiple sites in DI, you can use keyed services:
+For advanced DI, consider using the `ManiaAPI.TMX.Extensions.Hosting` package.
+
+## ManiaAPI.TMX.Extensions.Hosting
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TMX.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TMX.Extensions.Hosting/)
+
+Provides an efficient way to inject all TMX services into your application.
+
+### Setup
 
 ```cs
-foreach (TmxSite site in Enum.GetValues<TmxSite>())
-{
-    builder.Services.AddHttpClient($"{nameof(TMX)}_{site}");
+using ManiaAPI.TMX.Extensions.Hosting;
 
-    builder.Services.AddKeyedScoped(site, (provider, key) => new TMX(
-        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(TMX)}_{key}"), site));
-    builder.Services.AddScoped(provider => provider.GetRequiredKeyedService<TMX>(site));
-}
-
-builder.Services.AddScoped(provider => Enum.GetValues<TmxSite>()
-    .ToImmutableDictionary(site => site, site => provider.GetRequiredKeyedService<TMX>(site)));
+builder.Services.AddTMX();
 ```
 
-Features this last setup brings:
+Features this setup brings:
 
 - You can inject `ImmutableDictionary<TmxSite, TMX>` to get all TMX sites as individual instances
 - If you don't need specific site context, you can inject `IEnumerable<TMX>` to get all TMX sites
@@ -467,11 +537,11 @@ var map = await tmx.GetTrackGbxNodeAsync(12345);
 Console.WriteLine("Number of blocks: " + map.GetBlocks().Count());
 ```
 
-## ManiaAPI.XmlRpc
+## ManiaAPI.Xml
 
-[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.XmlRpc?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.XmlRpc/)
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.Xml?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.Xml/)
 
-Wraps TMF, TMT, and ManiaPlanet XML-RPC ingame APIs. **Does not include dedicated server XML-RPC.**
+Wraps TMF, TMT, and ManiaPlanet XML ingame APIs. **Does not relate to the dedicated server XML-RPC.**
 
 It currently **does not support any authentication** for its complexity and security reasons. If some of the leaderboard methods will become secured with authentication though, this will be considered. For authenticated functionality in TMUF, use the [TMF.NET](https://github.com/Laiteux/TMF.NET) library.
 
@@ -515,17 +585,9 @@ For all games:
 ### Setup for TMUF
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var masterServer = new MasterServerTMUF();
-```
-
-or with DI, using an injected `HttpClient`:
-
-```cs
-using ManiaAPI.XmlRpc;
-
-builder.Services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultAddress));
 ```
 
 ### Setup for ManiaPlanet
@@ -533,7 +595,7 @@ builder.Services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = 
 First examples assume `Maniaplanet relay 2` master server is still running.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var masterServer = new MasterServerMP4();
 ```
@@ -541,25 +603,13 @@ var masterServer = new MasterServerMP4();
 Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
-    BaseAddress = new System.Uri(MasterServerMP4.DefaultAddress)
+    BaseAddress = new Uri(MasterServerMP4.DefaultAddress)
 };
 var masterServer = new MasterServerMP4(httpClient);
-```
-
-or with DI, using an injected `HttpClient`:
-
-```cs
-using ManiaAPI.XmlRpc;
-
-builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress))
-    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-    {
-        AutomaticDecompression = DecompressionMethods.GZip
-    });
 ```
 
 In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
@@ -567,43 +617,15 @@ In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to 
 To be most inline with the game client, you should validate the master server first with `ValidateAsync`. Behind the scenes, it first requests `GetApplicationConfig`, then on catched HTTP exception, it requests `GetWaitingParams` from the init server and use the available master server instead.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
-    BaseAddress = new System.Uri(MasterServerMP4.DefaultAddress)
+    BaseAddress = new Uri(MasterServerMP4.DefaultAddress)
 };
 var masterServer = new MasterServerMP4(httpClient);
 
 await masterServer.ValidateAsync(); // Do this for reliability
-
-// The master server is now ready to use
-```
-
-With DI, it is recommended to separate the init server's `HttpClient` from the master server. Note how `MasterServerMP4` is registered as a singleton, so that it remembers the address.
-
-You don't have to enable decompression for the init server, as it does not return large responses.
-
-```cs
-using ManiaAPI.XmlRpc;
-
-// Register the services
-builder.Services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultAddress));
-builder.Services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress))
-    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-    {
-        AutomaticDecompression = DecompressionMethods.GZip
-    });
-builder.Services.AddSingleton<MasterServerMP4>();
-
-// Do the setup
-// This should run at the start of your application, or when you need to refresh the master servers
-await using var scope = provider.CreateScopeAsync();
-
-var initServer = scope.ServiceProvider.GetRequiredService<InitServerMP4>();
-var masterServer = scope.ServiceProvider.GetRequiredService<MasterServerMP4>();
-
-await masterServer.ValidateAsync(initServer);
 
 // The master server is now ready to use
 ```
@@ -613,7 +635,7 @@ await masterServer.ValidateAsync(initServer);
 TMT handles 3 platforms: PC, XB1, and PS4. Each have their own init server and master server. Nadeo still tends to change these master servers, so it's recommended to first go through the init server.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var initServer = new InitServerTMT(Platform.PC);
 var waitingParams = await initServer.GetWaitingParamsAsync();
@@ -626,7 +648,7 @@ var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
 Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client for the **master server**. Init server does not return large responses, so it's not necessary for that one.
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var initServer = new InitServerTMT(Platform.PC);
 var waitingParams = await initServer.GetWaitingParamsAsync();
@@ -640,35 +662,10 @@ var masterServer = new MasterServerTMT(httpClient);
 // You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
 ```
 
-or with DI, using an injected `HttpClient` (not viable for multiple platforms). Note how `MasterServerTMT` is registered as a singleton, so that it remembers the address.
-
-```cs
-using ManiaAPI.XmlRpc;
-
-// Register the services
-builder.Services.AddHttpClient<InitServerTMT>(client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(Platform.PC)));
-builder.Services.AddHttpClient<MasterServerTMT>()
-    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-    {
-        AutomaticDecompression = DecompressionMethods.GZip
-    });
-builder.Services.AddSingleton<MasterServerTMT>();
-
-// Do the setup
-// This should run at the start of your application, or when you need to refresh the master servers
-await using var scope = provider.CreateScopeAsync();
-
-var initServer = scope.ServiceProvider.GetRequiredService<InitServerTMT>();
-var waitingParams = await initServer.GetWaitingParamsAsync();
-
-var masterServer = scope.ServiceProvider.GetRequiredService<MasterServerTMT>();
-masterServer.Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
-```
-
 **For a simple setup with multiple platforms, the `AggregatedMasterServerTMT` is recommended:**
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml;
 
 var waitingParams = Enum.GetValues<Platform>().ToDictionary(
     platform => platform, 
@@ -688,37 +685,61 @@ var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDicti
 // You can now use aggregatedMasterServer to work with all master servers at once
 ```
 
-For DI setup with multiple platforms, you can use keyed services:
+## ManiaAPI.Xml.Extensions.Hosting
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.Xml.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.Xml.Extensions.Hosting/)
+
+Provides an efficient way to inject all XML services into your application.
+
+### Setup for TMUF
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.Xml.Extensions.Hosting;
+
+builder.Services.AddMasterServerTMUF();
+```
+
+### Setup for ManiaPlanet
+
+Relying on `Maniaplanet relay 2` to continue running:
+
+```cs
+using ManiaAPI.Xml.Extensions.Hosting;
+
+builder.Services.AddMasterServerMP4();
+```
+
+You can now inject `MasterServerMP4` (registered as singleton) and use it without additional steps. Compression is enabled.
+
+If you want to be extra sure the correct master server is selected, use this setup:
+
+```cs
+using ManiaAPI.Xml.Extensions.Hosting;
+
+builder.Services.AddInitServerMP4();
+builder.Services.AddMasterServerMP4();
+
+// In a scope, retrieve init server, and use it for validating the master server
+// No need for CreateScopeAsync if your service is scoped
+await using var scope = provider.CreateScopeAsync();
+
+var initServer = scope.ServiceProvider.GetRequiredService<InitServerMP4>();
+var masterServer = scope.ServiceProvider.GetRequiredService<MasterServerMP4>();
+
+await initServer.ValidateAsync(masterServer);
+```
+
+### Setup for TMT
+
+```cs
+using ManiaAPI.Xml.Extensions.Hosting;
 
 // Register the services
-foreach (var platform in Enum.GetValues<Platform>())
-{
-    builder.Services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(platform)));
-    builder.Services.AddHttpClient($"{nameof(MasterServerTMT)}_{platform}")
-        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip
-        });
-
-    builder.Services.AddKeyedScoped(platform, (provider, key) => new InitServerTMT(
-        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(InitServerTMT)}_{key}")));
-
-    builder.Services.AddKeyedSingleton(platform, (provider, key) => new MasterServerTMT(
-        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(MasterServerTMT)}_{key}")));
-    builder.Services.AddSingleton(provider => provider.GetRequiredKeyedService<MasterServerTMT>(platform));
-}
-
-builder.Services.AddSingleton(provider => Enum.GetValues<Platform>()
-    .ToImmutableDictionary(platform => platform, platform => provider.GetRequiredKeyedService<MasterServerTMT>(platform)));
-
-builder.Services.AddScoped(provider => new AggregatedMasterServerTMT(
-    provider.GetRequiredService<ImmutableDictionary<Platform, MasterServerTMT>>()));
+builder.Services.AddMasterServerTMT();
 
 // Do the setup
 // This should run at the start of your application, or when you need to refresh the master servers
+// No need for CreateScopeAsync if your service is scoped
 await using var scope = provider.CreateScopeAsync();
 
 foreach (var platform in Enum.GetValues<Platform>())
@@ -736,6 +757,7 @@ Features this last setup brings:
 - You can inject `ImmutableDictionary<Platform, MasterServerTMT>` to get all master servers as individual instances
 - If you don't need specific platform context, you can inject `IEnumerable<MasterServerTMT>` to get all master servers
 - Specific `InitServerTMT` and `MasterServerTMT` can be injected using `[FromKeyedServices(Platform.PC)]`
+- All `MasterServerTMT` handle compression
 
 > [!WARNING]
 > If you just inject `MasterServerTMT` alone, it will give the last-registered one (in this case, PS4). If you need a specific platform, use `[FromKeyedServices(...)]`.

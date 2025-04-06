@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <PublishAot>true</PublishAot>
+        <UserSecretsId>b568ff4f-c24c-402b-aaf1-eacc6d8220e5</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Src\ManiaAPI.NadeoAPI.Extensions.Hosting\ManiaAPI.NadeoAPI.Extensions.Hosting.csproj" />
+    </ItemGroup>
+
+</Project>

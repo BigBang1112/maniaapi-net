@@ -23,10 +23,4 @@ await mp.AuthorizeAsync("clientId", "clientSecret", ["basic", "dedicated", "maps
 // Ready to use
 ```
 
-or with DI, using an injected `HttpClient`:
-
-```cs
-using ManiaAPI.ManiaPlanetAPI;
-
-builder.Services.AddHttpClient<ManiaPlanetAPI>();
-```
+For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package.
