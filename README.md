@@ -32,6 +32,7 @@ Anything you can imagine!
 - [ManiaAPI.TrackmaniaWS](#maniaapitrackmaniaws)
 - [ManiaAPI.TrackmaniaWS.Extensions.Hosting](#maniaapitrackmaniawsextensionshosting)
 - [ManiaAPI.TMX](#maniaapitmx)
+- [ManiaAPI.TMX.Extensions.Hosting](#maniaapitmxextensionshosting)
 - [ManiaAPI.TMX.Extensions.Gbx](#maniaapitmxextensionsgbx)
 - [ManiaAPI.Xml](#maniaapixml)
 
