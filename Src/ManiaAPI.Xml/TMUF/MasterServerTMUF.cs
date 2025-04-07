@@ -1,5 +1,6 @@
 ﻿using MinimalXmlReader;
 using System.Collections.Immutable;
+using System.Net.Http.Headers;
 using TmEssentials;
 
 namespace ManiaAPI.Xml.TMUF;
@@ -24,19 +25,19 @@ public interface IMasterServerTMUF : IMasterServer
     Task<LadderScores> DownloadLatestLadderScoresAsync(int zoneId, bool parallelLatestCheck = false, CancellationToken cancellationToken = default);
     Task<LadderScores?> DownloadLatestLadderScoresAsync(string zone, bool parallelLatestCheck = false, CancellationToken cancellationToken = default);
     Task<Stream> DownloadScoresAsync(ScoresNumber num, string scoresName, int zoneId, CancellationToken cancellationToken = default);
-    Task<DateTimeOffset> FetchCampaignScoresDateTimeAsync(string campaignName, ScoresNumber num, int zoneId, CancellationToken cancellationToken = default);
-    Task<DateTimeOffset?> FetchCampaignScoresDateTimeAsync(string campaignName, ScoresNumber num, string zone, CancellationToken cancellationToken = default);
-    Task<DateTimeOffset> FetchGeneralScoresDateTimeAsync(ScoresNumber num, int zoneId, CancellationToken cancellationToken = default);
-    Task<DateTimeOffset?> FetchGeneralScoresDateTimeAsync(ScoresNumber num, string zone, CancellationToken cancellationToken = default);
-    Task<DateTimeOffset> FetchLadderScoresDateTimeAsync(ScoresNumber num, int zoneId, CancellationToken cancellationToken = default);
-    Task<DateTimeOffset?> FetchLadderScoresDateTimeAsync(ScoresNumber num, string zone, CancellationToken cancellationToken = default);
+    Task<DateTimeOffset> FetchCampaignScoresDateTimeAsync(string campaignName, ScoresNumber num, int zoneId, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default);
+    Task<DateTimeOffset?> FetchCampaignScoresDateTimeAsync(string campaignName, ScoresNumber num, string zone, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default);
+    Task<DateTimeOffset> FetchGeneralScoresDateTimeAsync(ScoresNumber num, int zoneId, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default);
+    Task<DateTimeOffset?> FetchGeneralScoresDateTimeAsync(ScoresNumber num, string zone, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default);
+    Task<DateTimeOffset> FetchLadderScoresDateTimeAsync(ScoresNumber num, int zoneId, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default);
+    Task<DateTimeOffset?> FetchLadderScoresDateTimeAsync(ScoresNumber num, string zone, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default);
+    Task<DateTimeOffset> FetchScoresDateTimeAsync(string scoresName, ScoresNumber num, int zoneId, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default);
     Task<ScoresInfo> FetchLatestCampaignScoresInfoAsync(string campaignName, int zoneId, bool parallel = false, CancellationToken cancellationToken = default);
     Task<ScoresInfo?> FetchLatestCampaignScoresInfoAsync(string campaignName, string zone, bool parallel = false, CancellationToken cancellationToken = default);
     Task<ScoresInfo> FetchLatestGeneralScoresInfoAsync(int zoneId, bool parallel = false, CancellationToken cancellationToken = default);
     Task<ScoresInfo?> FetchLatestGeneralScoresInfoAsync(string zone, bool parallel = false, CancellationToken cancellationToken = default);
     Task<ScoresInfo> FetchLatestLadderScoresInfoAsync(int zoneId, bool parallel = false, CancellationToken cancellationToken = default);
     Task<ScoresInfo?> FetchLatestLadderScoresInfoAsync(string zone, bool parallel = false, CancellationToken cancellationToken = default);
-    Task<DateTimeOffset> FetchScoresDateTimeAsync(string scoresName, ScoresNumber num, int zoneId, CancellationToken cancellationToken = default);
 
     static abstract string GetGeneralScoresUrl(ScoresNumber num, int zoneId);
     static abstract string GetLadderScoresUrl(ScoresNumber num, int zoneId);
@@ -353,46 +354,46 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         return await FetchLatestScoresInfoAsync(campaignName, zoneId, parallel, cancellationToken);
     }
 
-    public async Task<DateTimeOffset> FetchCampaignScoresDateTimeAsync(string campaignName, ScoresNumber num, int zoneId, CancellationToken cancellationToken = default)
+    public async Task<DateTimeOffset> FetchCampaignScoresDateTimeAsync(string campaignName, ScoresNumber num, int zoneId, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default)
     {
-        return await FetchScoresDateTimeAsync(campaignName, num, zoneId, cancellationToken);
+        return await FetchScoresDateTimeAsync(campaignName, num, zoneId, lastModified, cancellationToken);
     }
 
-    public async Task<DateTimeOffset?> FetchCampaignScoresDateTimeAsync(string campaignName, ScoresNumber num, string zone, CancellationToken cancellationToken = default)
+    public async Task<DateTimeOffset?> FetchCampaignScoresDateTimeAsync(string campaignName, ScoresNumber num, string zone, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default)
     {
         if (League.IdsWithDataInTMUF.TryGetValue(zone, out int zoneId))
         {
-            return await FetchCampaignScoresDateTimeAsync(campaignName, num, zoneId, cancellationToken);
+            return await FetchCampaignScoresDateTimeAsync(campaignName, num, zoneId, lastModified, cancellationToken);
         }
 
         return null;
     }
 
-    public async Task<DateTimeOffset> FetchGeneralScoresDateTimeAsync(ScoresNumber num, int zoneId, CancellationToken cancellationToken = default)
+    public async Task<DateTimeOffset> FetchGeneralScoresDateTimeAsync(ScoresNumber num, int zoneId, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default)
     {
-        return await FetchScoresDateTimeAsync(GeneralScoresName, num, zoneId, cancellationToken);
+        return await FetchScoresDateTimeAsync(GeneralScoresName, num, zoneId, lastModified, cancellationToken);
     }
 
-    public async Task<DateTimeOffset?> FetchGeneralScoresDateTimeAsync(ScoresNumber num, string zone, CancellationToken cancellationToken = default)
+    public async Task<DateTimeOffset?> FetchGeneralScoresDateTimeAsync(ScoresNumber num, string zone, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default)
     {
         if (League.IdsWithDataInTMUF.TryGetValue(zone, out int zoneId))
         {
-            return await FetchGeneralScoresDateTimeAsync(num, zoneId, cancellationToken);
+            return await FetchGeneralScoresDateTimeAsync(num, zoneId, lastModified, cancellationToken);
         }
 
         return null;
     }
 
-    public async Task<DateTimeOffset> FetchLadderScoresDateTimeAsync(ScoresNumber num, int zoneId, CancellationToken cancellationToken = default)
+    public async Task<DateTimeOffset> FetchLadderScoresDateTimeAsync(ScoresNumber num, int zoneId, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default)
     {
-        return await FetchScoresDateTimeAsync(LadderScoresName, num, zoneId, cancellationToken);
+        return await FetchScoresDateTimeAsync(LadderScoresName, num, zoneId, lastModified, cancellationToken);
     }
 
-    public async Task<DateTimeOffset?> FetchLadderScoresDateTimeAsync(ScoresNumber num, string zone, CancellationToken cancellationToken = default)
+    public async Task<DateTimeOffset?> FetchLadderScoresDateTimeAsync(ScoresNumber num, string zone, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default)
     {
         if (League.IdsWithDataInTMUF.TryGetValue(zone, out int zoneId))
         {
-            return await FetchLadderScoresDateTimeAsync(num, zoneId, cancellationToken);
+            return await FetchLadderScoresDateTimeAsync(num, zoneId, lastModified, cancellationToken);
         }
 
         return null;
@@ -408,10 +409,23 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
 
-    public virtual async Task<DateTimeOffset> FetchScoresDateTimeAsync(string scoresName, ScoresNumber num, int zoneId, CancellationToken cancellationToken = default)
+    public virtual async Task<DateTimeOffset> FetchScoresDateTimeAsync(string scoresName, ScoresNumber num, int zoneId, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default)
     {
         var url = GetScoresUrl(num, scoresName, zoneId);
-        using var response = await Client.HeadAsync(url, cancellationToken);
+
+        using var request = new HttpRequestMessage(HttpMethod.Head, url);
+
+        if (lastModified.HasValue)
+        {
+            request.Headers.IfModifiedSince = lastModified;
+        }
+
+        using var response = await Client.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
+        {
+            return response.Content.Headers.LastModified ?? lastModified ?? throw new Exception("Last modified is null");
+        }
 
         response.EnsureSuccessStatusCode();
 
