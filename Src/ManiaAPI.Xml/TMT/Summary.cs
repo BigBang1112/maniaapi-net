@@ -2,7 +2,6 @@
 
 namespace ManiaAPI.Xml.TMT;
 
-public sealed record Summary<T>(
-    string Zone, 
+public record Summary<T>(
     DateTimeOffset Timestamp,
     ImmutableArray<RecordUnit<T>> Scores) where T : struct;

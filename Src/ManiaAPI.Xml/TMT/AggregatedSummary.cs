@@ -2,7 +2,6 @@
 
 namespace ManiaAPI.Xml.TMT;
 
-public sealed record AggregatedSummary<T>(
-    string Zone, 
+public record AggregatedSummary<T>(
     ImmutableDictionary<Platform, DateTimeOffset> Timestamps,
     ImmutableArray<AggregatedRecordUnit<T>> Scores) where T : struct;

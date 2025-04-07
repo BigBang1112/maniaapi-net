@@ -2,6 +2,6 @@
 
 namespace ManiaAPI.Xml.TMT;
 
-public sealed record AggregatedSummaryResponse<T>(
+public sealed record AggregatedSummaryZoneResponse<T>(
     ImmutableDictionary<Platform, AggregatedSummaryInfo> Platforms,
-    AggregatedSummary<T> Summary) where T : struct;
+    ImmutableArray<AggregatedSummaryZone<T>> Summaries) where T : struct;
