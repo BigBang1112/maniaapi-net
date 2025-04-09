@@ -11,6 +11,6 @@ using ManiaAPI.TrackmaniaWS.Extensions.Hosting;
 
 builder.Services.AddTrackmaniaWS(new TrackmaniaWSOptions
 {
-	Credentials = new("tmf_yourapp", "password")
+    Credentials = new("tmf_yourapp", "password")
 });
 ```
