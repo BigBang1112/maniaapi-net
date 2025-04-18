@@ -39,7 +39,7 @@ await using var scope = provider.CreateScopeAsync();
 var initServer = scope.ServiceProvider.GetRequiredService<InitServerMP4>();
 var masterServer = scope.ServiceProvider.GetRequiredService<MasterServerMP4>();
 
-await initServer.ValidateAsync(masterServer);
+await masterServer.ValidateAsync(initServer);
 ```
 
 ## Setup for TMT
