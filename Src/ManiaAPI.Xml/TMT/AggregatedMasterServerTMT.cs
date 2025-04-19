@@ -124,17 +124,13 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
         IProgress<AggregatedSummaryZoneProgress<T>>? progress)
         where T : struct, IComparable<T>
     {
-        var tasks = masterServers.ToDictionary(async x => await getResponse(x.Value), x => x.Key);
+        var tasks = masterServers.ToDictionary(x => getResponse(x.Value), x => x.Key);
 
         var platforms = ImmutableDictionary.CreateBuilder<Platform, AggregatedSummaryInfo>();
         var aggregated = new Dictionary<string, (ImmutableDictionary<Platform, DateTimeOffset>.Builder Timestamps, ImmutableArray<AggregatedRecordUnit<T>>.Builder Scores)>();
 
-        while (tasks.Count > 0)
+        await foreach (var (platform, task) in tasks.WhenEachRemove())
         {
-            var task = await Task.WhenAny(tasks.Keys);
-            var platform = tasks[task];
-            tasks.Remove(task);
-
             try
             {
                 var response = await task;
@@ -178,18 +174,14 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
         IProgress<AggregatedSummaryProgress<T>>? progress)
         where T : struct, IComparable<T>
     {
-        var tasks = masterServers.ToDictionary(async x => await getResponse(x.Value), x => x.Key);
+        var tasks = masterServers.ToDictionary(x => getResponse(x.Value), x => x.Key);
 
         var platforms = ImmutableDictionary.CreateBuilder<Platform, AggregatedSummaryInfo>();
         var timestamps = ImmutableDictionary.CreateBuilder<Platform, DateTimeOffset>();
         var scores = ImmutableArray.CreateBuilder<AggregatedRecordUnit<T>>();
 
-        while (tasks.Count > 0)
+        await foreach (var (platform, task) in tasks.WhenEachRemove())
         {
-            var task = await Task.WhenAny(tasks.Keys);
-            var platform = tasks[task];
-            tasks.Remove(task);
-
             try
             {
                 var response = await task;
