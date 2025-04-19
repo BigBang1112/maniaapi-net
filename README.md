@@ -35,6 +35,7 @@ Anything you can imagine!
 - [ManiaAPI.TMX.Extensions.Hosting](#maniaapitmxextensionshosting)
 - [ManiaAPI.TMX.Extensions.Gbx](#maniaapitmxextensionsgbx)
 - [ManiaAPI.Xml](#maniaapixml)
+- [ManiaAPI.Xml.Extensions.Hosting](#maniaapixmlextensionshosting)
 
 ### Samples
 
