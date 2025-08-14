@@ -780,7 +780,7 @@ Make sure you have these framework SDKs available:
 
 In Visual Studio, you can just use Build Solution and everything should build. JetBrains Rider has been tested and also works.
 
-In .NET CLI, run `dotnet build` on the solution (`.sln`) level.
+In .NET CLI, run `dotnet build` on the solution (`.slnx`) level.
 
 ## Contributing
 

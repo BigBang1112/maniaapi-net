@@ -1,0 +1,50 @@
+<Solution>
+  <Folder Name="/Generators/">
+    <Project Path="Generators/ManiaAPI.TMX.Generators/ManiaAPI.TMX.Generators.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path=".gitmodules" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Samples/">
+    <Project Path="Samples/ExtendApiSample/ExtendApiSample.csproj" />
+    <Project Path="Samples/ExtendXmlSample/ExtendXmlSample.csproj" />
+    <Project Path="Samples/TrackmaniaWsSample/TrackmaniaWsSample.csproj" />
+    <Project Path="Samples/UpdateTM2020MapSample/UpdateTM2020MapSample.csproj" />
+    <Project Path="Samples/WebAppAuthorizationExample/WebAppAuthorizationExample.csproj" />
+    <Project Path="Samples/WebAppNadeoAPIExample/WebAppNadeoAPIExample.csproj" />
+    <Project Path="Samples/WebAppTmxExample/WebAppTmxExample.csproj" />
+    <Project Path="Samples/WebAppXmlExample/WebAppXmlExample.csproj" />
+  </Folder>
+  <Folder Name="/Src/">
+    <Project Path="Src/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.csproj" />
+    <Project Path="Src/ManiaAPI.ManiaPlanetAPI/ManiaAPI.ManiaPlanetAPI.csproj" />
+    <Project Path="Src/ManiaAPI.NadeoAPI.Extensions.Gbx/ManiaAPI.NadeoAPI.Extensions.Gbx.csproj" />
+    <Project Path="Src/ManiaAPI.NadeoAPI.Extensions.Hosting/ManiaAPI.NadeoAPI.Extensions.Hosting.csproj" />
+    <Project Path="Src/ManiaAPI.NadeoAPI/ManiaAPI.NadeoAPI.csproj" />
+    <Project Path="Src/ManiaAPI.TMX.Extensions.Gbx/ManiaAPI.TMX.Extensions.Gbx.csproj" />
+    <Project Path="Src/ManiaAPI.TMX.Extensions.Hosting/ManiaAPI.TMX.Extensions.Hosting.csproj" />
+    <Project Path="Src/ManiaAPI.TMX/ManiaAPI.TMX.csproj" />
+    <Project Path="Src/ManiaAPI.TrackmaniaAPI.Extensions.Hosting/ManiaAPI.TrackmaniaAPI.Extensions.Hosting.csproj" />
+    <Project Path="Src/ManiaAPI.TrackmaniaAPI/ManiaAPI.TrackmaniaAPI.csproj" />
+    <Project Path="Src/ManiaAPI.TrackmaniaIO/ManiaAPI.TrackmaniaIO.csproj" />
+    <Project Path="Src/ManiaAPI.TrackmaniaWS.Extensions.Hosting/ManiaAPI.TrackmaniaWS.Extensions.Hosting.csproj" />
+    <Project Path="Src/ManiaAPI.TrackmaniaWS/ManiaAPI.TrackmaniaWS.csproj" />
+    <Project Path="Src/ManiaAPI.Xml.Extensions.Hosting/ManiaAPI.Xml.Extensions.Hosting.csproj" />
+    <Project Path="Src/ManiaAPI.Xml/ManiaAPI.Xml.csproj" />
+    <Project Path="Src/ManiaAPI.XmlRpc/ManiaAPI.XmlRpc.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Tests/ManiaAPI.ManiaPlanetAPI.Tests.csproj" />
+    <Project Path="Tests/ManiaAPI.NadeoAPI.Extensions.Gbx.Tests/ManiaAPI.NadeoAPI.Extensions.Gbx.Tests.csproj" />
+    <Project Path="Tests/ManiaAPI.NadeoAPI.Tests/ManiaAPI.NadeoAPI.Tests.csproj" />
+    <Project Path="Tests/ManiaAPI.TMX.Tests/ManiaAPI.TMX.Tests.csproj" />
+    <Project Path="Tests/ManiaAPI.TrackmaniaAPI.Tests/ManiaAPI.TrackmaniaAPI.Tests.csproj" />
+    <Project Path="Tests/ManiaAPI.TrackmaniaIO.Tests/ManiaAPI.TrackmaniaIO.Tests.csproj" />
+    <Project Path="Tests/ManiaAPI.Xml.Tests/ManiaAPI.Xml.Tests.csproj" />
+  </Folder>
+</Solution>
