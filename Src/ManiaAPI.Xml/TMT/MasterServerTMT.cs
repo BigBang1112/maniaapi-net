@@ -8,18 +8,23 @@ namespace ManiaAPI.Xml.TMT;
 
 public interface IMasterServerTMT : IMasterServer
 {
-    Task<MasterServerResponse<ImmutableArray<Summary<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(IEnumerable<string> zones, CancellationToken cancellationToken = default);
-    Task<MasterServerResponse<ImmutableArray<Summary<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(string zone = "World", CancellationToken cancellationToken = default);
-    Task<MasterServerResponse<ImmutableArray<Summary<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(params IEnumerable<string> zones);
-    Task<ImmutableArray<Summary<int>>> GetCampaignLeaderBoardSummariesAsync(IEnumerable<string> zones, CancellationToken cancellationToken = default);
-    Task<ImmutableArray<Summary<int>>> GetCampaignLeaderBoardSummariesAsync(string zone = "World", CancellationToken cancellationToken = default);
-    Task<ImmutableArray<Summary<int>>> GetCampaignLeaderBoardSummariesAsync(params IEnumerable<string> zones);
-    Task<MasterServerResponse<ImmutableArray<Summary<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, IEnumerable<string> zones, CancellationToken cancellationToken = default);
-    Task<MasterServerResponse<ImmutableArray<Summary<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default);
-    Task<MasterServerResponse<ImmutableArray<Summary<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, params IEnumerable<string> zones);
-    Task<ImmutableArray<Summary<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, IEnumerable<string> zones, CancellationToken cancellationToken = default);
-    Task<ImmutableArray<Summary<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default);
-    Task<ImmutableArray<Summary<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, params IEnumerable<string> zones);
+    Task<MasterServerResponse<ImmutableArray<SummaryZone<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(IEnumerable<string> zones, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableArray<SummaryZone<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(string zone = "World", CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableArray<SummaryZone<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(params IEnumerable<string> zones);
+    Task<ImmutableArray<SummaryZone<int>>> GetCampaignLeaderBoardSummariesAsync(IEnumerable<string> zones, CancellationToken cancellationToken = default);
+    Task<ImmutableArray<SummaryZone<int>>> GetCampaignLeaderBoardSummariesAsync(string zone = "World", CancellationToken cancellationToken = default);
+    Task<ImmutableArray<SummaryZone<int>>> GetCampaignLeaderBoardSummariesAsync(params IEnumerable<string> zones);
+    Task<MasterServerResponse<ImmutableArray<SummaryZone<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, IEnumerable<string> zones, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableArray<SummaryZone<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableArray<SummaryZone<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, params IEnumerable<string> zones);
+    Task<ImmutableArray<SummaryZone<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, IEnumerable<string> zones, CancellationToken cancellationToken = default);
+    Task<ImmutableArray<SummaryZone<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default);
+    Task<ImmutableArray<SummaryZone<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, params IEnumerable<string> zones);
+
+    Task<MasterServerResponse<Summary<int>>> GetCampaignLeaderBoardSummaryResponseAsync(string zone = "World", CancellationToken cancellationToken = default);
+    Task<Summary<int>> GetCampaignLeaderBoardSummaryAsync(string zone = "World", CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<Summary<TimeInt32>>> GetMapLeaderBoardSummaryResponseAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default);
+    Task<Summary<TimeInt32>> GetMapLeaderBoardSummaryAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default);
 }
 
 public class MasterServerTMT : MasterServer, IMasterServerTMT
@@ -50,7 +55,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
     {
     }
 
-    public virtual async Task<MasterServerResponse<ImmutableArray<Summary<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(IEnumerable<string> zones, CancellationToken cancellationToken = default)
+    public virtual async Task<MasterServerResponse<ImmutableArray<SummaryZone<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(IEnumerable<string> zones, CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetCampaignLeaderBoardSummaries";
 
@@ -66,32 +71,32 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
         return XmlHelper.ProcessResponseResult(RequestName, response, ReadSummaries<int>);
     }
 
-    public async Task<MasterServerResponse<ImmutableArray<Summary<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(string zone = "World", CancellationToken cancellationToken = default)
+    public async Task<MasterServerResponse<ImmutableArray<SummaryZone<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(string zone = "World", CancellationToken cancellationToken = default)
     {
         return await GetCampaignLeaderBoardSummariesResponseAsync([zone], cancellationToken);
     }
 
-    public async Task<MasterServerResponse<ImmutableArray<Summary<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(params IEnumerable<string> zones)
+    public async Task<MasterServerResponse<ImmutableArray<SummaryZone<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(params IEnumerable<string> zones)
     {
         return await GetCampaignLeaderBoardSummariesResponseAsync(zones, default);
     }
 
-    public async Task<ImmutableArray<Summary<int>>> GetCampaignLeaderBoardSummariesAsync(IEnumerable<string> zones, CancellationToken cancellationToken = default)
+    public async Task<ImmutableArray<SummaryZone<int>>> GetCampaignLeaderBoardSummariesAsync(IEnumerable<string> zones, CancellationToken cancellationToken = default)
     {
         return (await GetCampaignLeaderBoardSummariesResponseAsync(zones, cancellationToken)).Result;
     }
 
-    public async Task<ImmutableArray<Summary<int>>> GetCampaignLeaderBoardSummariesAsync(string zone = "World", CancellationToken cancellationToken = default)
+    public async Task<ImmutableArray<SummaryZone<int>>> GetCampaignLeaderBoardSummariesAsync(string zone = "World", CancellationToken cancellationToken = default)
     {
         return await GetCampaignLeaderBoardSummariesAsync([zone], cancellationToken);
     }
 
-    public async Task<ImmutableArray<Summary<int>>> GetCampaignLeaderBoardSummariesAsync(params IEnumerable<string> zones)
+    public async Task<ImmutableArray<SummaryZone<int>>> GetCampaignLeaderBoardSummariesAsync(params IEnumerable<string> zones)
     {
         return await GetCampaignLeaderBoardSummariesAsync(zones, default);
     }
 
-    public virtual async Task<MasterServerResponse<ImmutableArray<Summary<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, IEnumerable<string> zones, CancellationToken cancellationToken = default)
+    public virtual async Task<MasterServerResponse<ImmutableArray<SummaryZone<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, IEnumerable<string> zones, CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetMapLeaderBoardSummaries";
 
@@ -107,40 +112,74 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
         return XmlHelper.ProcessResponseResult(RequestName, response, ReadSummaries<TimeInt32>);
     }
 
-    public async Task<MasterServerResponse<ImmutableArray<Summary<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default)
+    public async Task<MasterServerResponse<ImmutableArray<SummaryZone<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default)
     {
         return await GetMapLeaderBoardSummariesResponseAsync(mapUid, [zone], cancellationToken);
     }
 
-    public async Task<MasterServerResponse<ImmutableArray<Summary<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, params IEnumerable<string> zones)
+    public async Task<MasterServerResponse<ImmutableArray<SummaryZone<TimeInt32>>>> GetMapLeaderBoardSummariesResponseAsync(string mapUid, params IEnumerable<string> zones)
     {
         return await GetMapLeaderBoardSummariesResponseAsync(mapUid, zones, default);
     }
 
-    public async Task<ImmutableArray<Summary<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, IEnumerable<string> zones, CancellationToken cancellationToken = default)
+    public async Task<ImmutableArray<SummaryZone<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, IEnumerable<string> zones, CancellationToken cancellationToken = default)
     {
         return (await GetMapLeaderBoardSummariesResponseAsync(mapUid, zones, cancellationToken)).Result;
     }
 
-    public async Task<ImmutableArray<Summary<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default)
+    public async Task<ImmutableArray<SummaryZone<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default)
     {
         return await GetMapLeaderBoardSummariesAsync(mapUid, [zone], cancellationToken);
     }
 
-    public async Task<ImmutableArray<Summary<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, params IEnumerable<string> zones)
+    public async Task<ImmutableArray<SummaryZone<TimeInt32>>> GetMapLeaderBoardSummariesAsync(string mapUid, params IEnumerable<string> zones)
     {
         return await GetMapLeaderBoardSummariesAsync(mapUid, zones, default);
     }
 
-    private static ImmutableArray<Summary<T>> ReadSummaries<T>(ref MiniXmlReader xml) where T : struct
+    public virtual async Task<MasterServerResponse<Summary<int>>> GetCampaignLeaderBoardSummaryResponseAsync(string zone = "World", CancellationToken cancellationToken = default)
     {
-        var summaries = ImmutableArray.CreateBuilder<Summary<T>>();
+        const string RequestName = "GetLeaderBoardSummary";
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
+            <t>Campaign</t>
+            <c>TMTurbo@nadeolabs</c>
+            <m></m>
+            <s>0</s>
+            <z>{zone}</z>", cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, ReadSummary<int>);
+    }
+
+    public async Task<Summary<int>> GetCampaignLeaderBoardSummaryAsync(string zone = "World", CancellationToken cancellationToken = default)
+    {
+        return (await GetCampaignLeaderBoardSummaryResponseAsync(zone, cancellationToken)).Result;
+    }
+
+    public virtual async Task<MasterServerResponse<Summary<TimeInt32>>> GetMapLeaderBoardSummaryResponseAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "GetLeaderBoardSummary";
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
+            <t>Map</t>
+            <c>TMTurbo@nadeolabs</c>
+            <m>{mapUid}</m>
+            <s>0</s>
+            <z>{zone}</z>", cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, ReadSummary<TimeInt32>);
+    }
+
+    public async Task<Summary<TimeInt32>> GetMapLeaderBoardSummaryAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default)
+    {
+        return (await GetMapLeaderBoardSummaryResponseAsync(mapUid, zone, cancellationToken)).Result;
+    }
+
+    private static ImmutableArray<SummaryZone<T>> ReadSummaries<T>(ref MiniXmlReader xml) where T : struct
+    {
+        var summaries = ImmutableArray.CreateBuilder<SummaryZone<T>>();
 
         while (xml.TryReadStartElement("s"))
         {
             var zone = string.Empty;
             var timestamp = default(DateTimeOffset);
-            var medals = ImmutableArray.CreateBuilder<RecordUnit<T>>();
+            var units = ImmutableArray.CreateBuilder<RecordUnit<T>>();
 
             while (xml.TryReadStartElement(out var itemElement))
             {
@@ -176,7 +215,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
 
                         ref T scoreValue = ref Unsafe.As<uint, T>(ref score);
 
-                        medals.Add(new RecordUnit<T>(scoreValue, count));
+                        units.Add(new RecordUnit<T>(scoreValue, count));
                         break;
                     default:
                         xml.ReadContent();
@@ -186,11 +225,60 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
                 _ = xml.SkipEndElement();
             }
 
-            summaries.Add(new Summary<T>(zone, timestamp, medals.ToImmutable()));
+            summaries.Add(new SummaryZone<T>(zone, timestamp, units.ToImmutable()));
 
             _ = xml.SkipEndElement(); // s
         }
 
         return summaries.ToImmutable();
+    }
+
+    private static Summary<T> ReadSummary<T>(ref MiniXmlReader xml) where T : struct
+    {
+        var timestamp = default(DateTimeOffset);
+        var units = ImmutableArray.CreateBuilder<RecordUnit<T>>();
+
+        while (xml.TryReadStartElement(out var itemElement))
+        {
+            switch (itemElement)
+            {
+                case "d":
+                    timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                    break;
+                case "i":
+                    var score = 0u;
+                    var count = 0;
+
+                    while (xml.TryReadStartElement(out var medalElement))
+                    {
+                        switch (medalElement)
+                        {
+                            case "s":
+                                score = uint.Parse(xml.ReadContent());
+                                break;
+                            case "c":
+                                count = int.Parse(xml.ReadContent());
+                                break;
+                            default:
+                                xml.ReadContent();
+                                break;
+                        }
+
+                        _ = xml.SkipEndElement();
+                    }
+
+                    ref T scoreValue = ref Unsafe.As<uint, T>(ref score);
+
+                    units.Add(new RecordUnit<T>(scoreValue, count));
+                    break;
+                default:
+                    xml.ReadContent();
+                    break;
+            }
+
+            _ = xml.SkipEndElement();
+        }
+
+        return new Summary<T>(timestamp, units.ToImmutable());
     }
 }

@@ -9,5 +9,8 @@ Provides an efficient way to inject `TrackmaniaWS` into your application.
 ```cs
 using ManiaAPI.TrackmaniaWS.Extensions.Hosting;
 
-builder.Services.AddTrackmaniaWS();
+builder.Services.AddTrackmaniaWS(new TrackmaniaWSOptions
+{
+    Credentials = new("tmf_yourapp", "password")
+});
 ```
