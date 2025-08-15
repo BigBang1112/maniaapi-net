@@ -21,7 +21,7 @@ public interface INadeoLiveServices : INadeoAPI
     Task<CampaignCollection> GetWeeklyCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubMember> GetClubMemberAsync(int clubId, Guid accountId, CancellationToken cancellationToken = default);
     Task<ClubMember> GetClubMemberAsync(int clubId, string diplayName, CancellationToken cancellationToken = default);
-    Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int length, int offset = 0, bool active = true, CancellationToken cancellationToken = default);
+    Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int length, int offset = 0, bool active = true, int folderId = 0, CancellationToken cancellationToken = default);
     Task<Club> GetClubAsync(int clubId, CancellationToken cancellationToken = default);
     Task<ClubCampaign> GetClubCampaignAsync(int clubId, int campaignId, CancellationToken cancellationToken = default);
     Task<ClubCampaignCollection> GetClubCampaignsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
