@@ -6,7 +6,7 @@ Wraps TMF, TMT, and ManiaPlanet XML ingame APIs. **Does not relate to the dedica
 
 It currently **does not support any authentication** for its complexity and security reasons. If some of the leaderboard methods will become secured with authentication though, this will be considered. For authenticated functionality in TMUF, use the [TMF.NET](https://github.com/Laiteux/TMF.NET) library.
 
-For dedicated server XML, use the [GbxRemote.Net](https://github.com/EvoEsports/GbxRemote.Net) library.
+For dedicated server XML-RPC communication, see `ManiaAPI.XmlRpc` (lightweight, all Nadeo servers) or [GbxRemote.Net](https://github.com/EvoEsports/GbxRemote.Net) (TM2020-focused) library.
 
 ## Features
 
