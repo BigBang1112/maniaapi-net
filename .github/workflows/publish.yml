@@ -69,6 +69,7 @@ jobs:
           - ManiaPlanetAPI.Extensions.Hosting
           - Xml
           - Xml.Extensions.Hosting
+          - XmlRpc
           - TrackmaniaWS
           - TrackmaniaWS.Extensions.Hosting
         
