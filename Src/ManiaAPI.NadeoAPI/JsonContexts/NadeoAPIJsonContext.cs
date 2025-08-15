@@ -22,7 +22,7 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 [JsonSerializable(typeof(Dictionary<string, ApiRoute>))]
 [JsonSerializable(typeof(ImmutableArray<Zone>))]
 [JsonSerializable(typeof(ImmutableArray<PlayerClubTag>))]
-[JsonSerializable(typeof(ImmutableArray<MapInfo>))]
+[JsonSerializable(typeof(MapInfoCollection))]
 [JsonSerializable(typeof(CupOfTheDay))]
 [JsonSerializable(typeof(Competition))]
 [JsonSerializable(typeof(Challenge))]
@@ -38,5 +38,7 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 [JsonSerializable(typeof(ClubPlayerInfo))]
 [JsonSerializable(typeof(ClubActivityEdition))]
 [JsonSerializable(typeof(ClubCampaignEdition))]
+[JsonSerializable(typeof(ImmutableArray<WebIdentity>))]
+[JsonSerializable(typeof(SkinInfo))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal sealed partial class NadeoAPIJsonContext : JsonSerializerContext;
