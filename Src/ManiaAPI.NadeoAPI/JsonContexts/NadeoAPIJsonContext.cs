@@ -40,5 +40,6 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 [JsonSerializable(typeof(ClubCampaignEdition))]
 [JsonSerializable(typeof(ImmutableArray<WebIdentity>))]
 [JsonSerializable(typeof(SkinInfo))]
+[JsonSerializable(typeof(ClubFolder))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal sealed partial class NadeoAPIJsonContext : JsonSerializerContext;

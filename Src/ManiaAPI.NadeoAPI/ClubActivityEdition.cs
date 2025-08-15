@@ -15,4 +15,8 @@ public sealed record ClubActivityEdition
     public bool? Active { get; init; }
 
     public int? Position { get; init; }
+
+    public string? Name { get; init; }
+
+    public int? FolderId { get; init; }
 }
