@@ -21,7 +21,7 @@ public interface INadeoLiveServices : INadeoAPI
     Task<CampaignCollection> GetWeeklyCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubMember> GetClubMemberAsync(int clubId, Guid accountId, CancellationToken cancellationToken = default);
     Task<ClubMember> GetClubMemberAsync(int clubId, string diplayName, CancellationToken cancellationToken = default);
-    Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int length, int offset = 0, bool active = true, CancellationToken cancellationToken = default);
+    Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int length, int offset = 0, bool active = true, int folderId = 0, CancellationToken cancellationToken = default);
     Task<Club> GetClubAsync(int clubId, CancellationToken cancellationToken = default);
     Task<ClubCampaign> GetClubCampaignAsync(int clubId, int campaignId, CancellationToken cancellationToken = default);
     Task<ClubCampaignCollection> GetClubCampaignsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
@@ -46,6 +46,8 @@ public interface INadeoLiveServices : INadeoAPI
     Task<ClubCollection> GetMyClubsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubActivity> EditClubActivityAsync(int clubId, int activityId, ClubActivityEdition edition, CancellationToken cancellationToken = default);
     Task<ClubCampaign> EditClubCampaignAsync(int clubId, int campaignId, ClubCampaignEdition edition, CancellationToken cancellationToken = default);
+    Task<ClubActivity> CreateClubFolderAsync(int clubId, string folderName, CancellationToken cancellationToken = default);
+    Task DeleteClubActivityAsync(int clubId, int activityId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Requests the daily channel join link. It can vary based on server occupancy.
@@ -154,9 +156,9 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
             NadeoAPIJsonContext.Default.ClubMember, cancellationToken);
     }
 
-    public virtual async Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int length, int offset = 0, bool active = true, CancellationToken cancellationToken = default)
+    public virtual async Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int length, int offset = 0, bool active = true, int folderId = 0, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"token/club/{clubId}/activity?length={length}&offset={offset}&active={active}",
+        return await GetJsonAsync($"token/club/{clubId}/activity?length={length}&offset={offset}&active={active}&folderId={active}",
             NadeoAPIJsonContext.Default.ClubActivityCollection, cancellationToken);
     }
 
@@ -261,6 +263,18 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         var jsonContent = JsonContent.Create(edition, NadeoAPIJsonContext.Default.ClubCampaignEdition);
         return await PostJsonAsync($"token/club/{clubId}/campaign/{campaignId}/edit",
             jsonContent, NadeoAPIJsonContext.Default.ClubCampaign, cancellationToken);
+    }
+
+    public virtual async Task<ClubActivity> CreateClubFolderAsync(int clubId, string folderName, CancellationToken cancellationToken = default)
+    {
+        var jsonContent = JsonContent.Create(new ClubFolder(folderName, FolderId: 0), NadeoAPIJsonContext.Default.ClubFolder);
+        return await PostJsonAsync($"token/club/{clubId}/folder/create", jsonContent, NadeoAPIJsonContext.Default.ClubActivity, cancellationToken: cancellationToken);
+    }
+
+    public virtual async Task DeleteClubActivityAsync(int clubId, int activityId, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Post, $"token/club/{clubId}/activity/{activityId}/delete", cancellationToken: cancellationToken);
+        // Response: OK Activity deleted
     }
 
     public virtual async Task<string> JoinDailyChannelAsync(CancellationToken cancellationToken = default)

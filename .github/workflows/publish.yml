@@ -71,6 +71,7 @@ jobs:
           - Xml.Extensions.Hosting
           - TrackmaniaWS
           - TrackmaniaWS.Extensions.Hosting
+          - XmlRpc
         
     runs-on: ubuntu-latest
     
