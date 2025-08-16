@@ -11,6 +11,8 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/Samples/">
+    <Project Path="Samples/ExportMethodsXmlRpcSample/ExportMethodsXmlRpcSample.csproj" />
+    <Project Path="Samples/ExportNetworkStatsXmlRpcSample/ExportNetworkStatsXmlRpcSample.csproj" Id="7419d5a4-8359-4aed-bce4-80dcbb78d0c3" />
     <Project Path="Samples/ExtendApiSample/ExtendApiSample.csproj" />
     <Project Path="Samples/ExtendXmlSample/ExtendXmlSample.csproj" />
     <Project Path="Samples/TrackmaniaWsSample/TrackmaniaWsSample.csproj" />

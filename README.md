@@ -14,6 +14,7 @@ A wrapper for these web APIs:
 - [Trackmania Web Services](http://developers.trackmania.com/webservices/) (old TMF web API)
 - [Trackmania Exchange](https://api2.mania.exchange/)
 - XML protocol (for TMF, TMT, and ManiaPlanet)
+- XML-RPC protocol (for TMF, TMT, and ManiaPlanet)
 
 This set of libraries was made to be very easy and straightforward to use, but also easily mocked, so that it can be integrated into the real world in no time.
 
@@ -36,6 +37,7 @@ Anything you can imagine!
 - [ManiaAPI.TMX.Extensions.Gbx](#maniaapitmxextensionsgbx)
 - [ManiaAPI.Xml](#maniaapixml)
 - [ManiaAPI.Xml.Extensions.Hosting](#maniaapixmlextensionshosting)
+- [ManiaAPI.XmlRpc](#maniaapixmlrpc)
 
 ### Samples
 
@@ -765,6 +767,33 @@ Features this last setup brings:
 
 > [!WARNING]
 > If you just inject `MasterServerTMT` alone, it will give the last-registered one (in this case, PS4). If you need a specific platform, use `[FromKeyedServices(...)]`.
+
+## ManiaAPI.XmlRpc
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.XmlRpc?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.XmlRpc/)
+
+Integrates the XML-RPC communication used between controllers and servers.
+
+This solution tries to be lightweight and compatible with as many Nadeo games as possible. For a better strongly-typed XML-RPC, use the [GbxRemote.Net](https://github.com/EvoEsports/GbxRemote.Net) library.
+
+**This package is still experimental, the API can change drastically.**
+
+### Usage
+
+```cs
+using ManiaAPI.XmlRpc;
+
+using var xmlRpc = await XmlRpcClient.ConnectAsync("127.0.0.1");
+
+object?[] authenticationResult = await xmlRpc.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
+
+if (authenticationResult is not [true])
+{
+    throw new Exception("Authentication failed.");
+}
+
+object?[] result = await xmlRpc.CallAsync("GameDataDirectory");
+```
 
 ## Build
 
