@@ -31,6 +31,7 @@ public class TrackmaniaWS : ITrackmaniaWS
     public TrackmaniaWS(string apiUsername, string apiPassword, HttpClient client)
     {
         Client = client;
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.3.1 (TrackmaniaWS; Email=petrpiv1@gmail.com; Discord=bigbang1112)");
 
         authentication = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($"{apiUsername}:{apiPassword}")));
     }

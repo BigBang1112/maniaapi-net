@@ -125,6 +125,8 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         Client = client ?? throw new ArgumentNullException(nameof(client));
         Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         AutomaticallyAuthorize = automaticallyAuthorize;
+
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.3.1 (ManiaPlanetAPI; Email=petrpiv1@gmail.com; Discord=bigbang1112)");
     }
 
     /// <summary>
