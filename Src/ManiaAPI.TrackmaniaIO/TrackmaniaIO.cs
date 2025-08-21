@@ -42,19 +42,23 @@ public class TrackmaniaIO : ITrackmaniaIO
     public HttpClient Client { get; }
 
     /// <summary>
-    /// 
+    /// Make sure your user agent is descriptive enough, otherwise you might receive 403 Forbidden responses in the future.
     /// </summary>
     /// <param name="client">HTTP client.</param>
-    /// <param name="userAgent">Custom user agent as explained in https://openplanet.dev/tmio/api</param>
+    /// <param name="userAgent">Custom user agent as explained here: https://openplanet.dev/tmio/api</param>
     public TrackmaniaIO(HttpClient client, string userAgent)
     {
-        ArgumentException.ThrowIfNullOrEmpty(userAgent);
+        ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
 
         Client = client ?? throw new ArgumentNullException(nameof(client));
-        Client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (TrackmaniaIO) by BigBang1112");
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.3.1 (TrackmaniaIO; Discord=bigbang1112)");
     }
 
+    /// <summary>
+    /// Make sure your user agent is descriptive enough, otherwise you might receive 403 Forbidden responses in the future.
+    /// </summary>
+    /// <param name="userAgent">Custom user agent as explained here: https://openplanet.dev/tmio/api</param>
     public TrackmaniaIO(string userAgent) : this(new HttpClient(), userAgent)
     {
         

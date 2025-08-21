@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<PackageId>ManiaAPI.TrackmaniaIO</PackageId>
-		<Version>2.2.0</Version>
+		<Version>2.3.1</Version>
 		<Authors>BigBang1112</Authors>
 		<Description>Wrapper for the Trackmania.io API. Part of the ManiaAPI.NET library set.</Description>
 		<Copyright>Copyright (c) 2022-2025 Petr Pivoňka</Copyright>

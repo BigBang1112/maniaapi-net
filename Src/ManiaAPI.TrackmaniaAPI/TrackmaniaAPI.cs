@@ -46,6 +46,8 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         Client = client ?? throw new ArgumentNullException(nameof(client));
         Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         AutomaticallyAuthorize = automaticallyAuthorize;
+
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.3.1 (TrackmaniaAPI; Email=petrpiv1@gmail.com; Discord=bigbang1112)");
     }
 
     public TrackmaniaAPI(bool automaticallyAuthorize = true) : this(new HttpClient(), new TrackmaniaAPIHandler(), automaticallyAuthorize) { }
