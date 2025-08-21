@@ -11,7 +11,7 @@ public class TrackmaniaIOTests(ITestOutputHelper output)
     [Fact]
     public async Task TestVariousRequests()
     {
-        var trackmaniaIO = new TrackmaniaIO("Some testing Hi");
+        var trackmaniaIO = new TrackmaniaIO("ManiaAPI.TrackmaniaIO Integration Test 1.0 (Discord=bigbang1112)");
 
         var seasonalCampaigns = await trackmaniaIO.GetSeasonalCampaignsAsync();
         var clubCampaigns = await trackmaniaIO.GetClubCampaignsAsync();
