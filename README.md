@@ -13,6 +13,7 @@ A wrapper for these web APIs:
 - [Trackmania.io](https://openplanet.dev/tmio/api)
 - [Trackmania Web Services](http://developers.trackmania.com/webservices/) (old TMF web API)
 - [Trackmania Exchange](https://api2.mania.exchange/)
+- [UnitedLadder](https://ul.unitedascenders.xyz/)
 - XML protocol (for TMF, TMT, and ManiaPlanet)
 - XML-RPC protocol (for TMF, TMT, and ManiaPlanet)
 
@@ -38,6 +39,7 @@ Anything you can imagine!
 - [ManiaAPI.Xml](#maniaapixml)
 - [ManiaAPI.Xml.Extensions.Hosting](#maniaapixmlextensionshosting)
 - [ManiaAPI.XmlRpc](#maniaapixmlrpc)
+- [ManiaAPI.UnitedLadder](#maniaapiunitedladder)
 
 ### Samples
 
