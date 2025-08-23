@@ -20,7 +20,7 @@ public abstract class MasterServer : IMasterServer
     protected MasterServer(HttpClient client)
     {
         Client = client;
-        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.3.1 (Xml; Email=petrpiv1@gmail.com; Discord=bigbang1112)");
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.3.2 (Xml; Email=petrpiv1@gmail.com; Discord=bigbang1112)");
     }
 
     protected MasterServer(Uri address) : this(new HttpClient { BaseAddress = address })
