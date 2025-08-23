@@ -326,32 +326,32 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
 
     public virtual async Task<ScoresInfo?> FetchLatestGeneralScoresInfoAsync(string zone, bool parallel = false, CancellationToken cancellationToken = default)
     {
-        return await FetchLatestScoresInfoAsync(GeneralScoresName, zone, parallel, cancellationToken);
+        return await FetchLatestScoresInfoAsync(GeneralScoresName, zone, parallel, scores7: false, cancellationToken);
     }
 
     public virtual async Task<ScoresInfo> FetchLatestGeneralScoresInfoAsync(int zoneId, bool parallel = false, CancellationToken cancellationToken = default)
     {
-        return await FetchLatestScoresInfoAsync(GeneralScoresName, zoneId, parallel, cancellationToken);
+        return await FetchLatestScoresInfoAsync(GeneralScoresName, zoneId, parallel, scores7: false, cancellationToken);
     }
 
     public virtual async Task<ScoresInfo?> FetchLatestLadderScoresInfoAsync(string zone, bool parallel = false, CancellationToken cancellationToken = default)
     {
-        return await FetchLatestScoresInfoAsync(LadderScoresName, zone, parallel, cancellationToken);
+        return await FetchLatestScoresInfoAsync(LadderScoresName, zone, parallel, scores7: false, cancellationToken);
     }
 
     public virtual async Task<ScoresInfo> FetchLatestLadderScoresInfoAsync(int zoneId, bool parallel = false, CancellationToken cancellationToken = default)
     {
-        return await FetchLatestScoresInfoAsync(LadderScoresName, zoneId, parallel, cancellationToken);
+        return await FetchLatestScoresInfoAsync(LadderScoresName, zoneId, parallel, scores7: false, cancellationToken);
     }
 
     public virtual async Task<ScoresInfo?> FetchLatestCampaignScoresInfoAsync(string campaignName, string zone, bool parallel = false, CancellationToken cancellationToken = default)
     {
-        return await FetchLatestScoresInfoAsync(campaignName, zone, parallel, cancellationToken);
+        return await FetchLatestScoresInfoAsync(campaignName, zone, parallel, scores7: true, cancellationToken);
     }
 
     public virtual async Task<ScoresInfo> FetchLatestCampaignScoresInfoAsync(string campaignName, int zoneId, bool parallel = false, CancellationToken cancellationToken = default)
     {
-        return await FetchLatestScoresInfoAsync(campaignName, zoneId, parallel, cancellationToken);
+        return await FetchLatestScoresInfoAsync(campaignName, zoneId, parallel, scores7: true, cancellationToken);
     }
 
     public async Task<DateTimeOffset> FetchCampaignScoresDateTimeAsync(string campaignName, ScoresNumber num, int zoneId, DateTimeOffset? lastModified = null, CancellationToken cancellationToken = default)
@@ -432,22 +432,27 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         return FixDateTime(response.Content.Headers.LastModified ?? throw new Exception("Last modified is null"));
     }
 
-    internal async Task<ScoresInfo?> FetchLatestScoresInfoAsync(string scoresName, string zone, bool parallel = false, CancellationToken cancellationToken = default)
+    internal async Task<ScoresInfo?> FetchLatestScoresInfoAsync(string scoresName, string zone, bool parallel = false, bool scores7 = true, CancellationToken cancellationToken = default)
     {
         if (League.IdsWithDataInTMUF.TryGetValue(zone, out int zoneId))
         {
-            return await FetchLatestScoresInfoAsync(scoresName, zoneId, parallel, cancellationToken);
+            return await FetchLatestScoresInfoAsync(scoresName, zoneId, parallel, scores7, cancellationToken);
         }
 
         return null;
     }
 
-    internal async Task<ScoresInfo> FetchLatestScoresInfoAsync(string scoresName, int zoneId, bool parallel = false, CancellationToken cancellationToken = default)
+    internal async Task<ScoresInfo> FetchLatestScoresInfoAsync(string scoresName, int zoneId, bool parallel = false, bool scores7 = true, CancellationToken cancellationToken = default)
     {
         var responses = new Dictionary<ScoresNumber, Task<HttpResponseMessage>>();
 
         foreach (var num in Enum.GetValues<ScoresNumber>())
         {
+            if (!scores7 && num == ScoresNumber.Scores7)
+            {
+                continue; // skip Scores7 if not needed
+            }
+
             var url = GetScoresUrl(num, scoresName, zoneId);
             var task = Client.HeadAsync(url, cancellationToken);
 
