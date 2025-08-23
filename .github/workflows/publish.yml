@@ -72,6 +72,7 @@ jobs:
           - TrackmaniaWS
           - TrackmaniaWS.Extensions.Hosting
           - XmlRpc
+          - UnitedLadder
         
     runs-on: ubuntu-latest
     
