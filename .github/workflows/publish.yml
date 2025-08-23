@@ -3,6 +3,7 @@ name: Publish
 on:
   release:
     types: [ published ]
+  workflow_dispatch:
     
 permissions:
   contents: write # important for release description edit and asset upload
@@ -72,6 +73,7 @@ jobs:
           - TrackmaniaWS
           - TrackmaniaWS.Extensions.Hosting
           - XmlRpc
+          - UnitedLadder
         
     runs-on: ubuntu-latest
     
@@ -93,4 +95,5 @@ jobs:
       run: dotnet nuget push ManiaAPI.${{ matrix.lib }}/bin/Release/*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/bigbang1112/index.json --skip-duplicate
 
     - name: Attach the ManiaAPI.${{ matrix.lib }} package to the release
+      if: github.event_name == 'release'
       run: gh release upload ${{ github.ref_name }} ManiaAPI.${{ matrix.lib }}/bin/Release/*.nupkg

@@ -36,6 +36,7 @@
     <Project Path="Src/ManiaAPI.TrackmaniaIO/ManiaAPI.TrackmaniaIO.csproj" />
     <Project Path="Src/ManiaAPI.TrackmaniaWS.Extensions.Hosting/ManiaAPI.TrackmaniaWS.Extensions.Hosting.csproj" />
     <Project Path="Src/ManiaAPI.TrackmaniaWS/ManiaAPI.TrackmaniaWS.csproj" />
+    <Project Path="Src/ManiaAPI.UnitedLadder/ManiaAPI.UnitedLadder.csproj" Id="3d490138-d581-4889-9918-1e71be189cc5" />
     <Project Path="Src/ManiaAPI.Xml.Extensions.Hosting/ManiaAPI.Xml.Extensions.Hosting.csproj" />
     <Project Path="Src/ManiaAPI.Xml/ManiaAPI.Xml.csproj" />
     <Project Path="Src/ManiaAPI.XmlRpc/ManiaAPI.XmlRpc.csproj" />
