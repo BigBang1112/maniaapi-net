@@ -9,4 +9,4 @@ public sealed record Player(int Id,
                             string Path,
                             int IdZone,
                             bool Legacy,
-                            ImmutableArray<Tag> Tags);
+                            ImmutableList<Tag>? Tags);
