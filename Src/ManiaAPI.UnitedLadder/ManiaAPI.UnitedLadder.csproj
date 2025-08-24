@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<PackageId>ManiaAPI.UnitedLadder</PackageId>
-		<Version>2.3.2</Version>
+		<Version>2.3.3</Version>
 		<Authors>BigBang1112</Authors>
 		<Description>Wrapper for the new UnitedLadder API (ul.unitedascenders.xyz). Part of the ManiaAPI.NET library set.</Description>
 		<Copyright>Copyright (c) 2022-2025 Petr Pivoňka</Copyright>
