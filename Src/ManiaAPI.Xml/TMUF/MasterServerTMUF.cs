@@ -1,6 +1,6 @@
 ﻿using MinimalXmlReader;
 using System.Collections.Immutable;
-using System.Net.Http.Headers;
+using System.Globalization;
 using TmEssentials;
 
 namespace ManiaAPI.Xml.TMUF;
@@ -11,6 +11,8 @@ public interface IMasterServerTMUF : IMasterServer
     Task<MasterServerResponse<LeagueRankings>> GetLadderLeagueRankingsResponseAsync(string zone = "World", int page = 0, int count = 10, CancellationToken cancellationToken = default);
     Task<PlayerRankings> GetLadderPlayerRankingsAsync(string zone = "World", int page = 0, int count = 10, CancellationToken cancellationToken = default);
     Task<MasterServerResponse<PlayerRankings>> GetLadderPlayerRankingsResponseAsync(string zone = "World", int page = 0, int count = 10, CancellationToken cancellationToken = default);
+    Task<PlayerAchievements> GetPlayerAchievementsAsync(string login, int page = 0, int count = 10, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<PlayerAchievements>> GetPlayerAchievementsResponseAsync(string login, int page = 0, int count = 10, CancellationToken cancellationToken = default);
 
     Task<CampaignScores> DownloadCampaignScoresAsync(string campaignName, ScoresNumber num, int zoneId, CancellationToken cancellationToken = default);
     Task<CampaignScores?> DownloadCampaignScoresAsync(string campaignName, ScoresNumber num, string zone, CancellationToken cancellationToken = default);
@@ -223,6 +225,94 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         CancellationToken cancellationToken = default)
     {
         return (await GetLadderLeagueRankingsResponseAsync(zone, page, count, cancellationToken)).Result;
+    }
+
+    public virtual async Task<MasterServerResponse<PlayerAchievements>> GetPlayerAchievementsResponseAsync(string login, int page = 0, int count = 10, CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "GetRankingsNew";
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
+            <t>4</t>
+            <st>-1||-1</st>
+            <f>{login}</f>
+            <b>1</b>
+            <p>{page}</p>
+            <c>{count}</c>", cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
+        {
+            var achievements = ImmutableArray.CreateBuilder<PlayerAchievement>();
+            var achievementCount = 0;
+            var aa = DateTimeOffset.MinValue;
+
+            while (xml.TryReadStartElement(out var element))
+            {
+                switch (element)
+                {
+                    case "c":
+                        achievementCount = int.Parse(xml.ReadContent());
+                        break;
+                    case "v":
+                        var mapUid = string.Empty;
+                        var skillpoints = 0;
+                        var name = string.Empty;
+                        var d = 0;
+                        var m = 0;
+                        var environment = string.Empty;
+                        var dateAchieved = DateTimeOffset.MinValue;
+
+                        while (xml.TryReadStartElement(out var valueElement))
+                        {
+                            switch (valueElement)
+                            {
+                                case "u":
+                                    mapUid = xml.ReadContentAsString();
+                                    break;
+                                case "x":
+                                    skillpoints = int.Parse(xml.ReadContent());
+                                    break;
+                                case "n":
+                                    name = xml.ReadContentAsString();
+                                    break;
+                                case "d":
+                                    d = int.Parse(xml.ReadContent());
+                                    break;
+                                case "m":
+                                    m = int.Parse(xml.ReadContent());
+                                    break;
+                                case "e":
+                                    environment = xml.ReadContentAsString();
+                                    break;
+                                default:
+                                    xml.ReadContent();
+                                    break;
+                            }
+                            _ = xml.SkipEndElement();
+                        }
+
+                        achievements.Add(new PlayerAchievement(mapUid, skillpoints, name, d, m, environment));
+                        break;
+                    case "t":
+                        if (!MemoryExtensions.Equals(xml.ReadContent(), "Achievements", StringComparison.Ordinal))
+                        {
+                            throw new Exception("Expected 'Achievements' in <t> element.");
+                        }
+                        break;
+                    case "aa":
+                        aa = DateTimeOffset.ParseExact(xml.ReadContent(), "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+                        break;
+                    default:
+                        xml.ReadContent();
+                        break;
+                }
+                _ = xml.SkipEndElement();
+            }
+
+            return new PlayerAchievements(achievementCount, aa, achievements.ToImmutable());
+        });
+    }
+
+    public async Task<PlayerAchievements> GetPlayerAchievementsAsync(string login, int page = 0, int count = 10, CancellationToken cancellationToken = default)
+    {
+        return (await GetPlayerAchievementsResponseAsync(login, page, count, cancellationToken)).Result;
     }
 
     public virtual async Task<GeneralScores?> DownloadLatestGeneralScoresAsync(string zone, bool parallelLatestCheck = false, CancellationToken cancellationToken = default)

@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.Xml.TMUF;
+using System;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -56,5 +57,17 @@ public class MasterServerTMUFTests
 
         Assert.NotEqual(0, rankings.Count);
         Assert.NotEmpty(rankings.Leagues);
+    }
+
+    [Fact]
+    public async Task GetPlayerAchievementsAsync_ReturnsAchievements()
+    {
+        var server = new MasterServerTMUF();
+
+        var achievements = await server.GetPlayerAchievementsAsync("bigbang1112");
+
+        Assert.NotEqual(0, achievements.Count);
+        Assert.NotEqual(DateTimeOffset.MinValue, achievements.Aa);
+        Assert.NotEmpty(achievements.Maps);
     }
 }
