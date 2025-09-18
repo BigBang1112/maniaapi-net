@@ -23,4 +23,4 @@ public sealed record Competition(int Id,
                                  [property: JsonPropertyName("websiteurl")] string WebsiteUrl,
                                  [property: JsonPropertyName("logourl")] string LogoUrl,
                                  [property: JsonPropertyName("verticalurl")] string VerticalUrl,
-                                 ImmutableArray<CompetitionRound> Rounds);
+                                 ImmutableList<CompetitionRound> Rounds);

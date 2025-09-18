@@ -16,5 +16,5 @@ public sealed record TrackpackItem : IItem
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public User Creator { get; set; } = default!;
-    public ImmutableArray<Author> Managers { get; set; } = default!;
+    public ImmutableList<Author> Managers { get; set; } = default!;
 }

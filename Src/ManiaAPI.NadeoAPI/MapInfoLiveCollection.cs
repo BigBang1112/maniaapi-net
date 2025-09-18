@@ -2,4 +2,4 @@
 
 namespace ManiaAPI.NadeoAPI;
 
-public sealed record MapInfoLiveCollection(ImmutableArray<MapInfoLive> MapList);
+public sealed record MapInfoLiveCollection(ImmutableList<MapInfoLive> MapList);

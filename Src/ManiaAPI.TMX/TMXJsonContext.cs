@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace ManiaAPI.TMX.JsonContexts;
+namespace ManiaAPI.TMX;
 
 [JsonSerializable(typeof(ItemCollection<ReplayItem>))]
 [JsonSerializable(typeof(ItemCollection<TrackItem>))]

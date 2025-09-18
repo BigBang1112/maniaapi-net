@@ -2,4 +2,4 @@
 
 namespace ManiaAPI.Xml;
 
-public sealed record WaitingParams(ImmutableArray<MasterServerInfo> MasterServers);
+public sealed record WaitingParams(ImmutableList<MasterServerInfo> MasterServers);

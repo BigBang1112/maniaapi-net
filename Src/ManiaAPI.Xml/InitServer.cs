@@ -44,7 +44,7 @@ public abstract class InitServer : IInitServer
         var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
-            var masterServers = ImmutableArray.CreateBuilder<MasterServerInfo>();
+            var masterServers = ImmutableList.CreateBuilder<MasterServerInfo>();
 
             while (xml.TryReadStartElement(out var element))
             {

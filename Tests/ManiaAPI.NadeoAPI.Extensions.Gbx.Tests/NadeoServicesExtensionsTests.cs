@@ -1,6 +1,5 @@
 ﻿using NSubstitute;
 using System.Net.Http.Json;
-using ManiaAPI.NadeoAPI.JsonContexts;
 using System.Text.Json;
 
 namespace ManiaAPI.NadeoAPI.Extensions.Gbx.Tests;

@@ -1,5 +1,4 @@
-﻿using ManiaAPI.NadeoAPI.JsonContexts;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Net.Http.Json;
 using System.Web;
 
@@ -7,10 +6,10 @@ namespace ManiaAPI.NadeoAPI;
 
 public interface INadeoLiveServices : INadeoAPI
 {
-    Task<ImmutableArray<Maniapub>> GetActiveManiapubsAsync(CancellationToken cancellationToken = default);
+    Task<ImmutableList<Maniapub>> GetActiveManiapubsAsync(CancellationToken cancellationToken = default);
     Task<MapInfoLive> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default);
-    Task<ImmutableArray<MapInfoLive>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default);
-    Task<ImmutableArray<MapInfoLive>> GetMapInfosAsync(params string[] mapUids);
+    Task<ImmutableList<MapInfoLive>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default);
+    Task<ImmutableList<MapInfoLive>> GetMapInfosAsync(params string[] mapUids);
     Task<MedalRecordCollection> GetMapMedalRecordsAsync(string mapUid, string groupId, CancellationToken cancellationToken = default);
     Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, int length = 10, int offset = 0, bool onlyWorld = true, CancellationToken cancellationToken = default);
     Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, string groupId, int length = 10, int offset = 0, bool onlyWorld = true, CancellationToken cancellationToken = default);
@@ -75,13 +74,13 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         return await GetJsonAsync($"token/map/{mapUid}", NadeoAPIJsonContext.Default.MapInfoLive, cancellationToken);
     }
 
-    public virtual async Task<ImmutableArray<MapInfoLive>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
+    public virtual async Task<ImmutableList<MapInfoLive>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
     {
         return (await GetJsonAsync($"token/map/get-multiple?mapUidList={string.Join(',', mapUids)}",
             NadeoAPIJsonContext.Default.MapInfoLiveCollection, cancellationToken)).MapList;
     }
 
-    public async Task<ImmutableArray<MapInfoLive>> GetMapInfosAsync(params string[] mapUids)
+    public async Task<ImmutableList<MapInfoLive>> GetMapInfosAsync(params string[] mapUids)
     {
         return await GetMapInfosAsync(mapUids, cancellationToken: default);
     }
@@ -98,7 +97,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
             NadeoAPIJsonContext.Default.TopLeaderboardCollection, cancellationToken);
     }
 
-    public virtual async Task<ImmutableArray<Maniapub>> GetActiveManiapubsAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<ImmutableList<Maniapub>> GetActiveManiapubsAsync(CancellationToken cancellationToken = default)
     {
         return (await GetJsonAsync($"token/advertising/display/active", NadeoAPIJsonContext.Default.ManiapubCollection, cancellationToken)).DisplayList;
     }

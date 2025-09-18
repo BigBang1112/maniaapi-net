@@ -2,6 +2,6 @@
 
 namespace ManiaAPI.NadeoAPI;
 
-public sealed record ClubBucketCollection(ImmutableArray<ClubBucket> ClubBucketList,
+public sealed record ClubBucketCollection(ImmutableList<ClubBucket> ClubBucketList,
                                           int MaxPage,
                                           int ItemCount);

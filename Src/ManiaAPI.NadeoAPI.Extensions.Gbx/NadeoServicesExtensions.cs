@@ -1,6 +1,5 @@
 ﻿using GBX.NET;
 using GBX.NET.Engines.Game;
-using ManiaAPI.NadeoAPI.JsonContexts;
 using System.Net.Http.Json;
 using System.Text;
 using TmEssentials;
@@ -30,7 +29,7 @@ public static class NadeoServicesExtensions
 
         await using var bufferedStream = new BufferedStream(stream);
 
-        using var content = CreateContent(bufferedStream, fileName);
+        using var content = CreateContent(bufferedStream, fileName, out _);
 
         return await UploadMapAsync(services, content, cancellationToken);
     }
@@ -127,6 +126,7 @@ public static class NadeoServicesExtensions
         return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.MapInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
     }
 
+
     /// <summary>
     /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
     /// </summary>
@@ -146,9 +146,35 @@ public static class NadeoServicesExtensions
 
         await using var bufferedStream = new BufferedStream(stream);
 
-        using var content = CreateContent(bufferedStream, fileName);
+        using var content = CreateContent(bufferedStream, fileName, out _);
 
         return await UpdateMapAsync(services, mapId, content, cancellationToken);
+    }
+
+    /// <summary>
+    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="stream"></param>
+    /// <param name="fileName"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="FormatException">Author login is invalid.</exception>
+    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="MapNotFoundException"></exception>
+    public static async Task<MapInfo> UpdateMapAsync(this INadeoServices services, Stream stream, string fileName, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        ArgumentNullException.ThrowIfNull(fileName);
+
+        await using var bufferedStream = new BufferedStream(stream);
+
+        using var content = CreateContent(bufferedStream, fileName, out var mapUid);
+
+        var mapInfo = await services.GetMapInfoAsync(mapUid, cancellationToken) ?? throw new MapNotFoundException("Map with the specified UID does not exist.");
+
+        return await UpdateMapAsync(services, mapInfo.MapId, content, cancellationToken);
     }
 
     /// <summary>
@@ -171,6 +197,22 @@ public static class NadeoServicesExtensions
     /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
     /// </summary>
     /// <param name="services"></param>
+    /// <param name="stream"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="FormatException">Author login is invalid.</exception>
+    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="MapNotFoundException"></exception>
+    public static async Task<MapInfo> UpdateMapAsync(this INadeoServices services, FileStream stream, CancellationToken cancellationToken = default)
+    {
+        return await UpdateMapAsync(services, stream, Path.GetFileName(stream.Name), cancellationToken);
+    }
+
+    /// <summary>
+    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// </summary>
+    /// <param name="services"></param>
     /// <param name="mapId"></param>
     /// <param name="filePath"></param>
     /// <param name="cancellationToken"></param>
@@ -184,6 +226,25 @@ public static class NadeoServicesExtensions
 
         await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous);
         return await UpdateMapAsync(services, mapId, stream, Path.GetFileName(filePath), cancellationToken);
+    }
+
+    /// <summary>
+    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="filePath"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="FormatException">Author login is invalid.</exception>
+    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="MapNotFoundException"></exception>
+    public static async Task<MapInfo> UpdateMapAsync(this INadeoServices services, string filePath, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(filePath);
+
+        await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous);
+        return await UpdateMapAsync(services, stream, Path.GetFileName(filePath), cancellationToken);
     }
 
     /// <summary>
@@ -220,6 +281,27 @@ public static class NadeoServicesExtensions
     /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
     /// </summary>
     /// <param name="services"></param>
+    /// <param name="mapGbx"></param>
+    /// <param name="settings"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="FormatException">Author login is invalid.</exception>
+    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="MapNotFoundException"></exception>
+    public static async Task<MapInfo> UpdateMapAsync(this INadeoServices services, Gbx<CGameCtnChallenge> mapGbx, GbxWriteSettings settings = default, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(mapGbx);
+
+        var mapInfo = await services.GetMapInfoAsync(mapGbx.Node.MapUid, cancellationToken) ?? throw new MapNotFoundException("Map with the specified UID does not exist.");
+
+        return await UpdateMapAsync(services, mapInfo.MapId, mapGbx, settings, cancellationToken);
+    }
+
+    /// <summary>
+    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// </summary>
+    /// <param name="services"></param>
     /// <param name="mapId"></param>
     /// <param name="map"></param>
     /// <param name="fileName"></param>
@@ -243,6 +325,29 @@ public static class NadeoServicesExtensions
         return await UpdateMapAsync(services, mapId, content, cancellationToken);
     }
 
+    /// <summary>
+    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="map"></param>
+    /// <param name="fileName"></param>
+    /// <param name="settings"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="FormatException">Author login is invalid.</exception>
+    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="MapNotFoundException"></exception>
+    public static async Task<MapInfo> UpdateMapAsync(this INadeoServices services, CGameCtnChallenge map, string fileName, GbxWriteSettings settings = default, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(map);
+        ArgumentNullException.ThrowIfNull(fileName);
+
+        var mapInfo = await services.GetMapInfoAsync(map.MapUid, cancellationToken) ?? throw new MapNotFoundException("Map with the specified UID does not exist.");
+
+        return await UpdateMapAsync(services, mapInfo.MapId, map, fileName, settings, cancellationToken);
+    }
+
     private static async Task<MapInfo> UpdateMapAsync(INadeoServices services, Guid mapId, MultipartFormDataContent content, CancellationToken cancellationToken)
     {
         using var response = await services.SendAsync(HttpMethod.Post, $"maps/{mapId}", content, cancellationToken);
@@ -250,9 +355,10 @@ public static class NadeoServicesExtensions
     }
 
 
-    private static MultipartFormDataContent CreateContent(BufferedStream bufferedStream, string fileName)
+    private static MultipartFormDataContent CreateContent(BufferedStream bufferedStream, string fileName, out string mapUid)
     {
         var map = GBX.NET.Gbx.ParseHeaderNode<CGameCtnChallenge>(bufferedStream);
+        mapUid = map.MapUid;
 
         bufferedStream.Position = 0;
 

@@ -12,18 +12,18 @@ public interface IMasterServerMP4 : IMasterServer
     Task ValidateAsync(InitServerMP4 initServer, CancellationToken cancellationToken = default);
     Task ValidateAsync(CancellationToken cancellationToken = default);
 
-    Task<MasterServerResponse<ImmutableArray<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
-    Task<ImmutableArray<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
-    Task<MasterServerResponse<ImmutableArray<LeaderboardItem<TimeInt32>>>> GetMapLeaderBoardResponseAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
-    Task<ImmutableArray<LeaderboardItem<TimeInt32>>> GetMapLeaderBoardAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
-    Task<MasterServerResponse<ImmutableArray<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
-    Task<MasterServerResponse<ImmutableArray<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<CampaignSummaryRequest> summaries);
-    Task<ImmutableArray<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
-    Task<ImmutableArray<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, params IEnumerable<CampaignSummaryRequest> summaries);
-    Task<MasterServerResponse<ImmutableArray<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, CancellationToken cancellationToken = default);
-    Task<MasterServerResponse<ImmutableArray<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
-    Task<ImmutableArray<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, CancellationToken cancellationToken = default);
-    Task<ImmutableArray<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
+    Task<MasterServerResponse<ImmutableList<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
+    Task<ImmutableList<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<LeaderboardItem<TimeInt32>>>> GetMapLeaderBoardResponseAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
+    Task<ImmutableList<LeaderboardItem<TimeInt32>>> GetMapLeaderBoardAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<CampaignSummaryRequest> summaries);
+    Task<ImmutableList<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<ImmutableList<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, params IEnumerable<CampaignSummaryRequest> summaries);
+    Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
+    Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
 }
 
 public class MasterServerMP4 : MasterServer, IMasterServerMP4
@@ -81,7 +81,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         _ = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
     }
 
-    public virtual async Task<MasterServerResponse<ImmutableArray<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(
+    public virtual async Task<MasterServerResponse<ImmutableList<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(
         string titleId,
         string? campaignId = null,
         int count = 10,
@@ -102,7 +102,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         return XmlHelper.ProcessResponseResult(RequestName, response, ReadLeaderboardItems<uint>);
     }
 
-    public async Task<ImmutableArray<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(
+    public async Task<ImmutableList<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(
         string titleId,
         string? campaignId = null,
         int count = 10,
@@ -114,7 +114,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         return (await GetCampaignLeaderBoardResponseAsync(titleId, campaignId, count, offset, zone, type, cancellationToken)).Result;
     }
 
-    public virtual async Task<MasterServerResponse<ImmutableArray<LeaderboardItem<TimeInt32>>>> GetMapLeaderBoardResponseAsync(
+    public virtual async Task<MasterServerResponse<ImmutableList<LeaderboardItem<TimeInt32>>>> GetMapLeaderBoardResponseAsync(
         string titleId,
         string mapUid,
         int count = 10,
@@ -135,7 +135,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         return XmlHelper.ProcessResponseResult(RequestName, response, ReadLeaderboardItems<TimeInt32>);
     }
 
-    public async Task<ImmutableArray<LeaderboardItem<TimeInt32>>> GetMapLeaderBoardAsync(
+    public async Task<ImmutableList<LeaderboardItem<TimeInt32>>> GetMapLeaderBoardAsync(
         string titleId,
         string mapUid,
         int count = 10,
@@ -147,7 +147,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         return (await GetMapLeaderBoardResponseAsync(titleId, mapUid, count, offset, zone, context, cancellationToken)).Result;
     }
 
-    public virtual async Task<MasterServerResponse<ImmutableArray<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(
+    public virtual async Task<MasterServerResponse<ImmutableList<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(
         string titleId,
         IEnumerable<CampaignSummaryRequest> summaries,
         CancellationToken cancellationToken = default)
@@ -169,7 +169,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, sb.ToString(), cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
-            var summaries = ImmutableArray.CreateBuilder<CampaignSummary>();
+            var summaries = ImmutableList.CreateBuilder<CampaignSummary>();
 
             while (xml.TryReadStartElement("s"))
             {
@@ -223,14 +223,14 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         });
     }
 
-    public async Task<MasterServerResponse<ImmutableArray<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(
+    public async Task<MasterServerResponse<ImmutableList<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(
         string titleId,
         params IEnumerable<CampaignSummaryRequest> summaries)
     {
         return await GetCampaignLeaderBoardSummariesResponseAsync(titleId, summaries, default);
     }
 
-    public async Task<ImmutableArray<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(
+    public async Task<ImmutableList<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(
         string titleId,
         IEnumerable<CampaignSummaryRequest> summaries,
         CancellationToken cancellationToken = default)
@@ -238,14 +238,14 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         return (await GetCampaignLeaderBoardSummariesResponseAsync(titleId, summaries, cancellationToken)).Result;
     }
 
-    public async Task<ImmutableArray<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(
+    public async Task<ImmutableList<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(
         string titleId,
         params IEnumerable<CampaignSummaryRequest> summaries)
     {
         return await GetCampaignLeaderBoardSummariesAsync(titleId, summaries, default);
     }
 
-    public virtual async Task<MasterServerResponse<ImmutableArray<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(
+    public virtual async Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(
         string titleId,
         IEnumerable<MapSummaryRequest> summaries,
         CancellationToken cancellationToken = default)
@@ -267,7 +267,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, sb.ToString(), cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
-            var summaries = ImmutableArray.CreateBuilder<MapSummary>();
+            var summaries = ImmutableList.CreateBuilder<MapSummary>();
 
             while (xml.TryReadStartElement("s"))
             {
@@ -321,14 +321,14 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         });
     }
 
-    public async Task<MasterServerResponse<ImmutableArray<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(
+    public async Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(
         string titleId,
         params IEnumerable<MapSummaryRequest> summaries)
     {
         return await GetMapLeaderBoardSummariesResponseAsync(titleId, summaries, default);
     }
 
-    public async Task<ImmutableArray<MapSummary>> GetMapLeaderBoardSummariesAsync(
+    public async Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(
         string titleId,
         IEnumerable<MapSummaryRequest> summaries,
         CancellationToken cancellationToken = default)
@@ -336,16 +336,16 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         return (await GetMapLeaderBoardSummariesResponseAsync(titleId, summaries, cancellationToken)).Result;
     }
 
-    public async Task<ImmutableArray<MapSummary>> GetMapLeaderBoardSummariesAsync(
+    public async Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(
         string titleId,
         params IEnumerable<MapSummaryRequest> summaries)
     {
         return await GetMapLeaderBoardSummariesAsync(titleId, summaries, default);
     }
 
-    private static ImmutableArray<LeaderboardItem<T>> ReadLeaderboardItems<T>(ref MiniXmlReader xml) where T : struct
+    private static ImmutableList<LeaderboardItem<T>> ReadLeaderboardItems<T>(ref MiniXmlReader xml) where T : struct
     {
-        var items = ImmutableArray.CreateBuilder<LeaderboardItem<T>>();
+        var items = ImmutableList.CreateBuilder<LeaderboardItem<T>>();
 
         while (xml.TryReadStartElement("i"))
         {

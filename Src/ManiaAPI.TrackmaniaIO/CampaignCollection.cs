@@ -2,4 +2,4 @@
 
 namespace ManiaAPI.TrackmaniaIO;
 
-public sealed record CampaignCollection(ImmutableArray<CampaignItem> Campaigns, int Page, int PageCount);
+public sealed record CampaignCollection(ImmutableList<CampaignItem> Campaigns, int Page, int PageCount);

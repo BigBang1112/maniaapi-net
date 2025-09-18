@@ -2,7 +2,7 @@
 
 namespace ManiaAPI.NadeoAPI;
 
-public sealed record TopLeaderboardCollection(string GroupUid, string MapUid, ImmutableArray<TopLeaderboard> Tops)
+public sealed record TopLeaderboardCollection(string GroupUid, string MapUid, ImmutableList<TopLeaderboard> Tops)
 {    
     public TopLeaderboard Top => Tops[0];
 }

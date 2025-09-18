@@ -91,10 +91,10 @@ else
 }
 
 @code {
-    private Dictionary<Platform, MasterServerResponse<ImmutableArray<SummaryZone<int>>>> medalsPerPlatform = [];
+    private Dictionary<Platform, MasterServerResponse<ImmutableList<SummaryZone<int>>>> medalsPerPlatform = [];
 
     private string mapUid = "XUuBzeBgKAx0m6MMstYeTuWZGdb";
-    private Dictionary<Platform, MasterServerResponse<ImmutableArray<SummaryZone<TimeInt32>>>> recordsPerPlatform = [];
+    private Dictionary<Platform, MasterServerResponse<ImmutableList<SummaryZone<TimeInt32>>>> recordsPerPlatform = [];
 
     protected override async Task OnInitializedAsync()
     {

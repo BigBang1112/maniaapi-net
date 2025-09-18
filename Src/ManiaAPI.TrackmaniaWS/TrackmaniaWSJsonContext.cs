@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace ManiaAPI.TrackmaniaWS.JsonContexts;
+namespace ManiaAPI.TrackmaniaWS;
 
 [JsonSerializable(typeof(Player))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]

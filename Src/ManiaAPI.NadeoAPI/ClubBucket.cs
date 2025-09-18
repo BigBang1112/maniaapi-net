@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace ManiaAPI.NadeoAPI;
 
 public sealed record ClubBucket(string Type,
-                                ImmutableArray<ClubBucketItem> BucketItemList,
+                                ImmutableList<ClubBucketItem> BucketItemList,
                                 int BucketItemCount,
                                 int PopularityLevel,
                                 int PopularityValue,

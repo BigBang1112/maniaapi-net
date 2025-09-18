@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI;
 
-public sealed record CampaignCollection(ImmutableArray<Campaign> CampaignList,
+public sealed record CampaignCollection(ImmutableList<Campaign> CampaignList,
                                         [property: JsonConverter(typeof(DateTimeOffsetUnixConverter))] DateTimeOffset NextRequestTimestamp,
                                         int RelativeNextRequest,
                                         int ItemCount);

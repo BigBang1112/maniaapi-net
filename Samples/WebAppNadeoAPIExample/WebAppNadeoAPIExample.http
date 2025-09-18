@@ -1,11 +1,11 @@
 @WebAppNadeoAPIExample_HostAddress = http://localhost:5059
 
-GET {{WebAppNadeoAPIExample_HostAddress}}/todos/
+GET {{WebAppNadeoAPIExample_HostAddress}}/zones
 Accept: application/json
 
 ###
 
-GET {{WebAppNadeoAPIExample_HostAddress}}/todos/1
+GET {{WebAppNadeoAPIExample_HostAddress}}/campaigns
 Accept: application/json
 
 ###

@@ -36,7 +36,7 @@ public sealed record TrackItem : IItem
     public bool HasThumbnail { get; set; }
     public WRReplay? WRReplay { get; set; }
     public UserReplay? UserReplay { get; set; }
-    public ImmutableArray<Author> Authors { get; set; }
-    public ImmutableArray<TrackStyle> Tags { get; set; }
-    public ImmutableArray<Image>? Images { get; set; }
+    public ImmutableList<Author>? Authors { get; set; }
+    public ImmutableList<TrackStyle>? Tags { get; set; }
+    public ImmutableList<Image>? Images { get; set; }
 }

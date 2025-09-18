@@ -3,7 +3,6 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization.Metadata;
 using System.Text.Json;
-using ManiaAPI.ManiaPlanetAPI.JsonContexts;
 using System.Text;
 using System.Collections.Immutable;
 
@@ -63,7 +62,7 @@ public interface IManiaPlanetAPI : IDisposable
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Dedicated server accounts.</returns>
     /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
-    Task<ImmutableArray<DedicatedAccount>> GetDedicatedAccountsAsync(CancellationToken cancellationToken = default);
+    Task<ImmutableList<DedicatedAccount>> GetDedicatedAccountsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the authorized player's email.
@@ -79,7 +78,7 @@ public interface IManiaPlanetAPI : IDisposable
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Map infos.</returns>
     /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
-    Task<ImmutableArray<Map>> GetMapsAsync(CancellationToken cancellationToken = default);
+    Task<ImmutableList<Map>> GetMapsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the player authorized with the API.
@@ -89,11 +88,11 @@ public interface IManiaPlanetAPI : IDisposable
     /// <exception cref="ManiaPlanetAPIResponseException">Status code is not 200-299.</exception>
     Task<Player> GetPlayerAsync(CancellationToken cancellationToken = default);
     
-    Task<ImmutableArray<OnlineServer>> SearchOnlineServersAsync(string orderBy = "playerCount", string[]? titleUids = null, string[]? environments = null, string? scriptName = null, string? search = null, string? zone = null, bool onlyPublic = false, bool onlyPrivate = false, bool onlyLobby = false, bool excludeLobby = true, int offset = 0, int length = 10, CancellationToken cancellationToken = default);
+    Task<ImmutableList<OnlineServer>> SearchOnlineServersAsync(string orderBy = "playerCount", string[]? titleUids = null, string[]? environments = null, string? scriptName = null, string? search = null, string? zone = null, bool onlyPublic = false, bool onlyPrivate = false, bool onlyLobby = false, bool excludeLobby = true, int offset = 0, int length = 10, CancellationToken cancellationToken = default);
     Task<Title?> GetTitleByUidAsync(string uid, CancellationToken cancellationToken = default);
-    Task<ImmutableArray<Title>> GetTitlesAsync(CancellationToken cancellationToken = default);
-    Task<ImmutableArray<Title>> SearchTitlesAsync(string[]? filters = null, string? orderBy = "onlinePlayers", int offset = 0, int length = 10, CancellationToken cancellationToken = default);
-    Task<ImmutableArray<TitleScript>> GetTitleScriptsAsync(string uid, CancellationToken cancellationToken = default);
+    Task<ImmutableList<Title>> GetTitlesAsync(CancellationToken cancellationToken = default);
+    Task<ImmutableList<Title>> SearchTitlesAsync(string[]? filters = null, string? orderBy = "onlinePlayers", int offset = 0, int length = 10, CancellationToken cancellationToken = default);
+    Task<ImmutableList<TitleScript>> GetTitleScriptsAsync(string uid, CancellationToken cancellationToken = default);
     Task<IEnumerable<string>> GetZonesAsync(CancellationToken cancellationToken = default);
 }
 
@@ -211,19 +210,19 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         return await GetJsonAsync("me", ManiaPlanetAPIJsonContext.Default.Player, cancellationToken);
     }
 
-    public virtual async Task<ImmutableArray<Title>> GetTitlesAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<ImmutableList<Title>> GetTitlesAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("me/titles/created", ManiaPlanetAPIJsonContext.Default.ImmutableArrayTitle, cancellationToken);
+        return await GetJsonAsync("me/titles/created", ManiaPlanetAPIJsonContext.Default.ImmutableListTitle, cancellationToken);
     }
 
-    public virtual async Task<ImmutableArray<DedicatedAccount>> GetDedicatedAccountsAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<ImmutableList<DedicatedAccount>> GetDedicatedAccountsAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("me/dedicated", ManiaPlanetAPIJsonContext.Default.ImmutableArrayDedicatedAccount, cancellationToken);
+        return await GetJsonAsync("me/dedicated", ManiaPlanetAPIJsonContext.Default.ImmutableListDedicatedAccount, cancellationToken);
     }
 
-    public virtual async Task<ImmutableArray<Map>> GetMapsAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<ImmutableList<Map>> GetMapsAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("me/maps", ManiaPlanetAPIJsonContext.Default.ImmutableArrayMap, cancellationToken);
+        return await GetJsonAsync("me/maps", ManiaPlanetAPIJsonContext.Default.ImmutableListMap, cancellationToken);
     }
 
     public virtual async Task<string> GetEmailAsync(CancellationToken cancellationToken = default)
@@ -240,12 +239,12 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     public virtual async Task<IEnumerable<string>> GetZonesAsync(CancellationToken cancellationToken = default)
     {
-        var zones = await GetJsonAsync("zones", ManiaPlanetAPIJsonContext.Default.ImmutableArrayZone, cancellationToken);
+        var zones = await GetJsonAsync("zones", ManiaPlanetAPIJsonContext.Default.ImmutableListZone, cancellationToken);
 
         return zones.Select(x => x.Path);
     }
 
-    public virtual async Task<ImmutableArray<Title>> SearchTitlesAsync(
+    public virtual async Task<ImmutableList<Title>> SearchTitlesAsync(
         string[]? filters = null, 
         string? orderBy = "onlinePlayers", 
         int offset = 0, 
@@ -290,7 +289,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             sb.Append(length);
         }
 
-        return await GetJsonAsync(sb.ToString(), ManiaPlanetAPIJsonContext.Default.ImmutableArrayTitle, cancellationToken);
+        return await GetJsonAsync(sb.ToString(), ManiaPlanetAPIJsonContext.Default.ImmutableListTitle, cancellationToken);
     }
 
     public virtual async Task<Title?> GetTitleByUidAsync(string uid, CancellationToken cancellationToken = default)
@@ -299,13 +298,13 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         return await GetNullableJsonAsync($"titles/{uid}", ManiaPlanetAPIJsonContext.Default.Title, cancellationToken);
     }
 
-    public virtual async Task<ImmutableArray<TitleScript>> GetTitleScriptsAsync(string uid, CancellationToken cancellationToken = default)
+    public virtual async Task<ImmutableList<TitleScript>> GetTitleScriptsAsync(string uid, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(uid);
-        return await GetJsonAsync($"titles/{uid}/scripts", ManiaPlanetAPIJsonContext.Default.ImmutableArrayTitleScript, cancellationToken);
+        return await GetJsonAsync($"titles/{uid}/scripts", ManiaPlanetAPIJsonContext.Default.ImmutableListTitleScript, cancellationToken);
     }
 
-    public virtual async Task<ImmutableArray<OnlineServer>> SearchOnlineServersAsync(
+    public virtual async Task<ImmutableList<OnlineServer>> SearchOnlineServersAsync(
         string orderBy = "playerCount",
         string[]? titleUids = null,
         string[]? environments = null,
@@ -427,7 +426,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             sb.Append(length);
         }
 
-        return await GetJsonAsync(sb.ToString(), ManiaPlanetAPIJsonContext.Default.ImmutableArrayOnlineServer, cancellationToken);
+        return await GetJsonAsync(sb.ToString(), ManiaPlanetAPIJsonContext.Default.ImmutableListOnlineServer, cancellationToken);
     }
 
     protected internal async Task<HttpResponseMessage> GetResponseAsync(string endpoint, CancellationToken cancellationToken = default)

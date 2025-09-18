@@ -2,6 +2,6 @@
 
 namespace ManiaAPI.NadeoAPI;
 
-public sealed record ClubMemberCollection(ImmutableArray<ClubMember> ClubMemberList,
+public sealed record ClubMemberCollection(ImmutableList<ClubMember> ClubMemberList,
                                           int MaxPage,
                                           int ItemCount);

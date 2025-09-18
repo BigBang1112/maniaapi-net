@@ -2,6 +2,6 @@
 
 namespace ManiaAPI.NadeoAPI;
 
-public sealed record ClubMapReviewRoomCollection(ImmutableArray<ClubMapReviewRoom> ClubMapReviewList,
+public sealed record ClubMapReviewRoomCollection(ImmutableList<ClubMapReviewRoom> ClubMapReviewList,
                                                  int MaxPage,
                                                  int ItemCount);

@@ -7,8 +7,8 @@ public interface IMasterServer : IDisposable
 {
     HttpClient Client { get; }
 
-    Task<MasterServerResponse<ImmutableArray<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default);
-    Task<ImmutableArray<League>> GetLeaguesAsync(CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default);
+    Task<ImmutableList<League>> GetLeaguesAsync(CancellationToken cancellationToken = default);
 }
 
 public abstract class MasterServer : IMasterServer
@@ -38,13 +38,13 @@ public abstract class MasterServer : IMasterServer
         return XmlHelper.ProcessResponseResult(requestName, response, processContent);
     }
 
-    public virtual async Task<MasterServerResponse<ImmutableArray<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<MasterServerResponse<ImmutableList<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetLeagues";
         var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
-            var items = ImmutableArray.CreateBuilder<League>();
+            var items = ImmutableList.CreateBuilder<League>();
 
             while (xml.TryReadStartElement("l"))
             {
@@ -82,7 +82,7 @@ public abstract class MasterServer : IMasterServer
         });
     }
 
-    public async Task<ImmutableArray<League>> GetLeaguesAsync(CancellationToken cancellationToken = default)
+    public async Task<ImmutableList<League>> GetLeaguesAsync(CancellationToken cancellationToken = default)
     {
         return (await GetLeaguesResponseAsync(cancellationToken)).Result;
     }

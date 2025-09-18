@@ -2,4 +2,4 @@
 
 namespace ManiaAPI.NadeoAPI;
 
-public sealed record MedalRecordCollection(string GroupUid, string MapUid, ImmutableArray<MedalRecord> Medals);
+public sealed record MedalRecordCollection(string GroupUid, string MapUid, ImmutableList<MedalRecord> Medals);
