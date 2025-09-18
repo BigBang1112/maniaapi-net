@@ -15,4 +15,4 @@ public sealed record ClubRoom(int Id,
                               string Script,
                               [property: JsonPropertyName("scriptsettings"), JsonIgnore] ImmutableDictionary<string, ScriptSetting> ScriptSettings, // bugged atm
                               [property: JsonPropertyName("mediaurl")] string MediaUrl,
-                              ImmutableArray<Map> Maps);
+                              ImmutableList<Map> Maps);

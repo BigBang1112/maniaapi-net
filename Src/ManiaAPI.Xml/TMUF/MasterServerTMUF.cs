@@ -83,7 +83,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
             <c>{count}</c>", cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
-            var players = ImmutableArray.CreateBuilder<PlayerRanking>();
+            var players = ImmutableList.CreateBuilder<PlayerRanking>();
 
             var playerCount = 0;
 
@@ -163,7 +163,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
             <c>{count}</c>", cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
-            var leagues = ImmutableArray.CreateBuilder<LeagueRanking>();
+            var leagues = ImmutableList.CreateBuilder<LeagueRanking>();
 
             var leagueCount = 0;
 
@@ -239,7 +239,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
             <c>{count}</c>", cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
-            var achievements = ImmutableArray.CreateBuilder<PlayerAchievement>();
+            var achievements = ImmutableList.CreateBuilder<PlayerAchievement>();
             var achievementCount = 0;
             var aa = DateTimeOffset.MinValue;
 

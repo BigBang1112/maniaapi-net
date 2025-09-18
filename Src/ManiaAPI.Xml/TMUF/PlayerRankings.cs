@@ -2,4 +2,4 @@
 
 namespace ManiaAPI.Xml.TMUF;
 
-public sealed record PlayerRankings(int Count, ImmutableArray<PlayerRanking> Players);
+public sealed record PlayerRankings(int Count, ImmutableList<PlayerRanking> Players);

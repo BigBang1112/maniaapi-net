@@ -1,12 +1,12 @@
 ﻿using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 
-namespace ManiaAPI.TrackmaniaIO.JsonContexts;
+namespace ManiaAPI.TrackmaniaIO;
 
 [JsonSerializable(typeof(CampaignCollection))]
 [JsonSerializable(typeof(Campaign))]
 [JsonSerializable(typeof(Leaderboard))]
-[JsonSerializable(typeof(ImmutableArray<WorldRecord>))]
+[JsonSerializable(typeof(ImmutableList<WorldRecord>))]
 [JsonSerializable(typeof(ClubCollection))]
 [JsonSerializable(typeof(ClubMemberCollection))]
 [JsonSerializable(typeof(ClubActivityCollection))]

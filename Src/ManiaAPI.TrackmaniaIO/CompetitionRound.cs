@@ -9,5 +9,5 @@ public sealed record CompetitionRound(int Id,
                                       string Status,
                                       [property: JsonConverter(typeof(DateTimeOffsetUnixConverter)), JsonPropertyName("startdate")] DateTimeOffset StartDate,
                                       [property: JsonConverter(typeof(DateTimeOffsetUnixConverter)), JsonPropertyName("enddate")] DateTimeOffset EndDate,
-                                      ImmutableArray<CompetitionRoundMatch> Matches,
-                                      ImmutableArray<CompetitionRoundChallenge> Challenges);
+                                      ImmutableList<CompetitionRoundMatch> Matches,
+                                      ImmutableList<CompetitionRoundChallenge> Challenges);

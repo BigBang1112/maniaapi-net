@@ -12,7 +12,7 @@ public sealed record Campaign(int Id,
                               [property: JsonPropertyName("clubid")] int ClubId,
                               [property: JsonPropertyName("clubname")] string? ClubName,
                               [property: JsonPropertyName("leaderboarduid")] string LeaderboardUid,
-                              ImmutableArray<Map> Playlist,
+                              ImmutableList<Map> Playlist,
                               Media Mediae,
                               bool Tracked)
 {

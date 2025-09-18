@@ -4,6 +4,6 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI;
 
-public sealed record TrackOfTheDayCollection(ImmutableArray<TrackOfTheDayMonth> MonthList,
+public sealed record TrackOfTheDayCollection(ImmutableList<TrackOfTheDayMonth> MonthList,
                                              [property: JsonConverter(typeof(DateTimeOffsetUnixConverter))] DateTimeOffset NextRequestTimestamp,
                                              int RelativeNextRequest);

@@ -2,4 +2,4 @@
 
 namespace ManiaAPI.TrackmaniaIO;
 
-public sealed record ClubRoomCollection(ImmutableArray<ClubRoomItem> Rooms, int Page, int PageCount);
+public sealed record ClubRoomCollection(ImmutableList<ClubRoomItem> Rooms, int Page, int PageCount);

@@ -4,4 +4,4 @@ namespace ManiaAPI.Xml.TMT;
 
 public record Summary<T>(
     DateTimeOffset Timestamp,
-    ImmutableArray<RecordUnit<T>> Scores) where T : struct;
+    ImmutableList<RecordUnit<T>> Scores) where T : struct;

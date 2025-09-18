@@ -5,8 +5,8 @@ namespace ManiaAPI.NadeoAPI;
 public sealed record ClubBucketItem(Guid ItemId,
                                     int Position,
                                     string Description,
-                                    ImmutableArray<string> MediaUrls,
-                                    ImmutableArray<string> MediaUrlsJpgLarge,
-                                    ImmutableArray<string> MediaUrlsJpgMedium,
-                                    ImmutableArray<string> MediaUrlsJpgSmall,
-                                    ImmutableArray<string> MediaUrlsDds);
+                                    ImmutableList<string> MediaUrls,
+                                    ImmutableList<string> MediaUrlsJpgLarge,
+                                    ImmutableList<string> MediaUrlsJpgMedium,
+                                    ImmutableList<string> MediaUrlsJpgSmall,
+                                    ImmutableList<string> MediaUrlsDds);

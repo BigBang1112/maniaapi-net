@@ -8,7 +8,7 @@ public sealed record Room(int? Id,
                           string ServerAccountId,
                           int MaxPlayers,
                           int PlayerCount,
-                          ImmutableArray<string> Maps,
+                          ImmutableList<string> Maps,
                           string Script,
                           bool Scalable
                           //ImmutableDictionary<string, ScriptSetting> ScriptSettings bugged atm

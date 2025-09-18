@@ -96,7 +96,7 @@ public class MethodGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine("        response.EnsureSuccessStatusCode();");
         sb.AppendLine();
-        sb.Append("        return await response.Content.ReadFromJsonAsync(JsonContexts.TMXJsonContext.Default.");
+        sb.Append("        return await response.Content.ReadFromJsonAsync(TMXJsonContext.Default.");
 
         var returnSymbol = symbol.ReturnType;
 

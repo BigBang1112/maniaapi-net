@@ -19,6 +19,7 @@ For TMUF:
   - Medals
 - Get ladder zone rankings
 - Get ladder player rankings
+- Get player achievements
 
 For ManiaPlanet:
 

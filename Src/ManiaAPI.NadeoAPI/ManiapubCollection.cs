@@ -2,4 +2,4 @@
 
 namespace ManiaAPI.NadeoAPI;
 
-public sealed record ManiapubCollection(ImmutableArray<Maniapub> DisplayList);
+public sealed record ManiapubCollection(ImmutableList<Maniapub> DisplayList);

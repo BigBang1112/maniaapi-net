@@ -32,9 +32,19 @@ app.MapGet("/zones", async (NadeoServices nadeoServices, IMemoryCache cache, Can
     }));
 });
 
+app.MapGet("/campaigns", async (NadeoLiveServices nadeoLiveServices, IMemoryCache cache, CancellationToken cancellationToken) =>
+{
+    return TypedResults.Ok(await cache.GetOrCreateAsync("campaigns", async entry =>
+    {
+        entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+        return await nadeoLiveServices.GetSeasonalCampaignsAsync(5, cancellationToken: cancellationToken);
+    }));
+});
+
 app.Run();
 
-[JsonSerializable(typeof(ImmutableArray<Zone>))]
+[JsonSerializable(typeof(ImmutableList<Zone>))]
+[JsonSerializable(typeof(CampaignCollection))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext
 {
 

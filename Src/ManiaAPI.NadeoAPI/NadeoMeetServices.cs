@@ -1,6 +1,4 @@
-﻿using ManiaAPI.NadeoAPI.JsonContexts;
-
-namespace ManiaAPI.NadeoAPI;
+﻿namespace ManiaAPI.NadeoAPI;
 
 public interface INadeoMeetServices : INadeoAPI
 {

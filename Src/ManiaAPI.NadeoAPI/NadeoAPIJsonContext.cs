@@ -1,27 +1,27 @@
 ﻿using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 
-namespace ManiaAPI.NadeoAPI.JsonContexts;
+namespace ManiaAPI.NadeoAPI;
 
-[JsonSerializable(typeof(ImmutableArray<Account>))]
+[JsonSerializable(typeof(ImmutableList<Account>))]
 [JsonSerializable(typeof(AuthorizationBody))]
 [JsonSerializable(typeof(AuthorizationResponse))]
 [JsonSerializable(typeof(ErrorResponse))]
 [JsonSerializable(typeof(JwtPayloadNadeoAPI))]
 [JsonSerializable(typeof(MapInfoLiveCollection))]
-[JsonSerializable(typeof(ImmutableArray<MapRecord>))]
+[JsonSerializable(typeof(ImmutableList<MapRecord>))]
 [JsonSerializable(typeof(MedalRecordCollection))]
-[JsonSerializable(typeof(ImmutableArray<ManiapubCollection>))]
+[JsonSerializable(typeof(ImmutableList<ManiapubCollection>))]
 [JsonSerializable(typeof(TopLeaderboardCollection))]
 [JsonSerializable(typeof(UbisoftAuthenticationTicket))]
 [JsonSerializable(typeof(TrackOfTheDayCollection))]
 [JsonSerializable(typeof(TrackOfTheDayInfo))]
 [JsonSerializable(typeof(CampaignCollection))]
 [JsonSerializable(typeof(SeasonPlayerRankingCollection))]
-[JsonSerializable(typeof(ImmutableArray<PlayerZone>))]
+[JsonSerializable(typeof(ImmutableList<PlayerZone>))]
 [JsonSerializable(typeof(Dictionary<string, ApiRoute>))]
-[JsonSerializable(typeof(ImmutableArray<Zone>))]
-[JsonSerializable(typeof(ImmutableArray<PlayerClubTag>))]
+[JsonSerializable(typeof(ImmutableList<Zone>))]
+[JsonSerializable(typeof(ImmutableList<PlayerClubTag>))]
 [JsonSerializable(typeof(MapInfoCollection))]
 [JsonSerializable(typeof(CupOfTheDay))]
 [JsonSerializable(typeof(Competition))]
@@ -38,7 +38,7 @@ namespace ManiaAPI.NadeoAPI.JsonContexts;
 [JsonSerializable(typeof(ClubPlayerInfo))]
 [JsonSerializable(typeof(ClubActivityEdition))]
 [JsonSerializable(typeof(ClubCampaignEdition))]
-[JsonSerializable(typeof(ImmutableArray<WebIdentity>))]
+[JsonSerializable(typeof(ImmutableList<WebIdentity>))]
 [JsonSerializable(typeof(SkinInfo))]
 [JsonSerializable(typeof(ClubFolder))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]

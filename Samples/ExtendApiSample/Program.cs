@@ -23,12 +23,12 @@ foreach (var map in submittedMaps)
 
 internal class ExtendedNadeoServices : NadeoServices
 {
-    public async Task<ImmutableArray<MapInfo>> GetSubmittedMapsAsync(CancellationToken cancellationToken = default)
+    public async Task<ImmutableList<MapInfo>> GetSubmittedMapsAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("maps/by-submitter", MyJsonContext.Default.ImmutableArrayMapInfo, cancellationToken);
+        return await GetJsonAsync("maps/by-submitter", MyJsonContext.Default.ImmutableListMapInfo, cancellationToken);
     }
 }
 
-[JsonSerializable(typeof(ImmutableArray<MapInfo>))]
+[JsonSerializable(typeof(ImmutableList<MapInfo>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class MyJsonContext : JsonSerializerContext;

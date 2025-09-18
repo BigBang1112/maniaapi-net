@@ -105,7 +105,7 @@ internal class ExtendedMasterServerTMT : MasterServerTMT
                 var mainTimestmap = default(DateTimeOffset);
                 var login = string.Empty;
                 var opponentLogin = string.Empty;
-                var records = ImmutableArray.CreateBuilder<RecordComparison>();
+                var records = ImmutableList.CreateBuilder<RecordComparison>();
 
                 while (xml.TryReadStartElement(out var element))
                 {

@@ -2,4 +2,4 @@
 
 namespace ManiaAPI.TrackmaniaIO;
 
-public sealed record AdCollection(ImmutableArray<Ad> Ads);
+public sealed record AdCollection(ImmutableList<Ad> Ads);
