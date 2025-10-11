@@ -176,6 +176,7 @@ public abstract class NadeoAPI : INadeoAPI
         if (DateTimeOffset.UtcNow >= ExpirationTime.Value.AddHours(20))
         {
             await AuthorizeAsync(Handler.SavedCredentials ?? throw new Exception("No credentials available to reauthorize."), cancellationToken);
+            return true;
         }
 
         using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh")
