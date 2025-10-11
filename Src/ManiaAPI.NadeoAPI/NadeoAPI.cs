@@ -172,6 +172,12 @@ public abstract class NadeoAPI : INadeoAPI
             return false;
         }
 
+        // if older than 20 hours, reauthorize
+        if (DateTimeOffset.UtcNow >= ExpirationTime.Value.AddHours(20))
+        {
+            await AuthorizeAsync(Handler.SavedCredentials ?? throw new Exception("No credentials available to reauthorize."), cancellationToken);
+        }
+
         using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh")
         {
             Headers = { Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={Handler.RefreshToken}") }
@@ -196,6 +202,7 @@ public abstract class NadeoAPI : INadeoAPI
                 if (Handler.PendingCredentials is not null)
                 {
                     await AuthorizeAsync(Handler.PendingCredentials, cancellationToken);
+                    Handler.SavedCredentials = Handler.PendingCredentials;
                     Handler.PendingCredentials = null;
                 }
             }

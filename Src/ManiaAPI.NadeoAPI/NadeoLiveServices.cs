@@ -7,7 +7,7 @@ namespace ManiaAPI.NadeoAPI;
 public interface INadeoLiveServices : INadeoAPI
 {
     Task<ImmutableList<Maniapub>> GetActiveManiapubsAsync(CancellationToken cancellationToken = default);
-    Task<MapInfoLive> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default);
+    Task<MapInfoLive?> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default);
     Task<ImmutableList<MapInfoLive>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default);
     Task<ImmutableList<MapInfoLive>> GetMapInfosAsync(params string[] mapUids);
     Task<MedalRecordCollection> GetMapMedalRecordsAsync(string mapUid, string groupId, CancellationToken cancellationToken = default);
@@ -69,9 +69,16 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
     }
 
-    public virtual async Task<MapInfoLive> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)
+    public virtual async Task<MapInfoLive?> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"token/map/{mapUid}", NadeoAPIJsonContext.Default.MapInfoLive, cancellationToken);
+        try
+        {
+            return await GetJsonAsync($"token/map/{mapUid}", NadeoAPIJsonContext.Default.MapInfoLive, cancellationToken);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
     }
 
     public virtual async Task<ImmutableList<MapInfoLive>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
