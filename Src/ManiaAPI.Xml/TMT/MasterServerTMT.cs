@@ -192,30 +192,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
                         timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
                         break;
                     case "i":
-                        var score = 0u;
-                        var count = 0;
-
-                        while (xml.TryReadStartElement(out var medalElement))
-                        {
-                            switch (medalElement)
-                            {
-                                case "s":
-                                    score = uint.Parse(xml.ReadContent());
-                                    break;
-                                case "c":
-                                    count = int.Parse(xml.ReadContent());
-                                    break;
-                                default:
-                                    xml.ReadContent();
-                                    break;
-                            }
-
-                            _ = xml.SkipEndElement();
-                        }
-
-                        ref T scoreValue = ref Unsafe.As<uint, T>(ref score);
-
-                        units.Add(new RecordUnit<T>(scoreValue, count));
+                        units.Add(XmlHelper.ReadRecordUnit<T>(ref xml));
                         break;
                     default:
                         xml.ReadContent();
@@ -246,30 +223,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
                     timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
                     break;
                 case "i":
-                    var score = 0u;
-                    var count = 0;
-
-                    while (xml.TryReadStartElement(out var medalElement))
-                    {
-                        switch (medalElement)
-                        {
-                            case "s":
-                                score = uint.Parse(xml.ReadContent());
-                                break;
-                            case "c":
-                                count = int.Parse(xml.ReadContent());
-                                break;
-                            default:
-                                xml.ReadContent();
-                                break;
-                        }
-
-                        _ = xml.SkipEndElement();
-                    }
-
-                    ref T scoreValue = ref Unsafe.As<uint, T>(ref score);
-
-                    units.Add(new RecordUnit<T>(scoreValue, count));
+                    units.Add(XmlHelper.ReadRecordUnit<T>(ref xml));
                     break;
                 default:
                     xml.ReadContent();

@@ -20,9 +20,9 @@ public interface IMasterServerMP4 : IMasterServer
     Task<MasterServerResponse<ImmutableList<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<CampaignSummaryRequest> summaries);
     Task<ImmutableList<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
     Task<ImmutableList<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, params IEnumerable<CampaignSummaryRequest> summaries);
-    Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, bool isBinary = true, CancellationToken cancellationToken = default);
     Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
-    Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, CancellationToken cancellationToken = default);
+    Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, bool isBinary = true, CancellationToken cancellationToken = default);
     Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
 }
 
@@ -66,7 +66,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         catch (HttpRequestException)
         {
             var waitingParams = await initServer.GetWaitingParamsAsync(cancellationToken);
-            Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
+            Client.BaseAddress = waitingParams.MasterServers.First().GetUri(); // THIS IS BROKEN, the client needs to be recreated
         }
     }
 
@@ -178,8 +178,8 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                 var type = CampaignLeaderboardType.SkillPoint;
                 var timestamp = DateTimeOffset.UtcNow;
                 var count = 0;
-                var skillpoints = Array.Empty<RecordUnit<uint>>();
-                var highScores = Array.Empty<LeaderboardItem<uint>>();
+                var skillpoints = ImmutableArray<RecordUnit<uint>>.Empty;
+                var highScores = ImmutableArray<LeaderboardItem<uint>>.Empty;
 
                 while (xml.TryReadStartElement(out var itemElement))
                 {
@@ -227,7 +227,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         string titleId,
         params IEnumerable<CampaignSummaryRequest> summaries)
     {
-        return await GetCampaignLeaderBoardSummariesResponseAsync(titleId, summaries, default);
+        return await GetCampaignLeaderBoardSummariesResponseAsync(titleId, summaries, cancellationToken: default);
     }
 
     public async Task<ImmutableList<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(
@@ -242,23 +242,24 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         string titleId,
         params IEnumerable<CampaignSummaryRequest> summaries)
     {
-        return await GetCampaignLeaderBoardSummariesAsync(titleId, summaries, default);
+        return await GetCampaignLeaderBoardSummariesAsync(titleId, summaries, cancellationToken: default);
     }
 
     public virtual async Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(
         string titleId,
         IEnumerable<MapSummaryRequest> summaries,
+        bool isBinary = true,
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetMapLeaderBoardSummaries";
 
-        var sb = new StringBuilder("\n<b>1</b>");
+        var sb = new StringBuilder($"\n<b>{(isBinary ? 1 : 0)}</b>");
         var i = 1;
         foreach (var summary in summaries)
         {
             sb.Append($"\n<c{i}></c{i}>");
             sb.Append($"\n<m{i}>{summary.MapUid}</m{i}>");
-            sb.Append($"\n<t{i}></t{i}>");
+            sb.Append($"\n<t{i}>{summary.Context}</t{i}>");
             sb.Append($"\n<z{i}>{summary.Zone}</z{i}>");
             sb.Append($"\n<s{i}>{summary.Type}</s{i}>");
             i++;
@@ -276,8 +277,10 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                 var type = MapLeaderboardType.MapRecord;
                 var timestamp = DateTimeOffset.UtcNow;
                 var count = 0;
-                var skillpoints = Array.Empty<RecordUnit<TimeInt32>>();
-                var highScores = Array.Empty<LeaderboardItem<TimeInt32>>();
+                var skillpoints = ImmutableArray<RecordUnit<TimeInt32>>.Empty;
+                var highScores = ImmutableArray<LeaderboardItem<TimeInt32>>.Empty;
+                var skillpointsBuilder = ImmutableArray.CreateBuilder<RecordUnit<TimeInt32>>();
+                var highScoresBuilder = ImmutableArray.CreateBuilder<LeaderboardItem<TimeInt32>>();
 
                 while (xml.TryReadStartElement(out var itemElement))
                 {
@@ -299,10 +302,24 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                             count = int.Parse(xml.ReadContent());
                             break;
                         case "i":
-                            skillpoints = ReadAllLeaderboardRecords<TimeInt32>(ref xml);
+                            if (isBinary)
+                            {
+                                skillpoints = ReadAllLeaderboardRecords<TimeInt32>(ref xml);
+                            }
+                            else
+                            {
+                                skillpointsBuilder.Add(XmlHelper.ReadRecordUnit<TimeInt32>(ref xml));
+                            }
                             break;
                         case "t":
-                            highScores = ReadLeaderboardRecords<TimeInt32>(ref xml);
+                            if (isBinary)
+                            {
+                                highScores = ReadLeaderboardRecords<TimeInt32>(ref xml);
+                            }
+                            else
+                            {
+                                highScoresBuilder.Add(ReadLeaderboardItem<TimeInt32>(ref xml));
+                            }
                             break;
                         default:
                             xml.ReadContent();
@@ -310,6 +327,12 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
                     }
 
                     _ = xml.SkipEndElement();
+                }
+
+                if (!isBinary)
+                {
+                    skillpoints = skillpointsBuilder.ToImmutable();
+                    highScores = highScoresBuilder.ToImmutable();
                 }
 
                 summaries.Add(new MapSummary(mapUid, zone, type, timestamp, count, skillpoints, highScores));
@@ -325,22 +348,23 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         string titleId,
         params IEnumerable<MapSummaryRequest> summaries)
     {
-        return await GetMapLeaderBoardSummariesResponseAsync(titleId, summaries, default);
+        return await GetMapLeaderBoardSummariesResponseAsync(titleId, summaries, isBinary: true, cancellationToken: default);
     }
 
     public async Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(
         string titleId,
         IEnumerable<MapSummaryRequest> summaries,
+        bool isBinary = true,
         CancellationToken cancellationToken = default)
     {
-        return (await GetMapLeaderBoardSummariesResponseAsync(titleId, summaries, cancellationToken)).Result;
+        return (await GetMapLeaderBoardSummariesResponseAsync(titleId, summaries, isBinary, cancellationToken)).Result;
     }
 
     public async Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(
         string titleId,
         params IEnumerable<MapSummaryRequest> summaries)
     {
-        return await GetMapLeaderBoardSummariesAsync(titleId, summaries, default);
+        return await GetMapLeaderBoardSummariesAsync(titleId, summaries, isBinary: true, cancellationToken: default);
     }
 
     private static ImmutableList<LeaderboardItem<T>> ReadLeaderboardItems<T>(ref MiniXmlReader xml) where T : struct
@@ -349,46 +373,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
 
         while (xml.TryReadStartElement("i"))
         {
-            var rank = 0;
-            var login = string.Empty;
-            var nickname = string.Empty;
-            var score = 0u;
-            var fileName = string.Empty;
-            var downloadUrl = string.Empty;
-
-            while (xml.TryReadStartElement(out var itemElement))
-            {
-                switch (itemElement)
-                {
-                    case "r":
-                        rank = int.Parse(xml.ReadContent());
-                        break;
-                    case "l":
-                        login = xml.ReadContentAsString();
-                        break;
-                    case "n":
-                        nickname = xml.ReadContentAsString();
-                        break;
-                    case "s":
-                        score = uint.Parse(xml.ReadContent());
-                        break;
-                    case "f":
-                        fileName = xml.ReadContentAsString();
-                        break;
-                    case "u":
-                        downloadUrl = xml.ReadContentAsString();
-                        break;
-                    default:
-                        xml.ReadContent();
-                        break;
-                }
-
-                _ = xml.SkipEndElement();
-            }
-
-            ref T scoreValue = ref Unsafe.As<uint, T>(ref score);
-
-            items.Add(new LeaderboardItem<T>(rank, login, nickname, scoreValue, fileName, downloadUrl));
+            items.Add(ReadLeaderboardItem<T>(ref xml));
 
             _ = xml.SkipEndElement(); // i
         }
@@ -396,7 +381,51 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         return items.ToImmutable();
     }
 
-    private static RecordUnit<T>[] ReadAllLeaderboardRecords<T>(ref MiniXmlReader xml) where T : struct
+    private static LeaderboardItem<T> ReadLeaderboardItem<T>(ref MiniXmlReader xml) where T : struct
+    {
+        var rank = 0;
+        var login = string.Empty;
+        var nickname = string.Empty;
+        var score = 0u;
+        var fileName = string.Empty;
+        var downloadUrl = string.Empty;
+
+        while (xml.TryReadStartElement(out var itemElement))
+        {
+            switch (itemElement)
+            {
+                case "r":
+                    rank = int.Parse(xml.ReadContent());
+                    break;
+                case "l":
+                    login = xml.ReadContentAsString();
+                    break;
+                case "n":
+                    nickname = xml.ReadContentAsString();
+                    break;
+                case "s":
+                    score = uint.Parse(xml.ReadContent());
+                    break;
+                case "f":
+                    fileName = xml.ReadContentAsString();
+                    break;
+                case "u":
+                    downloadUrl = xml.ReadContentAsString();
+                    break;
+                default:
+                    xml.ReadContent();
+                    break;
+            }
+
+            _ = xml.SkipEndElement();
+        }
+
+        ref T scoreValue = ref Unsafe.As<uint, T>(ref score);
+
+        return new LeaderboardItem<T>(rank, login, nickname, scoreValue, fileName, downloadUrl);
+    }
+
+    private static ImmutableArray<RecordUnit<T>> ReadAllLeaderboardRecords<T>(ref MiniXmlReader xml) where T : struct
     {
         var scoreData = Convert.FromBase64String(xml.ReadContentAsString());
 
@@ -407,17 +436,17 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
 
         var uniqueScoreDataCount = BitConverter.ToInt32(scoreData, 0);
 
-        return MemoryMarshal.Cast<byte, RecordUnit<T>>(scoreData.AsSpan().Slice(4)).ToArray();
+        return MemoryMarshal.Cast<byte, RecordUnit<T>>(scoreData.AsSpan().Slice(4)).ToImmutableArray();
     }
 
-    private static LeaderboardItem<T>[] ReadLeaderboardRecords<T>(ref MiniXmlReader xml) where T : struct
+    private static ImmutableArray<LeaderboardItem<T>> ReadLeaderboardRecords<T>(ref MiniXmlReader xml) where T : struct
     {
         using var ms = new MemoryStream(Convert.FromBase64String(xml.ReadContentAsString()));
         using var r = new GbxBasedReader(ms, leaveOpen: false);
 
-        var records = new LeaderboardItem<T>[r.ReadUInt32()];
+        var records = ImmutableArray.CreateBuilder<LeaderboardItem<T>>(r.ReadInt32());
 
-        for (int i = 0; i < records.Length; i++)
+        for (int i = 0; i < records.Count; i++)
         {
             var rank = r.ReadInt32();
             var score = r.ReadUInt32();
@@ -431,6 +460,6 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
             records[i] = new LeaderboardItem<T>(rank, login, nickname, scoreValue, fileName, replayUrl);
         }
 
-        return records;
+        return records.ToImmutable();
     }
 }
