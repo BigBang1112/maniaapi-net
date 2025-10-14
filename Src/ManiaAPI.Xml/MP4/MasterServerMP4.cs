@@ -51,7 +51,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
     /// Creates a new instance of <see cref="MasterServerMP4"/> using any <see cref="HttpClient"/>. You need to set the base address yourself.
     /// </summary>
     /// <param name="client">HTTP client.</param>
-    public MasterServerMP4(HttpClient client) : base(client)
+    public MasterServerMP4(HttpClient client) : base(new Uri(DefaultAddress), client)
     {
     }
 
@@ -78,7 +78,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
     private async Task GetApplicationConfigAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetApplicationConfig";
-        _ = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
+        _ = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
     }
 
     public virtual async Task<MasterServerResponse<ImmutableList<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(
@@ -91,7 +91,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetCampaignLeaderBoard";
-        var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, @$"
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GetGameXml(titleId), authorXml: null, RequestName, @$"
             <f>{offset}</f>
             <n>{count}</n>
             <c>{campaignId ?? titleId}</c>
@@ -124,7 +124,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetMapLeaderBoard";
-        var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, @$"
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GetGameXml(titleId), authorXml: null, RequestName, @$"
             <m>{mapUid}</m>
             <n>{count}</n>
             <f>{offset}</f>
@@ -166,7 +166,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
             i++;
         }
 
-        var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, sb.ToString(), cancellationToken);
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GetGameXml(titleId), authorXml: null, RequestName, sb.ToString(), cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
             var summaries = ImmutableList.CreateBuilder<CampaignSummary>();
@@ -265,7 +265,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
             i++;
         }
 
-        var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, sb.ToString(), cancellationToken);
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GetGameXml(titleId), authorXml: null, RequestName, sb.ToString(), cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
             var summaries = ImmutableList.CreateBuilder<MapSummary>();

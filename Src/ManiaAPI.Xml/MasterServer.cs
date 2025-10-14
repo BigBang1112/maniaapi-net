@@ -15,15 +15,18 @@ public abstract class MasterServer : IMasterServer
 {
     public HttpClient Client { get; }
 
+    protected Uri ServerUri { get; }
     protected abstract string GameXml { get; }
 
-    protected MasterServer(HttpClient client)
+    protected MasterServer(Uri uri, HttpClient client)
     {
         Client = client;
         Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.3.2 (Xml; Email=petrpiv1@gmail.com; Discord=bigbang1112)");
+
+        ServerUri = uri;
     }
 
-    protected MasterServer(Uri address) : this(new HttpClient { BaseAddress = address })
+    protected MasterServer(Uri uri) : this(uri, new HttpClient())
     {
     }
 
@@ -34,14 +37,14 @@ public abstract class MasterServer : IMasterServer
         XmlProcessContent<T> processContent,
         CancellationToken cancellationToken = default) where T : notnull
     {
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml, requestName, parametersXml, cancellationToken);
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml, requestName, parametersXml, cancellationToken);
         return XmlHelper.ProcessResponseResult(requestName, response, processContent);
     }
 
     public virtual async Task<MasterServerResponse<ImmutableList<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetLeagues";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
             var items = ImmutableList.CreateBuilder<League>();

@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Src\ManiaAPI.Xml.Extensions.Hosting\ManiaAPI.Xml.Extensions.Hosting.csproj" />
     <ProjectReference Include="..\..\Src\ManiaAPI.Xml\ManiaAPI.Xml.csproj" />
   </ItemGroup>
 

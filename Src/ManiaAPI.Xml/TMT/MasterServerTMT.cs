@@ -50,8 +50,9 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerTMT"/> using any <see cref="HttpClient"/>. You need to set the base address yourself.
     /// </summary>
+    /// <param name="uri">URI of the master server.</param>
     /// <param name="client">HTTP client.</param>
-    public MasterServerTMT(HttpClient client) : base(client)
+    public MasterServerTMT(Uri uri, HttpClient client) : base(uri, client)
     {
     }
 
@@ -67,7 +68,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
             i++;
         }
 
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, sb.ToString(), cancellationToken);
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, sb.ToString(), cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, ReadSummaries<int>);
     }
 
@@ -108,7 +109,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
             i++;
         }
 
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, sb.ToString(), cancellationToken);
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, sb.ToString(), cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, ReadSummaries<TimeInt32>);
     }
 
@@ -140,7 +141,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
     public virtual async Task<MasterServerResponse<Summary<int>>> GetCampaignLeaderBoardSummaryResponseAsync(string zone = "World", CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetLeaderBoardSummary";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, @$"
             <t>Campaign</t>
             <c>TMTurbo@nadeolabs</c>
             <m></m>
@@ -157,7 +158,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
     public virtual async Task<MasterServerResponse<Summary<TimeInt32>>> GetMapLeaderBoardSummaryResponseAsync(string mapUid, string zone = "World", CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetLeaderBoardSummary";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, @$"
             <t>Map</t>
             <c>TMTurbo@nadeolabs</c>
             <m>{mapUid}</m>

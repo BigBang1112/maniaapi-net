@@ -44,16 +44,15 @@ public static class MasterServerServiceExtensions
 
             services.AddKeyedScoped(platform, (provider, key) => new InitServerTMT(
                 provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(InitServerTMT)}_{key}")));
-
-            services.AddKeyedSingleton(platform, (provider, key) => new MasterServerTMT(
-                provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(MasterServerTMT)}_{key}")));
-            services.AddSingleton(provider => provider.GetRequiredKeyedService<MasterServerTMT>(platform));
         }
 
-        services.AddSingleton(provider => Enum.GetValues<Platform>()
-            .ToImmutableDictionary(platform => platform, platform => provider.GetRequiredKeyedService<MasterServerTMT>(platform)));
+        // might be better to be scoped but MasterServerTMTFactory has issues with scoped
+        services.AddScoped(provider => Enum.GetValues<Platform>()
+            .ToImmutableDictionary(platform => platform, platform => provider.GetRequiredKeyedService<InitServerTMT>(platform)));
+
+        services.AddSingleton<IMasterServerTMTFactory, MasterServerTMTFactory>();
 
         services.AddScoped(provider => new AggregatedMasterServerTMT(
-            provider.GetRequiredService<ImmutableDictionary<Platform, MasterServerTMT>>()));
+            provider.GetRequiredService<IMasterServerTMTFactory>().CreateClients()));
     }
 }

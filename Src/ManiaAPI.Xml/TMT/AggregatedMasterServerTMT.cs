@@ -32,9 +32,9 @@ public interface IAggregatedMasterServerTMT
 /// </summary>
 public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
 {
-    private readonly IDictionary<Platform, MasterServerTMT> masterServers;
+    private readonly ImmutableDictionary<Platform, MasterServerTMT> masterServers;
 
-    public AggregatedMasterServerTMT(IDictionary<Platform, MasterServerTMT> masterServers)
+    public AggregatedMasterServerTMT(ImmutableDictionary<Platform, MasterServerTMT> masterServers)
     {
         this.masterServers = masterServers;
     }

@@ -1,27 +1,19 @@
-﻿using ManiaAPI.Xml.TMT;
+﻿using ManiaAPI.Xml.Extensions.Hosting;
 
 namespace WebAppXmlExample;
 
 public sealed class StartupHostedService : IHostedService
 {
-    private readonly IServiceProvider serviceProvider;
+    private readonly IMasterServerTMTFactory masterServerTMTFactory;
 
-    public StartupHostedService(IServiceProvider serviceProvider)
+    public StartupHostedService(IMasterServerTMTFactory masterServerTMTFactory)
     {
-        this.serviceProvider = serviceProvider;
+        this.masterServerTMTFactory = masterServerTMTFactory;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await using var scope = serviceProvider.CreateAsyncScope();
-
-        foreach (var platform in Enum.GetValues<Platform>())
-        {
-            var initServer = scope.ServiceProvider.GetRequiredKeyedService<InitServerTMT>(platform);
-            var waitingParams = await initServer.GetWaitingParamsAsync(cancellationToken);
-            var masterServer = scope.ServiceProvider.GetRequiredKeyedService<MasterServerTMT>(platform);
-            masterServer.Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
-        }
+        await masterServerTMTFactory.RequestWaitingParamsAsync(cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

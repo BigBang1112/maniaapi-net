@@ -41,6 +41,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+        <InternalsVisibleTo Include="ManiaAPI.Xml.Extensions.Hosting" />
 		<InternalsVisibleTo Include="ManiaAPI.Xml.Tests" />
 	</ItemGroup>
 
