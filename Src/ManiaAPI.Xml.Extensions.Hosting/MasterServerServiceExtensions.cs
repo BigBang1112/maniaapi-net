@@ -27,7 +27,7 @@ public static class MasterServerServiceExtensions
                 PooledConnectionLifetime = TimeSpan.FromMinutes(10),
                 AutomaticDecompression = DecompressionMethods.GZip
             });
-        services.AddSingleton<MasterServerMP4>();
+        services.AddSingleton(provider => new MasterServerMP4(provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(MasterServerMP4))));
     }
 
     public static void AddMasterServerTMT(this IServiceCollection services)
