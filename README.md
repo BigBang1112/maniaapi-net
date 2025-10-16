@@ -15,7 +15,7 @@ A wrapper for these web APIs:
 - [Trackmania Exchange](https://api2.mania.exchange/)
 - [UnitedLadder](https://ul.unitedascenders.xyz/)
 - XML protocol (for TMF, TMT, and ManiaPlanet)
-- XML-RPC protocol (for TMF, TMT, and ManiaPlanet)
+- XML-RPC protocol (for TMF, ManiaPlanet, and TM2020)
 
 This set of libraries was made to be very easy and straightforward to use, but also easily mocked, so that it can be integrated into the real world in no time.
 
