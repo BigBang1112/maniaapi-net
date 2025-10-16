@@ -28,7 +28,7 @@ public interface IMasterServerMP4 : IMasterServer
 
 public class MasterServerMP4 : MasterServer, IMasterServerMP4
 {
-    public const string DefaultAddress = "http://relay02.v04.maniaplanet.com/game/request.php";
+    public const string DefaultAddress = "https://relay02.v04.maniaplanet.com/game/request.php";
 
     protected override string GameXml => XmlHelperMP4.GameXml;
 
