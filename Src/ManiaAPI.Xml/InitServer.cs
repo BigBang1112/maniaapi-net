@@ -15,12 +15,15 @@ public abstract class InitServer : IInitServer
 {
     public HttpClient Client { get; }
 
+    protected Uri ServerUri { get; }
     protected abstract string GameXml { get; }
 
     protected InitServer(HttpClient client)
     {
         Client = client;
-        Client.DefaultRequestHeaders.Add("User-Agent", "ManiaAPI.NET (Xml) by BigBang1112");
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.5.0 (Xml; Email=petrpiv1@gmail.com; Discord=bigbang1112)");
+
+        ServerUri = client.BaseAddress ?? throw new ArgumentException("InitServer must have BaseAddress set", nameof(client));
     }
 
     protected InitServer(Uri address) : this(new HttpClient { BaseAddress = address })
@@ -34,14 +37,14 @@ public abstract class InitServer : IInitServer
         XmlProcessContent<T> processContent, 
         CancellationToken cancellationToken = default) where T : notnull
     {
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml, requestName, parametersXml, cancellationToken);
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml, requestName, parametersXml, cancellationToken);
         return XmlHelper.ProcessResponseResult(requestName, response, processContent);
     }
 
     public virtual async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetWaitingParams";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
         {
             var masterServers = ImmutableList.CreateBuilder<MasterServerInfo>();

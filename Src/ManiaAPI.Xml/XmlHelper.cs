@@ -1,7 +1,7 @@
-﻿using ManiaAPI.Xml;
-using MinimalXmlReader;
+﻿using MinimalXmlReader;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -12,7 +12,7 @@ internal static partial class XmlHelper
     [GeneratedRegex(@"execution time\s*:\s*(\d+\.\d+)\s*s")]
     private static partial Regex ExecutionTimeRegex();
 
-    internal static async Task<XmlResponse> SendAsync(HttpClient client, string gameXml, string? authorXml, string requestName, string parametersXml, CancellationToken cancellationToken)
+    public static async Task<XmlResponse> SendAsync(HttpClient client, Uri uri, string gameXml, string? authorXml, string requestName, string parametersXml, CancellationToken cancellationToken)
     {
         var formedXml = $"<root><game>{gameXml}</game>{authorXml}<request><name>{requestName}</name><params>{parametersXml}</params></request></root>";
 
@@ -22,7 +22,7 @@ internal static partial class XmlHelper
 
         var startTime = Stopwatch.GetTimestamp();
 
-        var response = await client.PostAsync(default(Uri), content, cancellationToken);
+        var response = await client.PostAsync(uri, content, cancellationToken);
 
         var requestTime = Stopwatch.GetElapsedTime(startTime);
 
@@ -31,7 +31,7 @@ internal static partial class XmlHelper
         return new XmlResponse(await response.Content.ReadAsStringAsync(cancellationToken), new XmlResponseDetails(requestTime));
     }
 
-    internal static MasterServerResponse<T> ProcessResponseResult<T>(
+    public static MasterServerResponse<T> ProcessResponseResult<T>(
         string requestName,
         XmlResponse response, 
         XmlProcessContent<T> processContent) where T : notnull
@@ -135,5 +135,33 @@ internal static partial class XmlHelper
         }
 
         throw new XmlRequestException(value, message, Stopwatch.GetElapsedTime(startTime), details);
+    }
+
+    public static RecordUnit<T> ReadRecordUnit<T>(ref MiniXmlReader xml) where T : struct
+    {
+        var score = 0u;
+        var count = 0;
+
+        while (xml.TryReadStartElement(out var element))
+        {
+            switch (element)
+            {
+                case "s":
+                    score = uint.Parse(xml.ReadContent());
+                    break;
+                case "c":
+                    count = int.Parse(xml.ReadContent());
+                    break;
+                default:
+                    xml.ReadContent();
+                    break;
+            }
+
+            _ = xml.SkipEndElement();
+        }
+
+        ref T scoreValue = ref Unsafe.As<uint, T>(ref score);
+
+        return new RecordUnit<T>(scoreValue, count);
     }
 }

@@ -40,7 +40,7 @@ public partial class TMX : ITMX
     public TMX(HttpClient client, TmxSite site)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
-        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.3.1 (TMX; Discord=bigbang1112)");
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.5.0 (TMX; Discord=bigbang1112)");
 
         Site = site;
         SiteName = site.ToString();

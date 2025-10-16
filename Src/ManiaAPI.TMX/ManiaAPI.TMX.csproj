@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<PackageId>ManiaAPI.TMX</PackageId>
-		<Version>2.4.0</Version>
+		<Version>2.5.0</Version>
 		<Authors>BigBang1112</Authors>
 		<Description>Wrapper for the TMX API, currently only on tm-exchange.com. Part of the ManiaAPI.NET library set.</Description>
 		<Copyright>Copyright (c) 2022-2025 Petr Pivoňka</Copyright>
@@ -41,7 +41,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TmEssentials" Version="2.5.2" />
+		<PackageReference Include="TmEssentials" Version="2.5.3" />
 	</ItemGroup>
 
 	<ItemGroup>

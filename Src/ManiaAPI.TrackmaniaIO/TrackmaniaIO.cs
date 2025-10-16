@@ -51,7 +51,7 @@ public class TrackmaniaIO : ITrackmaniaIO
 
         Client = client ?? throw new ArgumentNullException(nameof(client));
         Client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
-        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.3.1 (TrackmaniaIO; Discord=bigbang1112)");
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.5.0 (TrackmaniaIO; Discord=bigbang1112)");
     }
 
     /// <summary>

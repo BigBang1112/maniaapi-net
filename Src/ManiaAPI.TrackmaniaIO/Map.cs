@@ -1,6 +1,6 @@
-﻿using ManiaAPI.TrackmaniaIO.Converters;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using TmEssentials;
+using TmEssentials.Converters;
 
 namespace ManiaAPI.TrackmaniaIO;
 
@@ -8,10 +8,10 @@ public sealed record Map(Guid Author,
                          string Name,
                          string MapType,
                          string MapStyle,
-                         [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 AuthorScore,
-                         [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 GoldScore,
-                         [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 SilverScore,
-                         [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 BronzeScore,
+                         [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 AuthorScore,
+                         [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 GoldScore,
+                         [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 SilverScore,
+                         [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 BronzeScore,
                          string CollectionName,
                          [property: JsonPropertyName("filename")] string FileName,
                          bool IsPlayable,

@@ -4,7 +4,7 @@ public interface IInitServerMP4 : IInitServer;
 
 public class InitServerMP4 : InitServer, IInitServerMP4
 {
-    public const string DefaultAddress = "http://init.v04.maniaplanet.com/game/request.php";
+    public const string DefaultAddress = "https://init.v04.maniaplanet.com/game/request.php";
 
     protected override string GameXml => XmlHelperMP4.GameXml;
 

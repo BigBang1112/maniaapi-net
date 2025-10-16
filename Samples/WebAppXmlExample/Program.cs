@@ -1,43 +1,15 @@
-using System.Net;
 using WebAppXmlExample;
 using WebAppXmlExample.Components;
-using ManiaAPI.Xml.TMT;
-using System.Collections.Immutable;
 using Microsoft.Extensions.Caching.Hybrid;
+using ManiaAPI.Xml.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 // Register the services
-
-//
-// Setup all TMT services
-foreach (Platform platform in Enum.GetValues<Platform>())
-{
-    builder.Services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(platform)));
-    builder.Services.AddHttpClient($"{nameof(MasterServerTMT)}_{platform}")
-        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-        {
-            PooledConnectionLifetime = TimeSpan.FromMinutes(10),
-            AutomaticDecompression = DecompressionMethods.GZip
-        });
-
-    builder.Services.AddKeyedScoped(platform, (provider, key) => new InitServerTMT(
-        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(InitServerTMT)}_{key}")));
-
-    builder.Services.AddKeyedSingleton(platform, (provider, key) => new MasterServerTMT(
-        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(MasterServerTMT)}_{key}")));
-    builder.Services.AddSingleton(provider => provider.GetRequiredKeyedService<MasterServerTMT>(platform));
-}
-
-builder.Services.AddSingleton(provider => Enum.GetValues<Platform>()
-    .ToImmutableDictionary(platform => platform, platform => provider.GetRequiredKeyedService<MasterServerTMT>(platform)));
-
-builder.Services.AddScoped(provider => new AggregatedMasterServerTMT(
-    provider.GetRequiredService<ImmutableDictionary<Platform, MasterServerTMT>>()));
-//
-//
+builder.Services.AddMasterServerTMT();
+builder.Services.AddMasterServerMP4();
 
 builder.Services.AddHostedService<StartupHostedService>();
 

@@ -1,4 +1,6 @@
-﻿namespace ManiaAPI.Xml.MP4;
+﻿using System.Collections.Immutable;
+
+namespace ManiaAPI.Xml.MP4;
 
 public sealed record CampaignSummary(
     string CampaignId, 
@@ -6,5 +8,5 @@ public sealed record CampaignSummary(
     CampaignLeaderboardType Type, 
     DateTimeOffset Timestamp, 
     int Count, 
-    RecordUnit<uint>[] Skillpoints, 
-    LeaderboardItem<uint>[] HighScores);
+    ImmutableArray<RecordUnit<uint>> Skillpoints, 
+    ImmutableArray<LeaderboardItem<uint>> HighScores);

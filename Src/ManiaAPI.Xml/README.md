@@ -67,27 +67,33 @@ Because the responses can be quite large sometimes, it's **recommended to accept
 ```cs
 using ManiaAPI.Xml;
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-{
-    BaseAddress = new Uri(MasterServerMP4.DefaultAddress)
-};
-var masterServer = new MasterServerMP4(httpClient);
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip });
+var masterServer = new MasterServerMP4(new Uri(MasterServerMP4.DefaultAddress), httpClient);
 ```
 
-In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
-
-To be most inline with the game client, you should validate the master server first with `ValidateAsync`. Behind the scenes, it first requests `GetApplicationConfig`, then on catched HTTP exception, it requests `GetWaitingParams` from the init server and use the available master server instead.
+In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to the init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
 
 ```cs
 using ManiaAPI.Xml;
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-{
-    BaseAddress = new Uri(MasterServerMP4.DefaultAddress)
-};
-var masterServer = new MasterServerMP4(httpClient);
+var initServer = new InitServerMP4();
+var waitingParams = await initServer.GetWaitingParamsAsync();
 
-await masterServer.ValidateAsync(); // Do this for reliability
+var masterServer = new MasterServerMP4(waitingParams.MasterServers.First());
+
+// The master server is now ready to use
+```
+
+Example with enabled compression:
+
+```cs
+using ManiaAPI.Xml;
+
+var initServer = new InitServerMP4();
+var waitingParams = await initServer.GetWaitingParamsAsync();
+
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip });
+var masterServer = new MasterServerMP4(waitingParams.MasterServers.First().GetUri(), httpClient);
 
 // The master server is now ready to use
 ```
@@ -115,11 +121,8 @@ using ManiaAPI.Xml;
 var initServer = new InitServerTMT(Platform.PC);
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-{
-    BaseAddress = waitingParams.MasterServers.First().GetUri()
-};
-var masterServer = new MasterServerTMT(httpClient);
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip });
+var masterServer = new MasterServerTMT(waitingParams.MasterServers.First().GetUri(), httpClient);
 
 // You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
 ```
@@ -137,11 +140,8 @@ await Task.WhenAll(waitingParams.Values);
 
 var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDictionary(
     pair => pair.Key,
-    pair => new MasterServerTMT(
-        new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-        {
-            BaseAddress = pair.Value.Result.MasterServers.First().GetUri()
-        })
+    pair => new MasterServerTMT(pair.Value.Result.MasterServers.First().GetUri(),
+        new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip }))
     ));
 
 // You can now use aggregatedMasterServer to work with all master servers at once

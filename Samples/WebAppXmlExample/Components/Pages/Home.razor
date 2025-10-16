@@ -1,4 +1,5 @@
 ﻿@using ManiaAPI.Xml
+@using ManiaAPI.Xml.Extensions.Hosting
 @using ManiaAPI.Xml.TMT
 @using System.Collections.Immutable
 @using Microsoft.Extensions.Caching.Hybrid
@@ -7,8 +8,7 @@
 @rendermode InteractiveServer
 @attribute [StreamRendering]
 
-@* inject the master server TMTs for each platform *@
-@inject ImmutableDictionary<Platform, MasterServerTMT> MasterServerTMTs
+@inject IMasterServerTMTFactory MasterServerTMTFactory
 
 @inject HybridCache Cache
 
@@ -98,7 +98,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        medalsPerPlatform = (await Task.WhenAll(MasterServerTMTs.Select(platformMasterServerPair => Task.Run(async () =>
+        medalsPerPlatform = (await Task.WhenAll(MasterServerTMTFactory.CreateClients().Select(platformMasterServerPair => Task.Run(async () =>
         {
             var (platform, masterServerTMT) = platformMasterServerPair;
 
@@ -115,7 +115,7 @@ else
 
     public async Task LoadRecordsPerPlatformAsync()
     {
-        recordsPerPlatform = (await Task.WhenAll(MasterServerTMTs.Select(platformMasterServerPair => Task.Run(async () =>
+        recordsPerPlatform = (await Task.WhenAll(MasterServerTMTFactory.CreateClients().Select(platformMasterServerPair => Task.Run(async () =>
         {
             var (platform, masterServerTMT) = platformMasterServerPair;
 
