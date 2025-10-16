@@ -9,9 +9,6 @@ namespace ManiaAPI.Xml.MP4;
 
 public interface IMasterServerMP4 : IMasterServer
 {
-    Task ValidateAsync(InitServerMP4 initServer, CancellationToken cancellationToken = default);
-    Task ValidateAsync(CancellationToken cancellationToken = default);
-
     Task<MasterServerResponse<ImmutableList<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
     Task<ImmutableList<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
     Task<MasterServerResponse<ImmutableList<LeaderboardItem<TimeInt32>>>> GetMapLeaderBoardResponseAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
@@ -50,32 +47,15 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerMP4"/> using any <see cref="HttpClient"/>. You need to set the base address yourself.
     /// </summary>
+    /// <param name="uri">URI of the master server.</param>
     /// <param name="client">HTTP client.</param>
-    public MasterServerMP4(HttpClient client) : base(new Uri(DefaultAddress), client)
+    public MasterServerMP4(Uri uri, HttpClient client) : base(uri, client)
     {
     }
 
     protected string GetGameXml(string titleId) => $"{GameXml}<title>{titleId}</title>";
 
-    public virtual async Task ValidateAsync(InitServerMP4 initServer, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            await GetApplicationConfigAsync(cancellationToken);
-        }
-        catch (HttpRequestException)
-        {
-            var waitingParams = await initServer.GetWaitingParamsAsync(cancellationToken);
-            Client.BaseAddress = waitingParams.MasterServers.First().GetUri(); // THIS IS BROKEN, the client needs to be recreated
-        }
-    }
-
-    public async Task ValidateAsync(CancellationToken cancellationToken = default)
-    {
-        await ValidateAsync(new InitServerMP4(), cancellationToken);
-    }
-
-    private async Task GetApplicationConfigAsync(CancellationToken cancellationToken = default)
+    internal async Task GetApplicationConfigAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetApplicationConfig";
         _ = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);

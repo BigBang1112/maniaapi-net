@@ -14,20 +14,17 @@ public static class MasterServerServiceExtensions
         return services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultAddress));
     }
 
-    public static IHttpClientBuilder AddInitServerMP4(this IServiceCollection services)
-    {
-        return services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultAddress));
-    }
-
     public static void AddMasterServerMP4(this IServiceCollection services)
     {
+        services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultAddress));
         services.AddHttpClient<MasterServerMP4>(client => client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress))
             .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
             {
                 PooledConnectionLifetime = TimeSpan.FromMinutes(10),
                 AutomaticDecompression = DecompressionMethods.GZip
             });
-        services.AddSingleton(provider => new MasterServerMP4(provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(MasterServerMP4))));
+
+        services.AddSingleton<IMasterServerMP4Factory, MasterServerMP4Factory>();
     }
 
     public static void AddMasterServerTMT(this IServiceCollection services)

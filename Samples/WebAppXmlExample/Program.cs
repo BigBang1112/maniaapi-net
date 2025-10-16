@@ -1,8 +1,5 @@
-using System.Net;
 using WebAppXmlExample;
 using WebAppXmlExample.Components;
-using ManiaAPI.Xml.TMT;
-using System.Collections.Immutable;
 using Microsoft.Extensions.Caching.Hybrid;
 using ManiaAPI.Xml.Extensions.Hosting;
 
@@ -12,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Register the services
 builder.Services.AddMasterServerTMT();
+builder.Services.AddMasterServerMP4();
 
 builder.Services.AddHostedService<StartupHostedService>();
 
