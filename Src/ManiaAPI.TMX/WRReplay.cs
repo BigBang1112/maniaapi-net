@@ -1,9 +1,9 @@
 ﻿using ManiaAPI.TMX.Attributes;
-using ManiaAPI.TMX.Converters;
 using System.Text.Json.Serialization;
 using TmEssentials;
+using TmEssentials.Converters;
 
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record WRReplay(User User, [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 ReplayTime, int ReplayScore, int ReplayId);
+public sealed record WRReplay(User User, [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 ReplayTime, int ReplayScore, int ReplayId);

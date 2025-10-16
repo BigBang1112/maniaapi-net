@@ -1,11 +1,11 @@
-﻿using ManiaAPI.TrackmaniaIO.Converters;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using TmEssentials;
+using TmEssentials.Converters;
 
 namespace ManiaAPI.TrackmaniaIO;
 
 public sealed record Record(int Position,
-                            [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 Time,
+                            [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 Time,
                             int Score,
                             [property: JsonPropertyName("filename")] string? FileName,
                             DateTimeOffset? Timestamp,

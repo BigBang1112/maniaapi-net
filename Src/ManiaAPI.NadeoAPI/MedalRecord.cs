@@ -1,6 +1,6 @@
-﻿using ManiaAPI.NadeoAPI.Converters;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using TmEssentials;
+using TmEssentials.Converters;
 
 namespace ManiaAPI.NadeoAPI;
 
@@ -8,4 +8,4 @@ public sealed record MedalRecord(string Medal,
                                  Guid AccountId,
                                  Guid ZoneId,
                                  string ZoneName,
-                                 [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 Score);
+                                 [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 Score);

@@ -1,6 +1,7 @@
 ﻿using ManiaAPI.NadeoAPI.Converters;
 using System.Text.Json.Serialization;
 using TmEssentials;
+using TmEssentials.Converters;
 
 namespace ManiaAPI.NadeoAPI;
 
@@ -9,10 +10,10 @@ public sealed record MapInfoLive(string Uid,
                                  string Name,
                                  Guid Author,
                                  Guid Submitter,
-                                 [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 AuthorTime,
-                                 [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 GoldTime,
-                                 [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 SilverTime,
-                                 [property: JsonConverter(typeof(TimeInt32Converter))] TimeInt32 BronzeTime,
+                                 [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 AuthorTime,
+                                 [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 GoldTime,
+                                 [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 SilverTime,
+                                 [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 BronzeTime,
                                  int NbLaps,
                                  bool Valid,
                                  string DownloadUrl,
