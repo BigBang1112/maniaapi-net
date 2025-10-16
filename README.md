@@ -602,27 +602,33 @@ Because the responses can be quite large sometimes, it's **recommended to accept
 ```cs
 using ManiaAPI.Xml;
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-{
-    BaseAddress = new Uri(MasterServerMP4.DefaultAddress)
-};
-var masterServer = new MasterServerMP4(httpClient);
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip });
+var masterServer = new MasterServerMP4(new Uri(MasterServerMP4.DefaultAddress), httpClient);
 ```
 
-In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
-
-To be most inline with the game client, you should validate the master server first with `ValidateAsync`. Behind the scenes, it first requests `GetApplicationConfig`, then on catched HTTP exception, it requests `GetWaitingParams` from the init server and use the available master server instead.
+In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to the init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
 
 ```cs
 using ManiaAPI.Xml;
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-{
-    BaseAddress = new Uri(MasterServerMP4.DefaultAddress)
-};
-var masterServer = new MasterServerMP4(httpClient);
+var initServer = new InitServerMP4();
+var waitingParams = await initServer.GetWaitingParamsAsync();
 
-await masterServer.ValidateAsync(); // Do this for reliability
+var masterServer = new MasterServerMP4(waitingParams.MasterServers.First());
+
+// The master server is now ready to use
+```
+
+Example with enabled compression:
+
+```cs
+using ManiaAPI.Xml;
+
+var initServer = new InitServerMP4();
+var waitingParams = await initServer.GetWaitingParamsAsync();
+
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip });
+var masterServer = new MasterServerMP4(waitingParams.MasterServers.First().GetUri(), httpClient);
 
 // The master server is now ready to use
 ```
@@ -650,11 +656,8 @@ using ManiaAPI.Xml;
 var initServer = new InitServerTMT(Platform.PC);
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-{
-    BaseAddress = waitingParams.MasterServers.First().GetUri()
-};
-var masterServer = new MasterServerTMT(httpClient);
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip });
+var masterServer = new MasterServerTMT(waitingParams.MasterServers.First().GetUri(), httpClient);
 
 // You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
 ```
@@ -672,11 +675,8 @@ await Task.WhenAll(waitingParams.Values);
 
 var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDictionary(
     pair => pair.Key,
-    pair => new MasterServerTMT(
-        new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-        {
-            BaseAddress = pair.Value.Result.MasterServers.First().GetUri()
-        })
+    pair => new MasterServerTMT(pair.Value.Result.MasterServers.First().GetUri(),
+        new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip }))
     ));
 
 // You can now use aggregatedMasterServer to work with all master servers at once
@@ -698,33 +698,37 @@ builder.Services.AddMasterServerTMUF();
 
 ### Setup for ManiaPlanet
 
-Relying on `Maniaplanet relay 2` to continue running:
-
 ```cs
 using ManiaAPI.Xml.Extensions.Hosting;
 
 builder.Services.AddMasterServerMP4();
 ```
 
-You can now inject `MasterServerMP4` (registered as singleton) and use it without additional steps. Compression is enabled.
+You can now inject `MasterServerMP4`, as long as you're fine relying on `Maniaplanet relay 2` to continue running, and use it without additional steps. Compression is enabled.
 
-If you want to be extra sure the correct master server is selected, use this setup:
+If you want to have better control over the selection of master servers, use this setup:
 
 ```cs
 using ManiaAPI.Xml.Extensions.Hosting;
 
-builder.Services.AddInitServerMP4();
 builder.Services.AddMasterServerMP4();
 
-// In a scope, retrieve init server, and use it for validating the master server
-// No need for CreateScopeAsync if your service is scoped
-await using var scope = provider.CreateScopeAsync();
+// --------------------
+// Do the setup
+var factory = provider.GetRequiredService<IMasterServerMP4Factory>();
 
-var initServer = scope.ServiceProvider.GetRequiredService<InitServerMP4>();
-var masterServer = scope.ServiceProvider.GetRequiredService<MasterServerMP4>();
+// RequestWaitingParamsAsync should run at the start of your application, and when you need to refresh the master servers
+var waitingParams = await factory.RequestWaitingParamsAsync();
 
-await masterServer.ValidateAsync(initServer);
+// For example selects the first available master server (more overloads are available)
+var masterServer = factory.CreateClient();
 ```
+
+Features this setup brings:
+- You can inject `IMasterServerMP4Factory` to create multiple instances of `MasterServerMP4` with different master servers and refresh them
+- You can inject `MasterServerMP4` to get a default instance using `Maniaplanet relay 2`
+- You can inject `InitServerMP4` to get the init server
+- All `MasterServerMP4` handle GZIP compression
 
 ### Setup for TMT
 
@@ -734,27 +738,25 @@ using ManiaAPI.Xml.Extensions.Hosting;
 // Register the services
 builder.Services.AddMasterServerTMT();
 
+// --------------------
 // Do the setup
-// This should run at the start of your application, or when you need to refresh the master servers
-// No need for CreateScopeAsync if your service is scoped
-await using var scope = provider.CreateScopeAsync();
+var factory = provider.GetRequiredService<IMasterServerTMTFactory>();
 
-foreach (var platform in Enum.GetValues<Platform>())
-{
-    var initServer = scope.ServiceProvider.GetRequiredKeyedService<InitServerTMT>(platform);
-    var waitingParams = await initServer.GetWaitingParamsAsync(cancellationToken);
-    var masterServer = scope.ServiceProvider.GetRequiredKeyedService<MasterServerTMT>(platform);
-    masterServer.Client.BaseAddress = waitingParams.MasterServers.First().GetUri();
-}
+// RequestWaitingParamsAsync should run at the start of your application, and when you need to refresh the master servers
+await factory.RequestWaitingParamsAsync();
+
+// For example selects the PC master server
+var masterServerPC = factory.CreateClient(Platform.PC);
 ```
 
 Features this last setup brings:
 
 - **You can inject `AggregatedMasterServerTMT` to conveniently work with all master servers**
+- You can inject `IMasterServerTMTFactory` to create multiple instances of `MasterServerTMT` with different master servers
 - You can inject `ImmutableDictionary<Platform, MasterServerTMT>` to get all master servers as individual instances
 - If you don't need specific platform context, you can inject `IEnumerable<MasterServerTMT>` to get all master servers
 - Specific `InitServerTMT` and `MasterServerTMT` can be injected using `[FromKeyedServices(Platform.PC)]`
-- All `MasterServerTMT` handle compression
+- All `MasterServerTMT` handle GZIP compression
 
 > [!WARNING]
 > If you just inject `MasterServerTMT` alone, it will give the last-registered one (in this case, PS4). If you need a specific platform, use `[FromKeyedServices(...)]`.

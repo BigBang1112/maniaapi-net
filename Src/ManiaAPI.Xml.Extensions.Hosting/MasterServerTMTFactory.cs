@@ -4,12 +4,33 @@ using System.Collections.Immutable;
 
 namespace ManiaAPI.Xml.Extensions.Hosting;
 
+/// <summary>
+/// Factory to create <see cref="MasterServerTMT"/> clients.
+/// </summary>
 public interface IMasterServerTMTFactory
 {
+    /// <summary>
+    /// Available list of master servers for each platform retrieved from the init server. Will be empty until <see cref="RequestWaitingParamsAsync(CancellationToken)"/> is called, then it has to be manually refreshed.
+    /// </summary>
     ImmutableDictionary<Platform, MasterServerResponse<WaitingParams>> WaitingParams { get; }
 
+    /// <summary>
+    /// Requests the list of master servers from the init servers. Must be called before creating any clients. Calling this method again will refresh the <see cref="WaitingParams"/> property, it is not done automatically.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task.</returns>
     Task RequestWaitingParamsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a <see cref="MasterServerTMT"/> client for the specified platform. Requires <see cref="RequestWaitingParamsAsync(CancellationToken)"/> to be called first (at least once at the start of the application).
+    /// </summary>
+    /// <param name="platform">The master server info.</param>
+    /// <returns>The created client.</returns>
     MasterServerTMT CreateClient(Platform platform);
+
+    /// <summary>
+    /// Creates <see cref="MasterServerTMT"/> clients for all available platforms. Requires <see cref="RequestWaitingParamsAsync(CancellationToken)"/> to be called first (at least once at the start of the application).
+    /// </summary>
     ImmutableDictionary<Platform, MasterServerTMT> CreateClients();
 }
 

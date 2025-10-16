@@ -4,14 +4,47 @@ using System.Collections.Immutable;
 
 namespace ManiaAPI.Xml.Extensions.Hosting;
 
+/// <summary>
+/// Factory to create <see cref="MasterServerMP4"/> clients.
+/// </summary>
 public interface IMasterServerMP4Factory
 {
+    /// <summary>
+    /// Available list of master servers retrieved from the init server. Will be <see langword="null"/> until <see cref="RequestWaitingParamsAsync(CancellationToken)"/> is called, then it has to be manually refreshed.
+    /// </summary>
     MasterServerResponse<WaitingParams>? WaitingParams { get; }
 
-    Task RequestWaitingParamsAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Requests the list of master servers from the init server. Must be called before creating any clients (<see cref="CreateClient(MasterServerInfo)"/> being an exception). Calling this method again will refresh the <see cref="WaitingParams"/> property, it is not done automatically.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result of retrieved master servers.</returns>
+    Task<MasterServerResponse<WaitingParams>> RequestWaitingParamsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a <see cref="MasterServerMP4"/> client for the specified master server. This method does not require <see cref="RequestWaitingParamsAsync(CancellationToken)"/> to be called.
+    /// </summary>
+    /// <param name="masterServer">The master server info.</param>
+    /// <returns>The created client.</returns>
     MasterServerMP4 CreateClient(MasterServerInfo masterServer);
+
+    /// <summary>
+    /// Creates a <see cref="MasterServerMP4"/> client for the specified master server name. Requires <see cref="RequestWaitingParamsAsync(CancellationToken)"/> to be called first (at least once at the start of the application).
+    /// </summary>
+    /// <param name="name">The master server name.</param>
+    /// <returns>The created client.</returns>
     MasterServerMP4 CreateClient(string name);
+
+    /// <summary>
+    /// Creates a <see cref="MasterServerMP4"/> client for the first master server in the list. Requires <see cref="RequestWaitingParamsAsync(CancellationToken)"/> to be called first (at least once at the start of the application).
+    /// </summary>
+    /// <returns>The created client.</returns>
     MasterServerMP4 CreateClient();
+
+    /// <summary>
+    /// Creates <see cref="MasterServerMP4"/> clients for all available master servers. Requires <see cref="RequestWaitingParamsAsync(CancellationToken)"/> to be called first (at least once at the start of the application).
+    /// </summary>
+    /// <returns>A dictionary of created clients, keyed by master server name.</returns>
     ImmutableDictionary<string, MasterServerMP4> CreateClients();
 }
 
@@ -28,13 +61,13 @@ internal sealed class MasterServerMP4Factory : IMasterServerMP4Factory
         this.httpClientFactory = httpClientFactory;
     }
 
-    public async Task RequestWaitingParamsAsync(CancellationToken cancellationToken = default)
+    public async Task<MasterServerResponse<WaitingParams>> RequestWaitingParamsAsync(CancellationToken cancellationToken = default)
     {
         await using var scope = serviceScopeFactory.CreateAsyncScope();
 
         var initServer = scope.ServiceProvider.GetRequiredService<InitServerMP4>();
 
-        WaitingParams = await initServer.GetWaitingParamsResponseAsync(cancellationToken);
+        return WaitingParams = await initServer.GetWaitingParamsResponseAsync(cancellationToken);
     }
 
     public MasterServerMP4 CreateClient(MasterServerInfo masterServer)

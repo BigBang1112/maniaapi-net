@@ -9,17 +9,126 @@ namespace ManiaAPI.Xml.MP4;
 
 public interface IMasterServerMP4 : IMasterServer
 {
+    /// <summary>
+    /// Gets the campaign leaderboard. If <paramref name="campaignId"/> is <see langword="null"/>, it will use the <paramref name="titleId"/> instead.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="campaignId">Campaign ID, usually the same as the title ID for single campaign titles.</param>
+    /// <param name="count">Number of entries to retrieve.</param>
+    /// <param name="offset">Offset to start retrieving entries from.</param>
+    /// <param name="zone">Zone to retrieve the leaderboard from.</param>
+    /// <param name="type">Type of leaderboard to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the leaderboard entries.</returns>
     Task<MasterServerResponse<ImmutableList<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the campaign leaderboard. If <paramref name="campaignId"/> is <see langword="null"/>, it will use the <paramref name="titleId"/> instead.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="campaignId">Campaign ID, usually the same as the title ID for single campaign titles.</param>
+    /// <param name="count">Number of entries to retrieve.</param>
+    /// <param name="offset">Offset to start retrieving entries from.</param>
+    /// <param name="zone">Zone to retrieve the leaderboard from.</param>
+    /// <param name="type">Type of leaderboard to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the leaderboard entries.</returns>
     Task<ImmutableList<LeaderboardItem<uint>>> GetCampaignLeaderBoardAsync(string titleId, string? campaignId = null, int count = 10, int offset = 0, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the map leaderboard.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="mapUid">The unique ID (MapUid) of the map.</param>
+    /// <param name="count">Number of entries to retrieve.</param>
+    /// <param name="offset">Offset to start retrieving entries from.</param>
+    /// <param name="zone">Zone to retrieve the leaderboard from.</param>
+    /// <param name="context">Score context, usually empty string.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the leaderboard entries.</returns>
     Task<MasterServerResponse<ImmutableList<LeaderboardItem<TimeInt32>>>> GetMapLeaderBoardResponseAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the map leaderboard.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="mapUid">The unique ID (MapUid) of the map.</param>
+    /// <param name="count">Number of entries to retrieve.</param>
+    /// <param name="offset">Offset to start retrieving entries from.</param>
+    /// <param name="zone">Zone to retrieve the leaderboard from.</param>
+    /// <param name="context">Score context, usually empty string.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the leaderboard entries.</returns>
     Task<ImmutableList<LeaderboardItem<TimeInt32>>> GetMapLeaderBoardAsync(string titleId, string mapUid, int count = 10, int offset = 0, string zone = "World", string context = "", CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets multiple campaign leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="summaries">The list of campaign requests.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the campaign summaries.</returns>
     Task<MasterServerResponse<ImmutableList<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets multiple campaign leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="summaries">The list of campaign requests.</param>
+    /// <returns>A task with the result containing the campaign summaries.</returns>
     Task<MasterServerResponse<ImmutableList<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<CampaignSummaryRequest> summaries);
+
+    /// <summary>
+    /// Gets multiple campaign leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="summaries">The list of campaign requests.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the campaign summaries.</returns>
     Task<ImmutableList<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets multiple campaign leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="summaries">The list of campaign requests.</param>
+    /// <returns>A task with the result containing the campaign summaries.</returns>
     Task<ImmutableList<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, params IEnumerable<CampaignSummaryRequest> summaries);
+
+    /// <summary>
+    /// Gets multiple map leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="summaries">The list of map requests.</param>
+    /// <param name="isBinary">Whether to use binary format for scores (smaller payload) or XML format (larger payload). Default is <see langword="true"/> as it is objectively better, but you can set this to <see langword="false"/> to skip a cache once.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the map summaries.</returns>
     Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, bool isBinary = true, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets multiple map leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="summaries">The list of map requests.</param>
+    /// <returns>A task with the result containing the map summaries.</returns>
     Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
+
+    /// <summary>
+    /// Gets multiple map leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="summaries">The list of map requests.</param>
+    /// <param name="isBinary">Whether to use binary format for scores (smaller payload) or XML format (larger payload). Default is <see langword="true"/> as it is objectively better, but you can set this to <see langword="false"/> to skip a cache once.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the map summaries.</returns>
     Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, bool isBinary = true, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets multiple map leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="summaries">The list of map requests.</param>
+    /// <returns>A task with the result containing the map summaries.</returns>
     Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
 }
 

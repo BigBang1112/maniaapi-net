@@ -17,14 +17,6 @@ public class MasterServerMP4Tests
     }
 
     [Fact]
-    public async Task ValidateAsync()
-    {
-        var server = new MasterServerMP4();
-
-        await server.ValidateAsync();
-    }
-
-    [Fact]
     public async Task GetLeaguesAsync_ReturnsLeagues()
     {
         var server = new MasterServerMP4();
