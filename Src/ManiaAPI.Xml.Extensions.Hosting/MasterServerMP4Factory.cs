@@ -6,7 +6,7 @@ namespace ManiaAPI.Xml.Extensions.Hosting;
 
 public interface IMasterServerMP4Factory
 {
-    WaitingParams? WaitingParams { get; }
+    MasterServerResponse<WaitingParams>? WaitingParams { get; }
 
     Task RequestWaitingParamsAsync(CancellationToken cancellationToken = default);
     MasterServerMP4 CreateClient(MasterServerInfo masterServer);
@@ -20,7 +20,7 @@ internal sealed class MasterServerMP4Factory : IMasterServerMP4Factory
     private readonly IServiceScopeFactory serviceScopeFactory;
     private readonly IHttpClientFactory httpClientFactory;
 
-    public WaitingParams? WaitingParams { get; private set; }
+    public MasterServerResponse<WaitingParams>? WaitingParams { get; private set; }
 
     public MasterServerMP4Factory(IServiceScopeFactory serviceScopeFactory, IHttpClientFactory httpClientFactory)
     {
@@ -34,7 +34,7 @@ internal sealed class MasterServerMP4Factory : IMasterServerMP4Factory
 
         var initServer = scope.ServiceProvider.GetRequiredService<InitServerMP4>();
 
-        WaitingParams = await initServer.GetWaitingParamsAsync(cancellationToken);
+        WaitingParams = await initServer.GetWaitingParamsResponseAsync(cancellationToken);
     }
 
     public MasterServerMP4 CreateClient(MasterServerInfo masterServer)
@@ -49,7 +49,7 @@ internal sealed class MasterServerMP4Factory : IMasterServerMP4Factory
             throw new InvalidOperationException($"WaitingParams not set. Call {nameof(RequestWaitingParamsAsync)} first.");
         }
 
-        var masterServerAddress = WaitingParams.MasterServers.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+        var masterServerAddress = WaitingParams.Result.MasterServers.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException($"No MasterServer address found with name '{name}'.");
 
         return CreateClient(masterServerAddress);
@@ -62,7 +62,7 @@ internal sealed class MasterServerMP4Factory : IMasterServerMP4Factory
             throw new InvalidOperationException($"WaitingParams not set. Call {nameof(RequestWaitingParamsAsync)} first.");
         }
 
-        var masterServerAddress = WaitingParams.MasterServers.FirstOrDefault()
+        var masterServerAddress = WaitingParams.Result.MasterServers.FirstOrDefault()
             ?? throw new InvalidOperationException("No MasterServer address found.");
 
         return CreateClient(masterServerAddress);
@@ -75,6 +75,6 @@ internal sealed class MasterServerMP4Factory : IMasterServerMP4Factory
             throw new InvalidOperationException($"WaitingParams not set. Call {nameof(RequestWaitingParamsAsync)} first.");
         }
 
-        return WaitingParams.MasterServers.ToImmutableDictionary(x => x.Name, CreateClient);
+        return WaitingParams.Result.MasterServers.ToImmutableDictionary(x => x.Name, CreateClient);
     }
 }

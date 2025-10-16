@@ -6,7 +6,7 @@ namespace ManiaAPI.Xml.Extensions.Hosting;
 
 public interface IMasterServerTMTFactory
 {
-    ImmutableDictionary<Platform, WaitingParams> WaitingParams { get; }
+    ImmutableDictionary<Platform, MasterServerResponse<WaitingParams>> WaitingParams { get; }
 
     Task RequestWaitingParamsAsync(CancellationToken cancellationToken = default);
     MasterServerTMT CreateClient(Platform platform);
@@ -18,7 +18,7 @@ internal sealed class MasterServerTMTFactory : IMasterServerTMTFactory
     private readonly IServiceScopeFactory serviceScopeFactory;
     private readonly IHttpClientFactory httpClientFactory;
 
-    public ImmutableDictionary<Platform, WaitingParams> WaitingParams { get; private set; } = ImmutableDictionary<Platform, WaitingParams>.Empty;
+    public ImmutableDictionary<Platform, MasterServerResponse<WaitingParams>> WaitingParams { get; private set; } = ImmutableDictionary<Platform, MasterServerResponse<WaitingParams>>.Empty;
 
     public MasterServerTMTFactory(IServiceScopeFactory serviceScopeFactory, IHttpClientFactory httpClientFactory)
     {
@@ -33,7 +33,7 @@ internal sealed class MasterServerTMTFactory : IMasterServerTMTFactory
         var initServers = scope.ServiceProvider.GetRequiredService<ImmutableDictionary<Platform, InitServerTMT>>();
 
         var tasks = initServers.ToDictionary(
-            x => x.Value.GetWaitingParamsAsync(cancellationToken),
+            x => x.Value.GetWaitingParamsResponseAsync(cancellationToken),
             x => x.Key);
 
         await foreach (var (platform, task) in tasks.WhenEachRemove())
@@ -49,7 +49,7 @@ internal sealed class MasterServerTMTFactory : IMasterServerTMTFactory
             throw new InvalidOperationException($"WaitingParams for platform {platform} not set. Call {nameof(RequestWaitingParamsAsync)} first.");
         }
 
-        var masterServerAddress = paramsForPlatform.MasterServers.FirstOrDefault()
+        var masterServerAddress = paramsForPlatform.Result.MasterServers.FirstOrDefault()
             ?? throw new InvalidOperationException($"No MasterServer address found for platform {platform}.");
 
         return new MasterServerTMT(masterServerAddress.GetUri(), httpClientFactory.CreateClient($"{nameof(MasterServerTMT)}_{platform}"));
