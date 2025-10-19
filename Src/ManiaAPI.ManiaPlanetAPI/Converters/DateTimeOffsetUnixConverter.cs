@@ -9,7 +9,7 @@ internal sealed class DateTimeOffsetUnixConverter : JsonConverter<DateTimeOffset
     public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         Debug.Assert(typeToConvert == typeof(DateTimeOffset));
-        return DateTimeOffset.FromUnixTimeMilliseconds((long)(reader.GetDouble() * 1000)); // wtf is this
+        return DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64());
     }
 
     public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
