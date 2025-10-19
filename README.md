@@ -295,7 +295,11 @@ Wraps https://maniaplanet.com/swagger (ManiaPlanet web API). This API does not r
 
 ### Features
 
-[All available on Swagger.](https://maniaplanet.com/swagger)
+- [All available on Swagger.](https://maniaplanet.com/swagger)
+- Couple of ingame requests:
+  - Authenticating a ManiaPlanet user via login and token
+  - Downloading a title pack
+  - Get title pack info (contains more info than from WebServices)
 
 ### Setup
 
@@ -312,7 +316,29 @@ await mp.AuthorizeAsync("clientId", "clientSecret", ["basic", "dedicated", "maps
 // Ready to use
 ```
 
-For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package.
+For ingame API, use the `ManiaPlanetIngameAPI`. This is not an authenticated API, but you can use it to authenticate logins of users or servers by their token.
+
+```cs
+using ManiaAPI.ManiaPlanetAPI;
+
+var mpIngame = new ManiaPlanetIngameAPI();
+
+// Authenticate a user
+var user = await mpIngame.AuthenticateUserAsync("username", "token");
+
+if (user.Login != "username")
+{
+	throw new Exception("Invalid token");
+}
+```
+
+For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package, but for `ManiaPlanetIngameAPI`, you can just directly call:
+
+```cs
+using ManiaAPI.ManiaPlanetAPI;
+
+builder.Services.AddHttpClient<ManiaPlanetIngameAPI>();
+```
 
 ## ManiaAPI.ManiaPlanetAPI.Extensions.Hosting
 
