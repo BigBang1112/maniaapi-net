@@ -295,7 +295,7 @@ Wraps https://maniaplanet.com/swagger (ManiaPlanet web API). This API does not r
 
 ### Features
 
-- [All available on Swagger.](https://maniaplanet.com/swagger)
+- [All available on Swagger](https://maniaplanet.com/swagger)
 - Couple of ingame requests:
   - Authenticating a ManiaPlanet user via login and token
   - Downloading a title pack
