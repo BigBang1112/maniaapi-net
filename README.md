@@ -326,7 +326,7 @@ using ManiaAPI.ManiaPlanetAPI;
 var mpIngame = new ManiaPlanetIngameAPI();
 
 // Authenticate a user
-var user = await mpIngame.AuthenticateUserAsync("username", "token");
+var user = await mpIngame.AuthenticateAsync("username", "token");
 
 if (user.Login != "username")
 {
