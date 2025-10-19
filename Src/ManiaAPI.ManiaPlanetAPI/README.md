@@ -43,10 +43,4 @@ if (user.Login != "username")
 }
 ```
 
-For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package, but for `ManiaPlanetIngameAPI`, you can just directly call:
-
-```cs
-using ManiaAPI.ManiaPlanetAPI;
-
-builder.Services.AddHttpClient<ManiaPlanetIngameAPI>();
-```
+For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package.
