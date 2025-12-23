@@ -21,6 +21,16 @@ builder.Services.AddManiaPlanetAPI(options =>
 });
 ```
 
+## Setup `ManiaPlanetIngameAPI` injection
+
+`ManiaPlanetIngameAPI` will be available as a transient. This will make sure the `HttpClient` beneath is handled properly.
+
+```cs
+using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
+
+builder.Services.AddManiaPlanetIngameAPI();
+```
+
 ## Setup OAuth2
 
 For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager). **The redirect URL is the `/signin-maniaplanet` relative to the web root**, for example: `https://localhost:7864/signin-maniaplanet`.

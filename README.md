@@ -334,13 +334,7 @@ if (user.Login != "username")
 }
 ```
 
-For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package, but for `ManiaPlanetIngameAPI`, you can just directly call:
-
-```cs
-using ManiaAPI.ManiaPlanetAPI;
-
-builder.Services.AddHttpClient<ManiaPlanetIngameAPI>();
-```
+For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package.
 
 ## ManiaAPI.ManiaPlanetAPI.Extensions.Hosting
 
@@ -363,6 +357,16 @@ builder.Services.AddManiaPlanetAPI(options =>
         builder.Configuration["ManiaPlanet:ClientId"]!,
         builder.Configuration["ManiaPlanet:ClientSecret"]!);
 });
+```
+
+### Setup `ManiaPlanetIngameAPI` injection
+
+`ManiaPlanetIngameAPI` will be available as a transient. This will make sure the `HttpClient` beneath is handled properly.
+
+```cs
+using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
+
+builder.Services.AddManiaPlanetIngameAPI();
 ```
 
 ### Setup OAuth2

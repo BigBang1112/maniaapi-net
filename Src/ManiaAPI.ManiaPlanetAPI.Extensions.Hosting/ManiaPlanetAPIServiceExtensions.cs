@@ -21,4 +21,13 @@ public static class ManiaPlanetAPIServiceExtensions
     {
         return AddManiaPlanetAPI(services, _ => { });
     }
+
+    public static IHttpClientBuilder AddManiaPlanetIngameAPI(this IServiceCollection services)
+    {
+        return services.AddHttpClient<ManiaPlanetIngameAPI>()
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri(ManiaPlanetIngameAPI.BaseAddress);
+            });
+    }
 }
