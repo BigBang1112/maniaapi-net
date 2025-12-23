@@ -10,7 +10,12 @@ public interface INadeoServices : INadeoAPI
     Task<ImmutableList<Account>> GetAccountDisplayNamesAsync(params Guid[] accountIds);
     Task<ImmutableList<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default);
 	Task<ImmutableList<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, Guid mapId, CancellationToken cancellationToken = default);
+	Task<ImmutableList<MapRecord>> GetMapRecordsByIdsAsync(IEnumerable<Guid> mapRecordIds, CancellationToken cancellationToken = default);
+    Task<ImmutableList<MapRecord>> GetMapRecordsByIdsAsync(params Guid[] mapRecordIds);
+    [Obsolete("Use GetAccountRecordsByMapIdsAsync or GetAccountRecordsBySeasonIdsAsync instead.")]
     Task<ImmutableList<MapRecord>> GetAccountRecordsAsync(Guid accountId, string? gamemode = null, CancellationToken cancellationToken = default);
+    Task<ImmutableList<MapRecord>> GetAccountRecordsByMapIdsAsync(Guid accountId, IEnumerable<Guid> mapIds, string? gamemode = null, CancellationToken cancellationToken = default);
+    Task<ImmutableList<MapRecord>> GetAccountRecordsBySeasonIdsAsync(Guid accountId, IEnumerable<Guid> seasonIds, string? gamemode = null, CancellationToken cancellationToken = default);
     Task<MapRecord> GetMapRecordByIdAsync(Guid mapRecordId, CancellationToken cancellationToken = default);
     Task<ImmutableList<PlayerZone>> GetPlayerZonesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<ImmutableList<PlayerZone>> GetPlayerZonesAsync(params Guid[] accountIds);
@@ -43,7 +48,7 @@ public class NadeoServices : NadeoAPI, INadeoServices
 
 	public virtual async Task<ImmutableList<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, Guid mapId, CancellationToken cancellationToken = default)
 	{
-		return await GetJsonAsync($"v2/mapRecords/?accountIdList={string.Join(',', accountIds)}&mapId={mapId}",
+		return await GetJsonAsync($"v2/mapRecords/by-account/?accountIdList={string.Join(',', accountIds)}&mapId={mapId}",
 			NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
 	}
 
@@ -59,9 +64,33 @@ public class NadeoServices : NadeoAPI, INadeoServices
         return records.ToImmutable();
     }
 
+    public virtual async Task<ImmutableList<MapRecord>> GetMapRecordsByIdsAsync(IEnumerable<Guid> mapRecordIds, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"v2/mapRecords/by-id/?mapRecordIdList={string.Join(',', mapRecordIds)}",
+            NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
+    }
+
+    public async Task<ImmutableList<MapRecord>> GetMapRecordsByIdsAsync(params Guid[] mapRecordIds)
+    {
+        return await GetMapRecordsByIdsAsync(mapRecordIds, CancellationToken.None);
+    }
+
+    [Obsolete("Use GetAccountRecordsByMapIdsAsync or GetAccountRecordsBySeasonIdsAsync instead.")]
     public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsAsync(Guid accountId, string? gamemode = null, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords{(gamemode is null ? null : $"?gameMode={gamemode}")}",
+            NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
+    }
+
+    public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsByMapIdsAsync(Guid accountId, IEnumerable<Guid> mapIds, string? gamemode = null, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords?mapIdList={string.Join(',', mapIds)}{(gamemode is null ? null : $"&gameMode={gamemode}")}",
+            NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
+    }
+
+    public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsBySeasonIdsAsync(Guid accountId, IEnumerable<Guid> seasonIds, string? gamemode = null, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords?seasonIdList={string.Join(',', seasonIds)}{(gamemode is null ? null : $"&gameMode={gamemode}")}",
             NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
     }
 
@@ -116,29 +145,29 @@ public class NadeoServices : NadeoAPI, INadeoServices
 
     public virtual async Task<MapInfo?> GetMapInfoAsync(Guid mapId, CancellationToken cancellationToken = default)
     {
-        return (await GetJsonAsync($"maps/?mapIdList={mapId}", NadeoAPIJsonContext.Default.ImmutableListMapInfo, cancellationToken)).FirstOrDefault();
+        return (await GetJsonAsync($"maps/by-id/?mapIdList={mapId}", NadeoAPIJsonContext.Default.ImmutableListMapInfo, cancellationToken)).FirstOrDefault();
     }
 
     public virtual async Task<ImmutableList<MapInfo>> GetMapInfosAsync(IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"maps/?mapIdList={string.Join(',', mapIds)}",
+        return await GetJsonAsync($"maps/by-id/?mapIdList={string.Join(',', mapIds)}",
             NadeoAPIJsonContext.Default.ImmutableListMapInfo, cancellationToken);
     }
 
     public virtual async Task<MapInfo?> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)
     {
-        return (await GetJsonAsync($"maps/?mapUidList={mapUid}", NadeoAPIJsonContext.Default.ImmutableListMapInfo, cancellationToken)).FirstOrDefault();
+        return (await GetJsonAsync($"maps/by-uid/?mapUidList={mapUid}", NadeoAPIJsonContext.Default.ImmutableListMapInfo, cancellationToken)).FirstOrDefault();
     }
 
     public virtual async Task<ImmutableList<MapInfo>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"maps/?mapUidList={string.Join(',', mapUids)}",
+        return await GetJsonAsync($"maps/by-uid/?mapUidList={string.Join(',', mapUids)}",
             NadeoAPIJsonContext.Default.ImmutableListMapInfo, cancellationToken);
     }
 
     public virtual async Task<ImmutableList<WebIdentity>> GetPlayerWebIdentitiesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"webidentities/?accountIdList={string.Join(',', accountIds)}", NadeoAPIJsonContext.Default.ImmutableListWebIdentity, cancellationToken);
+        return await GetJsonAsync($"webidentities/by-account/?accountIdList={string.Join(',', accountIds)}", NadeoAPIJsonContext.Default.ImmutableListWebIdentity, cancellationToken);
     }
 
     public async Task<ImmutableList<WebIdentity>> GetPlayerWebIdentitiesAsync(params Guid[] accountIds)
