@@ -55,7 +55,7 @@ public abstract class NadeoAPI : INadeoAPI
         Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         AutomaticallyAuthorize = automaticallyAuthorize;
 
-        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.5.0 (NadeoAPI; Email=petrpiv1@gmail.com; Discord=bigbang1112)");
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("ManiaAPI.NET/2.5.3 (NadeoAPI; Email=petrpiv1@gmail.com; Discord=bigbang1112)");
     }
 
     /// <summary>
@@ -172,13 +172,6 @@ public abstract class NadeoAPI : INadeoAPI
             return false;
         }
 
-        // if older than 20 hours, reauthorize
-        if (DateTimeOffset.UtcNow >= ExpirationTime.Value.AddHours(20))
-        {
-            await AuthorizeAsync(Handler.SavedCredentials ?? throw new Exception("No credentials available to reauthorize."), cancellationToken);
-            return true;
-        }
-
         using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh")
         {
             Headers = { Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={Handler.RefreshToken}") }
@@ -203,7 +196,6 @@ public abstract class NadeoAPI : INadeoAPI
                 if (Handler.PendingCredentials is not null)
                 {
                     await AuthorizeAsync(Handler.PendingCredentials, cancellationToken);
-                    Handler.SavedCredentials = Handler.PendingCredentials;
                     Handler.PendingCredentials = null;
                 }
             }

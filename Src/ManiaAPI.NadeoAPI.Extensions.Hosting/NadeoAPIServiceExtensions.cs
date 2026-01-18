@@ -44,6 +44,8 @@ public static class NadeoAPIServiceExtensions
         services.AddTransient(provider => new NadeoMeetServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoMeetServices)),
             provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoMeetServices))));
+
+        services.AddHostedService<NadeoAPIRefreshBackgroundService>();
     }
 
     public static void AddNadeoAPI(
@@ -71,6 +73,8 @@ public static class NadeoAPIServiceExtensions
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoServices)),
             provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoServices))));
 
+        services.AddHostedService<NadeoAPIRefreshBackgroundService>();
+
         return httpBuilder;
     }
 
@@ -90,6 +94,8 @@ public static class NadeoAPIServiceExtensions
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoLiveServices)),
             provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoLiveServices))));
 
+        services.AddHostedService<NadeoAPIRefreshBackgroundService>();
+
         return httpBuilder;
     }
 
@@ -108,6 +114,8 @@ public static class NadeoAPIServiceExtensions
         services.AddTransient(provider => new NadeoMeetServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoMeetServices)),
             provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoMeetServices))));
+
+        services.AddHostedService<NadeoAPIRefreshBackgroundService>();
 
         return httpBuilder;
     }
