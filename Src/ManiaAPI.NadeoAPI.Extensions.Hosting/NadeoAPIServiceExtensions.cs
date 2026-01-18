@@ -27,9 +27,30 @@ public static class NadeoAPIServiceExtensions
             PendingCredentials = o.Credentials
         });
 
-        var httpNadeoServices = services.AddHttpClient<NadeoServices>();
-        var httpNadeoLiveServices = services.AddHttpClient<NadeoLiveServices>();
-        var httpNadeoMeetServices = services.AddHttpClient<NadeoMeetServices>();
+        var httpNadeoServices = services.AddHttpClient<NadeoServices>()
+            .ConfigureHttpClient(client =>
+            {
+                if (o.UserAgent is not null)
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
+                }
+            });
+        var httpNadeoLiveServices = services.AddHttpClient<NadeoLiveServices>()
+            .ConfigureHttpClient(client =>
+            {
+                if (o.UserAgent is not null)
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
+                }
+            });
+        var httpNadeoMeetServices = services.AddHttpClient<NadeoMeetServices>()
+            .ConfigureHttpClient(client =>
+            {
+                if (o.UserAgent is not null)
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
+                }
+            });
 
         if (configureNadeoServices is not null) configureNadeoServices(httpNadeoServices);
         if (configureNadeoLiveServices is not null) configureNadeoLiveServices(httpNadeoLiveServices);
@@ -67,7 +88,14 @@ public static class NadeoAPIServiceExtensions
             PendingCredentials = o.Credentials
         });
 
-        var httpBuilder = services.AddHttpClient<NadeoServices>();
+        var httpBuilder = services.AddHttpClient<NadeoServices>()
+            .ConfigureHttpClient(client =>
+            {
+                if (o.UserAgent is not null)
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
+                }
+            });
 
         services.AddTransient(provider => new NadeoServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoServices)),
@@ -88,7 +116,14 @@ public static class NadeoAPIServiceExtensions
             PendingCredentials = o.Credentials
         });
 
-        var httpBuilder = services.AddHttpClient<NadeoLiveServices>();
+        var httpBuilder = services.AddHttpClient<NadeoLiveServices>()
+            .ConfigureHttpClient(client =>
+            {
+                if (o.UserAgent is not null)
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
+                }
+            });
 
         services.AddTransient(provider => new NadeoLiveServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoLiveServices)),
@@ -109,7 +144,14 @@ public static class NadeoAPIServiceExtensions
             PendingCredentials = o.Credentials
         });
 
-        var httpBuilder = services.AddHttpClient<NadeoMeetServices>();
+        var httpBuilder = services.AddHttpClient<NadeoMeetServices>()
+            .ConfigureHttpClient(client =>
+            {
+                if (o.UserAgent is not null)
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
+                }
+            });
 
         services.AddTransient(provider => new NadeoMeetServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoMeetServices)),
