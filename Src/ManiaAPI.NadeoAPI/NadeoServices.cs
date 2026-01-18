@@ -38,7 +38,8 @@ public class NadeoServices : NadeoAPI, INadeoServices
     public override string Audience => nameof(NadeoServices);
     public override string BaseAddress => "https://prod.trackmania.core.nadeo.online";
 
-    public NadeoServices(HttpClient client, NadeoAPIHandler handler, bool automaticallyAuthorize = true) : base(client, handler, automaticallyAuthorize)
+    public NadeoServices(HttpClient client, NadeoAPIHandler? handler = null, bool automaticallyAuthorize = true)
+        : base(client, handler ?? new NadeoAPIHandler(), automaticallyAuthorize)
     {
     }
 
