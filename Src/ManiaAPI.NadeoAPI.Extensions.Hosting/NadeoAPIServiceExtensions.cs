@@ -16,15 +16,18 @@ public static class NadeoAPIServiceExtensions
 
         services.AddKeyedSingleton(nameof(NadeoServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials
+            PendingCredentials = o.Credentials,
+            SaveCredentials = false
         });
         services.AddKeyedSingleton(nameof(NadeoLiveServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials
+            PendingCredentials = o.Credentials,
+            SaveCredentials = false
         });
         services.AddKeyedSingleton(nameof(NadeoMeetServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials
+            PendingCredentials = o.Credentials,
+            SaveCredentials = false
         });
 
         var httpNadeoServices = services.AddHttpClient<NadeoServices>()
@@ -85,7 +88,8 @@ public static class NadeoAPIServiceExtensions
 
         services.AddKeyedSingleton(nameof(NadeoServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials
+            PendingCredentials = o.Credentials,
+            SaveCredentials = false
         });
 
         var httpBuilder = services.AddHttpClient<NadeoServices>()
@@ -113,7 +117,8 @@ public static class NadeoAPIServiceExtensions
 
         services.AddKeyedSingleton(nameof(NadeoLiveServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials
+            PendingCredentials = o.Credentials,
+            SaveCredentials = false
         });
 
         var httpBuilder = services.AddHttpClient<NadeoLiveServices>()
@@ -141,7 +146,8 @@ public static class NadeoAPIServiceExtensions
 
         services.AddKeyedSingleton(nameof(NadeoMeetServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials
+            PendingCredentials = o.Credentials,
+            SaveCredentials = false
         });
 
         var httpBuilder = services.AddHttpClient<NadeoMeetServices>()
