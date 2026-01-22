@@ -24,5 +24,5 @@ public sealed class NadeoAPIHandler
     /// <summary>
     /// Whether to save credentials after successful authentication. This is true by default to reduce confusion regarding refresh tokens after 24 hours of inactivity, but in case you don't need 24/7 authentication, you should set this to false to increase security. The ManiaAPI.NadeoAPI.Extensions.Hosting package solves this problem differently, so this property is ignored when adding the client via that package.
     /// </summary>
-    public bool SaveCredentials { get; set; } = true;
+    public bool SaveCredentials { get; init; } = true;
 }
