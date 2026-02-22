@@ -15,9 +15,12 @@ public static class TmxServiceExtensions
         {
             if (site.isMX()) {
                 var builder = services.AddHttpClient($"{nameof(MX)}_{site}");
-                builder.ConfigureHttpClient(client => {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
-                });
+                if (!string.IsNullOrEmpty(options.UserAgent))
+                {
+                    builder.ConfigureHttpClient(client => {
+                        client.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
+                    });
+                }
                 options.ConfigureHttpClient?.Invoke(builder);
                 
                 services.AddKeyedScoped(site, (provider, key) => new MX(
@@ -26,9 +29,12 @@ public static class TmxServiceExtensions
             }
             else {
                 var builder = services.AddHttpClient($"{nameof(TMX)}_{site}");
-                builder.ConfigureHttpClient(client => {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
-                });
+                if (!string.IsNullOrEmpty(options.UserAgent))
+                {
+                    builder.ConfigureHttpClient(client => {
+                        client.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
+                    });
+                }
                 options.ConfigureHttpClient?.Invoke(builder);
                 
                 services.AddKeyedScoped(site, (provider, key) => new TMX(
