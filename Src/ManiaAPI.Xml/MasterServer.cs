@@ -108,7 +108,7 @@ public abstract class MasterServer : IMasterServer
         return (await GetLeaguesResponseAsync(cancellationToken)).Result;
     }
 
-    public async Task<MasterServerResponse<PlayerInfos>> GetPlayerInfosResponseAsync(string login, CancellationToken cancellationToken = default)
+    public virtual async Task<MasterServerResponse<PlayerInfos>> GetPlayerInfosResponseAsync(string login, CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetPlayerInfos";
         var parametersXml = $"<login>{login}</login>";
@@ -164,7 +164,7 @@ public abstract class MasterServer : IMasterServer
         return (await GetPlayerInfosResponseAsync(login, cancellationToken)).Result;
     }
 
-    public async Task<MasterServerResponse<CheckLoginResult>> CheckLoginResponseAsync(string login, CancellationToken cancellationToken = default)
+    public virtual async Task<MasterServerResponse<CheckLoginResult>> CheckLoginResponseAsync(string login, CancellationToken cancellationToken = default)
     {
         const string RequestName = "CheckLogin";
         var parametersXml = $"<l>{login}</l>";

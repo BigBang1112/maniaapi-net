@@ -16,7 +16,7 @@ internal static partial class XmlHelper
     {
         var formedXml = $"<root><game>{gameXml}</game>{authorXml}<request><name>{requestName}</name><params>{parametersXml}</params></request></root>";
 
-        Debug.WriteLine(formedXml);
+        Debug.WriteLine($"{uri}\n{formedXml}");
 
         using var content = new StringContent(formedXml, Encoding.UTF8, "text/xml");
 
