@@ -17,7 +17,7 @@ public static class MasterServerServiceExtensions
     /// </summary>
     public static IHttpClientBuilder AddMasterServerTMUF(this IServiceCollection services)
     {
-        return services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultAddress));
+        return services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultUnitedUrl));
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ public static class MasterServerServiceExtensions
         services.AddTransient(provider =>
         {
             var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(MasterServerMP4));
-            client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress);
+            client.BaseAddress = new Uri(MasterServerMP4.DefaultUrl);
             return new MasterServerMP4(client);
         });
 

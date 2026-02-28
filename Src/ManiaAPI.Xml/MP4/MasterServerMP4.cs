@@ -140,14 +140,14 @@ public interface IMasterServerMP4 : IMasterServer
 
 public class MasterServerMP4 : MasterServer, IMasterServerMP4
 {
-    public const string DefaultAddress = "https://relay02.v04.maniaplanet.com/game/request.php";
+    public const string DefaultUrl = "https://relay02.v04.maniaplanet.com/game/request.php";
 
     protected override string GameXml => XmlHelperMP4.GameXml;
 
     /// <summary>
-    /// Creates a new instance of <see cref="MasterServerMP4"/> using the expected master server address (relay02). In case it's offline, you need to check <see cref="InitServerMP4"/>.
+    /// Creates a new instance of <see cref="MasterServerMP4"/> using the expected master server address. In case it's offline, you need to check <see cref="InitServerMP4"/>.
     /// </summary>
-    public MasterServerMP4() : base(new Uri(DefaultAddress)) { }
+    public MasterServerMP4(string url = DefaultUrl) : base(new Uri(url)) { }
 
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerMP4"/> using a <see cref="MasterServerInfo"/> object. Be careful to use the correct object given from the correct init server.

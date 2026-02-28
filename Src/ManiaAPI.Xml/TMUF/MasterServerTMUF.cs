@@ -47,24 +47,28 @@ public interface IMasterServerTMUF : IMasterServer
 
 public class MasterServerTMUF : MasterServer, IMasterServerTMUF
 {
-    public const string DefaultAddress = "http://game.trackmaniaforever.com/online_game/request.php";
+    public const string DefaultUnitedUrl = "http://game.trackmaniaforever.com/online_game/request.php";
+    public const string DefaultNationsUrl = "http://game2.trackmaniaforever.com/online_game/request.php";
 
     private const string GeneralScoresName = "General";
     private const string LadderScoresName = "Multi";
 
     protected override string GameXml => "<name>TmForever</name><version>2.11.25</version>";
 
-    public MasterServerTMUF() : base(new Uri(DefaultAddress))
+    public MasterServerTMUF(string url = DefaultUnitedUrl) : base(new Uri(url)) { }
+
+    public MasterServerTMUF(MasterServerType type) : this(type switch
     {
-    }
+        MasterServerType.United => DefaultUnitedUrl,
+        MasterServerType.Nations => DefaultNationsUrl,
+        _ => throw new ArgumentException("Invalid master server type", nameof(type))
+    }) { }
 
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerTMUF"/> using any <see cref="HttpClient"/>.
     /// </summary>
     /// <param name="client">HTTP client.</param>
-    public MasterServerTMUF(HttpClient client) : base(client)
-    {
-    }
+    public MasterServerTMUF(HttpClient client) : base(client) { }
 
     public virtual async Task<MasterServerResponse<PlayerRankings>> GetLadderPlayerRankingsResponseAsync(
         string zone = "World",
