@@ -53,7 +53,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
     private const string GeneralScoresName = "General";
     private const string LadderScoresName = "Multi";
 
-    protected override string GameXml => "<version>2.11.25</version>";
+    protected override string GameXml => "<name>TmForever</name><version>2.11.25</version>";
 
     public MasterServerTMUF() : base(new Uri(DefaultAddress))
     {
