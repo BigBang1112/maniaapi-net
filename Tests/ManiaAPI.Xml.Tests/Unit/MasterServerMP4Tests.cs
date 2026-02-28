@@ -1,5 +1,4 @@
 ﻿using ManiaAPI.Xml.MP4;
-using ManiaAPI.Xml.TMUF;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -40,9 +39,9 @@ public class MasterServerMP4Tests
     [Fact]
     public async Task GetWaitingParamsAsync_ReturnsMasterServers()
     {
-        var server = new InitServerMP4();
+        var server = new MasterServerMP4();
 
-        var waitingParams = await server.GetWaitingParamsAsync();
+        var waitingParams = await server.GetWaitingParamsAsync("bigbang1112");
 
         Assert.NotEmpty(waitingParams.MasterServers);
     }

@@ -12,6 +12,9 @@ public interface IMasterServerMP4 : IMasterServer
     Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default);
     Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default);
 
+    Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string login, CancellationToken cancellationToken = default);
+    Task<WaitingParams> GetWaitingParamsAsync(string login, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Gets the campaign leaderboard. If <paramref name="campaignId"/> is <see langword="null"/>, it will use the <paramref name="titleId"/> instead.
     /// </summary>
@@ -201,6 +204,17 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
 
             throw;
         }
+    }
+
+    public virtual async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string login, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(login);
+        return await InitServerMP.GetWaitingParamsResponseAsync(Client, GameXml, login, cancellationToken);
+    }
+
+    public async Task<WaitingParams> GetWaitingParamsAsync(string login, CancellationToken cancellationToken = default)
+    {
+        return (await GetWaitingParamsResponseAsync(login, cancellationToken)).Result;
     }
 
     public virtual async Task<MasterServerResponse<ImmutableList<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(

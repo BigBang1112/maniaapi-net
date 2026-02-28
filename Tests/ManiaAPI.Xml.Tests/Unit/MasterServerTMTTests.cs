@@ -27,10 +27,13 @@ public class MasterServerTMTTests
     public async Task GetWaitingParamsAsync_ReturnsMasterServers(Platform platform)
     {
         var server = new InitServerTMT(platform);
-
         var waitingParams = await server.GetWaitingParamsAsync();
+        var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+
+        var waitingParams2 = await masterServer.GetWaitingParamsAsync();
 
         Assert.NotEmpty(waitingParams.MasterServers);
+        Assert.NotEmpty(waitingParams2.MasterServers);
     }
 
     [Theory]

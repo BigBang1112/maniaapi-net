@@ -55,9 +55,25 @@ public abstract class InitServerMP : IInitServerMP
 
     public virtual async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string? login = null, CancellationToken cancellationToken = default)
     {
+        return await GetWaitingParamsResponseAsync(Client, GameXml, login, cancellationToken);
+    }
+
+    public async Task<WaitingParams> GetWaitingParamsAsync(string? login = null, CancellationToken cancellationToken = default)
+    {
+        return (await GetWaitingParamsResponseAsync(login, cancellationToken)).Result;
+    }
+
+    public virtual void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    internal static async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(HttpClient client, string gameXml, string? login = null, CancellationToken cancellationToken = default)
+    {
         const string RequestName = "GetWaitingParams";
         var authorXml = login is null ? null : $"<author><login>{login}</login></author>";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml, RequestName, string.Empty, cancellationToken);
+        var response = await XmlHelper.SendAsync(client, gameXml, authorXml, RequestName, string.Empty, cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
         {
             var waitingQueueDuration = 0;
@@ -120,16 +136,5 @@ public abstract class InitServerMP : IInitServerMP
 
             return new WaitingParams(waitingQueueDuration, waitingQueueMessage, masterServers.ToImmutable());
         });
-    }
-
-    public async Task<WaitingParams> GetWaitingParamsAsync(string? login = null, CancellationToken cancellationToken = default)
-    {
-        return (await GetWaitingParamsResponseAsync(login, cancellationToken)).Result;
-    }
-
-    public virtual void Dispose()
-    {
-        Client.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

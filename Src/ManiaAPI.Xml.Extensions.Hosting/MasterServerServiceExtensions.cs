@@ -27,7 +27,7 @@ public static class MasterServerServiceExtensions
         Action<IHttpClientBuilder>? configureInitServer = null,
         Action<IHttpClientBuilder>? configureMasterServer = null)
     {
-        var httpInitServer = services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultAddress));
+        var httpInitServer = services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultUrl));
         var httpMasterServer = services.AddHttpClient<MasterServerMP4>()
             .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
             {
@@ -56,7 +56,7 @@ public static class MasterServerServiceExtensions
     {
         foreach (var platform in Enum.GetValues<Platform>())
         {
-            var httpInitServer = services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(platform)));
+            var httpInitServer = services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultUrl(platform)));
             var httpMasterServer = services.AddHttpClient($"{nameof(MasterServerTMT)}_{platform}")
                 .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
                 {

@@ -5,7 +5,7 @@ using TmEssentials;
 
 namespace ManiaAPI.Xml.TMT;
 
-public interface IMasterServerTMT : IMasterServer
+public interface IMasterServerTMT : IMasterServer, IInitServerTMT
 {
     Task<MasterServerResponse<ImmutableList<SummaryZone<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(IEnumerable<string> zones, CancellationToken cancellationToken = default);
     Task<MasterServerResponse<ImmutableList<SummaryZone<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(string zone = "World", CancellationToken cancellationToken = default);
@@ -33,7 +33,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerTMT"/> using a raw address. Because the address changes quite often and also because there are multiple platforms, it is recommended to use <see cref="InitServerTMT"/> to get the address first.
     /// </summary>
-    /// <param name="uri">The address given from <see cref="InitServerTMT"/> via <see cref="InitServerMP.GetWaitingParamsAsync(CancellationToken)"/>, or a custom address.</param>
+    /// <param name="uri">The address given from <see cref="InitServerTMT"/> via <see cref="InitServerMP.GetWaitingParamsAsync(string?, CancellationToken)"/>, or a custom address.</param>
     public MasterServerTMT(Uri uri) : base(uri) { }
 
     /// <summary>
@@ -47,6 +47,16 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
     /// </summary>
     /// <param name="client">HTTP client.</param>
     public MasterServerTMT(HttpClient client) : base(client) { }
+
+    public virtual async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string? login = null, CancellationToken cancellationToken = default)
+    {
+        return await InitServerMP.GetWaitingParamsResponseAsync(Client, GameXml, login, cancellationToken);
+    }
+
+    public async Task<WaitingParams> GetWaitingParamsAsync(string? login = null, CancellationToken cancellationToken = default)
+    {
+        return (await GetWaitingParamsResponseAsync(login, cancellationToken)).Result;
+    }
 
     public virtual async Task<MasterServerResponse<ImmutableList<SummaryZone<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(IEnumerable<string> zones, CancellationToken cancellationToken = default)
     {
