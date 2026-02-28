@@ -9,6 +9,9 @@ namespace ManiaAPI.Xml.MP4;
 
 public interface IMasterServerMP4 : IMasterServer
 {
+    Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default);
+    Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Gets the campaign leaderboard. If <paramref name="campaignId"/> is <see langword="null"/>, it will use the <paramref name="titleId"/> instead.
     /// </summary>
@@ -168,6 +171,43 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
     {
         const string RequestName = "GetApplicationConfig";
         _ = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
+    }
+
+    public virtual async Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "GetAccountFromSteamUser";
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, $"<i>{steamId}</i>", cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
+        {
+            while (xml.TryReadStartElement(out var infoElement))
+            {
+                switch (infoElement)
+                {
+                    case "l":
+                        return xml.ReadContentAsString();
+                }
+                _ = xml.SkipEndElement();
+            }
+
+            throw new InvalidOperationException("Unexpected response format: missing 'l' element.");
+        });
+    }
+
+    public async Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return (await GetAccountFromSteamUserResponseAsync(steamId, cancellationToken)).Result;
+        }
+        catch (XmlRequestException ex)
+        {
+            if (ex.Value == 404)
+            {
+                return null;
+            }
+
+            throw;
+        }
     }
 
     public virtual async Task<MasterServerResponse<ImmutableList<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(

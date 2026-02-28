@@ -28,6 +28,16 @@ public class MasterServerMP4Tests
     }
 
     [Fact]
+    public async Task GetAccountFromSteamUserAsync_ReturnsLogin()
+    {
+        var server = new MasterServerMP4();
+
+        var login = await server.GetAccountFromSteamUserAsync(76561198060959523);
+
+        Assert.NotNull(login);
+    }
+
+    [Fact]
     public async Task GetWaitingParamsAsync_ReturnsMasterServers()
     {
         var server = new InitServerMP4();
