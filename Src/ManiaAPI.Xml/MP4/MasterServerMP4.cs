@@ -1,4 +1,5 @@
-﻿using MinimalXmlReader;
+﻿using ManiaAPI.Xml.MP3;
+using MinimalXmlReader;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -7,14 +8,8 @@ using TmEssentials;
 
 namespace ManiaAPI.Xml.MP4;
 
-public interface IMasterServerMP4 : IMasterServer
+public interface IMasterServerMP4 : IMasterServerMP
 {
-    Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default);
-    Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default);
-
-    Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string login, CancellationToken cancellationToken = default);
-    Task<WaitingParams> GetWaitingParamsAsync(string login, CancellationToken cancellationToken = default);
-
     /// <summary>
     /// Gets the campaign leaderboard. If <paramref name="campaignId"/> is <see langword="null"/>, it will use the <paramref name="titleId"/> instead.
     /// </summary>
@@ -138,11 +133,12 @@ public interface IMasterServerMP4 : IMasterServer
     Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
 }
 
-public class MasterServerMP4 : MasterServer, IMasterServerMP4
+public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
 {
     public const string DefaultUrl = "https://relay02.v04.maniaplanet.com/game/request.php";
 
     protected override string GameXml => XmlHelperMP4.GameXml;
+    protected override string GetGameXml(string titleId) => $"{GameXml}<title>{titleId}</title>";
 
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerMP4"/> using the expected master server address. In case it's offline, you need to check <see cref="InitServerMP4"/>.
@@ -161,60 +157,10 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
     /// <param name="client">HTTP client.</param>
     public MasterServerMP4(HttpClient client) : base(client) { }
 
-    protected string GetGameXml(string titleId) => $"{GameXml}<title>{titleId}</title>";
-
     internal async Task GetApplicationConfigAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetApplicationConfig";
         _ = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
-    }
-
-    public virtual async Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default)
-    {
-        const string RequestName = "GetAccountFromSteamUser";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, $"<i>{steamId}</i>", cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
-        {
-            while (xml.TryReadStartElement(out var infoElement))
-            {
-                switch (infoElement)
-                {
-                    case "l":
-                        return xml.ReadContentAsString();
-                }
-                _ = xml.SkipEndElement();
-            }
-
-            throw new InvalidOperationException("Unexpected response format: missing 'l' element.");
-        });
-    }
-
-    public async Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            return (await GetAccountFromSteamUserResponseAsync(steamId, cancellationToken)).Result;
-        }
-        catch (XmlRequestException ex)
-        {
-            if (ex.Value == 404)
-            {
-                return null;
-            }
-
-            throw;
-        }
-    }
-
-    public virtual async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string login, CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(login);
-        return await InitServerMP.GetWaitingParamsResponseAsync(Client, GameXml, login, cancellationToken);
-    }
-
-    public async Task<WaitingParams> GetWaitingParamsAsync(string login, CancellationToken cancellationToken = default)
-    {
-        return (await GetWaitingParamsResponseAsync(login, cancellationToken)).Result;
     }
 
     public virtual async Task<MasterServerResponse<ImmutableList<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(

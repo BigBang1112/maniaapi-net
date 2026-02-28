@@ -1,19 +1,13 @@
 ﻿namespace ManiaAPI.Xml.MP3;
 
-public interface IMasterServerMP3 : IMasterServer
-{
-    Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default);
-    Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default);
+public interface IMasterServerMP3 : IMasterServerMP;
 
-    Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string login, CancellationToken cancellationToken = default);
-    Task<WaitingParams> GetWaitingParamsAsync(string login, CancellationToken cancellationToken = default);
-}
-
-public class MasterServerMP3 : MasterServer, IMasterServerMP3
+public class MasterServerMP3 : MasterServerMP, IMasterServerMP3
 {
     public const string DefaultUrl = "http://mp05.maniaplanet.com/game/request.php";
 
     protected override string GameXml => XmlHelperMP3.GameXml;
+    protected override string GetGameXml(string titleId) => $"{GameXml}<title>{titleId}</title>";
 
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerMP3"/> using the expected master server address. In case it's offline, you need to check <see cref="InitServerMP3"/>.
@@ -31,54 +25,4 @@ public class MasterServerMP3 : MasterServer, IMasterServerMP3
     /// </summary>
     /// <param name="client">HTTP client.</param>
     public MasterServerMP3(HttpClient client) : base(client) { }
-
-    protected string GetGameXml(string titleId) => $"{GameXml}<title>{titleId}</title>";
-
-    public virtual async Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default)
-    {
-        const string RequestName = "GetAccountFromSteamUser";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, $"<i>{steamId}</i>", cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
-        {
-            while (xml.TryReadStartElement(out var infoElement))
-            {
-                switch (infoElement)
-                {
-                    case "l":
-                        return xml.ReadContentAsString();
-                }
-                _ = xml.SkipEndElement();
-            }
-
-            throw new InvalidOperationException("Unexpected response format: missing 'l' element.");
-        });
-    }
-
-    public async Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            return (await GetAccountFromSteamUserResponseAsync(steamId, cancellationToken)).Result;
-        }
-        catch (XmlRequestException ex)
-        {
-            if (ex.Value == 404)
-            {
-                return null;
-            }
-
-            throw;
-        }
-    }
-
-    public virtual async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string login, CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(login);
-        return await InitServerMP.GetWaitingParamsResponseAsync(Client, GameXml, login, cancellationToken);
-    }
-
-    public async Task<WaitingParams> GetWaitingParamsAsync(string login, CancellationToken cancellationToken = default)
-    {
-        return (await GetWaitingParamsResponseAsync(login, cancellationToken)).Result;
-    }
 }
