@@ -12,17 +12,17 @@ internal static partial class XmlHelper
     [GeneratedRegex(@"execution time\s*:\s*(\d+\.\d+)\s*s")]
     private static partial Regex ExecutionTimeRegex();
 
-    public static async Task<XmlResponse> SendAsync(HttpClient client, Uri uri, string gameXml, string? authorXml, string requestName, string parametersXml, CancellationToken cancellationToken)
+    public static async Task<XmlResponse> SendAsync(HttpClient client, string gameXml, string? authorXml, string requestName, string parametersXml, CancellationToken cancellationToken)
     {
         var formedXml = $"<root><game>{gameXml}</game>{authorXml}<request><name>{requestName}</name><params>{parametersXml}</params></request></root>";
 
-        Debug.WriteLine($"{uri}\n{formedXml}");
+        Debug.WriteLine($"{client.BaseAddress}\n{formedXml}");
 
         using var content = new StringContent(formedXml, Encoding.UTF8, "text/xml");
 
         var startTime = Stopwatch.GetTimestamp();
 
-        var response = await client.PostAsync(uri, content, cancellationToken);
+        var response = await client.PostAsync(client.BaseAddress, content, cancellationToken);
 
         var requestTime = Stopwatch.GetElapsedTime(startTime);
 

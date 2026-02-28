@@ -1,25 +1,23 @@
-﻿using MinimalXmlReader;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Net.Http.Headers;
 
 namespace ManiaAPI.Xml;
 
-public interface IInitServer : IDisposable
+public interface IInitServerMP : IDisposable
 {
     HttpClient Client { get; }
 
-    Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(CancellationToken cancellationToken = default);
-    Task<WaitingParams> GetWaitingParamsAsync(CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string? login = null, CancellationToken cancellationToken = default);
+    Task<WaitingParams> GetWaitingParamsAsync(string? login = null, CancellationToken cancellationToken = default);
 }
 
-public abstract class InitServer : IInitServer
+public abstract class InitServerMP : IInitServerMP
 {
     public HttpClient Client { get; }
 
-    protected Uri ServerUri { get; }
     protected abstract string GameXml { get; }
 
-    protected InitServer(HttpClient client)
+    protected InitServerMP(HttpClient client)
     {
         Client = client;
 
@@ -36,12 +34,13 @@ public abstract class InitServer : IInitServer
             headers.UserAgent.Add(new ProductInfoHeaderValue("(Xml; Email=petrpiv1@gmail.com; Discord=bigbang1112)"));
         }
 
-        ServerUri = client.BaseAddress ?? throw new ArgumentException("InitServer must have BaseAddress set", nameof(client));
+        if (client.BaseAddress is null)
+        {
+            throw new ArgumentException("BaseAddress must be set for ManiaPlanet InitServer", nameof(client));
+        }
     }
 
-    protected InitServer(Uri address) : this(new HttpClient { BaseAddress = address })
-    {
-    }
+    protected InitServerMP(Uri uri) : this(new HttpClient { BaseAddress = uri }) { }
 
     protected async Task<MasterServerResponse<T>> RequestAsync<T>(
         string? authorXml,
@@ -50,26 +49,37 @@ public abstract class InitServer : IInitServer
         XmlProcessContent<T> processContent, 
         CancellationToken cancellationToken = default) where T : notnull
     {
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml, requestName, parametersXml, cancellationToken);
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml, requestName, parametersXml, cancellationToken);
         return XmlHelper.ProcessResponseResult(requestName, response, processContent);
     }
 
-    public virtual async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string? login = null, CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetWaitingParams";
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
+        var authorXml = login is null ? null : $"<author><login>{login}</login></author>";
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml, RequestName, string.Empty, cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
         {
+            var waitingQueueDuration = 0;
+            var waitingQueueMessage = default(string);
             var masterServers = ImmutableList.CreateBuilder<MasterServerInfo>();
 
             while (xml.TryReadStartElement(out var element))
             {
                 switch (element)
                 {
+                    case "wt":
+                        waitingQueueDuration = int.Parse(xml.ReadContent());
+                        break;
+                    case "wm":
+                        waitingQueueMessage = xml.ReadContentAsString();
+                        break;
                     case "ms":
                         var name = string.Empty;
                         var domain = string.Empty;
                         var path = string.Empty;
+                        var portHttps = 443;
+                        var portHttp = 80;
 
                         while (xml.TryReadStartElement(out var valueElement))
                         {
@@ -84,6 +94,12 @@ public abstract class InitServer : IInitServer
                                 case "d":
                                     path = xml.ReadContentAsString();
                                     break;
+                                case "e":
+                                    portHttps = int.Parse(xml.ReadContent());
+                                    break;
+                                case "f":
+                                    portHttp = int.Parse(xml.ReadContent());
+                                    break;
                                 default:
                                     xml.ReadContent();
                                     break;
@@ -92,7 +108,7 @@ public abstract class InitServer : IInitServer
                             _ = xml.SkipEndElement();
                         }
 
-                        masterServers.Add(new MasterServerInfo(name, domain, path));
+                        masterServers.Add(new MasterServerInfo(name, domain, path, portHttps, portHttp));
                         break;
                     default:
                         xml.ReadContent();
@@ -102,13 +118,13 @@ public abstract class InitServer : IInitServer
                 _ = xml.SkipEndElement();
             }
 
-            return new WaitingParams(masterServers.ToImmutable());
+            return new WaitingParams(waitingQueueDuration, waitingQueueMessage, masterServers.ToImmutable());
         });
     }
 
-    public async Task<WaitingParams> GetWaitingParamsAsync(CancellationToken cancellationToken = default)
+    public async Task<WaitingParams> GetWaitingParamsAsync(string? login = null, CancellationToken cancellationToken = default)
     {
-        return (await GetWaitingParamsResponseAsync(cancellationToken)).Result;
+        return (await GetWaitingParamsResponseAsync(login, cancellationToken)).Result;
     }
 
     public virtual void Dispose()

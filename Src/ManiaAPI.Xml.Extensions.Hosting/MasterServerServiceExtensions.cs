@@ -34,8 +34,12 @@ public static class MasterServerServiceExtensions
                 PooledConnectionLifetime = TimeSpan.FromMinutes(10),
                 AutomaticDecompression = DecompressionMethods.GZip
             });
-        services.AddTransient(provider => new MasterServerMP4(new Uri(MasterServerMP4.DefaultAddress),
-            provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(MasterServerMP4))));
+        services.AddTransient(provider =>
+        {
+            var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(MasterServerMP4));
+            client.BaseAddress = new Uri(MasterServerMP4.DefaultAddress);
+            return new MasterServerMP4(client);
+        });
 
         if (configureInitServer is not null) configureInitServer(httpInitServer);
         if (configureMasterServer is not null) configureMasterServer(httpMasterServer);

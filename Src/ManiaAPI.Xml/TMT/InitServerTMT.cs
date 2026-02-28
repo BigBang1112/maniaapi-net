@@ -1,8 +1,8 @@
 ﻿namespace ManiaAPI.Xml.TMT;
 
-public interface IInitServerTMT : IInitServer;
+public interface IInitServerTMT : IInitServerMP;
 
-public class InitServerTMT : InitServer, IInitServerTMT
+public class InitServerTMT : InitServerMP, IInitServerTMT
 {
     protected override string GameXml => XmlHelperTMT.GameXml;
 
