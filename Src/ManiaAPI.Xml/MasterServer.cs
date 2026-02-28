@@ -1,8 +1,5 @@
-﻿using MinimalXmlReader;
-using System.Collections.Immutable;
-using System.Net;
+﻿using System.Collections.Immutable;
 using System.Net.Http.Headers;
-using System.Reflection.Metadata;
 
 namespace ManiaAPI.Xml;
 
@@ -16,6 +13,7 @@ public interface IMasterServer : IDisposable
     Task<PlayerInfos> GetPlayerInfosAsync(string login, CancellationToken cancellationToken = default);
     Task<MasterServerResponse<CheckLoginResult>> CheckLoginResponseAsync(string login, CancellationToken cancellationToken = default);
     Task<CheckLoginResult> CheckLoginAsync(string login, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse> TestAsync(CancellationToken cancellationToken = default);
 }
 
 public abstract class MasterServer : IMasterServer
@@ -203,6 +201,13 @@ public abstract class MasterServer : IMasterServer
     public async Task<CheckLoginResult> CheckLoginAsync(string login, CancellationToken cancellationToken = default)
     {
         return (await CheckLoginResponseAsync(login, cancellationToken)).Result;
+    }
+
+    public virtual async Task<MasterServerResponse> TestAsync(CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "Test";
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
+        return XmlHelper.ProcessResponseResult(response);
     }
 
     public virtual void Dispose()

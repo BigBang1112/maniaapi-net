@@ -78,6 +78,46 @@ internal static partial class XmlHelper
         return new MasterServerResponse<T>(content ?? throw new Exception("No response content"), executionTimeSpan, xmlParseTime, response.Details);
     }
 
+    public static MasterServerResponse ProcessResponseResult(XmlResponse response)
+    {
+        Debug.WriteLine(response.Content);
+
+        var startTime = Stopwatch.GetTimestamp();
+
+        var xml = new MiniXmlReader(response.Content);
+
+        xml.SkipProcessingInstruction();
+
+        if (!MemoryExtensions.Equals(xml.ReadStartElement(), "r", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new Exception("<r> (first one) not found");
+        }
+
+        var executionTime = string.Empty;
+
+        while (xml.TryReadStartElement(out var responseElement))
+        {
+            switch (responseElement)
+            {
+                case "e":
+                    executionTime = xml.ReadContentAsString();
+                    break;
+            }
+
+            _ = xml.SkipEndElement();
+        }
+
+        var xmlParseTime = Stopwatch.GetElapsedTime(startTime);
+
+        var executionTimeGroup = ExecutionTimeRegex().Match(executionTime).Groups[1].Value;
+
+        var executionTimeSpan = string.IsNullOrEmpty(executionTimeGroup)
+            ? default(TimeSpan?)
+            : TimeSpan.FromSeconds(double.Parse(executionTimeGroup, CultureInfo.InvariantCulture));
+
+        return new MasterServerResponse(executionTimeSpan, xmlParseTime, response.Details);
+    }
+
     private static void ProcessResponse<T>(
         string requestName, 
         XmlProcessContent<T> processContent, 

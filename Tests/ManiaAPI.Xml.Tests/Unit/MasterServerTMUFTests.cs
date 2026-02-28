@@ -9,6 +9,16 @@ namespace ManiaAPI.Xml.Tests.Unit;
 public class MasterServerTMUFTests
 {
     [Fact]
+    public async Task TestAsync()
+    {
+        var server = new MasterServerTMUF();
+
+        var response = await server.TestAsync();
+
+        Assert.NotNull(response);
+    }
+
+    [Fact]
     public async Task GetPlayerInfos_ReturnsPlayerInfos()
     {
         var server = new MasterServerTMUF();

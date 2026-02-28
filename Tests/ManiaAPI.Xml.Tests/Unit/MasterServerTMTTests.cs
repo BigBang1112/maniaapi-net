@@ -9,6 +9,25 @@ namespace ManiaAPI.Xml.Tests.Unit;
 
 public class MasterServerTMTTests
 {
+    [Theory]
+    [InlineData(Platform.PC)]
+    [InlineData(Platform.XB1)]
+    [InlineData(Platform.PS4)]
+    public async Task TestAsync(Platform platform)
+    {
+        var initServer = new InitServerTMT(platform);
+        var waitingParams = await initServer.GetWaitingParamsAsync();
+
+        var response = await initServer.TestAsync();
+
+        var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+
+        var response2 = await masterServer.TestAsync();
+
+        Assert.NotNull(response);
+        Assert.NotNull(response2);
+    }
+
     [Fact]
     public async Task GetPlayerInfos_ReturnsPlayerInfos()
     {

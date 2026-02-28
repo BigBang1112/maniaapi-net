@@ -9,6 +9,7 @@ public interface IInitServerMP : IDisposable
 
     Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string? login = null, CancellationToken cancellationToken = default);
     Task<WaitingParams> GetWaitingParamsAsync(string? login = null, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse> TestAsync(CancellationToken cancellationToken = default);
 }
 
 public abstract class InitServerMP : IInitServerMP
@@ -67,6 +68,13 @@ public abstract class InitServerMP : IInitServerMP
     {
         Client.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    public virtual async Task<MasterServerResponse> TestAsync(CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "Test";
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
+        return XmlHelper.ProcessResponseResult(response);
     }
 
     internal static async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(HttpClient client, string gameXml, string? login = null, CancellationToken cancellationToken = default)
