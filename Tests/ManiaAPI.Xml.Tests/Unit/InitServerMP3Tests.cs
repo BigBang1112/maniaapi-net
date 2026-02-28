@@ -1,15 +1,15 @@
-﻿using ManiaAPI.Xml.MP4;
+﻿using ManiaAPI.Xml.MP3;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace ManiaAPI.Xml.Tests.Unit;
 
-public class InitServerMP4Tests
+public class InitServerMP3Tests
 {
     [Fact]
     public async Task TestAsync()
     {
-        var server = new InitServerMP4();
+        var server = new InitServerMP3();
 
         var response = await server.TestAsync();
 
@@ -19,7 +19,7 @@ public class InitServerMP4Tests
     [Fact]
     public async Task GetWaitingParamsAsync_ReturnsMasterServers()
     {
-        var server = new InitServerMP4();
+        var server = new InitServerMP3();
 
         var waitingParams = await server.GetWaitingParamsAsync();
 
