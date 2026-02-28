@@ -1,6 +1,7 @@
 ﻿using MinimalXmlReader;
 using System.Collections.Immutable;
 using System.Net.Http.Headers;
+using System.Reflection.Metadata;
 
 namespace ManiaAPI.Xml;
 
@@ -12,6 +13,8 @@ public interface IMasterServer : IDisposable
     Task<ImmutableList<League>> GetLeaguesAsync(CancellationToken cancellationToken = default);
     Task<MasterServerResponse<PlayerInfos>> GetPlayerInfosResponseAsync(string login, CancellationToken cancellationToken = default);
     Task<PlayerInfos> GetPlayerInfosAsync(string login, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<CheckLoginResult>> CheckLoginResponseAsync(string login, CancellationToken cancellationToken = default);
+    Task<CheckLoginResult> CheckLoginAsync(string login, CancellationToken cancellationToken = default);
 }
 
 public abstract class MasterServer : IMasterServer
@@ -159,6 +162,46 @@ public abstract class MasterServer : IMasterServer
     public async Task<PlayerInfos> GetPlayerInfosAsync(string login, CancellationToken cancellationToken = default)
     {
         return (await GetPlayerInfosResponseAsync(login, cancellationToken)).Result;
+    }
+
+    public async Task<MasterServerResponse<CheckLoginResult>> CheckLoginResponseAsync(string login, CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "CheckLogin";
+        var parametersXml = $"<l>{login}</l>";
+        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, parametersXml, cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
+        {
+            var exists = false;
+            var paid = default(bool?);
+            var migrated = false;
+
+            while (xml.TryReadStartElement(out var infoElement))
+            {
+                switch (infoElement)
+                {
+                    case "e":
+                        exists = MemoryExtensions.Equals(xml.ReadContent(), "1", StringComparison.Ordinal);
+                        break;
+                    case "p":
+                        paid = xml.ReadContentAsBoolean();
+                        break;
+                    case "m":
+                        migrated = MemoryExtensions.Equals(xml.ReadContent(), "1", StringComparison.Ordinal);
+                        break;
+                    default:
+                        xml.ReadContent();
+                        break;
+                }
+                _ = xml.SkipEndElement();
+            }
+
+            return new CheckLoginResult(exists, paid, migrated);
+        });
+    }
+
+    public async Task<CheckLoginResult> CheckLoginAsync(string login, CancellationToken cancellationToken = default)
+    {
+        return (await CheckLoginResponseAsync(login, cancellationToken)).Result;
     }
 
     public virtual void Dispose()

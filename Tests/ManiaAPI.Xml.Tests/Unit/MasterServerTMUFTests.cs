@@ -47,6 +47,16 @@ public class MasterServerTMUFTests
     }
 
     [Fact]
+    public async Task CheckLoginAsync_ReturnsExistence()
+    {
+        var server = new MasterServerTMUF();
+
+        var result = await server.CheckLoginAsync("bigbang1112");
+
+        Assert.NotNull(result);
+    }
+
+    [Fact]
     public async Task GetLadderPlayerRankingsAsync_ReturnsPlayers()
     {
         var server = new MasterServerTMUF();

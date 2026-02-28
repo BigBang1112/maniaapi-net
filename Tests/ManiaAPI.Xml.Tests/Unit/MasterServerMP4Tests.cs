@@ -1,4 +1,5 @@
 ﻿using ManiaAPI.Xml.MP4;
+using ManiaAPI.Xml.TMUF;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -10,8 +11,20 @@ public class MasterServerMP4Tests
     public async Task GetPlayerInfos_ReturnsPlayerInfos()
     {
         var server = new MasterServerMP4();
+
         var playerInfos = await server.GetPlayerInfosAsync("bigbang1112");
+
         Assert.NotNull(playerInfos);
+    }
+
+    [Fact]
+    public async Task CheckLoginAsync_ReturnsExistence()
+    {
+        var server = new MasterServerMP4();
+
+        var result = await server.CheckLoginAsync("bigbang1112");
+
+        Assert.NotNull(result);
     }
 
     [Fact]

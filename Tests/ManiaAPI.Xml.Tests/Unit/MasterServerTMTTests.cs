@@ -1,5 +1,6 @@
 ﻿using ManiaAPI.Xml.MP4;
 using ManiaAPI.Xml.TMT;
+using ManiaAPI.Xml.TMUF;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -45,6 +46,21 @@ public class MasterServerTMTTests
         var leagues = await masterServer.GetLeaguesAsync();
 
         Assert.NotEmpty(leagues);
+    }
+
+    [Theory]
+    [InlineData(Platform.PC)]
+    [InlineData(Platform.XB1)]
+    [InlineData(Platform.PS4)]
+    public async Task CheckLoginAsync_ReturnsExistence(Platform platform)
+    {
+        var initServer = new InitServerTMT(platform);
+        var waitingParams = await initServer.GetWaitingParamsAsync();
+        var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+
+        var result = await masterServer.CheckLoginAsync("zojytyxy-pc56f3bdff95566");
+
+        Assert.NotNull(result);
     }
 
     [Theory]
