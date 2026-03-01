@@ -11,11 +11,11 @@ public interface IMasterServerMP : IMasterServer
 
 public abstract class MasterServerMP : MasterServer, IMasterServerMP
 {
-    public MasterServerMP(Uri uri) : base(uri) { }
+    protected MasterServerMP(Uri uri) : base(uri) { }
 
-    public MasterServerMP(MasterServerInfo info) : base(info.GetUri()) { }
+    protected MasterServerMP(MasterServerInfo info) : base(info.GetUri()) { }
 
-    public MasterServerMP(HttpClient client) : base(client) { }
+    protected MasterServerMP(HttpClient client) : base(client) { }
 
     protected abstract string GetGameXml(string titleId);
 
