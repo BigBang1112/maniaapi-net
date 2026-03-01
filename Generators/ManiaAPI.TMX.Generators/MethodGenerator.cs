@@ -109,7 +109,7 @@ public class MethodGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine("        response.EnsureSuccessStatusCode();");
         sb.AppendLine();
-        sb.AppendLine("        Debug.WriteLine($\"{sb}\n{await response.Content.ReadAsStringAsync(cancellationToken)}\");");
+        sb.AppendLine("        Debug.WriteLine($\"{route}\n{await response.Content.ReadAsStringAsync(cancellationToken)}\");");
         sb.AppendLine();
         sb.Append("        return await response.Content.ReadFromJsonAsync(TMXJsonContext.Default.");
 
