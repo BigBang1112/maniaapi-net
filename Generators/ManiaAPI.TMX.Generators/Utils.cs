@@ -2,7 +2,8 @@
 
 namespace ManiaAPI.TMX.Generators;
 
-public static class Utils {
+public static class Utils
+{
     public static IEnumerable<INamedTypeSymbol> GetAllTypes(INamespaceSymbol namespaceSymbol)
     {
         foreach (var type in namespaceSymbol.GetTypeMembers())

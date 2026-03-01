@@ -1,5 +1,4 @@
 using Microsoft.CodeAnalysis;
-using System.Diagnostics;
 using System.Text;
 
 namespace ManiaAPI.TMX.Generators;
@@ -7,15 +6,8 @@ namespace ManiaAPI.TMX.Generators;
 [Generator]
 public class MethodGenerator : IIncrementalGenerator
 {
-    private const bool Debug = false;
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        if (Debug && !Debugger.IsAttached)
-        {
-            Debugger.Launch();
-        }
-
         var methods = context.CompilationProvider.SelectMany((compilation, token) =>
         {
             var maniaApiTmxNamespace = compilation.GlobalNamespace
@@ -24,9 +16,9 @@ public class MethodGenerator : IIncrementalGenerator
                 ?.GetNamespaceMembers()
                 .FirstOrDefault(x => x.Name == "TMX");
 
-            if (maniaApiTmxNamespace == null)
+            if (maniaApiTmxNamespace is null)
             {
-                return Enumerable.Empty<IMethodSymbol>();
+                return [];
             }
 
             return Utils.GetAllTypes(maniaApiTmxNamespace)
@@ -117,7 +109,7 @@ public class MethodGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine("        response.EnsureSuccessStatusCode();");
         sb.AppendLine();
-        sb.AppendLine("        Debug.WriteLine(await response.Content.ReadAsStringAsync(cancellationToken));");
+        sb.AppendLine("        Debug.WriteLine($\"{sb}\n{await response.Content.ReadAsStringAsync(cancellationToken)}\");");
         sb.AppendLine();
         sb.Append("        return await response.Content.ReadFromJsonAsync(TMXJsonContext.Default.");
 
