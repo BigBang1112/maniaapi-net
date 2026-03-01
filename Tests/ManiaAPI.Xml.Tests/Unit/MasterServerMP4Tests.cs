@@ -1,4 +1,5 @@
-﻿using ManiaAPI.Xml.MP4;
+﻿using ManiaAPI.Xml.MP3;
+using ManiaAPI.Xml.MP4;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -84,6 +85,16 @@ public class MasterServerMP4Tests
 
         var summaries = await server.GetMapLeaderBoardSummariesAsync("TMValley@nadeo",
             [new("JNDnboltOprJ19O2d2OQCJrC1Sk"), new("f60UDPlW2mqfbhwCGUuclCIYQj2")]);
+
+        Assert.NotEmpty(summaries);
+    }
+
+    [Fact]
+    public async Task GetMultiplayerLeaderBoardSummariesAsync_ReturnsSummaries()
+    {
+        var server = new MasterServerMP4();
+
+        var summaries = await server.GetMultiplayerLeaderBoardSummariesAsync("TMValley@nadeo", "World", "World|Europe");
 
         Assert.NotEmpty(summaries);
     }

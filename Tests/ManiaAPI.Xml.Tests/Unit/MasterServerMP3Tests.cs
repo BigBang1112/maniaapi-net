@@ -65,4 +65,14 @@ public class MasterServerMP3Tests
 
         Assert.NotEmpty(leagues);
     }
+
+    [Fact]
+    public async Task GetMultiplayerLeaderBoardSummariesAsync_ReturnsSummaries()
+    {
+        var server = new MasterServerMP3();
+
+        var summaries = await server.GetMultiplayerLeaderBoardSummariesAsync("TMValley", "World", "World|Europe");
+
+        Assert.NotEmpty(summaries);
+    }
 }
