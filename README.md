@@ -618,18 +618,28 @@ For ManiaPlanet:
  - **Any range of records**
  - Skillpoints
  - Medals
-- Get available master servers
+- Get multiplayer leaderboards (without identities)
+- Get login from Steam64 ID
+- Get available master servers (GetWaitingParams)
+
+For ManiaPlanet 3
+
+- Get multiplayer leaderboards (without identities)
+- Get login from Steam64 ID
+- Get available master servers (GetWaitingParams)
 
 For TMT:
 
 - Get all map records (without identities)
 - Get campaign medal rankings (without identities)
-- Get available master servers
+- Get available master servers (GetWaitingParams)
 
 For all games:
 
 - Get player nickname, zone, creation/zone timestamp
 - Get all available zones
+- Check if login exists
+- Run Test request
 
 ### Setup for TMUF
 
@@ -654,8 +664,11 @@ Because the responses can be quite large sometimes, it's **recommended to accept
 ```cs
 using ManiaAPI.Xml;
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip });
-var masterServer = new MasterServerMP4(new Uri(MasterServerMP4.DefaultAddress), httpClient);
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
+{
+    BaseAddress = new Uri(MasterServerMP4.DefaultUrl)
+};
+var masterServer = new MasterServerMP4(httpClient);
 ```
 
 In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to the init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
@@ -679,11 +692,16 @@ using ManiaAPI.Xml;
 var initServer = new InitServerMP4();
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip });
-var masterServer = new MasterServerMP4(waitingParams.MasterServers.First().GetUri(), httpClient);
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
+{
+    BaseAddress = waitingParams.MasterServers.First().GetUri()
+};
+var masterServer = new MasterServerMP4(httpClient);
 
 // The master server is now ready to use
 ```
+
+The same idea works for ManiaPlanet 3 with `MasterServerMP3`, which uses `Maniaplanet relay 5` by default.
 
 ### Setup for TMT
 
@@ -708,8 +726,11 @@ using ManiaAPI.Xml;
 var initServer = new InitServerTMT(Platform.PC);
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip });
-var masterServer = new MasterServerTMT(waitingParams.MasterServers.First().GetUri(), httpClient);
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
+{
+    BaseAddress = waitingParams.MasterServers.First().GetUri()
+};
+var masterServer = new MasterServerTMT(httpClient);
 
 // You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
 ```
@@ -727,9 +748,10 @@ await Task.WhenAll(waitingParams.Values);
 
 var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDictionary(
     pair => pair.Key,
-    pair => new MasterServerTMT(pair.Value.Result.MasterServers.First().GetUri(),
-        new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip }))
-    ));
+    pair => new MasterServerTMT(new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
+    {
+        BaseAddress = pair.Value.Result.MasterServers.First().GetUri()
+    })));
 
 // You can now use aggregatedMasterServer to work with all master servers at once
 ```
@@ -781,6 +803,8 @@ Features this setup brings:
 - You can inject `MasterServerMP4` to get a default instance using `Maniaplanet relay 2`
 - You can inject `InitServerMP4` to get the init server
 - All `MasterServerMP4` handle GZIP compression
+
+The same idea works for ManiaPlanet 3 with `AddMasterServerMP3()`, which uses `Maniaplanet relay 5` by default.
 
 ### Setup for TMT
 
