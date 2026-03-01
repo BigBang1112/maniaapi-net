@@ -15,8 +15,8 @@ public sealed class StartupHostedService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await masterServerTMTFactory.RequestWaitingParamsAsync(cancellationToken);
-        await masterServerMP4Factory.RequestWaitingParamsAsync(cancellationToken);
+        await masterServerTMTFactory.RequestWaitingParamsAsync(login: null, cancellationToken);
+        await masterServerMP4Factory.RequestWaitingParamsAsync(login: null, cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

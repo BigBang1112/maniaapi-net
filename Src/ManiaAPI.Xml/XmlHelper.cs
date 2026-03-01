@@ -12,17 +12,17 @@ internal static partial class XmlHelper
     [GeneratedRegex(@"execution time\s*:\s*(\d+\.\d+)\s*s")]
     private static partial Regex ExecutionTimeRegex();
 
-    public static async Task<XmlResponse> SendAsync(HttpClient client, Uri uri, string gameXml, string? authorXml, string requestName, string parametersXml, CancellationToken cancellationToken)
+    public static async Task<XmlResponse> SendAsync(HttpClient client, string gameXml, string? authorXml, string requestName, string parametersXml, CancellationToken cancellationToken)
     {
         var formedXml = $"<root><game>{gameXml}</game>{authorXml}<request><name>{requestName}</name><params>{parametersXml}</params></request></root>";
 
-        Debug.WriteLine(formedXml);
+        Debug.WriteLine($"{client.BaseAddress}\n{formedXml}");
 
         using var content = new StringContent(formedXml, Encoding.UTF8, "text/xml");
 
         var startTime = Stopwatch.GetTimestamp();
 
-        var response = await client.PostAsync(uri, content, cancellationToken);
+        var response = await client.PostAsync(default(Uri), content, cancellationToken);
 
         var requestTime = Stopwatch.GetElapsedTime(startTime);
 
@@ -76,6 +76,46 @@ internal static partial class XmlHelper
             : TimeSpan.FromSeconds(double.Parse(executionTimeGroup, CultureInfo.InvariantCulture));
 
         return new MasterServerResponse<T>(content ?? throw new Exception("No response content"), executionTimeSpan, xmlParseTime, response.Details);
+    }
+
+    public static MasterServerResponse ProcessResponseResult(XmlResponse response)
+    {
+        Debug.WriteLine(response.Content);
+
+        var startTime = Stopwatch.GetTimestamp();
+
+        var xml = new MiniXmlReader(response.Content);
+
+        xml.SkipProcessingInstruction();
+
+        if (!MemoryExtensions.Equals(xml.ReadStartElement(), "r", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new Exception("<r> (first one) not found");
+        }
+
+        var executionTime = string.Empty;
+
+        while (xml.TryReadStartElement(out var responseElement))
+        {
+            switch (responseElement)
+            {
+                case "e":
+                    executionTime = xml.ReadContentAsString();
+                    break;
+            }
+
+            _ = xml.SkipEndElement();
+        }
+
+        var xmlParseTime = Stopwatch.GetElapsedTime(startTime);
+
+        var executionTimeGroup = ExecutionTimeRegex().Match(executionTime).Groups[1].Value;
+
+        var executionTimeSpan = string.IsNullOrEmpty(executionTimeGroup)
+            ? default(TimeSpan?)
+            : TimeSpan.FromSeconds(double.Parse(executionTimeGroup, CultureInfo.InvariantCulture));
+
+        return new MasterServerResponse(executionTimeSpan, xmlParseTime, response.Details);
     }
 
     private static void ProcessResponse<T>(

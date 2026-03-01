@@ -1,20 +1,18 @@
 ﻿namespace ManiaAPI.Xml.TMT;
 
-public interface IInitServerTMT : IInitServer;
+public interface IInitServerTMT : IInitServerMP;
 
-public class InitServerTMT : InitServer, IInitServerTMT
+public class InitServerTMT : InitServerMP, IInitServerTMT
 {
     protected override string GameXml => XmlHelperTMT.GameXml;
 
-    public InitServerTMT(Platform platform) : base(new Uri(GetDefaultAddress(platform)))
-    {
-    }
+    public InitServerTMT(Platform platform) : base(new Uri(GetDefaultUrl(platform))) { }
 
-    public InitServerTMT(HttpClient client) : base(client)
-    {
-    }
+    public InitServerTMT(Uri uri) : base(uri) { }
 
-    public static string GetDefaultAddress(Platform platform)
+    public InitServerTMT(HttpClient client) : base(client) { }
+
+    public static string GetDefaultUrl(Platform platform)
     {
         var platformStr = platform switch
         {

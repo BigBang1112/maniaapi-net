@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ManiaAPI.TMX.Generators": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\..\\Samples\\WebAppTmxExample\\WebAppTmxExample.csproj"
+    }
+  }
+}

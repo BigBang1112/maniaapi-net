@@ -1,5 +1,4 @@
-﻿using MinimalXmlReader;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Net.Http.Headers;
 
 namespace ManiaAPI.Xml;
@@ -12,16 +11,18 @@ public interface IMasterServer : IDisposable
     Task<ImmutableList<League>> GetLeaguesAsync(CancellationToken cancellationToken = default);
     Task<MasterServerResponse<PlayerInfos>> GetPlayerInfosResponseAsync(string login, CancellationToken cancellationToken = default);
     Task<PlayerInfos> GetPlayerInfosAsync(string login, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<CheckLoginResult>> CheckLoginResponseAsync(string login, CancellationToken cancellationToken = default);
+    Task<CheckLoginResult> CheckLoginAsync(string login, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse> TestAsync(CancellationToken cancellationToken = default);
 }
 
 public abstract class MasterServer : IMasterServer
 {
     public HttpClient Client { get; }
 
-    protected Uri ServerUri { get; }
     protected abstract string GameXml { get; }
 
-    protected MasterServer(Uri uri, HttpClient client)
+    protected MasterServer(HttpClient client)
     {
         Client = client;
 
@@ -38,12 +39,13 @@ public abstract class MasterServer : IMasterServer
             headers.UserAgent.Add(new ProductInfoHeaderValue("(Xml; Email=petrpiv1@gmail.com; Discord=bigbang1112)"));
         }
 
-        ServerUri = uri;
+        if (client.BaseAddress is null)
+        {
+            throw new ArgumentException("BaseAddress must be set for MasterServer", nameof(client));
+        }
     }
 
-    protected MasterServer(Uri uri) : this(uri, new HttpClient())
-    {
-    }
+    protected MasterServer(Uri uri) : this(new HttpClient { BaseAddress = uri }) { }
 
     protected async Task<MasterServerResponse<T>> RequestAsync<T>(
         string? authorXml,
@@ -52,15 +54,15 @@ public abstract class MasterServer : IMasterServer
         XmlProcessContent<T> processContent,
         CancellationToken cancellationToken = default) where T : notnull
     {
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml, requestName, parametersXml, cancellationToken);
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml, requestName, parametersXml, cancellationToken);
         return XmlHelper.ProcessResponseResult(requestName, response, processContent);
     }
 
     public virtual async Task<MasterServerResponse<ImmutableList<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetLeagues";
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
         {
             var items = ImmutableList.CreateBuilder<League>();
 
@@ -105,12 +107,12 @@ public abstract class MasterServer : IMasterServer
         return (await GetLeaguesResponseAsync(cancellationToken)).Result;
     }
 
-    public async Task<MasterServerResponse<PlayerInfos>> GetPlayerInfosResponseAsync(string login, CancellationToken cancellationToken = default)
+    public virtual async Task<MasterServerResponse<PlayerInfos>> GetPlayerInfosResponseAsync(string login, CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetPlayerInfos";
         var parametersXml = $"<login>{login}</login>";
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, parametersXml, cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, parametersXml, cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
         {
             var nickname = string.Empty;
             var zone = string.Empty;
@@ -159,6 +161,53 @@ public abstract class MasterServer : IMasterServer
     public async Task<PlayerInfos> GetPlayerInfosAsync(string login, CancellationToken cancellationToken = default)
     {
         return (await GetPlayerInfosResponseAsync(login, cancellationToken)).Result;
+    }
+
+    public virtual async Task<MasterServerResponse<CheckLoginResult>> CheckLoginResponseAsync(string login, CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "CheckLogin";
+        var parametersXml = $"<l>{login}</l>";
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, parametersXml, cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
+        {
+            var exists = false;
+            var paid = default(bool?);
+            var migrated = false;
+
+            while (xml.TryReadStartElement(out var infoElement))
+            {
+                switch (infoElement)
+                {
+                    case "e":
+                        exists = MemoryExtensions.Equals(xml.ReadContent(), "1", StringComparison.Ordinal);
+                        break;
+                    case "p":
+                        paid = xml.ReadContentAsBoolean();
+                        break;
+                    case "m":
+                        migrated = MemoryExtensions.Equals(xml.ReadContent(), "1", StringComparison.Ordinal);
+                        break;
+                    default:
+                        xml.ReadContent();
+                        break;
+                }
+                _ = xml.SkipEndElement();
+            }
+
+            return new CheckLoginResult(exists, paid, migrated);
+        });
+    }
+
+    public async Task<CheckLoginResult> CheckLoginAsync(string login, CancellationToken cancellationToken = default)
+    {
+        return (await CheckLoginResponseAsync(login, cancellationToken)).Result;
+    }
+
+    public virtual async Task<MasterServerResponse> TestAsync(CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "Test";
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
+        return XmlHelper.ProcessResponseResult(response);
     }
 
     public virtual void Dispose()

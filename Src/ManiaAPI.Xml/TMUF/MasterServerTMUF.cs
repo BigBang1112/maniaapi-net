@@ -1,5 +1,4 @@
-﻿using MinimalXmlReader;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Globalization;
 using TmEssentials;
 
@@ -48,24 +47,28 @@ public interface IMasterServerTMUF : IMasterServer
 
 public class MasterServerTMUF : MasterServer, IMasterServerTMUF
 {
-    public const string DefaultAddress = "http://game.trackmaniaforever.com/online_game/request.php";
+    public const string DefaultUnitedUrl = "http://game.trackmaniaforever.com/online_game/request.php";
+    public const string DefaultNationsUrl = "http://game2.trackmaniaforever.com/online_game/request.php";
 
     private const string GeneralScoresName = "General";
     private const string LadderScoresName = "Multi";
 
-    protected override string GameXml => "<version>2.11.25</version>";
+    protected override string GameXml => "<name>TmForever</name><version>2.11.25</version>";
 
-    public MasterServerTMUF() : base(new Uri(DefaultAddress))
+    public MasterServerTMUF(string url = DefaultUnitedUrl) : base(new Uri(url)) { }
+
+    public MasterServerTMUF(MasterServerType type) : this(type switch
     {
-    }
+        MasterServerType.United => DefaultUnitedUrl,
+        MasterServerType.Nations => DefaultNationsUrl,
+        _ => throw new ArgumentException("Invalid master server type", nameof(type))
+    }) { }
 
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerTMUF"/> using any <see cref="HttpClient"/>.
     /// </summary>
     /// <param name="client">HTTP client.</param>
-    public MasterServerTMUF(HttpClient client) : base(new Uri(DefaultAddress), client)
-    {
-    }
+    public MasterServerTMUF(HttpClient client) : base(client) { }
 
     public virtual async Task<MasterServerResponse<PlayerRankings>> GetLadderPlayerRankingsResponseAsync(
         string zone = "World",
@@ -74,14 +77,14 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetRankingsNew";
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, @$"
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
             <t>0</t>
             <st>g</st>
             <f>{zone}</f>
             <b>0</b>
             <p>{page}</p>
             <c>{count}</c>", cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
         {
             var players = ImmutableList.CreateBuilder<PlayerRanking>();
 
@@ -154,14 +157,14 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetRankingsNew";
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, @$"
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
             <t>1</t>
             <st>g</st>
             <f>{zone}</f>
             <b>0</b>
             <p>{page}</p>
             <c>{count}</c>", cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
         {
             var leagues = ImmutableList.CreateBuilder<LeagueRanking>();
 
@@ -230,14 +233,14 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
     public virtual async Task<MasterServerResponse<PlayerAchievements>> GetPlayerAchievementsResponseAsync(string login, int page = 0, int count = 10, CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetRankingsNew";
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, @$"
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
             <t>4</t>
             <st>-1||-1</st>
             <f>{login}</f>
             <b>1</b>
             <p>{page}</p>
             <c>{count}</c>", cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
         {
             var achievements = ImmutableList.CreateBuilder<PlayerAchievement>();
             var achievementCount = 0;

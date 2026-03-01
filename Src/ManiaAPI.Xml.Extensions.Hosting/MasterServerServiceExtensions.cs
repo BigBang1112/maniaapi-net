@@ -1,4 +1,5 @@
-﻿using ManiaAPI.Xml.MP4;
+﻿using ManiaAPI.Xml.MP3;
+using ManiaAPI.Xml.MP4;
 using ManiaAPI.Xml.TMT;
 using ManiaAPI.Xml.TMUF;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +18,7 @@ public static class MasterServerServiceExtensions
     /// </summary>
     public static IHttpClientBuilder AddMasterServerTMUF(this IServiceCollection services)
     {
-        return services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultAddress));
+        return services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultUnitedUrl));
     }
 
     /// <summary>
@@ -27,20 +28,51 @@ public static class MasterServerServiceExtensions
         Action<IHttpClientBuilder>? configureInitServer = null,
         Action<IHttpClientBuilder>? configureMasterServer = null)
     {
-        var httpInitServer = services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultAddress));
+        var httpInitServer = services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultUrl));
         var httpMasterServer = services.AddHttpClient<MasterServerMP4>()
             .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
             {
                 PooledConnectionLifetime = TimeSpan.FromMinutes(10),
                 AutomaticDecompression = DecompressionMethods.GZip
             });
-        services.AddTransient(provider => new MasterServerMP4(new Uri(MasterServerMP4.DefaultAddress),
-            provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(MasterServerMP4))));
+        services.AddTransient(provider =>
+        {
+            var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(MasterServerMP4));
+            client.BaseAddress = new Uri(MasterServerMP4.DefaultUrl);
+            return new MasterServerMP4(client);
+        });
 
         if (configureInitServer is not null) configureInitServer(httpInitServer);
         if (configureMasterServer is not null) configureMasterServer(httpMasterServer);
 
         services.AddSingleton<IMasterServerMP4Factory, MasterServerMP4Factory>();
+    }
+
+    /// <summary>
+    /// Adds the <see cref="InitServerMP3"/> and <see cref="MasterServerMP3"/> clients to the service collection, along with the <see cref="IMasterServerMP4Factory"/> to create <see cref="MasterServerMP4"/> clients.
+    /// </summary>
+    public static void AddMasterServerMP3(this IServiceCollection services,
+        Action<IHttpClientBuilder>? configureInitServer = null,
+        Action<IHttpClientBuilder>? configureMasterServer = null)
+    {
+        var httpInitServer = services.AddHttpClient<InitServerMP3>(client => client.BaseAddress = new Uri(InitServerMP3.DefaultUrl));
+        var httpMasterServer = services.AddHttpClient<MasterServerMP3>()
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+            {
+                PooledConnectionLifetime = TimeSpan.FromMinutes(10),
+                AutomaticDecompression = DecompressionMethods.GZip
+            });
+        services.AddTransient(provider =>
+        {
+            var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(MasterServerMP3));
+            client.BaseAddress = new Uri(MasterServerMP3.DefaultUrl);
+            return new MasterServerMP3(client);
+        });
+
+        if (configureInitServer is not null) configureInitServer(httpInitServer);
+        if (configureMasterServer is not null) configureMasterServer(httpMasterServer);
+
+        services.AddSingleton<IMasterServerMP3Factory, MasterServerMP3Factory>();
     }
 
     /// <summary>
@@ -52,7 +84,7 @@ public static class MasterServerServiceExtensions
     {
         foreach (var platform in Enum.GetValues<Platform>())
         {
-            var httpInitServer = services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultAddress(platform)));
+            var httpInitServer = services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultUrl(platform)));
             var httpMasterServer = services.AddHttpClient($"{nameof(MasterServerTMT)}_{platform}")
                 .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
                 {

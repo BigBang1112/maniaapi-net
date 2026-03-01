@@ -1,5 +1,6 @@
 ﻿using ManiaAPI.Xml.MP4;
 using ManiaAPI.Xml.TMT;
+using ManiaAPI.Xml.TMUF;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -8,6 +9,25 @@ namespace ManiaAPI.Xml.Tests.Unit;
 
 public class MasterServerTMTTests
 {
+    [Theory]
+    [InlineData(Platform.PC)]
+    [InlineData(Platform.XB1)]
+    [InlineData(Platform.PS4)]
+    public async Task TestAsync(Platform platform)
+    {
+        var initServer = new InitServerTMT(platform);
+        var waitingParams = await initServer.GetWaitingParamsAsync();
+
+        var response = await initServer.TestAsync();
+
+        var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+
+        var response2 = await masterServer.TestAsync();
+
+        Assert.NotNull(response);
+        Assert.NotNull(response2);
+    }
+
     [Fact]
     public async Task GetPlayerInfos_ReturnsPlayerInfos()
     {
@@ -26,10 +46,13 @@ public class MasterServerTMTTests
     public async Task GetWaitingParamsAsync_ReturnsMasterServers(Platform platform)
     {
         var server = new InitServerTMT(platform);
-
         var waitingParams = await server.GetWaitingParamsAsync();
+        var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+
+        var waitingParams2 = await masterServer.GetWaitingParamsAsync();
 
         Assert.NotEmpty(waitingParams.MasterServers);
+        Assert.NotEmpty(waitingParams2.MasterServers);
     }
 
     [Theory]
@@ -45,6 +68,21 @@ public class MasterServerTMTTests
         var leagues = await masterServer.GetLeaguesAsync();
 
         Assert.NotEmpty(leagues);
+    }
+
+    [Theory]
+    [InlineData(Platform.PC)]
+    [InlineData(Platform.XB1)]
+    [InlineData(Platform.PS4)]
+    public async Task CheckLoginAsync_ReturnsExistence(Platform platform)
+    {
+        var initServer = new InitServerTMT(platform);
+        var waitingParams = await initServer.GetWaitingParamsAsync();
+        var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+
+        var result = await masterServer.CheckLoginAsync("zojytyxy-pc56f3bdff95566");
+
+        Assert.NotNull(result);
     }
 
     [Theory]

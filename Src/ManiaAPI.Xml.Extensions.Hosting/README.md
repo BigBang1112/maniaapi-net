@@ -46,6 +46,8 @@ Features this setup brings:
 - You can inject `InitServerMP4` to get the init server
 - All `MasterServerMP4` handle GZIP compression
 
+The same idea works for ManiaPlanet 3 with `AddMasterServerMP3()`, which uses `Maniaplanet relay 5` by default.
+
 ## Setup for TMT
 
 ```cs

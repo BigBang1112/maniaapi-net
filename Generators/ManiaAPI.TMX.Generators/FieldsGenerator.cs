@@ -1,5 +1,4 @@
 using Microsoft.CodeAnalysis;
-using System.Diagnostics;
 using System.Text;
 
 namespace ManiaAPI.TMX.Generators;
@@ -7,15 +6,8 @@ namespace ManiaAPI.TMX.Generators;
 [Generator]
 public class FieldsGenerator : IIncrementalGenerator
 {
-    private const bool Debug = false;
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        if (Debug && !Debugger.IsAttached)
-        {
-            Debugger.Launch();
-        }
-
         var fields = context.CompilationProvider.SelectMany((compilation, token) =>
         {
             var maniaApiTmxNamespace = compilation.GlobalNamespace
@@ -24,9 +16,9 @@ public class FieldsGenerator : IIncrementalGenerator
                 ?.GetNamespaceMembers()
                 .FirstOrDefault(x => x.Name == "TMX");
 
-            if (maniaApiTmxNamespace == null)
+            if (maniaApiTmxNamespace is null)
             {
-                return Enumerable.Empty<INamedTypeSymbol>();
+                return [];
             }
 
             return Utils.GetAllTypes(maniaApiTmxNamespace)

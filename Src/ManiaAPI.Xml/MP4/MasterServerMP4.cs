@@ -1,4 +1,5 @@
-﻿using MinimalXmlReader;
+﻿using ManiaAPI.Xml.MP3;
+using MinimalXmlReader;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -7,7 +8,7 @@ using TmEssentials;
 
 namespace ManiaAPI.Xml.MP4;
 
-public interface IMasterServerMP4 : IMasterServer
+public interface IMasterServerMP4 : IMasterServerMP
 {
     /// <summary>
     /// Gets the campaign leaderboard. If <paramref name="campaignId"/> is <see langword="null"/>, it will use the <paramref name="titleId"/> instead.
@@ -132,42 +133,34 @@ public interface IMasterServerMP4 : IMasterServer
     Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
 }
 
-public class MasterServerMP4 : MasterServer, IMasterServerMP4
+public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
 {
-    public const string DefaultAddress = "https://relay02.v04.maniaplanet.com/game/request.php";
+    public const string DefaultUrl = "https://relay02.v04.maniaplanet.com/game/request.php";
 
     protected override string GameXml => XmlHelperMP4.GameXml;
+    protected override string GetGameXml(string titleId) => $"{GameXml}<title>{titleId}</title>";
 
     /// <summary>
-    /// Creates a new instance of <see cref="MasterServerMP4"/> using the expected master server address (relay02). In case it's offline, you need to check <see cref="InitServerMP4"/>.
+    /// Creates a new instance of <see cref="MasterServerMP4"/> using the expected master server address. In case it's offline, you need to check <see cref="InitServerMP4"/>.
     /// </summary>
-    public MasterServerMP4() : base(new Uri(DefaultAddress))
-    {
-    }
+    public MasterServerMP4(string url = DefaultUrl) : base(new Uri(url)) { }
 
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerMP4"/> using a <see cref="MasterServerInfo"/> object. Be careful to use the correct object given from the correct init server.
     /// </summary>
     /// <param name="info">Info about the master server, usually given from <see cref="InitServerMP4"/>.</param>
-    public MasterServerMP4(MasterServerInfo info) : base(info.GetUri())
-    {
-    }
+    public MasterServerMP4(MasterServerInfo info) : base(info.GetUri()) { }
 
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerMP4"/> using any <see cref="HttpClient"/>. You need to set the base address yourself.
     /// </summary>
-    /// <param name="uri">URI of the master server.</param>
     /// <param name="client">HTTP client.</param>
-    public MasterServerMP4(Uri uri, HttpClient client) : base(uri, client)
-    {
-    }
-
-    protected string GetGameXml(string titleId) => $"{GameXml}<title>{titleId}</title>";
+    public MasterServerMP4(HttpClient client) : base(client) { }
 
     internal async Task GetApplicationConfigAsync(CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetApplicationConfig";
-        _ = await XmlHelper.SendAsync(Client, ServerUri, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
+        _ = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
     }
 
     public virtual async Task<MasterServerResponse<ImmutableList<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(
@@ -180,7 +173,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetCampaignLeaderBoard";
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GetGameXml(titleId), authorXml: null, RequestName, @$"
+        var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, @$"
             <f>{offset}</f>
             <n>{count}</n>
             <c>{campaignId ?? titleId}</c>
@@ -213,7 +206,7 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
         CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetMapLeaderBoard";
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GetGameXml(titleId), authorXml: null, RequestName, @$"
+        var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, @$"
             <m>{mapUid}</m>
             <n>{count}</n>
             <f>{offset}</f>
@@ -255,8 +248,8 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
             i++;
         }
 
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GetGameXml(titleId), authorXml: null, RequestName, sb.ToString(), cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
+        var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, sb.ToString(), cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
         {
             var summaries = ImmutableList.CreateBuilder<CampaignSummary>();
 
@@ -354,8 +347,8 @@ public class MasterServerMP4 : MasterServer, IMasterServerMP4
             i++;
         }
 
-        var response = await XmlHelper.SendAsync(Client, ServerUri, GetGameXml(titleId), authorXml: null, RequestName, sb.ToString(), cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref MiniXmlReader xml) =>
+        var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, sb.ToString(), cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
         {
             var summaries = ImmutableList.CreateBuilder<MapSummary>();
 

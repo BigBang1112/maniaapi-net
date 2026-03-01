@@ -1,5 +1,7 @@
 using ManiaAPI.TMX.Attributes;
+using ManiaAPI.TMX.Converters;
 using System.Collections.Immutable;
+using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TMX;
 
@@ -28,7 +30,7 @@ public sealed record MapItem : IItem
     public int Difficulty { get; set; }
     public MapMedals Medals { get; set; }
     public int? CustomLength { get; set; }
-    public int Length { get; set; }
+    [JsonConverter(typeof(JsonBuggedInt32Converter))] public int Length { get; set; }
     public int AwardCount { get; set; }
     public int CommentCount { get; set; }
     public int DownloadCount { get; set; }
