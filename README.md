@@ -509,7 +509,7 @@ Wraps:
 ### Setup
 
 
-> [!WARNING] \
+> [!WARNING]
 > Note that `TMX` and `MX` are classes for covering different sets of games. Examples below will mostly use `TMX`. But you can use them with `MX` too.
 
 ```cs
