@@ -58,6 +58,53 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
         return (await GetWaitingParamsResponseAsync(login, cancellationToken)).Result;
     }
 
+    public virtual async Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default)
+    {
+        return await InitServerMP.GetAccountFromSteamUserResponseAsync(Client, GameXml, steamId, cancellationToken);
+    }
+
+    public async Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return (await GetAccountFromSteamUserResponseAsync(steamId, cancellationToken)).Result;
+        }
+        catch (XmlRequestException ex)
+        {
+            if (ex.Value == 404)
+            {
+                return null;
+            }
+
+            throw;
+        }
+    }
+
+    public virtual async Task<MasterServerResponse<ImmutableList<WebIdentityPlayer>>> GetWebIdentityFromManiaplanetLoginResponseAsync(IEnumerable<string> logins, CancellationToken cancellationToken = default)
+    {
+        return await InitServerMP.GetWebIdentityFromManiaplanetLoginResponseAsync(Client, GameXml, logins, cancellationToken);
+    }
+
+    public async Task<MasterServerResponse<ImmutableList<WebIdentityPlayer>>> GetWebIdentityFromManiaplanetLoginResponseAsync(params string[] logins)
+    {
+        return await GetWebIdentityFromManiaplanetLoginResponseAsync(logins, cancellationToken: default);
+    }
+
+    public async Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(IEnumerable<string> logins, CancellationToken cancellationToken = default)
+    {
+        return (await GetWebIdentityFromManiaplanetLoginResponseAsync(logins, cancellationToken)).Result;
+    }
+
+    public async Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(params string[] logins)
+    {
+        return await GetWebIdentityFromManiaplanetLoginAsync(logins, cancellationToken: default);
+    }
+
+    public async Task<WebIdentityPlayer?> GetWebIdentityFromManiaplanetLoginAsync(string login, CancellationToken cancellationToken = default)
+    {
+        return (await GetWebIdentityFromManiaplanetLoginAsync([login], cancellationToken)).FirstOrDefault();
+    }
+
     public virtual async Task<MasterServerResponse<ImmutableList<SummaryZone<int>>>> GetCampaignLeaderBoardSummariesResponseAsync(IEnumerable<string> zones, CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetCampaignLeaderBoardSummaries";

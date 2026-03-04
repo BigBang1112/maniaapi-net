@@ -1,9 +1,9 @@
-﻿using ManiaAPI.Xml.MP3;
-using ManiaAPI.Xml.MP4;
+﻿using ManiaAPI.Xml.MP4;
+using System;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace ManiaAPI.Xml.Tests.Unit;
+namespace ManiaAPI.Xml.Tests.Integration;
 
 public class MasterServerMP4Tests
 {
@@ -45,6 +45,26 @@ public class MasterServerMP4Tests
         var login = await server.GetAccountFromSteamUserAsync(76561198060959523);
 
         Assert.NotNull(login);
+    }
+
+    [Fact]
+    public async Task GetAccountFromUplayUserAsync_ReturnsLogin()
+    {
+        var server = new MasterServerMP4();
+
+        var login = await server.GetAccountFromUplayUserAsync(Guid.Parse("0bca2165-693d-41de-b723-632966e8de74"));
+
+        Assert.NotNull(login);
+    }
+
+    [Fact]
+    public async Task GetWebIdentityFromManiaplanetLoginAsync_ReturnsWebIdentities()
+    {
+        var server = new MasterServerMP4();
+
+        var webIdentities = await server.GetWebIdentityFromManiaplanetLoginAsync("futurecat", "riolu", "eddyey");
+
+        Assert.NotEmpty(webIdentities);
     }
 
     [Fact]
