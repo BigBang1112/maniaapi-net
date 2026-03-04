@@ -6,11 +6,16 @@ namespace ManiaAPI.Xml;
 
 public interface IMasterServerMP : IMasterServer
 {
-    Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default);
-    Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default);
-
     Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string login, CancellationToken cancellationToken = default);
     Task<WaitingParams> GetWaitingParamsAsync(string login, CancellationToken cancellationToken = default);
+
+    Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default);
+    Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<WebIdentityPlayer>>> GetWebIdentityFromManiaplanetLoginResponseAsync(IEnumerable<string> logins, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<WebIdentityPlayer>>> GetWebIdentityFromManiaplanetLoginResponseAsync(params string[] logins);
+    Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(IEnumerable<string> logins, CancellationToken cancellationToken = default);
+    Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(params string[] logins);
+    Task<WebIdentityPlayer?> GetWebIdentityFromManiaplanetLoginAsync(string login, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets multiple multiplayer leaderboard summaries in a single request.
@@ -59,22 +64,7 @@ public abstract class MasterServerMP : MasterServer, IMasterServerMP
 
     public virtual async Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default)
     {
-        const string RequestName = "GetAccountFromSteamUser";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, $"<i>{steamId}</i>", cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
-        {
-            while (xml.TryReadStartElement(out var infoElement))
-            {
-                switch (infoElement)
-                {
-                    case "l":
-                        return xml.ReadContentAsString();
-                }
-                _ = xml.SkipEndElement();
-            }
-
-            throw new InvalidOperationException("Unexpected response format: missing 'l' element.");
-        });
+        return await InitServerMP.GetAccountFromSteamUserResponseAsync(Client, GameXml, steamId, cancellationToken);
     }
 
     public async Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default)
@@ -92,6 +82,31 @@ public abstract class MasterServerMP : MasterServer, IMasterServerMP
 
             throw;
         }
+    }
+
+    public virtual async Task<MasterServerResponse<ImmutableList<WebIdentityPlayer>>> GetWebIdentityFromManiaplanetLoginResponseAsync(IEnumerable<string> logins, CancellationToken cancellationToken = default)
+    {
+        return await InitServerMP.GetWebIdentityFromManiaplanetLoginResponseAsync(Client, GameXml, logins, cancellationToken);
+    }
+
+    public async Task<MasterServerResponse<ImmutableList<WebIdentityPlayer>>> GetWebIdentityFromManiaplanetLoginResponseAsync(params string[] logins)
+    {
+        return await GetWebIdentityFromManiaplanetLoginResponseAsync(logins, cancellationToken: default);
+    }
+
+    public async Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(IEnumerable<string> logins, CancellationToken cancellationToken = default)
+    {
+        return (await GetWebIdentityFromManiaplanetLoginResponseAsync(logins, cancellationToken)).Result;
+    }
+
+    public async Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(params string[] logins)
+    {
+        return await GetWebIdentityFromManiaplanetLoginAsync(logins, cancellationToken: default);
+    }
+
+    public async Task<WebIdentityPlayer?> GetWebIdentityFromManiaplanetLoginAsync(string login, CancellationToken cancellationToken = default)
+    {
+        return (await GetWebIdentityFromManiaplanetLoginAsync([login], cancellationToken)).FirstOrDefault();
     }
 
     public virtual async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string login, CancellationToken cancellationToken = default)

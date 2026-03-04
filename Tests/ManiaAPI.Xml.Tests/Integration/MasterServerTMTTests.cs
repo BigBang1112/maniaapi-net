@@ -1,11 +1,10 @@
-﻿using ManiaAPI.Xml.MP4;
+﻿using ManiaAPI.Xml.MP3;
 using ManiaAPI.Xml.TMT;
-using ManiaAPI.Xml.TMUF;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace ManiaAPI.Xml.Tests.Unit;
+namespace ManiaAPI.Xml.Tests.Integration;
 
 public class MasterServerTMTTests
 {
@@ -53,6 +52,37 @@ public class MasterServerTMTTests
 
         Assert.NotEmpty(waitingParams.MasterServers);
         Assert.NotEmpty(waitingParams2.MasterServers);
+    }
+
+    [Theory]
+    [InlineData(Platform.PC)]
+    [InlineData(Platform.XB1)]
+    [InlineData(Platform.PS4)]
+    public async Task GetAccountFromSteamUserAsync_ReturnsLogin(Platform platform)
+    {
+        var server = new InitServerTMT(platform);
+        var login1 = await server.GetAccountFromSteamUserAsync(76561198060959523);
+        var waitingParams = await server.GetWaitingParamsAsync();
+        var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+
+        var login2 = await masterServer.GetAccountFromSteamUserAsync(76561198060959523);
+
+        Assert.Null(login1);
+        Assert.Null(login2);
+    }
+
+    [Fact]
+    public async Task GetWebIdentityFromManiaplanetLoginAsync_ReturnsWebIdentities()
+    {
+        var server = new InitServerTMT(Platform.PC);
+        var identity1 = await server.GetWebIdentityFromManiaplanetLoginAsync("zojytyxy-pc56f3bdff95566");
+        var waitingParams = await server.GetWaitingParamsAsync();
+        var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+
+        var identity2 = await masterServer.GetWebIdentityFromManiaplanetLoginAsync("zojytyxy-pc56f3bdff95566");
+
+        Assert.NotNull(identity1);
+        Assert.NotNull(identity2);
     }
 
     [Theory]

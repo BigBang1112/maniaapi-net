@@ -10,6 +10,9 @@ namespace ManiaAPI.Xml.MP4;
 
 public interface IMasterServerMP4 : IMasterServerMP
 {
+    Task<MasterServerResponse<string>> GetAccountFromUplayUserResponseAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<string?> GetAccountFromUplayUserAsync(Guid id, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Gets the campaign leaderboard. If <paramref name="campaignId"/> is <see langword="null"/>, it will use the <paramref name="titleId"/> instead.
     /// </summary>
@@ -161,6 +164,16 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
     {
         const string RequestName = "GetApplicationConfig";
         _ = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
+    }
+
+    public virtual async Task<MasterServerResponse<string>> GetAccountFromUplayUserResponseAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await InitServerMP4.GetAccountFromUplayUserResponseAsync(Client, GameXml, id, cancellationToken);
+    }
+
+    public async Task<string?> GetAccountFromUplayUserAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return (await GetAccountFromUplayUserResponseAsync(id, cancellationToken)).Result;
     }
 
     public virtual async Task<MasterServerResponse<ImmutableList<LeaderboardItem<uint>>>> GetCampaignLeaderBoardResponseAsync(

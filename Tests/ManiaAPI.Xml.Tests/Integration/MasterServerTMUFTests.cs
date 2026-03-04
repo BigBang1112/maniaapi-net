@@ -1,10 +1,9 @@
-﻿using ManiaAPI.Xml.MP4;
-using ManiaAPI.Xml.TMUF;
+﻿using ManiaAPI.Xml.TMUF;
 using System;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace ManiaAPI.Xml.Tests.Unit;
+namespace ManiaAPI.Xml.Tests.Integration;
 
 public class MasterServerTMUFTests
 {

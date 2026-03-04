@@ -1,14 +1,24 @@
 ﻿using System.Collections.Immutable;
 using System.Net.Http.Headers;
+using System.Text;
 
 namespace ManiaAPI.Xml;
 
 public interface IInitServerMP : IDisposable
 {
     HttpClient Client { get; }
-
+    
     Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(string? login = null, CancellationToken cancellationToken = default);
     Task<WaitingParams> GetWaitingParamsAsync(string? login = null, CancellationToken cancellationToken = default);
+
+    Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default);
+    Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<WebIdentityPlayer>>> GetWebIdentityFromManiaplanetLoginResponseAsync(IEnumerable<string> logins, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<WebIdentityPlayer>>> GetWebIdentityFromManiaplanetLoginResponseAsync(params string[] logins);
+    Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(IEnumerable<string> logins, CancellationToken cancellationToken = default);
+    Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(params string[] logins);
+    Task<WebIdentityPlayer?> GetWebIdentityFromManiaplanetLoginAsync(string login, CancellationToken cancellationToken = default);
+
     Task<MasterServerResponse> TestAsync(CancellationToken cancellationToken = default);
 }
 
@@ -64,10 +74,51 @@ public abstract class InitServerMP : IInitServerMP
         return (await GetWaitingParamsResponseAsync(login, cancellationToken)).Result;
     }
 
-    public virtual void Dispose()
+    public virtual async Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(ulong steamId, CancellationToken cancellationToken = default)
     {
-        Client.Dispose();
-        GC.SuppressFinalize(this);
+        return await GetAccountFromSteamUserResponseAsync(Client, GameXml, steamId, cancellationToken);
+    }
+
+    public async Task<string?> GetAccountFromSteamUserAsync(ulong steamId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return (await GetAccountFromSteamUserResponseAsync(steamId, cancellationToken)).Result;
+        }
+        catch (XmlRequestException ex)
+        {
+            if (ex.Value == 404)
+            {
+                return null;
+            }
+
+            throw;
+        }
+    }
+
+    public virtual async Task<MasterServerResponse<ImmutableList<WebIdentityPlayer>>> GetWebIdentityFromManiaplanetLoginResponseAsync(IEnumerable<string> logins, CancellationToken cancellationToken = default)
+    {
+        return await GetWebIdentityFromManiaplanetLoginResponseAsync(Client, GameXml, logins, cancellationToken);
+    }
+
+    public async Task<MasterServerResponse<ImmutableList<WebIdentityPlayer>>> GetWebIdentityFromManiaplanetLoginResponseAsync(params string[] logins)
+    {
+        return await GetWebIdentityFromManiaplanetLoginResponseAsync(logins, cancellationToken: default);
+    }
+
+    public async Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(IEnumerable<string> logins, CancellationToken cancellationToken = default)
+    {
+        return (await GetWebIdentityFromManiaplanetLoginResponseAsync(logins, cancellationToken)).Result;
+    }
+
+    public async Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(params string[] logins)
+    {
+        return await GetWebIdentityFromManiaplanetLoginAsync(logins, cancellationToken: default);
+    }
+
+    public async Task<WebIdentityPlayer?> GetWebIdentityFromManiaplanetLoginAsync(string login, CancellationToken cancellationToken = default)
+    {
+        return (await GetWebIdentityFromManiaplanetLoginAsync([login], cancellationToken)).FirstOrDefault();
     }
 
     public virtual async Task<MasterServerResponse> TestAsync(CancellationToken cancellationToken = default)
@@ -77,7 +128,33 @@ public abstract class InitServerMP : IInitServerMP
         return XmlHelper.ProcessResponseResult(response);
     }
 
-    internal static async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(HttpClient client, string gameXml, string? login = null, CancellationToken cancellationToken = default)
+    public virtual void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    internal static async Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(HttpClient client, string gameXml, ulong steamId, CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "GetAccountFromSteamUser";
+        var response = await XmlHelper.SendAsync(client, gameXml, authorXml: null, RequestName, $"<i>{steamId}</i>", cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
+        {
+            while (xml.TryReadStartElement(out var infoElement))
+            {
+                switch (infoElement)
+                {
+                    case "l":
+                        return xml.ReadContentAsString();
+                }
+                _ = xml.SkipEndElement();
+            }
+
+            throw new InvalidOperationException("Unexpected response format: missing 'l' element.");
+        });
+    }
+
+    internal static async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(HttpClient client, string gameXml, string? login, CancellationToken cancellationToken)
     {
         const string RequestName = "GetWaitingParams";
         var authorXml = login is null ? null : $"<author><login>{login}</login></author>";
@@ -143,6 +220,75 @@ public abstract class InitServerMP : IInitServerMP
             }
 
             return new WaitingParams(waitingQueueDuration, waitingQueueMessage, masterServers.ToImmutable());
+        });
+    }
+
+    internal static async Task<MasterServerResponse<ImmutableList<WebIdentityPlayer>>> GetWebIdentityFromManiaplanetLoginResponseAsync(HttpClient client, string gameXml, IEnumerable<string> logins, CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "GetWebIdentityFromManiaplanetLogin";
+
+        var sb = new StringBuilder();
+        var i = 1;
+        foreach (var login in logins)
+        {
+            sb.Append($"\n<l{i}>{login}</l{i}>");
+            i++;
+        }
+
+        var response = await XmlHelper.SendAsync(client, gameXml, authorXml: null, RequestName, sb.ToString(), cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
+        {
+            var players = ImmutableList.CreateBuilder<WebIdentityPlayer>();
+
+            while (xml.TryReadStartElement("p"))
+            {
+                var login = string.Empty;
+                var webIdentities = ImmutableList.CreateBuilder<WebIdentity>();
+
+                while (xml.TryReadStartElement(out var itemElement))
+                {
+                    switch (itemElement)
+                    {
+                        case "l":
+                            login = xml.ReadContentAsString();
+                            break;
+                        case "w":
+                            var name = string.Empty;
+                            var id = string.Empty;
+
+                            while (xml.TryReadStartElement(out var webIdentityElement))
+                            {
+                                switch (webIdentityElement)
+                                {
+                                    case "d":
+                                        name = xml.ReadContentAsString();
+                                        break;
+                                    case "i":
+                                        id = xml.ReadContentAsString();
+                                        break;
+                                    default:
+                                        xml.ReadContent();
+                                        break;
+                                }
+                                _ = xml.SkipEndElement();
+                            }
+
+                            webIdentities.Add(new WebIdentity(name, id));
+                            break;
+                        default:
+                            xml.ReadContent();
+                            break;
+                    }
+
+                    _ = xml.SkipEndElement();
+                }
+
+                players.Add(new WebIdentityPlayer(login, webIdentities.ToImmutable()));
+
+                _ = xml.SkipEndElement(); // p
+            }
+
+            return players.ToImmutable();
         });
     }
 }
