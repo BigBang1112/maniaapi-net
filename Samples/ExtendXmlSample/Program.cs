@@ -92,83 +92,83 @@ foreach (var line in platformLoginNicknamePairs.Skip(120))
 
 internal class ExtendedMasterServerTMT : MasterServerTMT
 {
-    public ExtendedMasterServerTMT(MasterServerInfo info) : base(info)
-    {
-    }
+    public ExtendedMasterServerTMT(MasterServerInfo info) : base(info) { }
 
     public async Task<MasterServerResponse<RecordsComparison>> GetChallengeRecordsComparisonResponseAsync(string login, string authorLogin, int sessionId, CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetChallengeRecordsComparison";
-        return await RequestAsync($"<author><login>{authorLogin}</login><session>{sessionId}</session></author>",
-            RequestName, $"<ol>{login}</ol>", (ref MiniXmlReader xml) =>
+
+        var authorXml = $"<author><login>{authorLogin}</login><session>{sessionId}</session></author>";
+
+        return await RequestAsync(RequestName, authorXml, $"<ol>{login}</ol>", (ref xml) =>
+        {
+            var mainTimestmap = default(DateTimeOffset);
+            var login = string.Empty;
+            var opponentLogin = string.Empty;
+            var records = ImmutableList.CreateBuilder<RecordComparison>();
+
+            while (xml.TryReadStartElement(out var element))
             {
-                var mainTimestmap = default(DateTimeOffset);
-                var login = string.Empty;
-                var opponentLogin = string.Empty;
-                var records = ImmutableList.CreateBuilder<RecordComparison>();
-
-                while (xml.TryReadStartElement(out var element))
+                switch (element)
                 {
-                    switch (element)
-                    {
-                        case "t":
-                            mainTimestmap = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
-                            break;
-                        case "l":
-                            login = xml.ReadContentAsString();
-                            break;
-                        case "ol":
-                            opponentLogin = xml.ReadContentAsString();
-                            break;
-                        case "v":
-                            var mapUid = string.Empty;
-                            var score = default(TimeInt32);
-                            var timestamp = default(DateTimeOffset);
-                            var opponentScore = default(TimeInt32);
-                            var opponentTimestamp = default(DateTimeOffset);
-                            var opponentDownloadUrl = string.Empty;
+                    case "t":
+                        mainTimestmap = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                        break;
+                    case "l":
+                        login = xml.ReadContentAsString();
+                        break;
+                    case "ol":
+                        opponentLogin = xml.ReadContentAsString();
+                        break;
+                    case "v":
+                        var mapUid = string.Empty;
+                        var score = default(TimeInt32);
+                        var timestamp = default(DateTimeOffset);
+                        var opponentScore = default(TimeInt32);
+                        var opponentTimestamp = default(DateTimeOffset);
+                        var opponentDownloadUrl = string.Empty;
 
-                            while (xml.TryReadStartElement(out var subElement))
+                        while (xml.TryReadStartElement(out var subElement))
+                        {
+                            switch (subElement)
                             {
-                                switch (subElement)
-                                {
-                                    case "c":
-                                        mapUid = xml.ReadContentAsString();
-                                        break;
-                                    case "r":
-                                        score = new TimeInt32((int)uint.Parse(xml.ReadContent()));
-                                        break;
-                                    case "d":
-                                        timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
-                                        break;
-                                    case "or":
-                                        opponentScore = new TimeInt32((int)uint.Parse(xml.ReadContent()));
-                                        break;
-                                    case "od":
-                                        opponentTimestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
-                                        break;
-                                    case "ou":
-                                        opponentDownloadUrl = xml.ReadContentAsString();
-                                        break;
-                                    default:
-                                        xml.ReadContent();
-                                        break;
-                                }
-                                _ = xml.SkipEndElement();
+                                case "c":
+                                    mapUid = xml.ReadContentAsString();
+                                    break;
+                                case "r":
+                                    score = new TimeInt32((int)uint.Parse(xml.ReadContent()));
+                                    break;
+                                case "d":
+                                    timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                                    break;
+                                case "or":
+                                    opponentScore = new TimeInt32((int)uint.Parse(xml.ReadContent()));
+                                    break;
+                                case "od":
+                                    opponentTimestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                                    break;
+                                case "ou":
+                                    opponentDownloadUrl = xml.ReadContentAsString();
+                                    break;
+                                default:
+                                    xml.ReadContent();
+                                    break;
                             }
+                            _ = xml.SkipEndElement();
+                        }
 
-                            records.Add(new RecordComparison(mapUid, score, timestamp, opponentScore, opponentTimestamp, opponentDownloadUrl));
-                            break;
-                        default:
-                            xml.ReadContent();
-                            break;
-                    }
-
-                    _ = xml.SkipEndElement();
+                        records.Add(new RecordComparison(mapUid, score, timestamp, opponentScore, opponentTimestamp, opponentDownloadUrl));
+                        break;
+                    default:
+                        xml.ReadContent();
+                        break;
                 }
 
-                return new RecordsComparison(mainTimestmap, login, opponentLogin, records.ToImmutable());
-            }, cancellationToken);
+                _ = xml.SkipEndElement();
+            }
+
+            return new RecordsComparison(mainTimestmap, login, opponentLogin, records.ToImmutable());
+        }, cancellationToken);
     }
 
     public async Task<RecordsComparison> GetChallengeRecordsComparisonAsync(string login, string authorLogin, int sessionId, CancellationToken cancellationToken = default)

@@ -19,6 +19,7 @@ internal static class AnyServerMP
     public static async Task<MasterServerResponse<string>> GetAccountFromSteamUserResponseAsync(HttpClient client, string gameXml, ulong steamId, CancellationToken cancellationToken = default)
     {
         const string RequestName = "GetAccountFromSteamUser";
+
         var response = await XmlHelper.SendAsync(client, gameXml, authorXml: null, RequestName, $"<i>{steamId}</i>", cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
         {

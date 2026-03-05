@@ -41,8 +41,8 @@ public abstract class AnyServer : IAnyServer
     protected AnyServer(Uri uri) : this(new HttpClient { BaseAddress = uri }) { }
 
     protected async Task<MasterServerResponse<T>> RequestAsync<T>(
-        string? authorXml,
         string requestName,
+        string? authorXml,
         string parametersXml,
         XmlProcessContent<T> processContent,
         CancellationToken cancellationToken = default) where T : notnull

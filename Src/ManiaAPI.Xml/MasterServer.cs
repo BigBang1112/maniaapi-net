@@ -20,9 +20,7 @@ public abstract class MasterServer : AnyServer, IMasterServer
 
     public virtual async Task<MasterServerResponse<ImmutableList<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default)
     {
-        const string RequestName = "GetLeagues";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
+        return await RequestAsync("GetLeagues", authorXml: null, parametersXml: string.Empty, (ref xml) =>
         {
             var items = ImmutableList.CreateBuilder<League>();
 
@@ -59,7 +57,8 @@ public abstract class MasterServer : AnyServer, IMasterServer
             }
 
             return items.ToImmutable();
-        });
+
+        }, cancellationToken);
     }
 
     public async Task<ImmutableList<League>> GetLeaguesAsync(CancellationToken cancellationToken = default)
@@ -69,10 +68,7 @@ public abstract class MasterServer : AnyServer, IMasterServer
 
     public virtual async Task<MasterServerResponse<PlayerInfos>> GetPlayerInfosResponseAsync(string login, CancellationToken cancellationToken = default)
     {
-        const string RequestName = "GetPlayerInfos";
-        var parametersXml = $"<login>{login}</login>";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, parametersXml, cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
+        return await RequestAsync("GetPlayerInfos", authorXml: null, $"<login>{login}</login>", (ref xml) =>
         {
             var nickname = string.Empty;
             var zone = string.Empty;
@@ -115,7 +111,8 @@ public abstract class MasterServer : AnyServer, IMasterServer
             }
 
             return new PlayerInfos(login, nickname, zone, createdAt, d, lastZoneUpdate, k);
-        });
+
+        }, cancellationToken);
     }
 
     public async Task<PlayerInfos> GetPlayerInfosAsync(string login, CancellationToken cancellationToken = default)
@@ -125,10 +122,7 @@ public abstract class MasterServer : AnyServer, IMasterServer
 
     public virtual async Task<MasterServerResponse<CheckLoginResult>> CheckLoginResponseAsync(string login, CancellationToken cancellationToken = default)
     {
-        const string RequestName = "CheckLogin";
-        var parametersXml = $"<l>{login}</l>";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, parametersXml, cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
+        return await RequestAsync("CheckLogin", authorXml: null, $"<l>{login}</l>", (ref xml) =>
         {
             var exists = false;
             var paid = default(bool?);
@@ -155,7 +149,8 @@ public abstract class MasterServer : AnyServer, IMasterServer
             }
 
             return new CheckLoginResult(exists, paid, migrated);
-        });
+
+        }, cancellationToken);
     }
 
     public async Task<CheckLoginResult> CheckLoginAsync(string login, CancellationToken cancellationToken = default)
