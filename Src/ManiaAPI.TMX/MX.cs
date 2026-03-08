@@ -5,7 +5,7 @@ namespace ManiaAPI.TMX;
 
 public interface IMX : IClient
 {
-    TmxSite Site { get; }
+    MxSite Site { get; }
     string SiteName { get; }
 
     string GetMapGbxUrl(long mapId);
@@ -67,10 +67,10 @@ public interface IMX : IClient
 public partial class MX : IMX
 {
     public HttpClient Client { get; }
-    public TmxSite Site { get; }
+    public MxSite Site { get; }
     public string SiteName { get; }
 
-    public MX(HttpClient client, TmxSite site)
+    public MX(HttpClient client, MxSite site)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
 
@@ -91,16 +91,16 @@ public partial class MX : IMX
         SiteName = site.ToString();
 
         var url = site switch {
-            TmxSite.Maniaplanet => "https://tm.mania.exchange/",
-            TmxSite.Trackmania => "https://trackmania.exchange/",
-            TmxSite.Shootmania => "https://sm.mania.exchange/",
+            MxSite.Maniaplanet => "https://tm.mania.exchange/",
+            MxSite.Trackmania => "https://trackmania.exchange/",
+            MxSite.Shootmania => "https://sm.mania.exchange/",
             _ => throw new NotImplementedException()
         };
 
         Client.BaseAddress = new Uri(url);
     }
 
-    public MX(TmxSite site) : this(new HttpClient(), site) { }
+    public MX(MxSite site) : this(new HttpClient(), site) { }
 
 
     public string GetMapGbxUrl(long mapId) => $"{Client.BaseAddress}mapgbx/{mapId}";
