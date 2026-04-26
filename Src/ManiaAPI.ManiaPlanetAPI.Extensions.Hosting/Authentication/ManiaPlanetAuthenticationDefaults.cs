@@ -9,4 +9,5 @@ public static class ManiaPlanetAuthenticationDefaults
     public const string AuthorizationEndpoint = "https://prod.live.maniaplanet.com/login/oauth2/authorize";
     public const string TokenEndpoint = "https://prod.live.maniaplanet.com/login/oauth2/access_token";
     public const string UserInformationEndpoint = "https://prod.live.maniaplanet.com/webservices/me";
+    public const string EmailEndpoint = "https://prod.live.maniaplanet.com/webservices/me/email";
 }

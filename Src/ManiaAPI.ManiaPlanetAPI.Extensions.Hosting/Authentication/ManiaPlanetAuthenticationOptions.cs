@@ -6,6 +6,8 @@ namespace ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Authentication;
 
 public class ManiaPlanetAuthenticationOptions : OAuthOptions
 {
+    public string EmailEndpoint { get; set; } = ManiaPlanetAuthenticationDefaults.EmailEndpoint;
+
     public ManiaPlanetAuthenticationOptions()
     {
         ClaimsIssuer = ManiaPlanetAuthenticationDefaults.Issuer;

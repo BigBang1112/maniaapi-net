@@ -1,68 +1,26 @@
 ﻿using System.Collections.Immutable;
-using System.Net.Http.Headers;
 
 namespace ManiaAPI.Xml;
 
-public interface IMasterServer : IDisposable
+public interface IMasterServer : IAnyServer, IDisposable
 {
-    HttpClient Client { get; }
-
     Task<MasterServerResponse<ImmutableList<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default);
     Task<ImmutableList<League>> GetLeaguesAsync(CancellationToken cancellationToken = default);
     Task<MasterServerResponse<PlayerInfos>> GetPlayerInfosResponseAsync(string login, CancellationToken cancellationToken = default);
     Task<PlayerInfos> GetPlayerInfosAsync(string login, CancellationToken cancellationToken = default);
     Task<MasterServerResponse<CheckLoginResult>> CheckLoginResponseAsync(string login, CancellationToken cancellationToken = default);
     Task<CheckLoginResult> CheckLoginAsync(string login, CancellationToken cancellationToken = default);
-    Task<MasterServerResponse> TestAsync(CancellationToken cancellationToken = default);
 }
 
-public abstract class MasterServer : IMasterServer
+public abstract class MasterServer : AnyServer, IMasterServer
 {
-    public HttpClient Client { get; }
+    protected MasterServer(HttpClient client) : base(client) { }
 
-    protected abstract string GameXml { get; }
-
-    protected MasterServer(HttpClient client)
-    {
-        Client = client;
-
-        var headers = Client.DefaultRequestHeaders;
-
-        const string product = "ManiaAPI.NET";
-        const string version = "2.7.0";
-
-        var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
-
-        if (!libraryExists)
-        {
-            headers.UserAgent.Add(new ProductInfoHeaderValue(product, version));
-            headers.UserAgent.Add(new ProductInfoHeaderValue("(Xml; Email=petrpiv1@gmail.com; Discord=bigbang1112)"));
-        }
-
-        if (client.BaseAddress is null)
-        {
-            throw new ArgumentException("BaseAddress must be set for MasterServer", nameof(client));
-        }
-    }
-
-    protected MasterServer(Uri uri) : this(new HttpClient { BaseAddress = uri }) { }
-
-    protected async Task<MasterServerResponse<T>> RequestAsync<T>(
-        string? authorXml,
-        string requestName,
-        string parametersXml,
-        XmlProcessContent<T> processContent,
-        CancellationToken cancellationToken = default) where T : notnull
-    {
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml, requestName, parametersXml, cancellationToken);
-        return XmlHelper.ProcessResponseResult(requestName, response, processContent);
-    }
+    protected MasterServer(Uri uri) : base(uri) { }
 
     public virtual async Task<MasterServerResponse<ImmutableList<League>>> GetLeaguesResponseAsync(CancellationToken cancellationToken = default)
     {
-        const string RequestName = "GetLeagues";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
+        return await RequestAsync("GetLeagues", authorXml: null, parametersXml: string.Empty, (ref xml) =>
         {
             var items = ImmutableList.CreateBuilder<League>();
 
@@ -99,7 +57,8 @@ public abstract class MasterServer : IMasterServer
             }
 
             return items.ToImmutable();
-        });
+
+        }, cancellationToken);
     }
 
     public async Task<ImmutableList<League>> GetLeaguesAsync(CancellationToken cancellationToken = default)
@@ -109,10 +68,7 @@ public abstract class MasterServer : IMasterServer
 
     public virtual async Task<MasterServerResponse<PlayerInfos>> GetPlayerInfosResponseAsync(string login, CancellationToken cancellationToken = default)
     {
-        const string RequestName = "GetPlayerInfos";
-        var parametersXml = $"<login>{login}</login>";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, parametersXml, cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
+        return await RequestAsync("GetPlayerInfos", authorXml: null, $"<login>{login}</login>", (ref xml) =>
         {
             var nickname = string.Empty;
             var zone = string.Empty;
@@ -155,7 +111,8 @@ public abstract class MasterServer : IMasterServer
             }
 
             return new PlayerInfos(login, nickname, zone, createdAt, d, lastZoneUpdate, k);
-        });
+
+        }, cancellationToken);
     }
 
     public async Task<PlayerInfos> GetPlayerInfosAsync(string login, CancellationToken cancellationToken = default)
@@ -165,10 +122,7 @@ public abstract class MasterServer : IMasterServer
 
     public virtual async Task<MasterServerResponse<CheckLoginResult>> CheckLoginResponseAsync(string login, CancellationToken cancellationToken = default)
     {
-        const string RequestName = "CheckLogin";
-        var parametersXml = $"<l>{login}</l>";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, parametersXml, cancellationToken);
-        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
+        return await RequestAsync("CheckLogin", authorXml: null, $"<l>{login}</l>", (ref xml) =>
         {
             var exists = false;
             var paid = default(bool?);
@@ -195,24 +149,12 @@ public abstract class MasterServer : IMasterServer
             }
 
             return new CheckLoginResult(exists, paid, migrated);
-        });
+
+        }, cancellationToken);
     }
 
     public async Task<CheckLoginResult> CheckLoginAsync(string login, CancellationToken cancellationToken = default)
     {
         return (await CheckLoginResponseAsync(login, cancellationToken)).Result;
-    }
-
-    public virtual async Task<MasterServerResponse> TestAsync(CancellationToken cancellationToken = default)
-    {
-        const string RequestName = "Test";
-        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, string.Empty, cancellationToken);
-        return XmlHelper.ProcessResponseResult(response);
-    }
-
-    public virtual void Dispose()
-    {
-        Client.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

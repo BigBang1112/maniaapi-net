@@ -19,14 +19,7 @@ internal class ManiaPlanetAuthenticationHandler(
                                                                           AuthenticationProperties properties,
                                                                           OAuthTokenResponse tokens)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, Options.UserInformationEndpoint);
-        request.Headers.Authorization = new AuthenticationHeaderValue(tokens.TokenType ?? "Bearer", tokens.AccessToken);
-
-        using var response = await Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, Context.RequestAborted);
-
-        response.EnsureSuccessStatusCode();
-
-        using var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Context.RequestAborted));
+        using var payload = JsonDocument.Parse(await RequestAsync(Options.UserInformationEndpoint, tokens));
 
         var principal = new ClaimsPrincipal(identity);
         var context = new OAuthCreatingTicketContext(
@@ -41,8 +34,30 @@ internal class ManiaPlanetAuthenticationHandler(
 
         context.RunClaimActions();
 
+        if (Options.Scope.Contains("email", StringComparer.OrdinalIgnoreCase))
+        {
+            var email = await RequestAsync(Options.EmailEndpoint, tokens);
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                identity.AddClaim(new(ClaimTypes.Email, email, ClaimValueTypes.String, Options.ClaimsIssuer ?? Scheme.Name));
+            }
+        }
+
         await Events.CreatingTicket(context);
 
         return await base.CreateTicketAsync(identity, properties, tokens);
+    }
+
+    private async Task<string> RequestAsync(string requestUri, OAuthTokenResponse tokens)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+        request.Headers.Authorization = new AuthenticationHeaderValue(tokens.TokenType ?? "Bearer", tokens.AccessToken);
+
+        using var response = await Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, Context.RequestAborted);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsStringAsync(Context.RequestAborted);
     }
 }

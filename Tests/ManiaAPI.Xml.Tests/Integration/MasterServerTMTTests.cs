@@ -1,5 +1,6 @@
 ﻿using ManiaAPI.Xml.MP3;
 using ManiaAPI.Xml.TMT;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -83,6 +84,20 @@ public class MasterServerTMTTests
 
         Assert.NotNull(identity1);
         Assert.NotNull(identity2);
+    }
+
+    [Fact]
+    public async Task GetManiaplanetLoginFromWebIdentityAsync_ReturnsLogins()
+    {
+        var server = new InitServerTMT(Platform.PC);
+        var login1 = await server.GetManiaplanetLoginFromWebIdentityAsync("ubiservices", Guid.Parse("31fba6f5-7beb-4ac3-a9d4-19665cb48ea2"));
+        var waitingParams = await server.GetWaitingParamsAsync();
+        var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+
+        var login2 = await masterServer.GetManiaplanetLoginFromWebIdentityAsync("ubiservices", Guid.Parse("31fba6f5-7beb-4ac3-a9d4-19665cb48ea2"));
+
+        Assert.NotNull(login1);
+        Assert.NotNull(login2);
     }
 
     [Theory]

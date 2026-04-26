@@ -68,6 +68,16 @@ public class MasterServerMP4Tests
     }
 
     [Fact]
+    public async Task GetManiaplanetLoginFromWebIdentityAsync_ReturnsLogins()
+    {
+        var server = new MasterServerMP4();
+
+        var login = await server.GetManiaplanetLoginFromWebIdentityAsync("uplay", Guid.Parse("e8c8b8eb-24d1-49ac-a368-036c6feac5c4"));
+
+        Assert.NotNull(login);
+    }
+
+    [Fact]
     public async Task GetWaitingParamsAsync_ReturnsMasterServers()
     {
         var server = new MasterServerMP4();

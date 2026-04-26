@@ -57,4 +57,14 @@ public class InitServerMP4Tests
 
         Assert.NotEmpty(webIdentities);
     }
+
+    [Fact]
+    public async Task GetManiaplanetLoginFromWebIdentityAsync_ReturnsLogins()
+    {
+        var server = new InitServerMP4();
+
+        var login = await server.GetManiaplanetLoginFromWebIdentityAsync("uplay", Guid.Parse("e8c8b8eb-24d1-49ac-a368-036c6feac5c4"));
+
+        Assert.NotNull(login);
+    }
 }

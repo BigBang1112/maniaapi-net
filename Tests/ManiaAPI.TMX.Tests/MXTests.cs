@@ -7,10 +7,10 @@ namespace ManiaAPI.TMX.Tests;
 public class MXTests
 {
     [Theory]
-    [InlineData(TmxSite.Trackmania)]
-    [InlineData(TmxSite.Maniaplanet)]
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
     // Medals don't exist on shootmania, so need to specify fields manually
-    public async Task SearchMapsAsync_Success(TmxSite site)
+    public async Task SearchMapsAsync_Success(MxSite site)
     {
         var tmx = new MX(site);
         var maps = await tmx.SearchMapsAsync(new ());
@@ -22,10 +22,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania, 120839)]
-    [InlineData(TmxSite.Maniaplanet, 224915)]
-    [InlineData(TmxSite.Shootmania, 5202)]
-    public async Task GetMapImageResponseAsync_Success(TmxSite site, long mapId)
+    [InlineData(MxSite.Trackmania, 120839)]
+    [InlineData(MxSite.Maniaplanet, 224915)]
+    [InlineData(MxSite.Shootmania, 5202)]
+    public async Task GetMapImageResponseAsync_Success(MxSite site, long mapId)
     {
         var tmx = new MX(site);
         var image = await tmx.GetMapImageResponseAsync(mapId);
@@ -35,10 +35,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania, 120839)]
-    [InlineData(TmxSite.Maniaplanet, 224915)]
-    [InlineData(TmxSite.Shootmania, 5202)]
-    public async Task GetMapScreenResponseAsync_Success(TmxSite site, long mapId)
+    [InlineData(MxSite.Trackmania, 120839)]
+    [InlineData(MxSite.Maniaplanet, 224915)]
+    [InlineData(MxSite.Shootmania, 5202)]
+    public async Task GetMapScreenResponseAsync_Success(MxSite site, long mapId)
     {
         var tmx = new MX(site);
         var image = await tmx.GetMapScreenResponseAsync(mapId);
@@ -48,10 +48,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania, 120839)]
-    [InlineData(TmxSite.Maniaplanet, 224915)]
-    [InlineData(TmxSite.Shootmania, 5202)]
-    public async Task GetMapThumbnailResponseAsync_Success(TmxSite site, long mapId)
+    [InlineData(MxSite.Trackmania, 120839)]
+    [InlineData(MxSite.Maniaplanet, 224915)]
+    [InlineData(MxSite.Shootmania, 5202)]
+    public async Task GetMapThumbnailResponseAsync_Success(MxSite site, long mapId)
     {
         var tmx = new MX(site);
         var image = await tmx.GetMapThumbnailResponseAsync(mapId);
@@ -59,10 +59,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania, 1729)]
-    [InlineData(TmxSite.Maniaplanet, 1388)]
-    [InlineData(TmxSite.Shootmania, 10)]
-    public async Task GetMappackThumbnailResponseAsync_Success(TmxSite site, long mappackId)
+    [InlineData(MxSite.Trackmania, 1729)]
+    [InlineData(MxSite.Maniaplanet, 1388)]
+    [InlineData(MxSite.Shootmania, 10)]
+    public async Task GetMappackThumbnailResponseAsync_Success(MxSite site, long mappackId)
     {
         var tmx = new MX(site);
         var image = await tmx.GetMappackThumbnailResponseAsync(mappackId);
@@ -70,10 +70,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania, 120839)]
-    [InlineData(TmxSite.Maniaplanet, 224915)]
+    [InlineData(MxSite.Trackmania, 120839)]
+    [InlineData(MxSite.Maniaplanet, 224915)]
     // no replays for shootmania
-    public async Task SearchReplaysAsync_Success(TmxSite site, long mapId)
+    public async Task SearchReplaysAsync_Success(MxSite site, long mapId)
     {
         var tmx = new MX(site);
         var replays = await tmx.SearchReplaysAsync(new MX.SearchReplaysParameters { MapId = mapId });
@@ -81,10 +81,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania)]
-    [InlineData(TmxSite.Maniaplanet)]
-    [InlineData(TmxSite.Shootmania)]
-    public async Task SearchUsersAsync_Success(TmxSite site)
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task SearchUsersAsync_Success(MxSite site)
     {
         var tmx = new MX(site);
         var users = await tmx.SearchUsersAsync(new ());
@@ -92,10 +92,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania)]
-    [InlineData(TmxSite.Maniaplanet)]
-    [InlineData(TmxSite.Shootmania)]
-    public async Task SearchVideosAsync_Success(TmxSite site)
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task SearchVideosAsync_Success(MxSite site)
     {
         var tmx = new MX(site);
         var videos = await tmx.SearchVideosAsync(new ());
@@ -103,10 +103,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania)]
-    [InlineData(TmxSite.Maniaplanet)]
-    [InlineData(TmxSite.Shootmania)]
-    public async Task SearchMappacksAsync_Success(TmxSite site)
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task SearchMappacksAsync_Success(MxSite site)
     {
         var tmx = new MX(site);
         var mappacks = await tmx.SearchMappacksAsync(new ());
@@ -114,10 +114,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania)]
-    [InlineData(TmxSite.Maniaplanet)]
-    [InlineData(TmxSite.Shootmania)]
-    public async Task GetMapSearchOrdersAsync_Success(TmxSite site)
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task GetMapSearchOrdersAsync_Success(MxSite site)
     {
         var tmx = new MX(site);
         var orders = await tmx.GetMapSearchOrdersAsync();
@@ -125,10 +125,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania)]
-    [InlineData(TmxSite.Maniaplanet)]
-    [InlineData(TmxSite.Shootmania)]
-    public async Task GetUserSearchOrdersAsync_Success(TmxSite site)
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task GetUserSearchOrdersAsync_Success(MxSite site)
     {
         var tmx = new MX(site);
         var orders = await tmx.GetUserSearchOrdersAsync();
@@ -136,10 +136,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania)]
-    [InlineData(TmxSite.Maniaplanet)]
-    [InlineData(TmxSite.Shootmania)]
-    public async Task GetMappackSearchOrdersAsync_Success(TmxSite site)
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task GetMappackSearchOrdersAsync_Success(MxSite site)
     {
         var tmx = new MX(site);
         var orders = await tmx.GetMappackSearchOrdersAsync();
@@ -147,10 +147,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania)]
-    [InlineData(TmxSite.Maniaplanet)]
-    [InlineData(TmxSite.Shootmania)]
-    public async Task GetTagsAsync_Success(TmxSite site)
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task GetTagsAsync_Success(MxSite site)
     {
         var tmx = new MX(site);
         var tags = await tmx.GetTagsAsync();
@@ -158,10 +158,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania)]
-    [InlineData(TmxSite.Maniaplanet)]
-    [InlineData(TmxSite.Shootmania)]
-    public async Task GetMaptypesAsync_Success(TmxSite site)
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task GetMaptypesAsync_Success(MxSite site)
     {
         var tmx = new MX(site);
         var maptypes = await tmx.GetMaptypesAsync();
@@ -169,10 +169,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania)]
-    [InlineData(TmxSite.Maniaplanet)]
-    [InlineData(TmxSite.Shootmania)]
-    public async Task GetVehiclesAsync_Success(TmxSite site)
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task GetVehiclesAsync_Success(MxSite site)
     {
         var tmx = new MX(site);
         var vehicles = await tmx.GetVehiclesAsync();
@@ -180,10 +180,10 @@ public class MXTests
     }
 
     [Theory]
-    [InlineData(TmxSite.Trackmania)]
-    [InlineData(TmxSite.Maniaplanet)]
-    [InlineData(TmxSite.Shootmania)]
-    public async Task GetTitlepacksAsync_Success(TmxSite site)
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task GetTitlepacksAsync_Success(MxSite site)
     {
         var tmx = new MX(site);
         var titlepacks = await tmx.GetTitlepacksAsync();

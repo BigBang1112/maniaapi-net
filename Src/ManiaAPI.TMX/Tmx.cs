@@ -153,6 +153,7 @@ public partial class TMX : ITMX
         [AsNumber] public bool? InSupporter { get; init; }
         [AsNumber] public bool? InHasRecord { get; init; }
         [AsNumber] public bool? InEnvMix { get; init; }
+        [AsNumber] public bool? InUnlimiter { get; init; }
         public TrackOrder? Order2 { get; init; } // no longer?
     }
 

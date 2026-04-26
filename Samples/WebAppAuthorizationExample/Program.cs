@@ -15,17 +15,27 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie()
     .AddManiaPlanet(options =>
     {
-        options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:Id"]!;
-        options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:Secret"]!;
+        options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:ClientId"]!;
+        options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:ClientSecret"]!;
 
         Array.ForEach(["basic", "dedicated", "titles"], options.Scope.Add);
 
         options.SaveTokens = true;
     })
+    .AddManiaPlanet("ManiaPlanetEmail", options =>
+    {
+        options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:ClientId"]!;
+        options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:ClientSecret"]!;
+        options.CallbackPath = "/signin-maniaplanet-email";
+
+        Array.ForEach(["basic", "dedicated", "titles", "email"], options.Scope.Add);
+
+        options.SaveTokens = true;
+    })
     .AddTrackmania(options =>
     {
-        options.ClientId = builder.Configuration["OAuth2:Trackmania:Id"]!;
-        options.ClientSecret = builder.Configuration["OAuth2:Trackmania:Secret"]!;
+        options.ClientId = builder.Configuration["OAuth2:Trackmania:ClientId"]!;
+        options.ClientSecret = builder.Configuration["OAuth2:Trackmania:ClientSecret"]!;
 
         options.SaveTokens = true;
     });
@@ -75,6 +85,11 @@ app.UseHttpsRedirection();
 app.MapGet("/login/maniaplanet", () =>
 {
     return TypedResults.Challenge(new() { RedirectUri = "/" }, [ManiaPlanetAuthenticationDefaults.AuthenticationScheme]);
+});
+
+app.MapGet("/login/maniaplanet-email", () =>
+{
+    return TypedResults.Challenge(new() { RedirectUri = "/" }, ["ManiaPlanetEmail"]);
 });
 
 app.MapGet("/login/trackmania", () =>
