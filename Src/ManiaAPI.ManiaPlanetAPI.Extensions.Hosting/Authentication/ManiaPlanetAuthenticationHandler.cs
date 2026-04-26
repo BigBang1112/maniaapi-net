@@ -36,7 +36,7 @@ internal class ManiaPlanetAuthenticationHandler(
 
         if (Options.Scope.Contains("email"))
         {
-            var email = await RequestAsync(ManiaPlanetAuthenticationDefaults.EmailEndpoint, tokens);
+            var email = await RequestAsync(Options.EmailEndpoint, tokens);
 
             if (!string.IsNullOrEmpty(email))
             {
