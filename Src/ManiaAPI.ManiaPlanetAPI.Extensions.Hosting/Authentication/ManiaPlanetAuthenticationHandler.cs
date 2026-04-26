@@ -34,7 +34,7 @@ internal class ManiaPlanetAuthenticationHandler(
 
         context.RunClaimActions();
 
-        if (Options.Scope.Contains("email"))
+        if (Options.Scope.Contains("email", StringComparer.OrdinalIgnoreCase))
         {
             var email = await RequestAsync(Options.EmailEndpoint, tokens);
 
