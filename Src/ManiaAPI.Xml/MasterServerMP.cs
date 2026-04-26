@@ -207,4 +207,34 @@ public abstract class MasterServerMP : MasterServer, IMasterServerMP
     {
         return await AnyServerMP.GetWebIdentityFromManiaplanetLoginAsync(Client, GameXml, login, cancellationToken);
     }
+
+    public virtual async Task<MasterServerResponse<ImmutableList<WebIdentityLogin>>> GetManiaplanetLoginFromWebIdentityResponseAsync(IEnumerable<WebIdentity> webIdentities, CancellationToken cancellationToken = default)
+    {
+        return await AnyServerMP.GetManiaplanetLoginFromWebIdentityResponseAsync(Client, GameXml, webIdentities, cancellationToken);
+    }
+
+    public virtual async Task<MasterServerResponse<ImmutableList<WebIdentityLogin>>> GetManiaplanetLoginFromWebIdentityResponseAsync(params WebIdentity[] webIdentities)
+    {
+        return await AnyServerMP.GetManiaplanetLoginFromWebIdentityResponseAsync(Client, GameXml, webIdentities, cancellationToken: default);
+    }
+
+    public virtual async Task<ImmutableList<WebIdentityLogin>> GetManiaplanetLoginFromWebIdentityAsync(IEnumerable<WebIdentity> webIdentities, CancellationToken cancellationToken = default)
+    {
+        return await AnyServerMP.GetManiaplanetLoginFromWebIdentityAsync(Client, GameXml, webIdentities, cancellationToken);
+    }
+
+    public virtual async Task<ImmutableList<WebIdentityLogin>> GetManiaplanetLoginFromWebIdentityAsync(params WebIdentity[] webIdentities)
+    {
+        return await AnyServerMP.GetManiaplanetLoginFromWebIdentityAsync(Client, GameXml, webIdentities, cancellationToken: default);
+    }
+
+    public virtual async Task<WebIdentityLogin?> GetManiaplanetLoginFromWebIdentityAsync(WebIdentity webIdentity, CancellationToken cancellationToken = default)
+    {
+        return await AnyServerMP.GetManiaplanetLoginFromWebIdentityAsync(Client, GameXml, webIdentity, cancellationToken);
+    }
+
+    public async Task<WebIdentityLogin?> GetManiaplanetLoginFromWebIdentityAsync(string platform, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await GetManiaplanetLoginFromWebIdentityAsync(new WebIdentity(platform, userId), cancellationToken);
+    }
 }

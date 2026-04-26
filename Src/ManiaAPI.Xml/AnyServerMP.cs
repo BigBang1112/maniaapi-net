@@ -12,6 +12,12 @@ public interface IAnyServerMP : IAnyServer
     Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(IEnumerable<string> logins, CancellationToken cancellationToken = default);
     Task<ImmutableList<WebIdentityPlayer>> GetWebIdentityFromManiaplanetLoginAsync(params string[] logins);
     Task<WebIdentityPlayer?> GetWebIdentityFromManiaplanetLoginAsync(string login, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<WebIdentityLogin>>> GetManiaplanetLoginFromWebIdentityResponseAsync(IEnumerable<WebIdentity> webIdentities, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<ImmutableList<WebIdentityLogin>>> GetManiaplanetLoginFromWebIdentityResponseAsync(params WebIdentity[] webIdentities);
+    Task<ImmutableList<WebIdentityLogin>> GetManiaplanetLoginFromWebIdentityAsync(IEnumerable<WebIdentity> webIdentities, CancellationToken cancellationToken = default);
+    Task<ImmutableList<WebIdentityLogin>> GetManiaplanetLoginFromWebIdentityAsync(params WebIdentity[] webIdentities);
+    Task<WebIdentityLogin?> GetManiaplanetLoginFromWebIdentityAsync(WebIdentity webIdentity, CancellationToken cancellationToken = default);
+    Task<WebIdentityLogin?> GetManiaplanetLoginFromWebIdentityAsync(string platform, Guid userId, CancellationToken cancellationToken = default);
 }
 
 internal static class AnyServerMP
@@ -85,7 +91,7 @@ internal static class AnyServerMP
                             break;
                         case "w":
                             var name = string.Empty;
-                            var id = string.Empty;
+                            var id = default(Guid);
 
                             while (xml.TryReadStartElement(out var webIdentityElement))
                             {
@@ -95,7 +101,7 @@ internal static class AnyServerMP
                                         name = xml.ReadContentAsString();
                                         break;
                                     case "i":
-                                        id = xml.ReadContentAsString();
+                                        id = Guid.Parse(xml.ReadContentAsString());
                                         break;
                                     default:
                                         xml.ReadContent();
@@ -141,5 +147,79 @@ internal static class AnyServerMP
     public static async Task<WebIdentityPlayer?> GetWebIdentityFromManiaplanetLoginAsync(HttpClient client, string gameXml, string login, CancellationToken cancellationToken = default)
     {
         return (await GetWebIdentityFromManiaplanetLoginAsync(client, gameXml, [login], cancellationToken)).FirstOrDefault();
+    }
+
+    public static async Task<MasterServerResponse<ImmutableList<WebIdentityLogin>>> GetManiaplanetLoginFromWebIdentityResponseAsync(HttpClient client, string gameXml, IEnumerable<WebIdentity> webIdentities, CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "GetManiaplanetLoginFromWebIdentity";
+
+        var sb = new StringBuilder();
+        var i = 1;
+        foreach (var webIdentity in webIdentities)
+        {
+            sb.Append($"\n<p{i}>{webIdentity.Platform}</p{i}>");
+            sb.Append($"\n<u{i}>{webIdentity.UserId}</u{i}>");
+            i++;
+        }
+
+        var response = await XmlHelper.SendAsync(client, gameXml, authorXml: null, RequestName, sb.ToString(), cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
+        {
+            var logins = ImmutableList.CreateBuilder<WebIdentityLogin>();
+
+            while (xml.TryReadStartElement("p"))
+            {
+                var login = string.Empty;
+                var platform = string.Empty;
+                var id = default(Guid);
+
+                while (xml.TryReadStartElement(out var itemElement))
+                {
+                    switch (itemElement)
+                    {
+                        case "l":
+                            login = xml.ReadContentAsString();
+                            break;
+                        case "d":
+                            platform = xml.ReadContentAsString();
+                            break;
+                        case "i":
+                            id = Guid.Parse(xml.ReadContentAsString());
+                            break;
+                        default:
+                            xml.ReadContent();
+                            break;
+                    }
+
+                    _ = xml.SkipEndElement();
+                }
+
+                logins.Add(new WebIdentityLogin(login, platform, id));
+
+                _ = xml.SkipEndElement(); // p
+            }
+
+            return logins.ToImmutable();
+        });
+    }
+
+    public static async Task<MasterServerResponse<ImmutableList<WebIdentityLogin>>> GetManiaplanetLoginFromWebIdentityResponseAsync(HttpClient client, string gameXml, params WebIdentity[] webIdentities)
+    {
+        return await GetManiaplanetLoginFromWebIdentityResponseAsync(client, gameXml, webIdentities, cancellationToken: default);
+    }
+
+    public static async Task<ImmutableList<WebIdentityLogin>> GetManiaplanetLoginFromWebIdentityAsync(HttpClient client, string gameXml, IEnumerable<WebIdentity> webIdentities, CancellationToken cancellationToken = default)
+    {
+        return (await GetManiaplanetLoginFromWebIdentityResponseAsync(client, gameXml, webIdentities, cancellationToken)).Result;
+    }
+
+    public static async Task<ImmutableList<WebIdentityLogin>> GetManiaplanetLoginFromWebIdentityAsync(HttpClient client, string gameXml, params WebIdentity[] webIdentities)
+    {
+        return await GetManiaplanetLoginFromWebIdentityAsync(client, gameXml, webIdentities, cancellationToken: default);
+    }
+
+    public static async Task<WebIdentityLogin?> GetManiaplanetLoginFromWebIdentityAsync(HttpClient client, string gameXml, WebIdentity webIdentity, CancellationToken cancellationToken = default)
+    {
+        return (await GetManiaplanetLoginFromWebIdentityAsync(client, gameXml, [webIdentity], cancellationToken)).FirstOrDefault();
     }
 }
