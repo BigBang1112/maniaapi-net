@@ -40,7 +40,7 @@ public class NadeoServicesTests
         };
 
         // Act
-        await ns.AuthorizeAsync(login, password, AuthorizationMethod.DedicatedServer);
+        await ns.AuthorizeAsync(login, password);
 
         var zones = await ns.GetZonesAsync();
         var mapRecords = await ns.GetMapRecordsAsync(accountList, mapIds);

@@ -12,7 +12,7 @@ var password = AnsiConsole.Prompt(
         .PromptStyle("red")
         .Secret());
 
-await ens.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
+await ens.AuthorizeAsync(login, password);
 
 var submittedMaps = await ens.GetSubmittedMapsAsync();
 

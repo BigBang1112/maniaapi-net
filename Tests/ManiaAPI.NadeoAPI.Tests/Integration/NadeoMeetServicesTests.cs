@@ -27,7 +27,7 @@ public class NadeoMeetServicesTests
 #pragma warning restore CA1859
 
         // Act
-        await nadeoMeetServices.AuthorizeAsync(login, password, AuthorizationMethod.DedicatedServer);
+        await nadeoMeetServices.AuthorizeAsync(login, password);
 
 #pragma warning disable IDE0059
         var cotd = await nadeoMeetServices.GetCurrentCupOfTheDayAsync();

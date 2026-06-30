@@ -28,7 +28,7 @@ public class NadeoLiveServicesTests
 #pragma warning restore CA1859
 
         // Act
-        await nls.AuthorizeAsync(login, password, AuthorizationMethod.DedicatedServer);
+        await nls.AuthorizeAsync(login, password);
 
         var pubs = await nls.GetActiveManiapubsAsync();
         var seasonalCampaigns = await nls.GetSeasonalCampaignsAsync(5);
