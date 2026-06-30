@@ -10,21 +10,14 @@ namespace ManiaAPI.NadeoAPI;
 
 public interface INadeoAPI : IDisposable
 {
+    [Obsolete("Use AuthorizeAsync(string login, string password, CancellationToken cancellationToken) instead. The Ubisoft account authentication method is no longer working (create a service account instead: https://www.trackmania.com/player/service-account)")]
     Task AuthorizeAsync(string login, string password, AuthorizationMethod method, CancellationToken cancellationToken = default);
+    Task AuthorizeAsync(string login, string password, CancellationToken cancellationToken = default);
     Task AuthorizeAsync(NadeoAPICredentials credentials, CancellationToken cancellationToken = default);
     ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default);
 
     HttpClient Client { get; }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="method"></param>
-    /// <param name="endpoint"></param>
-    /// <param name="content"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NadeoAPIResponseException"></exception>
     Task<HttpResponseMessage> SendAsync(HttpMethod method, string? endpoint, HttpContent? content = null, CancellationToken cancellationToken = default);
 }
 
@@ -80,46 +73,36 @@ public abstract class NadeoAPI : INadeoAPI
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
+    [Obsolete("Use AuthorizeAsync(string login, string password, CancellationToken cancellationToken) instead. The Ubisoft account authentication method is no longer working (create a service account instead: https://www.trackmania.com/player/service-account)")]
     public virtual async Task AuthorizeAsync(string login, string password, AuthorizationMethod method, CancellationToken cancellationToken = default)
+    {
+        await AuthorizeAsync(login, password, cancellationToken);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="login"></param>
+    /// <param name="password"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public virtual async Task AuthorizeAsync(string login, string password, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(login);
         ArgumentException.ThrowIfNullOrEmpty(password);
 
-        // TODO: Try optimize with Span
         var authenticationValue = $"{login}:{password}";
         var encodedAuthenticationValue = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationValue));
 
-        if (method == AuthorizationMethod.UbisoftAccount)
-        {
-            using var ubiRequest = new HttpRequestMessage(HttpMethod.Post, "https://public-ubiservices.ubi.com/v3/profiles/sessions")
-            {
-                Headers = { Authorization = new AuthenticationHeaderValue("Basic", encodedAuthenticationValue) },
-                Content = new StringContent("", Encoding.UTF8, "application/json")
-            };
-
-            ubiRequest.Headers.Add("Ubi-AppId", "86263886-327a-4328-ac69-527f0d20a237");
-
-            using var ubiResponse = await Client.SendAsync(ubiRequest, cancellationToken);
-
-            Handler.UbisoftTicket = await ubiResponse.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.UbisoftAuthenticationTicket, cancellationToken);
-        }
-
         var payload = new AuthorizationBody(Audience);
         var content = JsonContent.Create(payload, NadeoAPIJsonContext.Default.AuthorizationBody);
-        
-        var authRequest = method switch
+
+        var authRequest = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/basic")
         {
-            AuthorizationMethod.UbisoftAccount => new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/ubiservices")
-            {
-                Headers = { Authorization = new AuthenticationHeaderValue("ubi_v1", $"t={Handler.UbisoftTicket?.Ticket ?? throw new Exception("Ticket not available")}") },
-                Content = content
-            },
-            AuthorizationMethod.DedicatedServer => new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/basic")
-            {
-                Headers = { Authorization = new AuthenticationHeaderValue("Basic", encodedAuthenticationValue) },
-                Content = content
-            },
-            _ => throw new ArgumentOutOfRangeException(nameof(method), method, null),
+            Headers = { Authorization = new AuthenticationHeaderValue("Basic", encodedAuthenticationValue) },
+            Content = content
         };
 
         using var response = await Client.SendAsync(authRequest, cancellationToken);
@@ -129,7 +112,7 @@ public abstract class NadeoAPI : INadeoAPI
 
     public async Task AuthorizeAsync(NadeoAPICredentials credentials, CancellationToken cancellationToken = default)
     {
-        await AuthorizeAsync(credentials.Login, credentials.Password, credentials.Method, cancellationToken);
+        await AuthorizeAsync(credentials.Login, credentials.Password, cancellationToken);
     }
 
     /// <summary>
@@ -203,6 +186,15 @@ public abstract class NadeoAPI : INadeoAPI
         return true;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="method"></param>
+    /// <param name="endpoint"></param>
+    /// <param name="content"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="NadeoAPIResponseException"></exception>
     public async Task<HttpResponseMessage> SendAsync(HttpMethod method, string? endpoint, HttpContent? content = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(method);

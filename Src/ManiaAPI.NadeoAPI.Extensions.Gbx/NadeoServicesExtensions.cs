@@ -12,7 +12,7 @@ namespace ManiaAPI.NadeoAPI.Extensions.Gbx;
 public static class NadeoServicesExtensions
 {
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="stream"></param>
@@ -35,7 +35,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="stream"></param>
@@ -50,7 +50,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="filePath"></param>
@@ -66,7 +66,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="mapGbx"></param>
@@ -95,7 +95,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="map"></param>
@@ -128,7 +128,7 @@ public static class NadeoServicesExtensions
 
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="mapId"></param>
@@ -152,7 +152,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="stream"></param>
@@ -178,7 +178,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="mapId"></param>
@@ -194,7 +194,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="stream"></param>
@@ -210,7 +210,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="mapId"></param>
@@ -229,7 +229,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="filePath"></param>
@@ -248,7 +248,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="mapId"></param>
@@ -278,7 +278,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="mapGbx"></param>
@@ -299,7 +299,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="mapId"></param>
@@ -326,7 +326,7 @@ public static class NadeoServicesExtensions
     }
 
     /// <summary>
-    /// Does not work with <see cref="AuthorizationMethod.DedicatedServer"/>.
+    /// Does not work with dedicated server authentication.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="map"></param>

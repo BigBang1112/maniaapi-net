@@ -19,6 +19,7 @@ public sealed class NadeoAPIHandler
     internal string? RefreshToken { get; set; }
 
     public JwtPayloadNadeoAPI? JWT { get; internal set; }
+    [Obsolete("Ubisoft account authentication flow is no longer working, so this property is no longer used")]
     public UbisoftAuthenticationTicket? UbisoftTicket { get; internal set; }
 
     /// <summary>

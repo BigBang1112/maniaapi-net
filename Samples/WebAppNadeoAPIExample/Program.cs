@@ -10,8 +10,7 @@ builder.Services.AddNadeoAPI(options =>
 {
     options.Credentials = new NadeoAPICredentials(
         builder.Configuration["NadeoAPI:Login"]!,
-        builder.Configuration["NadeoAPI:Password"]!,
-        AuthorizationMethod.DedicatedServer);
+        builder.Configuration["NadeoAPI:Password"]!);
 
     options.UserAgent = "WebAppNadeoAPIExample/1.0";
 });

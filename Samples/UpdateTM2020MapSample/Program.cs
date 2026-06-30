@@ -11,7 +11,7 @@ var password = AnsiConsole.Prompt(
         .PromptStyle("red")
         .Secret());
 
-await ns.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
+await ns.AuthorizeAsync(login, password);
 
 AnsiConsole.MarkupLine("[green]Authorization successful[/]");
 
