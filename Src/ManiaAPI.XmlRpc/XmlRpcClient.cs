@@ -191,13 +191,13 @@ public partial class XmlRpcClient : IDisposable
 
             var r = new MiniXmlReader(xml);
 
-            Debug.Assert(r.SkipProcessingInstruction());
-            Debug.Assert(r.SkipStartElement("methodCall"));
-            Debug.Assert(r.SkipStartElement("methodName"));
+            _ = r.SkipProcessingInstruction();
+            _ = r.SkipStartElement("methodCall");
+            _ = r.SkipStartElement("methodName");
 
             var methodName = r.ReadContentAsString();
 
-            Debug.Assert(r.SkipEndElement());
+            _ = r.SkipEndElement();
 
             var parameters = ReadXmlRpcParams(xml, ref r);
 
@@ -277,8 +277,8 @@ public partial class XmlRpcClient : IDisposable
     {
         var r = new MiniXmlReader(xml);
 
-        Debug.Assert(r.SkipProcessingInstruction());
-        Debug.Assert(r.SkipStartElement("methodResponse"));
+        _ = r.SkipProcessingInstruction();
+        _ = r.SkipStartElement("methodResponse");
 
         return ReadXmlRpcParams(xml, ref r);
     }
@@ -310,7 +310,7 @@ public partial class XmlRpcClient : IDisposable
         while (r.SkipStartElement("param"))
         {
             parameters.Add(ReadXmlRpcValue(ref r));
-            Debug.Assert(r.SkipEndElement("param"));
+            _ = r.SkipEndElement("param");
         }
 
         return parameters.ToArray();
@@ -318,7 +318,7 @@ public partial class XmlRpcClient : IDisposable
 
     private static object? ReadXmlRpcValue(ref MiniXmlReader r)
     {
-        Debug.Assert(r.SkipStartElement("value"));
+        _ = r.SkipStartElement("value");
 
         var type = r.ReadStartElement();
 
@@ -333,8 +333,8 @@ public partial class XmlRpcClient : IDisposable
             _ => throw new XmlRpcClientException($"unknown type {type}"),
         };
 
-        Debug.Assert(r.SkipEndElement());
-        Debug.Assert(r.SkipEndElement("value"));
+        _ = r.SkipEndElement();
+        _ = r.SkipEndElement("value");
 
         return value;
     }
@@ -345,14 +345,14 @@ public partial class XmlRpcClient : IDisposable
 
         while (r.SkipStartElement("member"))
         {
-            Debug.Assert(r.SkipStartElement("name"));
+            _ = r.SkipStartElement("name");
             var memberName = r.ReadContentAsString();
-            Debug.Assert(r.SkipEndElement("name"));
+            _ = r.SkipEndElement("name");
             var memberValue = ReadXmlRpcValue(ref r);
 
             dict.Add(memberName, memberValue);
 
-            Debug.Assert(r.SkipEndElement("member"));
+            _ = r.SkipEndElement("member");
         }
 
         return dict;
@@ -362,7 +362,7 @@ public partial class XmlRpcClient : IDisposable
     {
         var list = new List<object?>();
 
-        Debug.Assert(r.SkipStartElement("data"));
+        _ = r.SkipStartElement("data");
 
         while (!r.SkipEndElement("data"))
         {
