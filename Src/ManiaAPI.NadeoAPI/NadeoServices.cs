@@ -15,7 +15,7 @@ public interface INadeoServices : INadeoAPI
     [Obsolete("Use GetAccountRecordsByMapIdsAsync or GetAccountRecordsBySeasonIdsAsync instead.")]
     Task<ImmutableList<MapRecord>> GetAccountRecordsAsync(Guid accountId, string? gamemode = null, CancellationToken cancellationToken = default);
     /// <summary>
-    /// This request requires authentication through Ubisoft account.
+    /// This request requires authentication through service account.
     /// </summary>
     /// <param name="accountId"></param>
     /// <param name="mapIds"></param>
@@ -24,7 +24,7 @@ public interface INadeoServices : INadeoAPI
     /// <returns></returns>
     Task<ImmutableList<MapRecord>> GetAccountRecordsByMapIdsAsync(Guid accountId, IEnumerable<Guid> mapIds, string? gamemode = null, CancellationToken cancellationToken = default);
     /// <summary>
-    /// This request requires authentication through Ubisoft account.
+    /// This request requires authentication through service account.
     /// </summary>
     /// <param name="accountId"></param>
     /// <param name="seasonIds"></param>
@@ -38,14 +38,14 @@ public interface INadeoServices : INadeoAPI
     Task<Dictionary<string, ApiRoute>> GetApiRoutesAsync(ApiUsage usage, CancellationToken cancellationToken = default);
     Task<ImmutableList<Zone>> GetZonesAsync(CancellationToken cancellationToken = default);
     /// <summary>
-    /// This request requires authentication through Ubisoft account.
+    /// This request requires authentication through service account.
     /// </summary>
     /// <param name="accountIds"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<ImmutableList<PlayerClubTag>> GetPlayerClubTagsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     /// <summary>
-    /// This request requires authentication through Ubisoft account.
+    /// This request requires authentication through service account.
     /// </summary>
     /// <param name="accountIds"></param>
     /// <returns></returns>
@@ -57,13 +57,13 @@ public interface INadeoServices : INadeoAPI
     Task<ImmutableList<WebIdentity>> GetPlayerWebIdentitiesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<ImmutableList<WebIdentity>> GetPlayerWebIdentitiesAsync(params Guid[] accountIds);
     /// <summary>
-    /// This request requires authentication through Ubisoft account.
+    /// This request requires authentication through service account.
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<MapInfoCollection> GetMapsByAuthorAsync(CancellationToken cancellationToken = default);
     /// <summary>
-    /// This request requires authentication through Ubisoft account.
+    /// This request requires authentication through service account.
     /// </summary>
     /// <param name="skinId"></param>
     /// <param name="cancellationToken"></param>

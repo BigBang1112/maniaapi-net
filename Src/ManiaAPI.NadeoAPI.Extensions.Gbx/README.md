@@ -18,7 +18,7 @@ using ManiaAPI.NadeoAPI;
 using ManiaAPI.NadeoAPI.Extensions.Gbx;
 
 var ns = new NadeoServices();
-await ns.AuthorizeAsync("mylogin", "mypassword", AuthorizationMethod.UbisoftAccount);
+await ns.AuthorizeAsync("service_name", "ls>97jO>e3>>D/Ce");
 
 // Update the map (no leaderboard lost!)
 await ns.UpdateMapAsync("Path/To/Map.Map.Gbx");

@@ -51,22 +51,20 @@ For `NadeoMeetServices`:
 
 ## Setup for a single service
 
+Make sure you have created your service account [here](https://www.trackmania.com/player/service-account).
+
 ```cs
 using ManiaAPI.NadeoAPI;
 
 var ns = new NadeoServices();
 
-await ns.AuthorizeAsync("mylogin", "mypassword", AuthorizationMethod.UbisoftAccount);
+await ns.AuthorizeAsync("service_name", "ls>97jO>e3>>D/Ce");
 
 // Ready to use
 var zones = await ns.GetZonesAsync();
 ```
 
-You can also use a dedicated server. Just be aware it has some limitations.
-
-```cs
-await ns.AuthorizeAsync("my_dedicated_server", "ls>97jO>e3>>D/Ce", AuthorizationMethod.DedicatedServer);
-```
+You can also use a dedicated server authentication. Just be aware it has some limitations.
 
 For other services, just replace `NadeoServices` with `NadeoLiveServices` or `NadeoMeetServices`.
 
@@ -75,14 +73,14 @@ For other services, just replace `NadeoServices` with `NadeoLiveServices` or `Na
 ```cs
 using ManiaAPI.NadeoAPI;
 
-var login = "mylogin";
-var password = "mypassword";
+var login = "service_name";
+var password = "ls>97jO>e3>>D/Ce";
 
 var ns = new NadeoServices();
-await ns.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
+await ns.AuthorizeAsync(login, password);
 
 var nls = new NadeoLiveServices();
-await nls.AuthorizeAsync(login, password, AuthorizationMethod.UbisoftAccount);
+await nls.AuthorizeAsync(login, password);
 
 // Ready to use combined
 
