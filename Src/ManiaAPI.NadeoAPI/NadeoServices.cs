@@ -68,7 +68,9 @@ public interface INadeoServices : INadeoAPI
     /// <param name="skinId"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<SkinInfo> GetSkinInfoAsync(Guid skinId, CancellationToken cancellationToken = default);
+    Task<SkinInfo?> GetSkinInfoAsync(Guid skinId, CancellationToken cancellationToken = default);
+    Task<ImmutableList<SkinIdentifier>> GetSkinsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
+    Task<ImmutableList<SkinIdentifier>> GetSkinsAsync(params Guid[] accountIds);
 }
 
 public class NadeoServices : NadeoAPI, INadeoServices
@@ -214,13 +216,30 @@ public class NadeoServices : NadeoAPI, INadeoServices
         return await GetPlayerWebIdentitiesAsync(accountIds, CancellationToken.None);
     }
 
-    public async Task<MapInfoCollection> GetMapsByAuthorAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<MapInfoCollection> GetMapsByAuthorAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("maps/by-author", NadeoAPIJsonContext.Default.MapInfoCollection, cancellationToken);
+        return await GetJsonAsync("maps/by-author/", NadeoAPIJsonContext.Default.MapInfoCollection, cancellationToken);
     }
 
-    public async Task<SkinInfo> GetSkinInfoAsync(Guid skinId, CancellationToken cancellationToken = default)
+    public virtual async Task<SkinInfo?> GetSkinInfoAsync(Guid skinId, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"skins/{skinId}", NadeoAPIJsonContext.Default.SkinInfo, cancellationToken);
+        try
+        {
+            return await GetJsonAsync($"skins/{skinId}", NadeoAPIJsonContext.Default.SkinInfo, cancellationToken);
+        }
+        catch (NadeoAPIResponseException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
+
+    public virtual async Task<ImmutableList<SkinIdentifier>> GetSkinsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"accounts/skins/?accountIdList={string.Join(',', accountIds)}", NadeoAPIJsonContext.Default.ImmutableListSkinIdentifier, cancellationToken);
+    }
+
+    public async Task<ImmutableList<SkinIdentifier>> GetSkinsAsync(params Guid[] accountIds)
+    {
+        return await GetSkinsAsync(accountIds, CancellationToken.None);
     }
 }
