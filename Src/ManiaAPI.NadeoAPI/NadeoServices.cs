@@ -35,6 +35,7 @@ public interface INadeoServices : INadeoAPI
     Task<MapRecord> GetMapRecordByIdAsync(Guid mapRecordId, CancellationToken cancellationToken = default);
     Task<ImmutableList<PlayerZone>> GetPlayerZonesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<ImmutableList<PlayerZone>> GetPlayerZonesAsync(params Guid[] accountIds);
+    Task<PlayerZone?> GetPlayerZoneAsync(Guid accountId, CancellationToken cancellationToken = default);
     Task<Dictionary<string, ApiRoute>> GetApiRoutesAsync(ApiUsage usage, CancellationToken cancellationToken = default);
     Task<ImmutableList<Zone>> GetZonesAsync(CancellationToken cancellationToken = default);
     /// <summary>
@@ -56,6 +57,7 @@ public interface INadeoServices : INadeoAPI
     Task<ImmutableList<MapInfo>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default);
     Task<ImmutableList<WebIdentity>> GetPlayerWebIdentitiesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<ImmutableList<WebIdentity>> GetPlayerWebIdentitiesAsync(params Guid[] accountIds);
+    Task<WebIdentity?> GetPlayerWebIdentityAsync(Guid accountId, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
@@ -69,8 +71,9 @@ public interface INadeoServices : INadeoAPI
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<SkinInfo?> GetSkinInfoAsync(Guid skinId, CancellationToken cancellationToken = default);
-    Task<ImmutableList<SkinIdentifier>> GetSkinsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
-    Task<ImmutableList<SkinIdentifier>> GetSkinsAsync(params Guid[] accountIds);
+    Task<ImmutableList<SkinIdentifier>> GetSkinsByAccountIdsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
+    Task<ImmutableList<SkinIdentifier>> GetSkinsByAccountIdsAsync(params Guid[] accountIds);
+    Task<SkinIdentifier?> GetSkinByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default);
 }
 
 public class NadeoServices : NadeoAPI, INadeoServices
@@ -164,6 +167,11 @@ public class NadeoServices : NadeoAPI, INadeoServices
         return await GetPlayerZonesAsync(accountIds, CancellationToken.None);
     }
 
+    public async Task<PlayerZone?> GetPlayerZoneAsync(Guid accountId, CancellationToken cancellationToken = default)
+    {
+        return (await GetPlayerZonesAsync([accountId], cancellationToken)).FirstOrDefault();
+    }
+
     public virtual async Task<Dictionary<string, ApiRoute>> GetApiRoutesAsync(ApiUsage usage, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"api/routes?usage={usage}", NadeoAPIJsonContext.Default.DictionaryStringApiRoute, cancellationToken);
@@ -184,26 +192,26 @@ public class NadeoServices : NadeoAPI, INadeoServices
         return await GetPlayerClubTagsAsync(accountIds, CancellationToken.None);
     }
 
-    public virtual async Task<MapInfo?> GetMapInfoAsync(Guid mapId, CancellationToken cancellationToken = default)
-    {
-        return (await GetJsonAsync($"maps/by-id/?mapIdList={mapId}", NadeoAPIJsonContext.Default.ImmutableListMapInfo, cancellationToken)).FirstOrDefault();
-    }
-
     public virtual async Task<ImmutableList<MapInfo>> GetMapInfosAsync(IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"maps/by-id/?mapIdList={string.Join(',', mapIds)}",
             NadeoAPIJsonContext.Default.ImmutableListMapInfo, cancellationToken);
     }
 
-    public virtual async Task<MapInfo?> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)
+    public async Task<MapInfo?> GetMapInfoAsync(Guid mapId, CancellationToken cancellationToken = default)
     {
-        return (await GetJsonAsync($"maps/by-uid/?mapUidList={mapUid}", NadeoAPIJsonContext.Default.ImmutableListMapInfo, cancellationToken)).FirstOrDefault();
+        return (await GetMapInfosAsync([mapId], cancellationToken)).FirstOrDefault();
     }
 
     public virtual async Task<ImmutableList<MapInfo>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"maps/by-uid/?mapUidList={string.Join(',', mapUids)}",
             NadeoAPIJsonContext.Default.ImmutableListMapInfo, cancellationToken);
+    }
+
+    public virtual async Task<MapInfo?> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)
+    {
+        return (await GetMapInfosAsync([mapUid], cancellationToken)).FirstOrDefault();
     }
 
     public virtual async Task<ImmutableList<WebIdentity>> GetPlayerWebIdentitiesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
@@ -214,6 +222,11 @@ public class NadeoServices : NadeoAPI, INadeoServices
     public async Task<ImmutableList<WebIdentity>> GetPlayerWebIdentitiesAsync(params Guid[] accountIds)
     {
         return await GetPlayerWebIdentitiesAsync(accountIds, CancellationToken.None);
+    }
+
+    public async Task<WebIdentity?> GetPlayerWebIdentityAsync(Guid accountId, CancellationToken cancellationToken = default)
+    {
+        return (await GetPlayerWebIdentitiesAsync([accountId], cancellationToken)).FirstOrDefault();
     }
 
     public virtual async Task<MapInfoCollection> GetMapsByAuthorAsync(CancellationToken cancellationToken = default)
@@ -233,13 +246,18 @@ public class NadeoServices : NadeoAPI, INadeoServices
         }
     }
 
-    public virtual async Task<ImmutableList<SkinIdentifier>> GetSkinsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
+    public virtual async Task<ImmutableList<SkinIdentifier>> GetSkinsByAccountIdsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"accounts/skins/?accountIdList={string.Join(',', accountIds)}", NadeoAPIJsonContext.Default.ImmutableListSkinIdentifier, cancellationToken);
     }
 
-    public async Task<ImmutableList<SkinIdentifier>> GetSkinsAsync(params Guid[] accountIds)
+    public async Task<ImmutableList<SkinIdentifier>> GetSkinsByAccountIdsAsync(params Guid[] accountIds)
     {
-        return await GetSkinsAsync(accountIds, CancellationToken.None);
+        return await GetSkinsByAccountIdsAsync(accountIds, CancellationToken.None);
+    }
+
+    public async Task<SkinIdentifier?> GetSkinByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default)
+    {
+        return (await GetSkinsByAccountIdsAsync([accountId], cancellationToken)).FirstOrDefault();
     }
 }

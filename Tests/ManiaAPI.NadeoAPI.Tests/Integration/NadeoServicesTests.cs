@@ -72,7 +72,7 @@ public class NadeoServicesTests
 
         await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetSkinInfoAsync(Guid.Parse("a1d4ec7c-a05a-4eb0-9873-c1f5840e4523"))); // works only on player account
 
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetSkinsAsync(Guid.Parse("6a43df20-cd1a-4b3b-87b9-a6835a9b416d")));
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetSkinsByAccountIdsAsync(Guid.Parse("6a43df20-cd1a-4b3b-87b9-a6835a9b416d")));
 
     }
 }
