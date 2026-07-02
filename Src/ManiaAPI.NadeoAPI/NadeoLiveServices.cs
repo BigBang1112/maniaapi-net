@@ -85,7 +85,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         {
             return await GetJsonAsync($"token/map/{mapUid}", NadeoAPIJsonContext.Default.MapInfoLive, cancellationToken);
         }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (NadeoAPIResponseException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             return null;
         }
@@ -151,7 +151,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
             return await PostJsonAsync($"token/leaderboard/group/map?{queryParams}", jsonContent, 
                 NadeoAPIJsonContext.Default.ImmutableListPosition, cancellationToken);
         }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (NadeoAPIResponseException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             return [];
         }

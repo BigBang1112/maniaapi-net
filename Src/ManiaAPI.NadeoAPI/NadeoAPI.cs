@@ -140,7 +140,7 @@ public abstract class NadeoAPI : INadeoAPI
             error = null;
         }
 
-        throw new NadeoAPIResponseException(error, new HttpRequestException(response.ReasonPhrase, inner: null, response.StatusCode));
+        throw new NadeoAPIResponseException(error, response.StatusCode, response.ReasonPhrase);
     }
 
     internal async Task SaveTokenResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
@@ -235,21 +235,46 @@ public abstract class NadeoAPI : INadeoAPI
             request.Content = content;
         }
 
-        var response = await Client.SendAsync(request, cancellationToken);
+        try
+        {
+            var response = await Client.SendAsync(request, cancellationToken);
 
-        Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {response.StatusCode} {await response.Content.ReadAsStringAsync(cancellationToken)}");
+            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {response.StatusCode} {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
-        await ValidateResponseAsync(response, cancellationToken);
+            await ValidateResponseAsync(response, cancellationToken);
 
-        return response;
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new NadeoAPIResponseException(ex.Message, ex.InnerException);
+        }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="endpoint"></param>
+    /// <param name="jsonTypeInfo"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="NadeoAPIResponseException"></exception>
     protected async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
         return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="endpoint"></param>
+    /// <param name="jsonTypeInfo"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="NadeoAPIResponseException"></exception>
     protected async Task<T?> GetNullableJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
@@ -262,6 +287,16 @@ public abstract class NadeoAPI : INadeoAPI
         return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="endpoint"></param>
+    /// <param name="content"></param>
+    /// <param name="jsonTypeInfo"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="NadeoAPIResponseException"></exception>
     protected async Task<T> PostJsonAsync<T>(string? endpoint, JsonContent content, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, endpoint, content, cancellationToken: cancellationToken);
