@@ -133,7 +133,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             error = null;
         }
 
-        throw new TrackmaniaAPIResponseException(error, new HttpRequestException(response.ReasonPhrase, inner: null, response.StatusCode));
+        throw new TrackmaniaAPIResponseException(error, response.StatusCode, response.ReasonPhrase);
     }
 
     /// <summary>
@@ -231,13 +231,20 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
         request.Headers.Authorization = Handler.Authorization;
 
-        using var response = await Client.SendAsync(request, cancellationToken);
+        try
+        {
+            using var response = await Client.SendAsync(request, cancellationToken);
 
-        Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
+            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
-        await ValidateResponseAsync(response, cancellationToken);
+            await ValidateResponseAsync(response, cancellationToken);
 
-        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+            return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new TrackmaniaAPIResponseException(ex.Message, ex.InnerException);
+        }
     }
 
     public virtual void Dispose()

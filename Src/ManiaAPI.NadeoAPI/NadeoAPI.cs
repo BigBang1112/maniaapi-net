@@ -52,7 +52,7 @@ public abstract class NadeoAPI : INadeoAPI
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.7.0";
+        const string version = "2.8.5";
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
@@ -86,7 +86,6 @@ public abstract class NadeoAPI : INadeoAPI
     /// <param name="password"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    /// <exception cref="Exception"></exception>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public virtual async Task AuthorizeAsync(string login, string password, CancellationToken cancellationToken = default)
     {

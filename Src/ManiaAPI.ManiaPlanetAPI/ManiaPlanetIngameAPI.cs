@@ -85,7 +85,7 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
 
         using var response = await Client.GetAsync($"public/titles/{uid}", cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             return null;
         }
