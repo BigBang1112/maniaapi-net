@@ -117,19 +117,19 @@ public class NadeoServices : NadeoAPI, INadeoServices
     [Obsolete("Use GetAccountRecordsByMapIdsAsync or GetAccountRecordsBySeasonIdsAsync instead.")]
     public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsAsync(Guid accountId, string? gamemode = null, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords{(gamemode is null ? null : $"?gameMode={gamemode}")}",
+        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/{(gamemode is null ? null : $"?gameMode={gamemode}")}",
             NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
     }
 
     public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsByMapIdsAsync(Guid accountId, IEnumerable<Guid> mapIds, string? gamemode = null, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords?mapIdList={string.Join(',', mapIds)}{(gamemode is null ? null : $"&gameMode={gamemode}")}",
+        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/?mapIdList={string.Join(',', mapIds)}{(gamemode is null ? null : $"&gameMode={gamemode}")}",
             NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
     }
 
     public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsBySeasonIdsAsync(Guid accountId, IEnumerable<Guid> seasonIds, string? gamemode = null, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords?seasonIdList={string.Join(',', seasonIds)}{(gamemode is null ? null : $"&gameMode={gamemode}")}",
+        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/?seasonIdList={string.Join(',', seasonIds)}{(gamemode is null ? null : $"&gameMode={gamemode}")}",
             NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
     }
 
@@ -169,7 +169,7 @@ public class NadeoServices : NadeoAPI, INadeoServices
 
     public virtual async Task<ImmutableList<Zone>> GetZonesAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("zones", NadeoAPIJsonContext.Default.ImmutableListZone, cancellationToken);
+        return await GetJsonAsync("zones/", NadeoAPIJsonContext.Default.ImmutableListZone, cancellationToken);
     }
 
     public async Task<ImmutableList<PlayerClubTag>> GetPlayerClubTagsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
