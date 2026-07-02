@@ -30,7 +30,7 @@ public class MasterServerTMUFTests
     {
         var expectedUrl = "http://scores.trackmaniaforever.com/scores3/UnitedRace/UnitedRace5.gz";
 
-        var actualUrl = MasterServerTMUF.GetScoresUrl(ScoresNumber.Scores3, "UnitedRace", zoneId: 5);
+        var actualUrl = MasterServerTMUF.GetScoresUrl(ScoresNumber.Scores3, "UnitedRace", leagueId: 5);
 
         Assert.Equal(expectedUrl, actualUrl);
     }
@@ -40,7 +40,7 @@ public class MasterServerTMUFTests
     {
         var expectedUrl = "http://scores.trackmaniaforever.com/scores3/General/General5.gz";
 
-        var actualUrl = MasterServerTMUF.GetGeneralScoresUrl(ScoresNumber.Scores3, zoneId: 5);
+        var actualUrl = MasterServerTMUF.GetGeneralScoresUrl(ScoresNumber.Scores3, leagueId: 5);
 
         Assert.Equal(expectedUrl, actualUrl);
     }
@@ -107,6 +107,6 @@ public class MasterServerTMUFTests
         var campaignScores = await server.GetCampaignScoresAsync("UnitedRace", ["World|Czech republic|Jihoceský kraj", "World"]);
 
         Assert.NotEmpty(campaignScores.Name);
-        Assert.NotEmpty(campaignScores.Campaigns);
+        Assert.NotEmpty(campaignScores.Leagues);
     }
 }
