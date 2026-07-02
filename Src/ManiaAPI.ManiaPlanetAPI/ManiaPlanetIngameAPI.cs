@@ -32,7 +32,7 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.7.0";
+        const string version = "2.8.5";
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
