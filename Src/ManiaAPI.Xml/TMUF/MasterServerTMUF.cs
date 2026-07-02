@@ -1,7 +1,7 @@
 ﻿using System.Buffers.Binary;
 using System.Collections.Immutable;
 using System.Globalization;
-using TmEssentials;
+using System.Text;
 using TmScores;
 
 namespace ManiaAPI.Xml.TMUF;
@@ -14,6 +14,10 @@ public interface IMasterServerTMUF : IMasterServer
     Task<MasterServerResponse<PlayerRankings>> GetLadderPlayerRankingsResponseAsync(string zone = "World", int page = 0, int count = 10, CancellationToken cancellationToken = default);
     Task<PlayerAchievements> GetPlayerAchievementsAsync(string login, int page = 0, int count = 10, CancellationToken cancellationToken = default);
     Task<MasterServerResponse<PlayerAchievements>> GetPlayerAchievementsResponseAsync(string login, int page = 0, int count = 10, CancellationToken cancellationToken = default);
+    Task<CampaignScoresInfo> GetCampaignScoresAsync(string campaignName, IEnumerable<string> zones, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<CampaignScoresInfo>> GetCampaignScoresResponseAsync(string campaignName, IEnumerable<string> zones, CancellationToken cancellationToken = default);
+    Task<CampaignScoresEntry?> GetCampaignScoresAsync(string campaignName, string zone, CancellationToken cancellationToken = default);
+    Task<MasterServerResponse<CampaignScoresInfo>> GetCampaignScoresResponseAsync(string campaignName, string zone, CancellationToken cancellationToken = default);
 
     Task<CampaignScores> DownloadCampaignScoresAsync(string campaignName, ScoresNumber num, int zoneId, CancellationToken cancellationToken = default);
     Task<CampaignScores?> DownloadCampaignScoresAsync(string campaignName, ScoresNumber num, string zone, CancellationToken cancellationToken = default);
@@ -318,6 +322,136 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
     public async Task<PlayerAchievements> GetPlayerAchievementsAsync(string login, int page = 0, int count = 10, CancellationToken cancellationToken = default)
     {
         return (await GetPlayerAchievementsResponseAsync(login, page, count, cancellationToken)).Result;
+    }
+
+    public virtual async Task<MasterServerResponse<CampaignScoresInfo>> GetCampaignScoresResponseAsync(
+        string campaignName,
+        IEnumerable<string> zones,
+        CancellationToken cancellationToken = default)
+    {
+        const string RequestName = "GetCampaignScores";
+        var zonesXml = new StringBuilder();
+        var i = 0;
+        foreach (var zone in zones)
+        {
+            zonesXml.Append($"<f{i}>{zone}</f{i}>");
+            i++;
+        }
+        var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, $"""
+                <n>{campaignName}</n>
+                {zonesXml}
+                <s>0000:00:00:00:00:00</s>
+                <t>2</t>
+            """, cancellationToken);
+        return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
+        {
+            var campaignNameResult = string.Empty;
+            var campaigns = ImmutableList.CreateBuilder<CampaignScoresEntry>();
+
+            var pendingZone = string.Empty;
+            var pendingTimestamp = DateTimeOffset.MinValue;
+            var pendingType = 0;
+            var hasPendingDescriptor = false;
+
+            while (xml.TryReadStartElement(out var element))
+            {
+                switch (element)
+                {
+                    case "a":
+                        campaignNameResult = xml.ReadContentAsString();
+                        break;
+                    case "d":
+                        pendingZone = string.Empty;
+                        pendingTimestamp = DateTimeOffset.MinValue;
+                        pendingType = 0;
+
+                        while (xml.TryReadStartElement(out var dElement))
+                        {
+                            switch (dElement)
+                            {
+                                case "f":
+                                    pendingZone = xml.ReadContentAsString();
+                                    break;
+                                case "u":
+                                    pendingTimestamp = DateTimeOffset.ParseExact(xml.ReadContent(), "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+                                    break;
+                                case "t":
+                                    pendingType = int.Parse(xml.ReadContent());
+                                    break;
+                                default:
+                                    xml.ReadContent();
+                                    break;
+                            }
+
+                            _ = xml.SkipEndElement();
+                        }
+
+                        hasPendingDescriptor = true;
+                        break;
+                    case "s":
+                        var filePath = string.Empty;
+                        var url = string.Empty;
+
+                        while (xml.TryReadStartElement(out var sElement))
+                        {
+                            switch (sElement)
+                            {
+                                case "f":
+                                    filePath = xml.ReadContentAsString();
+                                    break;
+                                case "u":
+                                    url = xml.ReadContentAsString();
+                                    break;
+                                default:
+                                    xml.ReadContent();
+                                    break;
+                            }
+
+                            _ = xml.SkipEndElement();
+                        }
+
+                        if (hasPendingDescriptor)
+                        {
+                            campaigns.Add(new CampaignScoresEntry(pendingZone, pendingTimestamp, pendingType, filePath, url));
+                            hasPendingDescriptor = false;
+                        }
+                        break;
+                    default:
+                        xml.ReadContent();
+                        break;
+                }
+
+                _ = xml.SkipEndElement();
+            }
+
+            return new CampaignScoresInfo(campaignNameResult, campaigns.ToImmutable());
+        });
+    }
+
+    public virtual async Task<MasterServerResponse<CampaignScoresInfo>> GetCampaignScoresResponseAsync(
+        string campaignName,
+        string zone,
+        CancellationToken cancellationToken = default)
+    {
+        return await GetCampaignScoresResponseAsync(campaignName, [zone], cancellationToken);
+    }
+
+    public async Task<CampaignScoresInfo> GetCampaignScoresAsync(
+        string campaignName,
+        IEnumerable<string> zones,
+        CancellationToken cancellationToken = default)
+    {
+        return (await GetCampaignScoresResponseAsync(campaignName, zones, cancellationToken)).Result;
+    }
+
+    public async Task<CampaignScoresEntry?> GetCampaignScoresAsync(
+        string campaignName,
+        string zone,
+        CancellationToken cancellationToken = default)
+    {
+        return (await GetCampaignScoresResponseAsync(campaignName, zone, cancellationToken)).Result
+            .Campaigns
+            .FirstOrDefault(x => x.Zone == zone);
     }
 
     public virtual async Task<GeneralScores?> DownloadLatestGeneralScoresAsync(string zone, CancellationToken cancellationToken = default)

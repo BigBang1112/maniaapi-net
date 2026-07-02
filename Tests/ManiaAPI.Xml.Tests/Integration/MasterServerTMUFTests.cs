@@ -98,4 +98,15 @@ public class MasterServerTMUFTests
         Assert.NotEqual(DateTimeOffset.MinValue, achievements.Aa);
         Assert.NotEmpty(achievements.Maps);
     }
+
+    [Fact]
+    public async Task GetCampaignScoresAsync_ReturnsCampaignScores()
+    {
+        var server = new MasterServerTMUF();
+
+        var campaignScores = await server.GetCampaignScoresAsync("UnitedRace", ["World|Czech republic|Jihoceský kraj", "World"]);
+
+        Assert.NotEmpty(campaignScores.Name);
+        Assert.NotEmpty(campaignScores.Campaigns);
+    }
 }
