@@ -5,10 +5,10 @@ using System.Text.Json.Serialization;
 
 using var ens = new ExtendedNadeoServices();
 
-var login = AnsiConsole.Ask<string>("Enter Ubisoft Connect [green]login[/]:");
+var login = AnsiConsole.Ask<string>("Enter service account [green]login[/]:");
 
 var password = AnsiConsole.Prompt(
-    new TextPrompt<string>("Enter Ubisoft Connect [green]password[/]:")
+    new TextPrompt<string>("Enter service account [green]password[/]:")
         .PromptStyle("red")
         .Secret());
 

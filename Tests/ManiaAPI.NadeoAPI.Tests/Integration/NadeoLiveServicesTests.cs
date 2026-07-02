@@ -20,7 +20,12 @@ public class NadeoLiveServicesTests
         var login = configuration.GetValue<string>("DedicatedServer:Login") ?? throw new Exception("DedicatedServer:Login user secret is required");
         var password = configuration.GetValue<string>("DedicatedServer:Password") ?? throw new Exception("DedicatedServer:Password user secret is required");
 
-        var http = new HttpClient();
+        var handler = new HttpClientHandler
+        {
+            AllowAutoRedirect = false // test redirects so the Authorization header is not reset
+        };
+
+        var http = new HttpClient(handler);
         http.DefaultRequestHeaders.UserAgent.ParseAdd("NadeoLiveServices Integration Test 1.0");
 
 #pragma warning disable CA1859

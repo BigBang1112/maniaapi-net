@@ -1,6 +1,5 @@
-using ManiaAPI.TMX.Attributes;
+﻿using ManiaAPI.TMX.Attributes;
 using System.Net.Http.Headers;
-using System.Reflection.PortableExecutable;
 
 namespace ManiaAPI.TMX;
 
