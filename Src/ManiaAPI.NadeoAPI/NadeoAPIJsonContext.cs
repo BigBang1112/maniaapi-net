@@ -13,7 +13,6 @@ namespace ManiaAPI.NadeoAPI;
 [JsonSerializable(typeof(MedalRecordCollection))]
 [JsonSerializable(typeof(ImmutableList<ManiapubCollection>))]
 [JsonSerializable(typeof(TopLeaderboardCollection))]
-[JsonSerializable(typeof(UbisoftAuthenticationTicket))]
 [JsonSerializable(typeof(TrackOfTheDayCollection))]
 [JsonSerializable(typeof(TrackOfTheDayInfo))]
 [JsonSerializable(typeof(CampaignCollection))]
