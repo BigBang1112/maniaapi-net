@@ -16,7 +16,7 @@ internal class NadeoAPIRefreshBackgroundService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(TimeSpan.FromHours(20), stoppingToken);
+            await Task.Delay(TimeSpan.FromHours(6), stoppingToken);
 
             await using var scope = scopeFactory.CreateAsyncScope();
 
