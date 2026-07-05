@@ -228,14 +228,14 @@ public partial class XmlRpcClient : IDisposable
         return await CallXmlAsync(methodName, [], cancellationToken);
     }
 
-    public async Task<object?[]> CallAsync(string methodName, object?[] methodParams, CancellationToken cancellationToken = default)
+    public async Task<object?> CallAsync(string methodName, object?[] methodParams, CancellationToken cancellationToken = default)
     {
         var xmlResult = await CallXmlAsync(methodName, methodParams, cancellationToken);
 
         return ParseXmlRpcMethodResponse(xmlResult);
     }
 
-    public async Task<object?[]> CallAsync(string methodName, CancellationToken cancellationToken = default)
+    public async Task<object?> CallAsync(string methodName, CancellationToken cancellationToken = default)
     {
         return await CallAsync(methodName, [], cancellationToken);
     }
@@ -273,14 +273,15 @@ public partial class XmlRpcClient : IDisposable
         return pendingRequests.GetOrAdd(handle, _ => Channel.CreateBounded<string>(1));
     }
 
-    private static object?[] ParseXmlRpcMethodResponse(string xml)
+    private static object? ParseXmlRpcMethodResponse(string xml)
     {
         var r = new MiniXmlReader(xml);
 
         _ = r.SkipProcessingInstruction();
         _ = r.SkipStartElement("methodResponse");
 
-        return ReadXmlRpcParams(xml, ref r);
+        var parameters = ReadXmlRpcParams(xml, ref r);
+        return parameters.Length == 1 ? parameters[0] : parameters;
     }
 
     private static object?[] ReadXmlRpcParams(string xml, ref MiniXmlReader r)
