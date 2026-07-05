@@ -12,7 +12,7 @@ using System.Threading.Channels;
 
 namespace ManiaAPI.XmlRpc;
 
-public partial class XmlRpcClient : IDisposable
+public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 {
     private const string Handshake = "GBXRemote 2";
 
@@ -507,6 +507,30 @@ public partial class XmlRpcClient : IDisposable
     {
         cts.Cancel();
         tcp.Dispose();
+        cts.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        cts.Cancel();
+
+        try
+        {
+            await Task.WhenAll(ListenTask, CallbackTask);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected: the listen/callback loops observe the cancellation and stop.
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "XML-RPC background task ended unexpectedly during dispose.");
+        }
+
+        tcp.Dispose();
+        cts.Dispose();
+
         GC.SuppressFinalize(this);
     }
 }
