@@ -203,7 +203,7 @@ public partial class XmlRpcClient : IDisposable
 
             if (Callback is not null)
             {
-                await Callback.Invoke(methodName, parameters);
+                await Callback.Invoke(methodName, parameters, cancellationToken);
             }
         }
     }
