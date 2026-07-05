@@ -633,9 +633,11 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
         using var ms = new MemoryStream(Convert.FromBase64String(xml.ReadContentAsString()));
         using var r = new GbxBasedReader(ms, leaveOpen: false);
 
-        var records = ImmutableArray.CreateBuilder<LeaderboardItem<T>>(r.ReadInt32());
+        var count = r.ReadInt32();
 
-        for (int i = 0; i < records.Count; i++)
+        var records = new LeaderboardItem<T>[count];
+
+        for (int i = 0; i < count; i++)
         {
             var rank = r.ReadInt32();
             var score = r.ReadUInt32();
@@ -649,6 +651,6 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
             records[i] = new LeaderboardItem<T>(rank, login, nickname, scoreValue, fileName, replayUrl);
         }
 
-        return records.ToImmutable();
+        return records.ToImmutableArray();
     }
 }
