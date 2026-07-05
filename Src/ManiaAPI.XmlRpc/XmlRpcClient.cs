@@ -236,6 +236,11 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return ParseXmlRpcMethodResponse(xmlResult);
     }
 
+    public async Task<object?> CallAsync(string methodName, params object?[] methodParams)
+    {
+        return await CallAsync(methodName, methodParams, CancellationToken.None);
+    }
+
     public async Task<object?> CallAsync(string methodName, CancellationToken cancellationToken = default)
     {
         return await CallAsync(methodName, [], cancellationToken);
