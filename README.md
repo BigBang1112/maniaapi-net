@@ -849,16 +849,23 @@ This solution tries to be lightweight and compatible with as many Nadeo games as
 ```cs
 using ManiaAPI.XmlRpc;
 
-using var xmlRpc = await XmlRpcClient.ConnectAsync("127.0.0.1");
+await using var xmlRpc = await XmlRpcClient.ConnectAsync("127.0.0.1");
 
-object?[] authenticationResult = await xmlRpc.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
+object? authenticationResult = await xmlRpc.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
 
-if (authenticationResult is not [true])
+if (authenticationResult is not true)
 {
     throw new Exception("Authentication failed.");
 }
 
-object?[] result = await xmlRpc.CallAsync("GameDataDirectory");
+object? result = await xmlRpc.CallAsync("GameDataDirectory");
+
+if (result is not string gameDataDirectory)
+{
+    throw new Exception("Failed to retrieve game data directory.");
+}
+
+Console.WriteLine($"Game data directory: {gameDataDirectory}");
 ```
 
 ## ManiaAPI.UnitedLadder
