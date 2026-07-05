@@ -503,6 +503,23 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Waits until the connection is closed, whether because the client was disposed,
+    /// the remote host closed it, or an error occurred while listening for messages.
+    /// </summary>
+    /// <param name="cancellationToken">A token that, when canceled, stops waiting without closing the connection.</param>
+    public async Task WaitForCloseAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await ListenTask.WaitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException ex) when (ex.CancellationToken != cancellationToken)
+        {
+            // The listen loop stopped because the client was disposed - this is a normal closure.
+        }
+    }
+
     public void Dispose()
     {
         cts.Cancel();
