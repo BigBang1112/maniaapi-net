@@ -14,9 +14,9 @@ var logger = LoggerFactory.Create(builder =>
 
 using var xmlRpc = await XmlRpcClient.ConnectAsync("127.0.0.1", logger: logger);
 
-object?[] authenticationResult = await xmlRpc.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
+object? authenticationResult = await xmlRpc.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
 
-if (authenticationResult is not [true])
+if (authenticationResult is not true)
 {
     throw new Exception("Authentication failed.");
 }

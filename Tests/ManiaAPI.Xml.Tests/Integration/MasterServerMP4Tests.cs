@@ -106,6 +106,7 @@ public class MasterServerMP4Tests
             [new(), new(Zone: "World|Europe")]);
 
         Assert.NotEmpty(summaries);
+        Assert.NotEmpty(summaries[0].HighScores);
     }
 
     [Fact]
@@ -117,6 +118,7 @@ public class MasterServerMP4Tests
             [new("JNDnboltOprJ19O2d2OQCJrC1Sk"), new("f60UDPlW2mqfbhwCGUuclCIYQj2")]);
 
         Assert.NotEmpty(summaries);
+        Assert.NotEmpty(summaries[0].HighScores);
     }
 
     [Fact]
