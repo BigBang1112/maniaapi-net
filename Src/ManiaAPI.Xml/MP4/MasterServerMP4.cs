@@ -78,6 +78,17 @@ public interface IMasterServerMP4 : IMasterServerMP
     /// Gets multiple campaign leaderboard summaries in a single request.
     /// </summary>
     /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="campaignId">The ID of the campaign.</param>
+    /// <param name="zone">The zone to retrieve the leaderboard from.</param>
+    /// <param name="type">The type of leaderboard.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the campaign summaries.</returns>
+    Task<MasterServerResponse<ImmutableList<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, string? campaignId = null, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets multiple campaign leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
     /// <param name="summaries">The list of campaign requests.</param>
     /// <returns>A task with the result containing the campaign summaries.</returns>
     Task<MasterServerResponse<ImmutableList<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<CampaignSummaryRequest> summaries);
@@ -90,6 +101,17 @@ public interface IMasterServerMP4 : IMasterServerMP
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task with the result containing the campaign summaries.</returns>
     Task<ImmutableList<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(string titleId, IEnumerable<CampaignSummaryRequest> summaries, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets multiple campaign leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="campaignId">The ID of the campaign.</param>
+    /// <param name="zone">The zone to retrieve the leaderboard from.</param>
+    /// <param name="type">The type of leaderboard.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the campaign summaries.</returns>
+    Task<CampaignSummary> GetCampaignLeaderBoardSummariesAsync(string titleId, string? campaignId = null, string zone = "World", CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets multiple campaign leaderboard summaries in a single request.
@@ -113,6 +135,19 @@ public interface IMasterServerMP4 : IMasterServerMP
     /// Gets multiple map leaderboard summaries in a single request.
     /// </summary>
     /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="mapUid">The unique ID of the map.</param>
+    /// <param name="zone">The zone to retrieve the leaderboard from.</param>
+    /// <param name="context">The context for the leaderboard.</param>
+    /// <param name="type">The type of leaderboard.</param>
+    /// <param name="isBinary">Whether to use binary format for scores (smaller payload) or XML format (larger payload). Default is <see langword="true"/> as it is objectively better, but you can set this to <see langword="false"/> to skip a cache once.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the map summaries.</returns>
+    Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, string mapUid, string zone = "World", string context = "", MapLeaderboardType type = MapLeaderboardType.MapRecord, bool isBinary = true, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets multiple map leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
     /// <param name="summaries">The list of map requests.</param>
     /// <returns>A task with the result containing the map summaries.</returns>
     Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(string titleId, params IEnumerable<MapSummaryRequest> summaries);
@@ -126,6 +161,19 @@ public interface IMasterServerMP4 : IMasterServerMP
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task with the result containing the map summaries.</returns>
     Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(string titleId, IEnumerable<MapSummaryRequest> summaries, bool isBinary = true, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets multiple map leaderboard summaries in a single request.
+    /// </summary>
+    /// <param name="titleId">The title ID of a title pack.</param>
+    /// <param name="mapUid">The unique ID of the map.</param>
+    /// <param name="zone">The zone to retrieve the leaderboard from.</param>
+    /// <param name="context">The context for the leaderboard.</param>
+    /// <param name="type">The type of leaderboard.</param>
+    /// <param name="isBinary">Whether to use binary format for scores (smaller payload) or XML format (larger payload). Default is <see langword="true"/> as it is objectively better, but you can set this to <see langword="false"/> to skip a cache once.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task with the result containing the map summary.</returns>
+    Task<MapSummary> GetMapLeaderBoardSummariesAsync(string titleId, string mapUid, string zone = "World", string context = "", MapLeaderboardType type = MapLeaderboardType.MapRecord, bool isBinary = true, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets multiple map leaderboard summaries in a single request.
@@ -325,6 +373,16 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
         return await GetCampaignLeaderBoardSummariesResponseAsync(titleId, summaries, cancellationToken: default);
     }
 
+    public async Task<MasterServerResponse<ImmutableList<CampaignSummary>>> GetCampaignLeaderBoardSummariesResponseAsync(
+        string titleId,
+        string? campaignId = null,
+        string zone = "World",
+        CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint,
+        CancellationToken cancellationToken = default)
+    {
+        return await GetCampaignLeaderBoardSummariesResponseAsync(titleId, [new CampaignSummaryRequest(campaignId, zone, type)], cancellationToken);
+    }
+
     public async Task<ImmutableList<CampaignSummary>> GetCampaignLeaderBoardSummariesAsync(
         string titleId,
         IEnumerable<CampaignSummaryRequest> summaries,
@@ -338,6 +396,17 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
         params IEnumerable<CampaignSummaryRequest> summaries)
     {
         return await GetCampaignLeaderBoardSummariesAsync(titleId, summaries, cancellationToken: default);
+    }
+
+    public async Task<CampaignSummary> GetCampaignLeaderBoardSummariesAsync(
+        string titleId,
+        string? campaignId = null,
+        string zone = "World",
+        CampaignLeaderboardType type = CampaignLeaderboardType.SkillPoint,
+        CancellationToken cancellationToken = default)
+    {
+        var summaries = await GetCampaignLeaderBoardSummariesAsync(titleId, [new CampaignSummaryRequest(campaignId, zone, type)], cancellationToken);
+        return summaries.FirstOrDefault() ?? throw new InvalidOperationException("No campaign summary found.");
     }
 
     public virtual async Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(
@@ -441,6 +510,18 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
 
     public async Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(
         string titleId,
+        string mapUid,
+        string zone = "World",
+        string context = "",
+        MapLeaderboardType type = MapLeaderboardType.MapRecord,
+        bool isBinary = true,
+        CancellationToken cancellationToken = default)
+    {
+        return await GetMapLeaderBoardSummariesResponseAsync(titleId, [new MapSummaryRequest(mapUid, zone, context, type)], isBinary, cancellationToken);
+    }
+
+    public async Task<MasterServerResponse<ImmutableList<MapSummary>>> GetMapLeaderBoardSummariesResponseAsync(
+        string titleId,
         params IEnumerable<MapSummaryRequest> summaries)
     {
         return await GetMapLeaderBoardSummariesResponseAsync(titleId, summaries, isBinary: true, cancellationToken: default);
@@ -453,6 +534,19 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
         CancellationToken cancellationToken = default)
     {
         return (await GetMapLeaderBoardSummariesResponseAsync(titleId, summaries, isBinary, cancellationToken)).Result;
+    }
+
+    public async Task<MapSummary> GetMapLeaderBoardSummariesAsync(
+        string titleId,
+        string mapUid,
+        string zone = "World",
+        string context = "",
+        MapLeaderboardType type = MapLeaderboardType.MapRecord,
+        bool isBinary = true,
+        CancellationToken cancellationToken = default)
+    {
+        var summaries = await GetMapLeaderBoardSummariesAsync(titleId, [new MapSummaryRequest(mapUid, zone, context, type)], isBinary, cancellationToken);
+        return summaries.FirstOrDefault() ?? throw new InvalidOperationException("No map summary found.");
     }
 
     public async Task<ImmutableList<MapSummary>> GetMapLeaderBoardSummariesAsync(
