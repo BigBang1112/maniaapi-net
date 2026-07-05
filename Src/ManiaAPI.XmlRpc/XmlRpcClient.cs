@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using MinimalXmlReader;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
@@ -391,9 +392,16 @@ public partial class XmlRpcClient : IDisposable
 
     private static void AppendXmlRpcParam<T>(StringBuilder sb, T param)
     {
-        sb.Append("<param><value>");
+        sb.Append("<param>");
+        AppendXmlRpcValue(sb, param);
+        sb.Append("</param>");
+    }
 
-        switch (param)
+    private static void AppendXmlRpcValue<T>(StringBuilder sb, T value)
+    {
+        sb.Append("<value>");
+
+        switch (value)
         {
             case int integer:
                 sb.Append("<int>");
@@ -418,12 +426,32 @@ public partial class XmlRpcClient : IDisposable
             case string str:
                 sb.Append(str);
                 break;
+            case IDictionary<string, object?> dict:
+                sb.Append("<struct>");
+                foreach (var member in dict)
+                {
+                    sb.Append("<member><name>");
+                    sb.Append(member.Key);
+                    sb.Append("</name>");
+                    AppendXmlRpcValue(sb, member.Value);
+                    sb.Append("</member>");
+                }
+                sb.Append("</struct>");
+                break;
+            case IEnumerable enumerable:
+                sb.Append("<array><data>");
+                foreach (var item in enumerable)
+                {
+                    AppendXmlRpcValue(sb, item);
+                }
+                sb.Append("</data></array>");
+                break;
             default:
-                sb.Append(param);
+                sb.Append(value);
                 break;
         }
 
-        sb.Append("</value></param>");
+        sb.Append("</value>");
     }
 
     private async Task<uint> SendXmlPayloadAsync(string xmlPayload, CancellationToken cancellationToken)
