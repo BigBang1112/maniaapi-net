@@ -15,16 +15,16 @@ This solution tries to be lightweight and compatible with as many Nadeo games as
 ```cs
 using ManiaAPI.XmlRpc;
 
-await using var xmlRpc = await XmlRpcClient.ConnectAsync("127.0.0.1");
+await using var client = await XmlRpcClient.ConnectAsync("127.0.0.1");
 
-object? authenticationResult = await xmlRpc.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
+object? authenticationResult = await client.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
 
 if (authenticationResult is not true)
 {
     throw new Exception("Authentication failed.");
 }
 
-object? gameDataResult = await xmlRpc.CallAsync("GameDataDirectory");
+object? gameDataResult = await client.CallAsync("GameDataDirectory");
 
 if (gameDataResult is not string gameDataDirectory)
 {
@@ -37,7 +37,7 @@ Console.WriteLine($"Game data directory: {gameDataDirectory}");
 For callbacks:
 
 ```cs
-object? enableCallbacksResult = await xmlRpc.CallAsync("EnableCallbacks", true);
+object? enableCallbacksResult = await client.CallAsync("EnableCallbacks", true);
 
 if (enableCallbacksResult is not true)
 {
@@ -45,10 +45,15 @@ if (enableCallbacksResult is not true)
 }
 
 // Subscribe to callbacks
-xmlRpc.Callback += async (methodName, methodParams, cancellationToken) =>
+client.Callback += async (methodName, methodParams, cancellationToken) =>
 {
     Console.WriteLine($"{methodName}: {string.Join(", ", methodParams)}");
 };
+
+client.On("TrackMania.PlayerConnect", async (methodParams, cancellationToken) => 
+{
+    // ...
+});
 
 // Keep the connection until the server closes it
 await xmlRpc.WaitForCloseAsync();

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Channels;
 
@@ -29,6 +30,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 #endif
     private readonly Channel<KeyValuePair<uint, string>> callbackChannel = Channel.CreateUnbounded<KeyValuePair<uint, string>>();
     private readonly ConcurrentDictionary<uint, Channel<string>> pendingRequests = new();
+    private readonly ConcurrentDictionary<string, List<Func<object?[], CancellationToken, Task>>> routeHandlers = new();
 
     // GBXRemote 1 has no handle to correlate requests/responses,
     // so calls must be strictly sequential to avoid cross-talk between callers
@@ -44,8 +46,8 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
     public bool IsWaitingForMessages { get; private set; }
 
-    public Task ListenTask { get; }
-    public Task CallbackTask { get; }
+    private Task ListenTask { get; }
+    private Task CallbackTask { get; }
 
     public event XmlRpcCallback? Callback;
 
@@ -59,8 +61,24 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
         stream = tcp.GetStream();
 
-        ListenTask = Task.Run(() => ListenAsync(cts.Token));
-        CallbackTask = Task.Run(() => RunCallbacksAsync(cts.Token));
+        ListenTask = Task.Run(async () =>
+        {
+            try
+            {
+                await ListenAsync(cts.Token);
+            }
+            finally
+            {
+                callbackChannel.Writer.TryComplete();
+
+                if (!cts.IsCancellationRequested)
+                {
+                    cts.Cancel();
+                }
+            }
+        });
+
+        CallbackTask = Task.Run(() => ProcessCallbacksAsync(cts.Token));
     }
 
     /// <summary>
@@ -151,6 +169,15 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         };
     }
 
+    public void On(string methodName, Func<object?[], CancellationToken, Task> handler)
+    {
+        routeHandlers.AddOrUpdate(
+            methodName,
+            _ => [handler],
+            (_, list) => { list.Add(handler); return list; }
+        );
+    }
+
     private async Task ListenAsync(CancellationToken cancellationToken = default)
     {
         while (!cancellationToken.IsCancellationRequested)
@@ -216,7 +243,35 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         }
     }
 
-    private async Task RunCallbacksAsync(CancellationToken cancellationToken)
+    public async IAsyncEnumerable<XmlRpcCallbackMessage> StreamCallbacksAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
+        
+        var streamChannel = Channel.CreateUnbounded<XmlRpcCallbackMessage>();
+
+        Task HandleCallback(string methodName, object?[] parameters, CancellationToken token)
+        {
+            streamChannel.Writer.TryWrite(new XmlRpcCallbackMessage(methodName, parameters));
+            return Task.CompletedTask;
+        }
+
+        Callback += HandleCallback;
+
+        try
+        {
+            await foreach (var message in streamChannel.Reader.ReadAllAsync(linkedCts.Token))
+            {
+                yield return message;
+            }
+        }
+        finally
+        {
+            Callback -= HandleCallback;
+            streamChannel.Writer.TryComplete();
+        }
+    }
+
+    private async Task ProcessCallbacksAsync(CancellationToken cancellationToken)
     {
         await foreach (var (handle, xml) in callbackChannel.Reader.ReadAllAsync(cancellationToken))
         {
@@ -232,12 +287,34 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
             var parameters = ReadXmlRpcParams(xml, ref r);
 
+            if (routeHandlers.TryGetValue(methodName, out var handlers))
+            {
+                await Task.WhenAll(handlers.Select(async handler =>
+                {
+                    try
+                    {
+                        await handler.Invoke(parameters, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Routed handler threw an exception for {MethodName}.", methodName);
+                    }
+                }));
+            }
+
             var callback = Callback;
-            if (callback is null) return;
+            if (callback is null) continue;
 
             await Task.WhenAll(callback.GetInvocationList().Select(async invocation =>
             {
-                await ((XmlRpcCallback)invocation).Invoke(methodName, parameters, cancellationToken);
+                try
+                {
+                    await ((XmlRpcCallback)invocation).Invoke(methodName, parameters, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Global callback threw an exception for {MethodName}.", methodName);
+                }
             }));
         }
     }
