@@ -8,7 +8,7 @@ var logger = LoggerFactory.Create(builder =>
         options.IncludeScopes = true;
         options.SingleLine = true;
     });
-    builder.SetMinimumLevel(LogLevel.Trace);
+    builder.SetMinimumLevel(LogLevel.Warning);
 }).CreateLogger<XmlRpcClient>();
 
 using var xmlRpc = await XmlRpcClient.ConnectAsync("127.0.0.1", logger: logger);
