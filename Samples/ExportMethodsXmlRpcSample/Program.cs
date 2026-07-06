@@ -15,6 +15,9 @@ using var xmlRpc = await XmlRpcClient.ConnectAsync("127.0.0.1", logger: logger);
 
 var methods = await xmlRpc.SystemListMethodsAsync();
 
+// Note: this is a rather slow approach to achieve the goal
+// for real scenarios, you would want to call SystemMulticallAsync
+// with system.methodSignature and system.methodHelp for all methods listed
 foreach (var method in methods)
 {
     var signatures = await xmlRpc.SystemMethodSignatureAsync(method);

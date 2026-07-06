@@ -7,14 +7,19 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Channels;
 
 namespace ManiaAPI.XmlRpc;
 
-public partial class XmlRpcClient : IDisposable
+public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 {
-    private const string Handshake = "GBXRemote 2";
+    private const string HandshakeV1 = "GBXRemote 1";
+    private const string HandshakeV2 = "GBXRemote 2";
+
+    // GBXRemote 1 messages carry no handle, so a fixed placeholder is used to key pending requests
+    private const uint NoHandle = 0;
 
     private uint handle = 0x80000000;
 
@@ -25,8 +30,14 @@ public partial class XmlRpcClient : IDisposable
 #endif
     private readonly Channel<KeyValuePair<uint, string>> callbackChannel = Channel.CreateUnbounded<KeyValuePair<uint, string>>();
     private readonly ConcurrentDictionary<uint, Channel<string>> pendingRequests = new();
+    private readonly ConcurrentDictionary<string, List<Func<object?[], CancellationToken, Task>>> routeHandlers = new();
+
+    // GBXRemote 1 has no handle to correlate requests/responses,
+    // so calls must be strictly sequential to avoid cross-talk between callers
+    private readonly SemaphoreSlim? v1CallSemaphore;
 
     private readonly TcpClient tcp;
+    private readonly int version;
     private readonly ILogger<XmlRpcClient> logger;
 
     private readonly NetworkStream stream;
@@ -35,20 +46,39 @@ public partial class XmlRpcClient : IDisposable
 
     public bool IsWaitingForMessages { get; private set; }
 
-    public Task ListenTask { get; }
-    public Task CallbackTask { get; }
+    private Task ListenTask { get; }
+    private Task CallbackTask { get; }
 
     public event XmlRpcCallback? Callback;
 
-    private XmlRpcClient(TcpClient tcp, ILogger<XmlRpcClient> logger)
+    private XmlRpcClient(TcpClient tcp, int version, ILogger<XmlRpcClient> logger)
     {
         this.tcp = tcp ?? throw new ArgumentNullException(nameof(tcp));
+        this.version = version;
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        v1CallSemaphore = version < 2 ? new SemaphoreSlim(1, 1) : null;
 
         stream = tcp.GetStream();
 
-        ListenTask = Task.Run(() => ListenAsync(cts.Token));
-        CallbackTask = Task.Run(() => RunCallbacksAsync(cts.Token));
+        ListenTask = Task.Run(async () =>
+        {
+            try
+            {
+                await ListenAsync(cts.Token);
+            }
+            finally
+            {
+                callbackChannel.Writer.TryComplete();
+
+                if (!cts.IsCancellationRequested)
+                {
+                    cts.Cancel();
+                }
+            }
+        });
+
+        CallbackTask = Task.Run(() => ProcessCallbacksAsync(cts.Token));
     }
 
     /// <summary>
@@ -69,8 +99,8 @@ public partial class XmlRpcClient : IDisposable
     {
         var tcp = new TcpClient();
         await tcp.ConnectAsync(ip, port, cancellationToken);
-        await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new XmlRpcClient(tcp, logger ?? NullLogger<XmlRpcClient>.Instance);
+        var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
+        return new XmlRpcClient(tcp, version, logger ?? NullLogger<XmlRpcClient>.Instance);
     }
 
     /// <summary>
@@ -91,8 +121,8 @@ public partial class XmlRpcClient : IDisposable
     {
         var tcp = new TcpClient();
         await tcp.ConnectAsync(ip, port, cancellationToken);
-        await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new XmlRpcClient(tcp, logger ?? NullLogger<XmlRpcClient>.Instance);
+        var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
+        return new XmlRpcClient(tcp, version, logger ?? NullLogger<XmlRpcClient>.Instance);
     }
 
     /// <summary>
@@ -111,11 +141,11 @@ public partial class XmlRpcClient : IDisposable
     {
         var tcp = new TcpClient();
         await tcp.ConnectAsync(endpoint, cancellationToken);
-        await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new XmlRpcClient(tcp, logger ?? NullLogger<XmlRpcClient>.Instance);
+        var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
+        return new XmlRpcClient(tcp, version, logger ?? NullLogger<XmlRpcClient>.Instance);
     }
 
-    private static async Task ValidateHeaderOrThrowAsync(NetworkStream stream, CancellationToken cancellationToken)
+    private static async Task<int> ValidateHeaderOrThrowAsync(NetworkStream stream, CancellationToken cancellationToken)
     {
         var lengthBuffer = new byte[4];
         await stream.ReadExactlyAsync(lengthBuffer, cancellationToken);
@@ -129,13 +159,23 @@ public partial class XmlRpcClient : IDisposable
         var headerBuffer = new byte[length];
         await stream.ReadExactlyAsync(headerBuffer, cancellationToken);
 
-        for (int i = 0; i < Handshake.Length; i++)
+        var header = Encoding.ASCII.GetString(headerBuffer);
+
+        return header switch
         {
-            if (headerBuffer[i] != Handshake[i])
-            {
-                throw new XmlRpcClientException("GBXRemote header is invalid");
-            }
-        }
+            HandshakeV1 => 1,
+            HandshakeV2 => 2,
+            _ => throw new XmlRpcClientException($"GBXRemote header is invalid: {header}"),
+        };
+    }
+
+    public void On(string methodName, Func<object?[], CancellationToken, Task> handler)
+    {
+        routeHandlers.AddOrUpdate(
+            methodName,
+            _ => [handler],
+            (_, list) => { list.Add(handler); return list; }
+        );
     }
 
     private async Task ListenAsync(CancellationToken cancellationToken = default)
@@ -144,11 +184,27 @@ public partial class XmlRpcClient : IDisposable
         {
             IsWaitingForMessages = true;
 
-            var payloadPrefix = new byte[8];
-            await stream.ReadExactlyAsync(payloadPrefix, cancellationToken);
+            uint handle;
+            int payloadSize;
 
-            var payloadSize = BitConverter.ToInt32(payloadPrefix, 0);
-            var handle = BitConverter.ToUInt32(payloadPrefix, 4);
+            if (version >= 2)
+            {
+                var payloadPrefix = new byte[8];
+                await stream.ReadExactlyAsync(payloadPrefix, cancellationToken);
+
+                payloadSize = BitConverter.ToInt32(payloadPrefix, 0);
+                handle = BitConverter.ToUInt32(payloadPrefix, 4);
+            }
+            else
+            {
+                // GBXRemote 1 has no handle in the message header
+                var payloadPrefix = new byte[4];
+                await stream.ReadExactlyAsync(payloadPrefix, cancellationToken);
+
+                payloadSize = BitConverter.ToInt32(payloadPrefix, 0);
+                handle = NoHandle;
+            }
+
             var payloadBuffer = new byte[payloadSize];
             await stream.ReadExactlyAsync(payloadBuffer, cancellationToken);
 
@@ -157,7 +213,10 @@ public partial class XmlRpcClient : IDisposable
             var payload = Encoding.UTF8.GetString(payloadBuffer);
 
             // if handle is sent method (not callback)
-            var isCallback = (handle >> 31) == 0;
+            // GBXRemote 1 has no handle, so distinguish by the actual XML root element instead.
+            var isCallback = version >= 2
+                ? (handle >> 31) == 0
+                : IsMethodCallPayload(payload);
 
             if (isCallback)
             {
@@ -184,12 +243,38 @@ public partial class XmlRpcClient : IDisposable
         }
     }
 
-    private async Task RunCallbacksAsync(CancellationToken cancellationToken)
+    public async IAsyncEnumerable<XmlRpcCallbackMessage> StreamCallbacksAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            var (handle, xml) = await callbackChannel.Reader.ReadAsync(cancellationToken);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
+        
+        var streamChannel = Channel.CreateUnbounded<XmlRpcCallbackMessage>();
 
+        Task HandleCallback(string methodName, object?[] parameters, CancellationToken token)
+        {
+            streamChannel.Writer.TryWrite(new XmlRpcCallbackMessage(methodName, parameters));
+            return Task.CompletedTask;
+        }
+
+        Callback += HandleCallback;
+
+        try
+        {
+            await foreach (var message in streamChannel.Reader.ReadAllAsync(linkedCts.Token))
+            {
+                yield return message;
+            }
+        }
+        finally
+        {
+            Callback -= HandleCallback;
+            streamChannel.Writer.TryComplete();
+        }
+    }
+
+    private async Task ProcessCallbacksAsync(CancellationToken cancellationToken)
+    {
+        await foreach (var (handle, xml) in callbackChannel.Reader.ReadAllAsync(cancellationToken))
+        {
             var r = new MiniXmlReader(xml);
 
             _ = r.SkipProcessingInstruction();
@@ -202,10 +287,35 @@ public partial class XmlRpcClient : IDisposable
 
             var parameters = ReadXmlRpcParams(xml, ref r);
 
-            if (Callback is not null)
+            if (routeHandlers.TryGetValue(methodName, out var handlers))
             {
-                await Callback.Invoke(methodName, parameters, cancellationToken);
+                await Task.WhenAll(handlers.Select(async handler =>
+                {
+                    try
+                    {
+                        await handler.Invoke(parameters, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Routed handler threw an exception for {MethodName}.", methodName);
+                    }
+                }));
             }
+
+            var callback = Callback;
+            if (callback is null) continue;
+
+            await Task.WhenAll(callback.GetInvocationList().Select(async invocation =>
+            {
+                try
+                {
+                    await ((XmlRpcCallback)invocation).Invoke(methodName, parameters, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Global callback threw an exception for {MethodName}.", methodName);
+                }
+            }));
         }
     }
 
@@ -236,6 +346,11 @@ public partial class XmlRpcClient : IDisposable
         return ParseXmlRpcMethodResponse(xmlResult);
     }
 
+    public async Task<object?> CallAsync(string methodName, params object?[] methodParams)
+    {
+        return await CallAsync(methodName, methodParams, CancellationToken.None);
+    }
+
     public async Task<object?> CallAsync(string methodName, CancellationToken cancellationToken = default)
     {
         return await CallAsync(methodName, [], cancellationToken);
@@ -245,28 +360,51 @@ public partial class XmlRpcClient : IDisposable
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var startTime = Stopwatch.GetTimestamp();
-
-        var handle = await SendXmlPayloadAsync(xmlPayload, cancellationToken);
-
-        if (logger.IsEnabled(LogLevel.Debug))
+        if (v1CallSemaphore is not null)
         {
-            logger.LogDebug("{MethodName} (0x{Handle}) has been sent. Waiting for response...", methodName, handle.ToString("x8"));
+            await v1CallSemaphore.WaitAsync(cancellationToken);
         }
 
-        var channel = GetOrCreatePendingRequestChannel(handle);
-        var xml = await channel.Reader.ReadAsync(cancellationToken);
-
-        pendingRequests.Remove(handle, out _);
-
-        var elapsed = Stopwatch.GetElapsedTime(startTime);
-
-        if (logger.IsEnabled(LogLevel.Debug))
+        try
         {
-            logger.LogDebug("{MethodName} (0x{Handle}) response received (in {ElapsedMilliseconds}ms).", methodName, handle.ToString("x8"), elapsed.TotalMilliseconds);
-        }
+            var startTime = Stopwatch.GetTimestamp();
 
-        return xml;
+            var handle = await SendXmlPayloadAsync(xmlPayload, cancellationToken);
+
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("{MethodName} (0x{Handle}) has been sent. Waiting for response...", methodName, handle.ToString("x8"));
+            }
+
+            var channel = GetOrCreatePendingRequestChannel(handle);
+            var xml = await channel.Reader.ReadAsync(cancellationToken);
+
+            pendingRequests.Remove(handle, out _);
+
+            var elapsed = Stopwatch.GetElapsedTime(startTime);
+
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("{MethodName} (0x{Handle}) response received (in {ElapsedMilliseconds}ms).", methodName, handle.ToString("x8"), elapsed.TotalMilliseconds);
+            }
+
+            return xml;
+        }
+        finally
+        {
+            v1CallSemaphore?.Release();
+        }
+    }
+
+    // Checks whether the payload's actual root element is <methodCall> (a server-initiated callback),
+    // as opposed to <methodResponse>/<fault> (a reply to our request). Anchored to the root element
+    // rather than a raw substring search, since response data (e.g. string values) is not guaranteed
+    // to be escaped and could otherwise coincidentally contain the literal text "<methodCall>".
+    private static bool IsMethodCallPayload(string payload)
+    {
+        var declarationEnd = payload.IndexOf("?>", StringComparison.Ordinal);
+        var rootStart = declarationEnd >= 0 ? declarationEnd + 2 : 0;
+        return payload.AsSpan(rootStart).TrimStart().StartsWith("<methodCall>", StringComparison.Ordinal);
     }
 
     private Channel<string> GetOrCreatePendingRequestChannel(uint handle)
@@ -456,38 +594,66 @@ public partial class XmlRpcClient : IDisposable
 
     private async Task<uint> SendXmlPayloadAsync(string xmlPayload, CancellationToken cancellationToken)
     {
-        const int headerSize = sizeof(uint) + sizeof(uint);
-
         var xmlPayloadByteCount = Encoding.UTF8.GetByteCount(xmlPayload);
 
-        // uint32 xmlPayloadByteCount (4 bytes)
-        // uint32 handle (+4 bytes = 8)
-        // bytes xmlPayload (length of xmlPayloadByteCount)
-        var buffer = new byte[xmlPayloadByteCount + headerSize];
-
-        var bufferedXmlPayloadByteCount = Encoding.UTF8.GetBytes(xmlPayload, buffer.AsSpan().Slice(headerSize));
-
-        if (bufferedXmlPayloadByteCount != xmlPayloadByteCount)
+        if (version >= 2)
         {
-            throw new XmlRpcClientException($"Invalid string buffering (expected {xmlPayloadByteCount} bytes, got {bufferedXmlPayloadByteCount} bytes)");
-        }
+            const int headerSize = sizeof(uint) + sizeof(uint);
 
-        if (!BitConverter.TryWriteBytes(buffer, xmlPayloadByteCount))
+            // uint32 xmlPayloadByteCount (4 bytes)
+            // uint32 handle (+4 bytes = 8)
+            // bytes xmlPayload (length of xmlPayloadByteCount)
+            var buffer = new byte[xmlPayloadByteCount + headerSize];
+
+            var bufferedXmlPayloadByteCount = Encoding.UTF8.GetBytes(xmlPayload, buffer.AsSpan().Slice(headerSize));
+
+            if (bufferedXmlPayloadByteCount != xmlPayloadByteCount)
+            {
+                throw new XmlRpcClientException($"Invalid string buffering (expected {xmlPayloadByteCount} bytes, got {bufferedXmlPayloadByteCount} bytes)");
+            }
+
+            if (!BitConverter.TryWriteBytes(buffer, xmlPayloadByteCount))
+            {
+                throw new XmlRpcClientException("Failed to write XML payload byte count to buffer");
+            }
+
+            var handle = GetNextHandle();
+
+            // Write handle as uint32 at offset 4
+            if (!BitConverter.TryWriteBytes(buffer.AsSpan().Slice(4), handle))
+            {
+                throw new XmlRpcClientException("Failed to write handle to buffer");
+            }
+
+            await stream.WriteAsync(buffer, cancellationToken);
+
+            return handle;
+        }
+        else
         {
-            throw new XmlRpcClientException("Failed to write XML payload byte count to buffer");
+            const int headerSize = sizeof(uint);
+
+            // uint32 xmlPayloadByteCount (4 bytes)
+            // bytes xmlPayload (length of xmlPayloadByteCount)
+            // GBXRemote 1 has no handle field
+            var buffer = new byte[xmlPayloadByteCount + headerSize];
+
+            var bufferedXmlPayloadByteCount = Encoding.UTF8.GetBytes(xmlPayload, buffer.AsSpan().Slice(headerSize));
+
+            if (bufferedXmlPayloadByteCount != xmlPayloadByteCount)
+            {
+                throw new XmlRpcClientException($"Invalid string buffering (expected {xmlPayloadByteCount} bytes, got {bufferedXmlPayloadByteCount} bytes)");
+            }
+
+            if (!BitConverter.TryWriteBytes(buffer, xmlPayloadByteCount))
+            {
+                throw new XmlRpcClientException("Failed to write XML payload byte count to buffer");
+            }
+
+            await stream.WriteAsync(buffer, cancellationToken);
+
+            return NoHandle;
         }
-
-        var handle = GetNextHandle();
-
-        // Write handle as uint32 at offset 4
-        if (!BitConverter.TryWriteBytes(buffer.AsSpan().Slice(4), handle))
-        {
-            throw new XmlRpcClientException("Failed to write handle to buffer");
-        }
-
-        await stream.WriteAsync(buffer, cancellationToken);
-
-        return handle;
     }
 
     private uint GetNextHandle()
@@ -503,10 +669,53 @@ public partial class XmlRpcClient : IDisposable
         }
     }
 
+    /// <summary>
+    /// Waits until the connection is closed, whether because the client was disposed,
+    /// the remote host closed it, or an error occurred while listening for messages.
+    /// </summary>
+    /// <param name="cancellationToken">A token that, when canceled, stops waiting without closing the connection.</param>
+    public async Task WaitForCloseAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await ListenTask.WaitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException ex) when (ex.CancellationToken != cancellationToken)
+        {
+            // The listen loop stopped because the client was disposed - this is a normal closure.
+        }
+    }
+
     public void Dispose()
     {
         cts.Cancel();
         tcp.Dispose();
+        cts.Dispose();
+        v1CallSemaphore?.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        cts.Cancel();
+
+        try
+        {
+            await Task.WhenAll(ListenTask, CallbackTask);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected: the listen/callback loops observe the cancellation and stop.
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "XML-RPC background task ended unexpectedly during dispose.");
+        }
+
+        tcp.Dispose();
+        cts.Dispose();
+        v1CallSemaphore?.Dispose();
+
         GC.SuppressFinalize(this);
     }
 }
