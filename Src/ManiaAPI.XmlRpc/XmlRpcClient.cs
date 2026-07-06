@@ -14,7 +14,11 @@ namespace ManiaAPI.XmlRpc;
 
 public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 {
-    private const string Handshake = "GBXRemote 2";
+    private const string HandshakeV1 = "GBXRemote 1";
+    private const string HandshakeV2 = "GBXRemote 2";
+
+    // GBXRemote 1 messages carry no handle, so a fixed placeholder is used to key pending requests
+    private const uint NoHandle = 0;
 
     private uint handle = 0x80000000;
 
@@ -27,6 +31,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     private readonly ConcurrentDictionary<uint, Channel<string>> pendingRequests = new();
 
     private readonly TcpClient tcp;
+    private readonly int version;
     private readonly ILogger<XmlRpcClient> logger;
 
     private readonly NetworkStream stream;
@@ -40,9 +45,10 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
     public event XmlRpcCallback? Callback;
 
-    private XmlRpcClient(TcpClient tcp, ILogger<XmlRpcClient> logger)
+    private XmlRpcClient(TcpClient tcp, int version, ILogger<XmlRpcClient> logger)
     {
         this.tcp = tcp ?? throw new ArgumentNullException(nameof(tcp));
+        this.version = version;
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         stream = tcp.GetStream();
@@ -69,8 +75,8 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     {
         var tcp = new TcpClient();
         await tcp.ConnectAsync(ip, port, cancellationToken);
-        await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new XmlRpcClient(tcp, logger ?? NullLogger<XmlRpcClient>.Instance);
+        var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
+        return new XmlRpcClient(tcp, version, logger ?? NullLogger<XmlRpcClient>.Instance);
     }
 
     /// <summary>
@@ -91,8 +97,8 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     {
         var tcp = new TcpClient();
         await tcp.ConnectAsync(ip, port, cancellationToken);
-        await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new XmlRpcClient(tcp, logger ?? NullLogger<XmlRpcClient>.Instance);
+        var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
+        return new XmlRpcClient(tcp, version, logger ?? NullLogger<XmlRpcClient>.Instance);
     }
 
     /// <summary>
@@ -111,11 +117,11 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     {
         var tcp = new TcpClient();
         await tcp.ConnectAsync(endpoint, cancellationToken);
-        await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new XmlRpcClient(tcp, logger ?? NullLogger<XmlRpcClient>.Instance);
+        var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
+        return new XmlRpcClient(tcp, version, logger ?? NullLogger<XmlRpcClient>.Instance);
     }
 
-    private static async Task ValidateHeaderOrThrowAsync(NetworkStream stream, CancellationToken cancellationToken)
+    private static async Task<int> ValidateHeaderOrThrowAsync(NetworkStream stream, CancellationToken cancellationToken)
     {
         var lengthBuffer = new byte[4];
         await stream.ReadExactlyAsync(lengthBuffer, cancellationToken);
@@ -129,13 +135,14 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         var headerBuffer = new byte[length];
         await stream.ReadExactlyAsync(headerBuffer, cancellationToken);
 
-        for (int i = 0; i < Handshake.Length; i++)
+        var header = Encoding.ASCII.GetString(headerBuffer);
+
+        return header switch
         {
-            if (headerBuffer[i] != Handshake[i])
-            {
-                throw new XmlRpcClientException("GBXRemote header is invalid");
-            }
-        }
+            HandshakeV1 => 1,
+            HandshakeV2 => 2,
+            _ => throw new XmlRpcClientException($"GBXRemote header is invalid: {header}"),
+        };
     }
 
     private async Task ListenAsync(CancellationToken cancellationToken = default)
@@ -144,11 +151,27 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         {
             IsWaitingForMessages = true;
 
-            var payloadPrefix = new byte[8];
-            await stream.ReadExactlyAsync(payloadPrefix, cancellationToken);
+            uint handle;
+            int payloadSize;
 
-            var payloadSize = BitConverter.ToInt32(payloadPrefix, 0);
-            var handle = BitConverter.ToUInt32(payloadPrefix, 4);
+            if (version >= 2)
+            {
+                var payloadPrefix = new byte[8];
+                await stream.ReadExactlyAsync(payloadPrefix, cancellationToken);
+
+                payloadSize = BitConverter.ToInt32(payloadPrefix, 0);
+                handle = BitConverter.ToUInt32(payloadPrefix, 4);
+            }
+            else
+            {
+                // GBXRemote 1 has no handle in the message header
+                var payloadPrefix = new byte[4];
+                await stream.ReadExactlyAsync(payloadPrefix, cancellationToken);
+
+                payloadSize = BitConverter.ToInt32(payloadPrefix, 0);
+                handle = NoHandle;
+            }
+
             var payloadBuffer = new byte[payloadSize];
             await stream.ReadExactlyAsync(payloadBuffer, cancellationToken);
 
@@ -157,7 +180,10 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             var payload = Encoding.UTF8.GetString(payloadBuffer);
 
             // if handle is sent method (not callback)
-            var isCallback = (handle >> 31) == 0;
+            // GBXRemote 1 has no handle, so distinguish by the XML root element instead.
+            var isCallback = version >= 2
+                ? (handle >> 31) == 0
+                : payload.Contains("<methodCall>", StringComparison.Ordinal);
 
             if (isCallback)
             {
@@ -461,38 +487,66 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
     private async Task<uint> SendXmlPayloadAsync(string xmlPayload, CancellationToken cancellationToken)
     {
-        const int headerSize = sizeof(uint) + sizeof(uint);
-
         var xmlPayloadByteCount = Encoding.UTF8.GetByteCount(xmlPayload);
 
-        // uint32 xmlPayloadByteCount (4 bytes)
-        // uint32 handle (+4 bytes = 8)
-        // bytes xmlPayload (length of xmlPayloadByteCount)
-        var buffer = new byte[xmlPayloadByteCount + headerSize];
-
-        var bufferedXmlPayloadByteCount = Encoding.UTF8.GetBytes(xmlPayload, buffer.AsSpan().Slice(headerSize));
-
-        if (bufferedXmlPayloadByteCount != xmlPayloadByteCount)
+        if (version >= 2)
         {
-            throw new XmlRpcClientException($"Invalid string buffering (expected {xmlPayloadByteCount} bytes, got {bufferedXmlPayloadByteCount} bytes)");
-        }
+            const int headerSize = sizeof(uint) + sizeof(uint);
 
-        if (!BitConverter.TryWriteBytes(buffer, xmlPayloadByteCount))
+            // uint32 xmlPayloadByteCount (4 bytes)
+            // uint32 handle (+4 bytes = 8)
+            // bytes xmlPayload (length of xmlPayloadByteCount)
+            var buffer = new byte[xmlPayloadByteCount + headerSize];
+
+            var bufferedXmlPayloadByteCount = Encoding.UTF8.GetBytes(xmlPayload, buffer.AsSpan().Slice(headerSize));
+
+            if (bufferedXmlPayloadByteCount != xmlPayloadByteCount)
+            {
+                throw new XmlRpcClientException($"Invalid string buffering (expected {xmlPayloadByteCount} bytes, got {bufferedXmlPayloadByteCount} bytes)");
+            }
+
+            if (!BitConverter.TryWriteBytes(buffer, xmlPayloadByteCount))
+            {
+                throw new XmlRpcClientException("Failed to write XML payload byte count to buffer");
+            }
+
+            var handle = GetNextHandle();
+
+            // Write handle as uint32 at offset 4
+            if (!BitConverter.TryWriteBytes(buffer.AsSpan().Slice(4), handle))
+            {
+                throw new XmlRpcClientException("Failed to write handle to buffer");
+            }
+
+            await stream.WriteAsync(buffer, cancellationToken);
+
+            return handle;
+        }
+        else
         {
-            throw new XmlRpcClientException("Failed to write XML payload byte count to buffer");
+            const int headerSize = sizeof(uint);
+
+            // uint32 xmlPayloadByteCount (4 bytes)
+            // bytes xmlPayload (length of xmlPayloadByteCount)
+            // GBXRemote 1 has no handle field
+            var buffer = new byte[xmlPayloadByteCount + headerSize];
+
+            var bufferedXmlPayloadByteCount = Encoding.UTF8.GetBytes(xmlPayload, buffer.AsSpan().Slice(headerSize));
+
+            if (bufferedXmlPayloadByteCount != xmlPayloadByteCount)
+            {
+                throw new XmlRpcClientException($"Invalid string buffering (expected {xmlPayloadByteCount} bytes, got {bufferedXmlPayloadByteCount} bytes)");
+            }
+
+            if (!BitConverter.TryWriteBytes(buffer, xmlPayloadByteCount))
+            {
+                throw new XmlRpcClientException("Failed to write XML payload byte count to buffer");
+            }
+
+            await stream.WriteAsync(buffer, cancellationToken);
+
+            return NoHandle;
         }
-
-        var handle = GetNextHandle();
-
-        // Write handle as uint32 at offset 4
-        if (!BitConverter.TryWriteBytes(buffer.AsSpan().Slice(4), handle))
-        {
-            throw new XmlRpcClientException("Failed to write handle to buffer");
-        }
-
-        await stream.WriteAsync(buffer, cancellationToken);
-
-        return handle;
     }
 
     private uint GetNextHandle()
