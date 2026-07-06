@@ -30,6 +30,10 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     private readonly Channel<KeyValuePair<uint, string>> callbackChannel = Channel.CreateUnbounded<KeyValuePair<uint, string>>();
     private readonly ConcurrentDictionary<uint, Channel<string>> pendingRequests = new();
 
+    // GBXRemote 1 has no handle to correlate requests/responses, so calls must be strictly
+    // sequential (send, then wait for the matching response) to avoid cross-talk between callers.
+    private readonly SemaphoreSlim? v1CallSemaphore;
+
     private readonly TcpClient tcp;
     private readonly int version;
     private readonly ILogger<XmlRpcClient> logger;
@@ -50,6 +54,8 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         this.tcp = tcp ?? throw new ArgumentNullException(nameof(tcp));
         this.version = version;
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        v1CallSemaphore = version < 2 ? new SemaphoreSlim(1, 1) : null;
 
         stream = tcp.GetStream();
 
@@ -180,10 +186,10 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             var payload = Encoding.UTF8.GetString(payloadBuffer);
 
             // if handle is sent method (not callback)
-            // GBXRemote 1 has no handle, so distinguish by the XML root element instead.
+            // GBXRemote 1 has no handle, so distinguish by the actual XML root element instead.
             var isCallback = version >= 2
                 ? (handle >> 31) == 0
-                : payload.Contains("<methodCall>", StringComparison.Ordinal);
+                : IsMethodCallPayload(payload);
 
             if (isCallback)
             {
@@ -276,28 +282,51 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var startTime = Stopwatch.GetTimestamp();
-
-        var handle = await SendXmlPayloadAsync(xmlPayload, cancellationToken);
-
-        if (logger.IsEnabled(LogLevel.Debug))
+        if (v1CallSemaphore is not null)
         {
-            logger.LogDebug("{MethodName} (0x{Handle}) has been sent. Waiting for response...", methodName, handle.ToString("x8"));
+            await v1CallSemaphore.WaitAsync(cancellationToken);
         }
 
-        var channel = GetOrCreatePendingRequestChannel(handle);
-        var xml = await channel.Reader.ReadAsync(cancellationToken);
-
-        pendingRequests.Remove(handle, out _);
-
-        var elapsed = Stopwatch.GetElapsedTime(startTime);
-
-        if (logger.IsEnabled(LogLevel.Debug))
+        try
         {
-            logger.LogDebug("{MethodName} (0x{Handle}) response received (in {ElapsedMilliseconds}ms).", methodName, handle.ToString("x8"), elapsed.TotalMilliseconds);
-        }
+            var startTime = Stopwatch.GetTimestamp();
 
-        return xml;
+            var handle = await SendXmlPayloadAsync(xmlPayload, cancellationToken);
+
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("{MethodName} (0x{Handle}) has been sent. Waiting for response...", methodName, handle.ToString("x8"));
+            }
+
+            var channel = GetOrCreatePendingRequestChannel(handle);
+            var xml = await channel.Reader.ReadAsync(cancellationToken);
+
+            pendingRequests.Remove(handle, out _);
+
+            var elapsed = Stopwatch.GetElapsedTime(startTime);
+
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("{MethodName} (0x{Handle}) response received (in {ElapsedMilliseconds}ms).", methodName, handle.ToString("x8"), elapsed.TotalMilliseconds);
+            }
+
+            return xml;
+        }
+        finally
+        {
+            v1CallSemaphore?.Release();
+        }
+    }
+
+    // Checks whether the payload's actual root element is <methodCall> (a server-initiated callback),
+    // as opposed to <methodResponse>/<fault> (a reply to our request). Anchored to the root element
+    // rather than a raw substring search, since response data (e.g. string values) is not guaranteed
+    // to be escaped and could otherwise coincidentally contain the literal text "<methodCall>".
+    private static bool IsMethodCallPayload(string payload)
+    {
+        var declarationEnd = payload.IndexOf("?>", StringComparison.Ordinal);
+        var rootStart = declarationEnd >= 0 ? declarationEnd + 2 : 0;
+        return payload.AsSpan(rootStart).TrimStart().StartsWith("<methodCall>", StringComparison.Ordinal);
     }
 
     private Channel<string> GetOrCreatePendingRequestChannel(uint handle)
@@ -584,6 +613,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         cts.Cancel();
         tcp.Dispose();
         cts.Dispose();
+        v1CallSemaphore?.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -606,6 +636,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
         tcp.Dispose();
         cts.Dispose();
+        v1CallSemaphore?.Dispose();
 
         GC.SuppressFinalize(this);
     }
