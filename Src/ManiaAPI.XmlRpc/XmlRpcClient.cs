@@ -30,8 +30,8 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     private readonly Channel<KeyValuePair<uint, string>> callbackChannel = Channel.CreateUnbounded<KeyValuePair<uint, string>>();
     private readonly ConcurrentDictionary<uint, Channel<string>> pendingRequests = new();
 
-    // GBXRemote 1 has no handle to correlate requests/responses, so calls must be strictly
-    // sequential (send, then wait for the matching response) to avoid cross-talk between callers.
+    // GBXRemote 1 has no handle to correlate requests/responses,
+    // so calls must be strictly sequential to avoid cross-talk between callers
     private readonly SemaphoreSlim? v1CallSemaphore;
 
     private readonly TcpClient tcp;
@@ -218,10 +218,8 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
     private async Task RunCallbacksAsync(CancellationToken cancellationToken)
     {
-        while (!cancellationToken.IsCancellationRequested)
+        await foreach (var (handle, xml) in callbackChannel.Reader.ReadAllAsync(cancellationToken))
         {
-            var (handle, xml) = await callbackChannel.Reader.ReadAsync(cancellationToken);
-
             var r = new MiniXmlReader(xml);
 
             _ = r.SkipProcessingInstruction();
@@ -234,10 +232,13 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
             var parameters = ReadXmlRpcParams(xml, ref r);
 
-            if (Callback is not null)
+            var callback = Callback;
+            if (callback is null) return;
+
+            await Task.WhenAll(callback.GetInvocationList().Select(async invocation =>
             {
-                await Callback.Invoke(methodName, parameters, cancellationToken);
-            }
+                await ((XmlRpcCallback)invocation).Invoke(methodName, parameters, cancellationToken);
+            }));
         }
     }
 
