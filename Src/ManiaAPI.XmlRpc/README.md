@@ -17,19 +17,14 @@ using ManiaAPI.XmlRpc;
 
 await using var client = await XmlRpcClient.ConnectAsync("127.0.0.1");
 
-object? authenticationResult = await client.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
+object authenticationResult = await client.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
 
 if (authenticationResult is not true)
 {
     throw new Exception("Authentication failed.");
 }
 
-object? gameDataResult = await client.CallAsync("GameDataDirectory");
-
-if (gameDataResult is not string gameDataDirectory)
-{
-    throw new Exception("Failed to retrieve game data directory.");
-}
+string gameDataDirectory = await client.CallAsync<string>("GameDataDirectory");
 
 Console.WriteLine($"Game data directory: {gameDataDirectory}");
 ```
@@ -37,9 +32,9 @@ Console.WriteLine($"Game data directory: {gameDataDirectory}");
 For callbacks:
 
 ```cs
-object? enableCallbacksResult = await client.CallAsync("EnableCallbacks", true);
+bool enableCallbacksResult = await client.CallAsync<bool>("EnableCallbacks", true);
 
-if (enableCallbacksResult is not true)
+if (!enableCallbacksResult)
 {
     throw new Exception("Failed to enable callbacks.");
 }
@@ -56,5 +51,5 @@ client.On("TrackMania.PlayerConnect", async (methodParams, cancellationToken) =>
 });
 
 // Keep the connection until the server closes it
-await xmlRpc.WaitForCloseAsync();
+await client.WaitForCloseAsync();
 ```
