@@ -728,7 +728,7 @@ var masterServer = new MasterServerTMUF();
 
 ### Setup for ManiaPlanet
 
-First examples assume `Maniaplanet relay 2` master server is still running.
+First examples assume `Maniaplanet relay 1` master server is still running.
 
 ```cs
 using ManiaAPI.Xml;
@@ -748,7 +748,7 @@ var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression =
 var masterServer = new MasterServerMP4(httpClient);
 ```
 
-In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to the init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
+In case `Maniaplanet relay 1` shuts down / errors out, you have to reach out to the init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
 
 ```cs
 using ManiaAPI.Xml;
@@ -855,7 +855,7 @@ using ManiaAPI.Xml.Extensions.Hosting;
 builder.Services.AddMasterServerMP4();
 ```
 
-You can now inject `MasterServerMP4`, as long as you're fine relying on `Maniaplanet relay 2` to continue running, and use it without additional steps. Compression is enabled.
+You can now inject `MasterServerMP4`, as long as you're fine relying on `Maniaplanet relay 1` to continue running, and use it without additional steps. Compression is enabled.
 
 If you want to have better control over the selection of master servers, use this setup:
 
@@ -877,7 +877,7 @@ var masterServer = factory.CreateClient();
 
 Features this setup brings:
 - You can inject `IMasterServerMP4Factory` to create multiple instances of `MasterServerMP4` with different master servers and refresh them
-- You can inject `MasterServerMP4` to get a default instance using `Maniaplanet relay 2`
+- You can inject `MasterServerMP4` to get a default instance using `Maniaplanet relay 1`
 - You can inject `InitServerMP4` to get the init server
 - All `MasterServerMP4` handle GZIP compression
 
