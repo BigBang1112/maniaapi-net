@@ -62,3 +62,22 @@ app.Run();
 ```
 
 You can inject `ManiaPlanetAPI` if you create a special HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options.
+
+## Resilience
+
+Both `AddManiaPlanetAPI` and `AddManiaPlanetIngameAPI` return an `IHttpClientBuilder`, so you can chain [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) directly onto them to add retries, timeouts, and circuit breakers:
+
+```cs
+using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
+
+builder.Services.AddManiaPlanetAPI(options =>
+{
+    options.Credentials = new ManiaPlanetAPICredentials(
+        builder.Configuration["ManiaPlanet:ClientId"]!,
+        builder.Configuration["ManiaPlanet:ClientSecret"]!);
+})
+.AddStandardResilienceHandler();
+
+builder.Services.AddManiaPlanetIngameAPI()
+    .AddStandardResilienceHandler();
+```

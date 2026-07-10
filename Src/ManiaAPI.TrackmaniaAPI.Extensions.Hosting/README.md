@@ -52,3 +52,19 @@ app.Run();
 ```
 
 You can inject `TrackmaniaAPI` if you create a special HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options.
+
+## Resilience
+
+`AddTrackmaniaAPI` returns an `IHttpClientBuilder`, so you can chain [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) directly onto it to add retries, timeouts, and circuit breakers:
+
+```cs
+using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
+
+builder.Services.AddTrackmaniaAPI(options =>
+{
+    options.Credentials = new ManiaPlanetAPICredentials(
+        builder.Configuration["Trackmania:ClientId"]!,
+        builder.Configuration["Trackmania:ClientSecret"]!);
+})
+.AddStandardResilienceHandler();
+```

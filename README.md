@@ -173,6 +173,24 @@ Features this setup brings:
 - HTTP client will be handled properly
 - Credentials will be handled as a singleton
 
+### Resilience
+
+Since the setup exposes each service's `IHttpClientBuilder` through `configureNadeoServices`, `configureNadeoLiveServices`, and `configureNadeoMeetServices`, you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
+
+```cs
+using ManiaAPI.NadeoAPI.Extensions.Hosting;
+
+builder.Services.AddNadeoAPI(options =>
+{
+    options.Credentials = new NadeoAPICredentials(
+        builder.Configuration["NadeoAPI:Login"]!,
+        builder.Configuration["NadeoAPI:Password"]!);
+},
+configureNadeoServices: http => http.AddStandardResilienceHandler(),
+configureNadeoLiveServices: http => http.AddStandardResilienceHandler(),
+configureNadeoMeetServices: http => http.AddStandardResilienceHandler());
+```
+
 ## ManiaAPI.NadeoAPI.Extensions.Gbx
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.NadeoAPI.Extensions.Gbx?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.NadeoAPI.Extensions.Gbx/)
@@ -288,6 +306,22 @@ app.Run();
 
 You can inject `TrackmaniaAPI` if you create a special HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options - see the [sample](Samples/WebAppAuthorizationExample).
 
+### Resilience
+
+`AddTrackmaniaAPI` returns an `IHttpClientBuilder`, so you can chain [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) directly onto it to add retries, timeouts, and circuit breakers:
+
+```cs
+using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
+
+builder.Services.AddTrackmaniaAPI(options =>
+{
+    options.Credentials = new ManiaPlanetAPICredentials(
+        builder.Configuration["Trackmania:ClientId"]!,
+        builder.Configuration["Trackmania:ClientSecret"]!);
+})
+.AddStandardResilienceHandler();
+```
+
 ## ManiaAPI.ManiaPlanetAPI
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.ManiaPlanetAPI?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.ManiaPlanetAPI/)
@@ -402,6 +436,25 @@ app.Run();
 
 You can inject `ManiaPlanetAPI` if you create a special HTTP client handler to provide the token from `HttpContext.GetTokenAsync("access_token")` and use that to get more information from the authorized user. Don't forget to set `SaveTokens = true` in options - see the [sample](Samples/WebAppAuthorizationExample).
 
+### Resilience
+
+Both `AddManiaPlanetAPI` and `AddManiaPlanetIngameAPI` return an `IHttpClientBuilder`, so you can chain [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) directly onto them to add retries, timeouts, and circuit breakers:
+
+```cs
+using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
+
+builder.Services.AddManiaPlanetAPI(options =>
+{
+    options.Credentials = new ManiaPlanetAPICredentials(
+        builder.Configuration["ManiaPlanet:ClientId"]!,
+        builder.Configuration["ManiaPlanet:ClientSecret"]!);
+})
+.AddStandardResilienceHandler();
+
+builder.Services.AddManiaPlanetIngameAPI()
+    .AddStandardResilienceHandler();
+```
+
 ## ManiaAPI.TrackmaniaIO
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TrackmaniaIO?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TrackmaniaIO/)
@@ -479,6 +532,20 @@ builder.Services.AddTrackmaniaWS(new TrackmaniaWSOptions
 });
 ```
 
+### Resilience
+
+`AddTrackmaniaWS` returns an `IHttpClientBuilder`, so you can chain [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) directly onto it to add retries, timeouts, and circuit breakers:
+
+```cs
+using ManiaAPI.TrackmaniaWS.Extensions.Hosting;
+
+builder.Services.AddTrackmaniaWS(new TrackmaniaWSOptions
+{
+    Credentials = new("tmf_yourapp", "password")
+})
+.AddStandardResilienceHandler();
+```
+
 ## ManiaAPI.TMX
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.TMX?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.TMX/)
@@ -553,6 +620,19 @@ Features this setup brings:
 
 > [!WARNING]
 > If you just inject `TMX` alone, it will give the last-registered one (in this case, Original). If you need a specific site, use `[FromKeyedServices(...)]`.
+
+### Resilience
+
+`TmxOptions.ConfigureHttpClient` gives you access to each site's `IHttpClientBuilder`, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
+
+```cs
+using ManiaAPI.TMX.Extensions.Hosting;
+
+builder.Services.AddTMX(options =>
+{
+    options.ConfigureHttpClient = http => http.AddStandardResilienceHandler();
+});
+```
 
 ## ManiaAPI.TMX.Extensions.Gbx
 
@@ -833,6 +913,25 @@ Features this last setup brings:
 
 > [!WARNING]
 > If you just inject `MasterServerTMT` alone, it will give the last-registered one (in this case, PS4). If you need a specific platform, use `[FromKeyedServices(...)]`.
+
+### Resilience
+
+`AddMasterServerTMUF` returns an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
+
+```cs
+using ManiaAPI.Xml.Extensions.Hosting;
+
+builder.Services.AddMasterServerTMUF()
+    .AddStandardResilienceHandler();
+
+builder.Services.AddMasterServerMP4(
+    configureInitServer: http => http.AddStandardResilienceHandler(),
+    configureMasterServer: http => http.AddStandardResilienceHandler());
+
+builder.Services.AddMasterServerTMT(
+    configureInitServer: http => http.AddStandardResilienceHandler(),
+    configureMasterServer: http => http.AddStandardResilienceHandler());
+```
 
 ## ManiaAPI.XmlRpc
 

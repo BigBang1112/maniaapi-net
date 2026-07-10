@@ -78,3 +78,22 @@ Features this last setup brings:
 
 > [!WARNING]
 > If you just inject `MasterServerTMT` alone, it will give the last-registered one (in this case, PS4). If you need a specific platform, use `[FromKeyedServices(...)]`.
+
+## Resilience
+
+`AddMasterServerTMUF` returns an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
+
+```cs
+using ManiaAPI.Xml.Extensions.Hosting;
+
+builder.Services.AddMasterServerTMUF()
+    .AddStandardResilienceHandler();
+
+builder.Services.AddMasterServerMP4(
+    configureInitServer: http => http.AddStandardResilienceHandler(),
+    configureMasterServer: http => http.AddStandardResilienceHandler());
+
+builder.Services.AddMasterServerTMT(
+    configureInitServer: http => http.AddStandardResilienceHandler(),
+    configureMasterServer: http => http.AddStandardResilienceHandler());
+```
