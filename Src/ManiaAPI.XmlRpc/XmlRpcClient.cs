@@ -339,19 +339,19 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return await CallXmlAsync(methodName, [], cancellationToken);
     }
 
-    public async Task<object?> CallAsync(string methodName, object?[] methodParams, CancellationToken cancellationToken = default)
+    public async Task<object> CallAsync(string methodName, object?[] methodParams, CancellationToken cancellationToken = default)
     {
         var xmlResult = await CallXmlAsync(methodName, methodParams, cancellationToken);
 
         return ParseXmlRpcMethodResponse(xmlResult);
     }
 
-    public async Task<object?> CallAsync(string methodName, params object?[] methodParams)
+    public async Task<object> CallAsync(string methodName, params object?[] methodParams)
     {
         return await CallAsync(methodName, methodParams, CancellationToken.None);
     }
 
-    public async Task<object?> CallAsync(string methodName, CancellationToken cancellationToken = default)
+    public async Task<object> CallAsync(string methodName, CancellationToken cancellationToken = default)
     {
         return await CallAsync(methodName, [], cancellationToken);
     }
@@ -412,7 +412,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return pendingRequests.GetOrAdd(handle, _ => Channel.CreateBounded<string>(1));
     }
 
-    private static object? ParseXmlRpcMethodResponse(string xml)
+    private static object ParseXmlRpcMethodResponse(string xml)
     {
         var r = new MiniXmlReader(xml);
 
@@ -423,7 +423,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return parameters.Length == 1 ? parameters[0] : parameters;
     }
 
-    private static object?[] ReadXmlRpcParams(string xml, ref MiniXmlReader r)
+    private static object[] ReadXmlRpcParams(string xml, ref MiniXmlReader r)
     {
         if (!r.SkipStartElement("params"))
         {
@@ -432,20 +432,20 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
                 throw new XmlRpcClientException(xml);
             }
 
-            if (ReadXmlRpcValue(ref r) is not Dictionary<string, object?> faultDict)
+            if (ReadXmlRpcValue(ref r) is not Dictionary<string, object> faultDict)
             {
                 throw new XmlRpcClientException("Fault is not dictionary, cannot gather details");
             }
 
             if (faultDict.TryGetValue("faultString", out var faultString))
             {
-                throw new XmlRpcFaultException(faultString?.ToString());
+                throw new XmlRpcFaultException(faultString?.ToString() ?? "Unknown fault");
             }
 
             throw new XmlRpcClientException("Cannot gather fault details (faultString not found)");
         }
 
-        var parameters = new List<object?>();
+        var parameters = new List<object>();
 
         while (r.SkipStartElement("param"))
         {
@@ -456,13 +456,13 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return parameters.ToArray();
     }
 
-    private static object? ReadXmlRpcValue(ref MiniXmlReader r)
+    private static object ReadXmlRpcValue(ref MiniXmlReader r)
     {
         _ = r.SkipStartElement("value");
 
         var type = r.ReadStartElement();
 
-        object? value = type switch
+        object value = type switch
         {
             "i4" or "int" => int.Parse(r.ReadContent()),
             "string" => WebUtility.HtmlDecode(r.ReadContentAsString()),
@@ -479,9 +479,9 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return value;
     }
 
-    private static Dictionary<string, object?> ReadXmlRpcStruct(ref MiniXmlReader r)
+    private static Dictionary<string, object> ReadXmlRpcStruct(ref MiniXmlReader r)
     {
-        var dict = new Dictionary<string, object?>();
+        var dict = new Dictionary<string, object>();
 
         while (r.SkipStartElement("member"))
         {
