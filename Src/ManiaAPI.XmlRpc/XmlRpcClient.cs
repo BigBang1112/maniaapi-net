@@ -356,6 +356,21 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return await CallAsync(methodName, [], cancellationToken);
     }
 
+    public async Task<T> CallAsync<T>(string methodName, object?[] methodParams, CancellationToken cancellationToken = default)
+    {
+        return (T)await CallAsync(methodName, methodParams, cancellationToken);
+    }
+
+    public async Task<T> CallAsync<T>(string methodName, params object?[] methodParams)
+    {
+        return (T)await CallAsync(methodName, methodParams);
+    }
+
+    public async Task<T> CallAsync<T>(string methodName, CancellationToken cancellationToken = default)
+    {
+        return (T)await CallAsync(methodName, cancellationToken);
+    }
+
     private async Task<string> SendAndReceiveAsync(string methodName, string xmlPayload, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
