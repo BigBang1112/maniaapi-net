@@ -53,3 +53,24 @@ client.On("TrackMania.PlayerConnect", async (methodParams, cancellationToken) =>
 // Keep the connection until the server closes it
 await client.WaitForCloseAsync();
 ```
+
+## Resilience
+
+`XmlRpcClient` communicates over a raw TCP connection. Wrap `ConnectAsync` with a [`Polly`](https://www.nuget.org/packages/Polly) pipeline to retry on transient connection failures:
+
+```cs
+using ManiaAPI.XmlRpc;
+using Polly;
+using Polly.Retry;
+
+var pipeline = new ResiliencePipelineBuilder()
+    .AddRetry(new RetryStrategyOptions
+    {
+        MaxRetryAttempts = 5,
+        BackoffType = DelayBackoffType.Exponential
+    })
+    .Build();
+
+await using var client = await pipeline.ExecuteAsync(async token =>
+    await XmlRpcClient.ConnectAsync("127.0.0.1", 5000, cancellationToken: token));
+```

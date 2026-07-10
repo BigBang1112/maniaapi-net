@@ -55,6 +55,8 @@ You can inject `TrackmaniaAPI` if you create a special HTTP client handler to pr
 
 ## Resilience
 
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
 `AddTrackmaniaAPI` returns an `IHttpClientBuilder`, so you can chain [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) directly onto it to add retries, timeouts, and circuit breakers:
 
 ```cs

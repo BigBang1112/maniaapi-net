@@ -175,6 +175,8 @@ Features this setup brings:
 
 ### Resilience
 
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
 Since the setup exposes each service's `IHttpClientBuilder` through `configureNadeoServices`, `configureNadeoLiveServices`, and `configureNadeoMeetServices`, you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
 
 ```cs
@@ -308,6 +310,8 @@ You can inject `TrackmaniaAPI` if you create a special HTTP client handler to pr
 
 ### Resilience
 
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
 `AddTrackmaniaAPI` returns an `IHttpClientBuilder`, so you can chain [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) directly onto it to add retries, timeouts, and circuit breakers:
 
 ```cs
@@ -438,6 +442,8 @@ You can inject `ManiaPlanetAPI` if you create a special HTTP client handler to p
 
 ### Resilience
 
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
 Both `AddManiaPlanetAPI` and `AddManiaPlanetIngameAPI` return an `IHttpClientBuilder`, so you can chain [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) directly onto them to add retries, timeouts, and circuit breakers:
 
 ```cs
@@ -534,6 +540,8 @@ builder.Services.AddTrackmaniaWS(new TrackmaniaWSOptions
 
 ### Resilience
 
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
 `AddTrackmaniaWS` returns an `IHttpClientBuilder`, so you can chain [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) directly onto it to add retries, timeouts, and circuit breakers:
 
 ```cs
@@ -622,6 +630,8 @@ Features this setup brings:
 > If you just inject `TMX` alone, it will give the last-registered one (in this case, Original). If you need a specific site, use `[FromKeyedServices(...)]`.
 
 ### Resilience
+
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
 
 `TmxOptions.ConfigureHttpClient` gives you access to each site's `IHttpClientBuilder`, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
 
@@ -916,6 +926,8 @@ Features this last setup brings:
 
 ### Resilience
 
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
 `AddMasterServerTMUF` returns an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
 
 ```cs
@@ -987,6 +999,27 @@ client.On("TrackMania.PlayerConnect", async (methodParams, cancellationToken) =>
 
 // Keep the connection until the server closes it
 await client.WaitForCloseAsync();
+```
+
+### Resilience
+
+`XmlRpcClient` communicates over a raw TCP connection. Wrap `ConnectAsync` with a [`Polly`](https://www.nuget.org/packages/Polly) pipeline to retry on transient connection failures:
+
+```cs
+using ManiaAPI.XmlRpc;
+using Polly;
+using Polly.Retry;
+
+var pipeline = new ResiliencePipelineBuilder()
+    .AddRetry(new RetryStrategyOptions
+    {
+        MaxRetryAttempts = 5,
+        BackoffType = DelayBackoffType.Exponential
+    })
+    .Build();
+
+await using var client = await pipeline.ExecuteAsync(async token =>
+    await XmlRpcClient.ConnectAsync("127.0.0.1", 5000, cancellationToken: token));
 ```
 
 ## ManiaAPI.UnitedLadder

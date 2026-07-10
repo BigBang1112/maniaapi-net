@@ -65,6 +65,8 @@ You can inject `ManiaPlanetAPI` if you create a special HTTP client handler to p
 
 ## Resilience
 
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
 Both `AddManiaPlanetAPI` and `AddManiaPlanetIngameAPI` return an `IHttpClientBuilder`, so you can chain [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) directly onto them to add retries, timeouts, and circuit breakers:
 
 ```cs

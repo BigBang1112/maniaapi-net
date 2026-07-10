@@ -26,6 +26,8 @@ Features this setup brings:
 
 ## Resilience
 
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
 Since the setup exposes each service's `IHttpClientBuilder` through `configureNadeoServices`, `configureNadeoLiveServices`, and `configureNadeoMeetServices`, you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
 
 ```cs

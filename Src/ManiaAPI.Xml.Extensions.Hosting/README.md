@@ -81,6 +81,8 @@ Features this last setup brings:
 
 ## Resilience
 
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
 `AddMasterServerTMUF` returns an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
 
 ```cs
