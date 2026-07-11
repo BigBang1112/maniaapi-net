@@ -84,14 +84,17 @@ public class NadeoLiveServicesTests
         var clubTopLeaderboard = await nls.GetClubTopLeaderboardAsync(sampleMapUids.First(), clubs.ClubList.First().Id);
         var trophyRankings = await nls.GetPlayerTrophyRankingsAsync(Guid.Parse("6a43df20-cd1a-4b3b-87b9-a6835a9b416d"));
 
-        // the following all require authentication through a Ubisoft user account, so they fail with a dedicated server account
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nls.GetDedicatedServerAccountsAsync());
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nls.GetPlayerClubCampaignRankingAsync(sampleGroupId, clubs.ClubList.First().Id));
+        var dedicatedServerAccounts = await nls.GetDedicatedServerAccountsAsync();
+        var playerClubCampaignRanking = await nls.GetPlayerClubCampaignRankingAsync(sampleGroupId, clubs.ClubList.First().Id);
+        var ownTrophyRanking = await nls.GetOwnTrophyRankingAsync();
+
+        await nls.AddFavoriteMapAsync(sampleMapUids.First());
+        await nls.RemoveFavoriteMapAsync(sampleMapUids.First());
+
+        var favoriteMaps = await nls.GetFavoriteMapsAsync(5);
+        var uploadedMaps = await nls.GetUploadedMapsAsync(5);
+
+        // the following require authentication through a Ubisoft user account, so they fail with a dedicated server account
         await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nls.GetPlayerClubMapRecordAsync(sampleMapUids.First(), clubs.ClubList.First().Id));
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nls.GetOwnTrophyRankingAsync());
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nls.AddFavoriteMapAsync(sampleMapUids.First()));
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nls.RemoveFavoriteMapAsync(sampleMapUids.First()));
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nls.GetFavoriteMapsAsync(5));
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nls.GetUploadedMapsAsync(5));
     }
 }

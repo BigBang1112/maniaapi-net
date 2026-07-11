@@ -38,7 +38,6 @@ public class NadeoMeetServicesTests
 #pragma warning disable IDE0059
         var cotd = await nadeoMeetServices.GetCurrentCupOfTheDayAsync();
         var cotds = await nadeoMeetServices.GetCupsOfTheDayAsync(CupOfTheDayType.COTW);
-#pragma warning restore IDE0059
 
         var competitions = await nadeoMeetServices.GetCompetitionsAsync(5);
         var sampleCompetitionId = competitions.First().LiveId;
@@ -59,12 +58,10 @@ public class NadeoMeetServicesTests
         var matchmakingPlayerRanks = await nadeoMeetServices.GetMatchmakingPlayerRanksAsync(matchmakingSummary.Ranked3v3Id, [matchmakingRankings.Results.First().Player]);
         var matchmakingPlayerProgressions = await nadeoMeetServices.GetMatchmakingPlayerProgressionsAsync(matchmakingSummary.Ranked3v3Id, [matchmakingRankings.Results.First().Player]);
 
-        // the following all require authentication through a Ubisoft user account, so they fail with a dedicated server account
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nadeoMeetServices.GetMyClubCompetitionsAsync(5));
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nadeoMeetServices.GetMatchmakingPlayerStatusAsync(matchmakingSummary.Ranked3v3Id));
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nadeoMeetServices.SendMatchmakingHeartbeatAsync(matchmakingSummary.Ranked3v3Id, "", []));
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nadeoMeetServices.CancelMatchmakingAsync(matchmakingSummary.Ranked3v3Id));
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nadeoMeetServices.GetSuperRoyalStatusAsync());
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => nadeoMeetServices.GetSuperRoyalStatisticsAsync());
+        var myClubCompetitions = await nadeoMeetServices.GetMyClubCompetitionsAsync(5);
+        var matchmakingPlayerStatus = await nadeoMeetServices.GetMatchmakingPlayerStatusAsync(matchmakingSummary.Ranked3v3Id);
+        var superRoyalStatus = await nadeoMeetServices.GetSuperRoyalStatusAsync();
+        var superRoyalStatistics = await nadeoMeetServices.GetSuperRoyalStatisticsAsync();
+#pragma warning restore IDE0059
     }
 }

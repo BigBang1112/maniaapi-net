@@ -63,7 +63,7 @@ public interface INadeoLiveServices : INadeoAPI
     Task<string> JoinDailyChannelAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// This request requires authentication through service account.
+    /// This request returns empty list if authenticated through dedicated server.
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
@@ -90,7 +90,7 @@ public interface INadeoLiveServices : INadeoAPI
     /// <returns></returns>
     Task<ClubCampaignTopCollection> GetClubCampaignLeaderboardAsync(string groupUid, int clubId, int length = 5, int offset = 0, CancellationToken cancellationToken = default);
     /// <summary>
-    /// This request requires authentication through service account. The <paramref name="groupUid"/> "Personal_Best" cannot be used for this endpoint because it requires a group that refers to a campaign or season.
+    /// This request returns empty model if authenticated through dedicated server. The <paramref name="groupUid"/> "Personal_Best" cannot be used for this endpoint because it requires a group that refers to a campaign or season.
     /// </summary>
     /// <param name="groupUid"></param>
     /// <param name="clubId"></param>
@@ -134,27 +134,27 @@ public interface INadeoLiveServices : INadeoAPI
     Task<TrophyRankingCollection> GetPlayerTrophyRankingsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<TrophyRankingCollection> GetPlayerTrophyRankingsAsync(params Guid[] accountIds);
     /// <summary>
-    /// This request requires authentication through service account.
+    /// This request returns empty model if authenticated through dedicated server.
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<TrophyPlayerRanking> GetOwnTrophyRankingAsync(CancellationToken cancellationToken = default);
     /// <summary>
-    /// This request requires authentication through service account.
+    /// This request requires authentication through service account, but does not error out on dedicated servers (silently fails).
     /// </summary>
     /// <param name="mapUid"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task AddFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
     /// <summary>
-    /// This request requires authentication through service account.
+    /// This request requires authentication through service account, but does not error out on dedicated servers (silently fails).
     /// </summary>
     /// <param name="mapUid"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task RemoveFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
     /// <summary>
-    /// This request requires authentication through service account.
+    /// This request returns empty list if authenticated through dedicated server.
     /// </summary>
     /// <param name="length"></param>
     /// <param name="offset"></param>
@@ -167,7 +167,7 @@ public interface INadeoLiveServices : INadeoAPI
     /// <returns></returns>
     Task<MapInfoLiveCollection> GetFavoriteMapsAsync(int length, int offset = 0, string sort = "date", string order = "desc", string? mapTypeList = null, bool? playable = null, bool? onlyMine = null, CancellationToken cancellationToken = default);
     /// <summary>
-    /// This request requires authentication through service account.
+    /// This request returns empty list if authenticated through dedicated server.
     /// </summary>
     /// <param name="length"></param>
     /// <param name="offset"></param>

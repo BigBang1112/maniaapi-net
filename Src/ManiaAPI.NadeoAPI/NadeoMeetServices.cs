@@ -21,7 +21,7 @@ public interface INadeoMeetServices : INadeoAPI
     Task<ImmutableList<CompetitionTeam>> GetCompetitionTeamsAsync(string competitionId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// This request requires authentication through service account.
+    /// This request returns empty list if authenticated through dedicated server.
     /// </summary>
     /// <param name="length"></param>
     /// <param name="offset"></param>
@@ -84,7 +84,7 @@ public interface INadeoMeetServices : INadeoAPI
     Task<MatchmakingProgressionCollection> GetMatchmakingPlayerProgressionsAsync(int matchmakingType, IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<MatchmakingDivisionCollection> GetMatchmakingDivisionsAsync(int matchmakingType, CancellationToken cancellationToken = default);
     /// <summary>
-    /// This request requires authentication through service account.
+    /// This request returns empty model if authenticated through dedicated server.
     /// </summary>
     /// <param name="matchmakingType"></param>
     /// <param name="cancellationToken"></param>
@@ -92,8 +92,8 @@ public interface INadeoMeetServices : INadeoAPI
     Task<MatchmakingPlayerStatus> GetMatchmakingPlayerStatusAsync(int matchmakingType, CancellationToken cancellationToken = default);
     Task<MatchmakingSummary> GetMatchmakingSummaryAsync(CancellationToken cancellationToken = default);
 
-    Task<SuperRoyalStatus> GetSuperRoyalStatusAsync(CancellationToken cancellationToken = default);
-    Task<SuperRoyalStatistics> GetSuperRoyalStatisticsAsync(CancellationToken cancellationToken = default);
+    Task<SuperRoyalStatus?> GetSuperRoyalStatusAsync(CancellationToken cancellationToken = default);
+    Task<SuperRoyalStatistics?> GetSuperRoyalStatisticsAsync(CancellationToken cancellationToken = default);
 }
 
 public class NadeoMeetServices : NadeoAPI, INadeoMeetServices
@@ -301,13 +301,27 @@ public class NadeoMeetServices : NadeoAPI, INadeoMeetServices
         return await GetJsonAsync("official/summary", NadeoAPIJsonContext.Default.MatchmakingSummary, cancellationToken);
     }
 
-    public virtual async Task<SuperRoyalStatus> GetSuperRoyalStatusAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<SuperRoyalStatus?> GetSuperRoyalStatusAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("me/super-royal/current", NadeoAPIJsonContext.Default.SuperRoyalStatus, cancellationToken);
+        try
+        {
+            return await GetJsonAsync("me/super-royal/current", NadeoAPIJsonContext.Default.SuperRoyalStatus, cancellationToken);
+        }
+        catch (NadeoAPIResponseException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
     }
 
-    public virtual async Task<SuperRoyalStatistics> GetSuperRoyalStatisticsAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<SuperRoyalStatistics?> GetSuperRoyalStatisticsAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("me/super-royal/stats", NadeoAPIJsonContext.Default.SuperRoyalStatistics, cancellationToken);
+        try
+        {
+            return await GetJsonAsync("me/super-royal/stats", NadeoAPIJsonContext.Default.SuperRoyalStatistics, cancellationToken);
+        }
+        catch (NadeoAPIResponseException ex) when(ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
     }
 }
