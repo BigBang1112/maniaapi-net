@@ -249,7 +249,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         
         var streamChannel = Channel.CreateUnbounded<XmlRpcCallbackMessage>();
 
-        Task HandleCallback(string methodName, object?[] parameters, CancellationToken token)
+        Task HandleCallback(string methodName, object[] parameters, CancellationToken token)
         {
             streamChannel.Writer.TryWrite(new XmlRpcCallbackMessage(methodName, parameters));
             return Task.CompletedTask;
