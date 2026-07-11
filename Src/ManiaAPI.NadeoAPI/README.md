@@ -23,6 +23,11 @@ For `NadeoServices`:
 - Get all available zones
 - Get player club tags
 - Get map info
+- Get player trophy history and summary
+- Get, add, and remove favorite maps
+- Get and set map votes
+- Get submitted maps
+- Get favorited skins
 
 For `NadeoLiveServices`:
 
@@ -43,11 +48,26 @@ For `NadeoLiveServices`:
 - Get player season rankings
 - Get active advertisements
 - Join daily channel (COTD)
+- Get dedicated server accounts
+- Get cup of the week campaigns
+- Get campaign and club leaderboards/rankings
+- Get player records across multiple maps
+- Get surrounding leaderboard records
+- Get player trophy rankings
+- Get, add, and remove favorite maps
+- Get uploaded maps
+- Create, edit, and delete clubs, campaigns, rooms, news, rankings, and map reviews
+- Manage club members, VIPs, and upload activities
+- Get and submit map review activities
 
 For `NadeoMeetServices`:
 
 - Get the current Cup of the Day
 - Get various Cups of the Day
+- Get competitions, challenges, and their leaderboards/participants/rounds/teams
+- Get matches and competition match results
+- Matchmaking rankings, progressions, divisions, and heartbeat
+- Get Super Royal status and statistics
 
 ## Setup for a single service
 

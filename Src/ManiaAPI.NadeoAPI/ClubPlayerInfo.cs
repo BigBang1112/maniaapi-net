@@ -5,4 +5,5 @@ public sealed record ClubPlayerInfo(bool HasClubVip,
                                     bool HasFollower,
                                     int TagClubId,
                                     string Tag,
-                                    int PinnedClub);
+                                    int PinnedClub,
+                                    string? PinnedClubName = null);

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Net.Http.Json;
 
 namespace ManiaAPI.NadeoAPI;
 
@@ -74,6 +75,86 @@ public interface INadeoServices : INadeoAPI
     Task<ImmutableList<SkinIdentifier>> GetSkinsByAccountIdsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<ImmutableList<SkinIdentifier>> GetSkinsByAccountIdsAsync(params Guid[] accountIds);
     Task<SkinIdentifier?> GetSkinByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="accountId"></param>
+    /// <param name="count">The number of entries to retrieve. Max allowed is 1000.</param>
+    /// <param name="offset">The number of entries to skip (looking back from the most recent).</param>
+    /// <param name="trophyType">The level of trophy to filter for (between 1 and 9).</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<TrophyHistoryCollection> GetPlayerTrophyHistoryAsync(Guid accountId, int count = 100, int offset = 0, int? trophyType = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="accountId"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<TrophySummary> GetPlayerTrophySummaryAsync(Guid accountId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="mapUid"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task AddFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="mapUid"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task RemoveFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="length"></param>
+    /// <param name="offset"></param>
+    /// <param name="sort">Either "date" or "name".</param>
+    /// <param name="order">Either "asc" or "desc".</param>
+    /// <param name="mapTypeList"></param>
+    /// <param name="playable"></param>
+    /// <param name="onlyMine"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<MapFavoriteCollection> GetFavoriteMapsAsync(int length, int offset = 0, string sort = "date", string order = "desc", string? mapTypeList = null, bool? playable = null, bool? onlyMine = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="mapUids"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<MapFavoriteCollection> GetFavoriteMapsByUidsAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default);
+    Task<MapFavoriteCollection> GetFavoriteMapsByUidsAsync(params string[] mapUids);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="mapUid"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<MapVote> GetMapVoteAsync(string mapUid, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="mapUid"></param>
+    /// <param name="vote">-1 for a dislike, 1 for a like, 0 to unset the vote.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task SetMapVoteAsync(string mapUid, int vote, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<MapInfoCollection> GetSubmittedMapsAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="accountId"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<ImmutableList<SkinFavorite>> GetFavoriteSkinsAsync(Guid accountId, CancellationToken cancellationToken = default);
 }
 
 public class NadeoServices : NadeoAPI, INadeoServices
@@ -259,5 +340,77 @@ public class NadeoServices : NadeoAPI, INadeoServices
     public async Task<SkinIdentifier?> GetSkinByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         return (await GetSkinsByAccountIdsAsync([accountId], cancellationToken)).FirstOrDefault();
+    }
+
+    public virtual async Task<TrophyHistoryCollection> GetPlayerTrophyHistoryAsync(Guid accountId, int count = 100, int offset = 0, int? trophyType = null, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"accounts/{accountId}/trophies?count={count}&offset={offset}{(trophyType is null ? "" : $"&trophyType={trophyType}")}",
+            NadeoAPIJsonContext.Default.TrophyHistoryCollection, cancellationToken);
+    }
+
+    public virtual async Task<TrophySummary> GetPlayerTrophySummaryAsync(Guid accountId, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"accounts/{accountId}/trophies/lastYearSummary", NadeoAPIJsonContext.Default.TrophySummary, cancellationToken);
+    }
+
+    public virtual async Task AddFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+
+        var jsonContent = JsonContent.Create(new MapUidRequest(mapUid), NadeoAPIJsonContext.Default.MapUidRequest);
+        using var response = await SendAsync(HttpMethod.Post, "maps/favorites", jsonContent, cancellationToken);
+    }
+
+    public virtual async Task RemoveFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+
+        var jsonContent = JsonContent.Create(new MapUidRequest(mapUid), NadeoAPIJsonContext.Default.MapUidRequest);
+        using var response = await SendAsync(HttpMethod.Delete, "maps/favorites", jsonContent, cancellationToken);
+    }
+
+    public virtual async Task<MapFavoriteCollection> GetFavoriteMapsAsync(int length, int offset = 0, string sort = "date", string order = "desc", string? mapTypeList = null, bool? playable = null, bool? onlyMine = null, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"maps/favorites?offset={offset}&length={length}&sort={sort}&order={order}" +
+            $"{(mapTypeList is null ? "" : $"&mapTypeList={mapTypeList}")}" +
+            $"{(playable is null ? "" : $"&playable={playable}")}" +
+            $"{(onlyMine is null ? "" : $"&onlyMine={onlyMine}")}",
+            NadeoAPIJsonContext.Default.MapFavoriteCollection, cancellationToken);
+    }
+
+    public virtual async Task<MapFavoriteCollection> GetFavoriteMapsByUidsAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"maps/favorites/by-map-uids?mapUidList={string.Join(',', mapUids)}",
+            NadeoAPIJsonContext.Default.MapFavoriteCollection, cancellationToken);
+    }
+
+    public async Task<MapFavoriteCollection> GetFavoriteMapsByUidsAsync(params string[] mapUids)
+    {
+        return await GetFavoriteMapsByUidsAsync(mapUids, CancellationToken.None);
+    }
+
+    public virtual async Task<MapVote> GetMapVoteAsync(string mapUid, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+
+        return await GetJsonAsync($"maps/{mapUid}/votes", NadeoAPIJsonContext.Default.MapVote, cancellationToken);
+    }
+
+    public virtual async Task SetMapVoteAsync(string mapUid, int vote, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+
+        var jsonContent = JsonContent.Create(new MapVoteRequest(vote), NadeoAPIJsonContext.Default.MapVoteRequest);
+        using var response = await SendAsync(HttpMethod.Post, $"maps/{mapUid}/votes", jsonContent, cancellationToken);
+    }
+
+    public virtual async Task<MapInfoCollection> GetSubmittedMapsAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync("maps/by-submitter", NadeoAPIJsonContext.Default.MapInfoCollection, cancellationToken);
+    }
+
+    public virtual async Task<ImmutableList<SkinFavorite>> GetFavoriteSkinsAsync(Guid accountId, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"accounts/{accountId}/skins/favorites/", NadeoAPIJsonContext.Default.ImmutableListSkinFavorite, cancellationToken);
     }
 }
