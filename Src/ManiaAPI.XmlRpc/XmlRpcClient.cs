@@ -56,7 +56,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         this.tcp = tcp ?? throw new ArgumentNullException(nameof(tcp));
         this.version = version;
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
+        
         v1CallSemaphore = version < 2 ? new SemaphoreSlim(1, 1) : null;
 
         stream = tcp.GetStream();
