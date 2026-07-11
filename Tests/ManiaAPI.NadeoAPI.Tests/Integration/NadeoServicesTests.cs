@@ -74,5 +74,16 @@ public class NadeoServicesTests
 
         await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetSkinsByAccountIdsAsync(Guid.Parse("6a43df20-cd1a-4b3b-87b9-a6835a9b416d")));
 
+        // the following all require authentication through a Ubisoft user account, so they fail with a dedicated server account
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetPlayerTrophyHistoryAsync(accountList.First()));
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetPlayerTrophySummaryAsync(accountList.First()));
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.AddFavoriteMapAsync(mapInfoById.MapUid));
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.RemoveFavoriteMapAsync(mapInfoById.MapUid));
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetFavoriteMapsAsync(10));
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetFavoriteMapsByUidsAsync(mapInfoById.MapUid));
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetMapVoteAsync(mapInfoById.MapUid));
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.SetMapVoteAsync(mapInfoById.MapUid, 1));
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetSubmittedMapsAsync());
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetFavoriteSkinsAsync(accountList.First()));
     }
 }

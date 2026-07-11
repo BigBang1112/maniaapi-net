@@ -20,7 +20,7 @@ using ManiaAPI.Xml.Extensions.Hosting;
 builder.Services.AddMasterServerMP4();
 ```
 
-You can now inject `MasterServerMP4`, as long as you're fine relying on `Maniaplanet relay 2` to continue running, and use it without additional steps. Compression is enabled.
+You can now inject `MasterServerMP4`, as long as you're fine relying on `Maniaplanet relay 1` to continue running, and use it without additional steps. Compression is enabled.
 
 If you want to have better control over the selection of master servers, use this setup:
 
@@ -42,7 +42,7 @@ var masterServer = factory.CreateClient();
 
 Features this setup brings:
 - You can inject `IMasterServerMP4Factory` to create multiple instances of `MasterServerMP4` with different master servers and refresh them
-- You can inject `MasterServerMP4` to get a default instance using `Maniaplanet relay 2`
+- You can inject `MasterServerMP4` to get a default instance using `Maniaplanet relay 1`
 - You can inject `InitServerMP4` to get the init server
 - All `MasterServerMP4` handle GZIP compression
 
@@ -78,3 +78,24 @@ Features this last setup brings:
 
 > [!WARNING]
 > If you just inject `MasterServerTMT` alone, it will give the last-registered one (in this case, PS4). If you need a specific platform, use `[FromKeyedServices(...)]`.
+
+## Resilience
+
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
+`AddMasterServerTMUF` returns an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
+
+```cs
+using ManiaAPI.Xml.Extensions.Hosting;
+
+builder.Services.AddMasterServerTMUF()
+    .AddStandardResilienceHandler();
+
+builder.Services.AddMasterServerMP4(
+    configureInitServer: http => http.AddStandardResilienceHandler(),
+    configureMasterServer: http => http.AddStandardResilienceHandler());
+
+builder.Services.AddMasterServerTMT(
+    configureInitServer: http => http.AddStandardResilienceHandler(),
+    configureMasterServer: http => http.AddStandardResilienceHandler());
+```

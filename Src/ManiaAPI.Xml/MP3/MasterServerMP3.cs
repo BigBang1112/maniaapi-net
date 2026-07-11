@@ -4,7 +4,12 @@ public interface IMasterServerMP3 : IMasterServerMP;
 
 public class MasterServerMP3 : MasterServerMP, IMasterServerMP3
 {
-    public const string DefaultUrl = "http://mp05.maniaplanet.com/game/request.php";
+    public const string DefaultUrl = DefaultUrlMP05;
+    public const string DefaultUrlMP01 = "http://mp01.maniaplanet.com/game/request.php";
+    public const string DefaultUrlMP02 = "http://mp02.maniaplanet.com/game/request.php";
+    public const string DefaultUrlMP03 = "http://mp03.maniaplanet.com/game/request.php";
+    public const string DefaultUrlMP04 = "http://mp04.maniaplanet.com/game/request.php";
+    public const string DefaultUrlMP05 = "http://mp05.maniaplanet.com/game/request.php";
 
     protected override string GameXml => XmlHelperMP3.GameXml;
     protected override string GetGameXml(string titleId) => $"{GameXml}<title>{titleId}</title>";

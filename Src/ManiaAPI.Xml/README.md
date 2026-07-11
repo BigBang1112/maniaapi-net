@@ -65,7 +65,7 @@ var masterServer = new MasterServerTMUF();
 
 ## Setup for ManiaPlanet
 
-First examples assume `Maniaplanet relay 2` master server is still running.
+First examples assume `Maniaplanet relay 1` master server is still running.
 
 ```cs
 using ManiaAPI.Xml;
@@ -85,7 +85,7 @@ var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression =
 var masterServer = new MasterServerMP4(httpClient);
 ```
 
-In case `Maniaplanet relay 2` shuts down / errors out, you have to reach out to the init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
+In case `Maniaplanet relay 1` shuts down / errors out, you have to reach out to the init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
 
 ```cs
 using ManiaAPI.Xml;

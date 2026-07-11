@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
@@ -37,6 +38,30 @@ public class NadeoMeetServicesTests
 #pragma warning disable IDE0059
         var cotd = await nadeoMeetServices.GetCurrentCupOfTheDayAsync();
         var cotds = await nadeoMeetServices.GetCupsOfTheDayAsync(CupOfTheDayType.COTW);
+
+        var competitions = await nadeoMeetServices.GetCompetitionsAsync(5);
+        var sampleCompetitionId = competitions.First().LiveId;
+        var competition = await nadeoMeetServices.GetCompetitionAsync(sampleCompetitionId);
+        var competitionLeaderboard = await nadeoMeetServices.GetCompetitionLeaderboardAsync(sampleCompetitionId, 5);
+        var competitionParticipants = await nadeoMeetServices.GetCompetitionParticipantsAsync(sampleCompetitionId, 5);
+        var competitionRounds = await nadeoMeetServices.GetCompetitionRoundsAsync(sampleCompetitionId);
+        var competitionTeams = await nadeoMeetServices.GetCompetitionTeamsAsync(sampleCompetitionId);
+
+        var challenges = await nadeoMeetServices.GetChallengesAsync(5);
+        var sampleChallengeId = challenges.First().Id.ToString();
+        var challenge = await nadeoMeetServices.GetChallengeAsync(sampleChallengeId);
+        var challengeLeaderboard = await nadeoMeetServices.GetChallengeLeaderboardAsync(sampleChallengeId, 5);
+
+        var matchmakingSummary = await nadeoMeetServices.GetMatchmakingSummaryAsync();
+        var matchmakingDivisions = await nadeoMeetServices.GetMatchmakingDivisionsAsync(matchmakingSummary.Ranked3v3Id);
+        var matchmakingRankings = await nadeoMeetServices.GetMatchmakingRankingsAsync(matchmakingSummary.Ranked3v3Id, 5);
+        var matchmakingPlayerRanks = await nadeoMeetServices.GetMatchmakingPlayerRanksAsync(matchmakingSummary.Ranked3v3Id, [matchmakingRankings.Results.First().Player]);
+        var matchmakingPlayerProgressions = await nadeoMeetServices.GetMatchmakingPlayerProgressionsAsync(matchmakingSummary.Ranked3v3Id, [matchmakingRankings.Results.First().Player]);
+
+        var myClubCompetitions = await nadeoMeetServices.GetMyClubCompetitionsAsync(5);
+        var matchmakingPlayerStatus = await nadeoMeetServices.GetMatchmakingPlayerStatusAsync(matchmakingSummary.Ranked3v3Id);
+        var superRoyalStatus = await nadeoMeetServices.GetSuperRoyalStatusAsync();
+        var superRoyalStatistics = await nadeoMeetServices.GetSuperRoyalStatisticsAsync();
 #pragma warning restore IDE0059
     }
 }

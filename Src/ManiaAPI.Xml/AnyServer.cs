@@ -22,7 +22,7 @@ public abstract class AnyServer : IAnyServer
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.8.5";
+        const string version = "2.9.0";
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 

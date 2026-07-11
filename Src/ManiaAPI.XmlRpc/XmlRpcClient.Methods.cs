@@ -4,24 +4,14 @@ public partial class XmlRpcClient
 {
     public async Task<IEnumerable<string>> SystemListMethodsAsync(CancellationToken cancellationToken = default)
     {
-        var result = await CallAsync("system.listMethods", cancellationToken);
-
-        if (result is not IEnumerable<object> methods)
-        {
-            throw new XmlRpcClientException("Invalid response from system.listMethods.");
-        }
+        var methods = await CallAsync<IEnumerable<object>>("system.listMethods", cancellationToken);
 
         return methods.OfType<string>();
     }
 
     public async Task<IEnumerable<IEnumerable<string>>> SystemMethodSignatureAsync(string methodName, CancellationToken cancellationToken = default)
     {
-        var result = await CallAsync("system.methodSignature", [methodName], cancellationToken);
-
-        if (result is not IEnumerable<object> signatures)
-        {
-            throw new XmlRpcClientException($"Invalid response from system.methodSignature for method '{methodName}'.");
-        }
+        var signatures = await CallAsync<IEnumerable<object>>("system.methodSignature", [methodName], cancellationToken);
 
         return signatures
             .OfType<IEnumerable<object>>()
@@ -30,14 +20,7 @@ public partial class XmlRpcClient
 
     public async Task<string> SystemMethodHelpAsync(string methodName, CancellationToken cancellationToken = default)
     {
-        var result = await CallAsync("system.methodHelp", [methodName], cancellationToken);
-
-        if (result is not string help)
-        {
-            throw new XmlRpcClientException($"Invalid response from system.methodHelp for method '{methodName}'.");
-        }
-
-        return help;
+        return await CallAsync<string>("system.methodHelp", [methodName], cancellationToken);
     }
 
     public async Task<IEnumerable<XmlRpcMulticallResult>> SystemMulticallAsync(IEnumerable<XmlRpcMulticall> calls, CancellationToken cancellationToken = default)
@@ -50,12 +33,7 @@ public partial class XmlRpcClient
             })
             .ToArray();
 
-        var result = await CallAsync("system.multicall", [multicallParams], cancellationToken);
-
-        if (result is not IEnumerable<object> results)
-        {
-            throw new XmlRpcClientException("Invalid response from system.multicall.");
-        }
+        var results = await CallAsync<IEnumerable<object>>("system.multicall", [multicallParams], cancellationToken);
 
         return results.Select(ParseMulticallResult);
     }

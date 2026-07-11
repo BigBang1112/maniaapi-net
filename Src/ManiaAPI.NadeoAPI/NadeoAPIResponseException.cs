@@ -9,7 +9,7 @@ public class NadeoAPIResponseException : Exception
     public string? ReasonPhrase { get; }
 
     public NadeoAPIResponseException(ErrorResponse? response, HttpStatusCode statusCode, string? reasonPhrase)
-        : this(response?.Message ?? "No message received from NadeoAPI")
+        : this(response?.Message ?? reasonPhrase ?? "No message received from NadeoAPI")
     {
         Response = response;
         StatusCode = statusCode;

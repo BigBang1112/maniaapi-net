@@ -20,3 +20,18 @@ Features this setup brings:
 
 > [!WARNING]
 > If you just inject `TMX` alone, it will give the last-registered one (in this case, Original). If you need a specific site, use `[FromKeyedServices(...)]`.
+
+## Resilience
+
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
+`TmxOptions.ConfigureHttpClient` gives you access to each site's `IHttpClientBuilder`, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
+
+```cs
+using ManiaAPI.TMX.Extensions.Hosting;
+
+builder.Services.AddTMX(options =>
+{
+    options.ConfigureHttpClient = http => http.AddStandardResilienceHandler();
+});
+```

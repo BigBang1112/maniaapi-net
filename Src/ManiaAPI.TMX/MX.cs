@@ -77,7 +77,7 @@ public partial class MX : IMX
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.7.0";
+        const string version = "2.9.0";
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
@@ -496,6 +496,11 @@ public partial class MX : IMX
         /// The API secret of the mappack, used to access unlisted maps in mappacks with hidden map lists
         /// </summary>
         public long? MappackSecret { get; init; }
+
+        /// <summary>
+        /// Filter by ingame player login associated to the author (exact match)
+        /// </summary>
+        public string? DriverLogin { get; init; }
     }
 
     [GetMethod("api/maps")]

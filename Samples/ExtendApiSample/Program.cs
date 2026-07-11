@@ -14,7 +14,7 @@ var password = AnsiConsole.Prompt(
 
 await ens.AuthorizeAsync(login, password);
 
-var submittedMaps = await ens.GetSubmittedMapsAsync();
+var submittedMaps = await ens.GetSubmittedMapsExampleExtensionAsync();
 
 foreach (var map in submittedMaps)
 {
@@ -23,7 +23,7 @@ foreach (var map in submittedMaps)
 
 internal class ExtendedNadeoServices : NadeoServices
 {
-    public async Task<ImmutableList<MapInfo>> GetSubmittedMapsAsync(CancellationToken cancellationToken = default)
+    public async Task<ImmutableList<MapInfo>> GetSubmittedMapsExampleExtensionAsync(CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync("maps/by-submitter", MyJsonContext.Default.ImmutableListMapInfo, cancellationToken);
     }

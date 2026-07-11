@@ -20,7 +20,7 @@ public class MasterServerMP4Tests
     [Fact]
     public async Task GetPlayerInfos_ReturnsPlayerInfos()
     {
-        var server = new MasterServerMP4();
+        var server = new MasterServerMP4(MasterServerMP4.DefaultUrlRelay02);
 
         var playerInfos = await server.GetPlayerInfosAsync("bigbang1112");
 
