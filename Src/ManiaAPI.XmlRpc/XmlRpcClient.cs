@@ -31,7 +31,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 #endif
     private readonly Channel<KeyValuePair<uint, string>> callbackChannel = Channel.CreateUnbounded<KeyValuePair<uint, string>>();
     private readonly ConcurrentDictionary<uint, Channel<string>> pendingRequests = new();
-    private readonly ConcurrentDictionary<string, List<Func<object?[], CancellationToken, Task>>> routeHandlers = new();
+    private readonly ConcurrentDictionary<string, List<Func<object[], CancellationToken, Task>>> routeHandlers = new();
 
     // GBXRemote 1 has no handle to correlate requests/responses,
     // so calls must be strictly sequential to avoid cross-talk between callers
@@ -170,7 +170,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         };
     }
 
-    public void On(string methodName, Func<object?[], CancellationToken, Task> handler)
+    public void On(string methodName, Func<object[], CancellationToken, Task> handler)
     {
         routeHandlers.AddOrUpdate(
             methodName,
@@ -320,7 +320,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         }
     }
 
-    public async Task<string> CallXmlAsync(string methodName, object?[] methodParams, CancellationToken cancellationToken = default)
+    public async Task<string> CallXmlAsync(string methodName, object[] methodParams, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -340,14 +340,14 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return await CallXmlAsync(methodName, [], cancellationToken);
     }
 
-    public async Task<object> CallAsync(string methodName, object?[] methodParams, CancellationToken cancellationToken = default)
+    public async Task<object> CallAsync(string methodName, object[] methodParams, CancellationToken cancellationToken = default)
     {
         var xmlResult = await CallXmlAsync(methodName, methodParams, cancellationToken);
 
         return ParseXmlRpcMethodResponse(xmlResult);
     }
 
-    public async Task<object> CallAsync(string methodName, params object?[] methodParams)
+    public async Task<object> CallAsync(string methodName, params object[] methodParams)
     {
         return await CallAsync(methodName, methodParams, CancellationToken.None);
     }
@@ -357,12 +357,12 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return await CallAsync(methodName, [], cancellationToken);
     }
 
-    public async Task<T> CallAsync<T>(string methodName, object?[] methodParams, CancellationToken cancellationToken = default)
+    public async Task<T> CallAsync<T>(string methodName, object[] methodParams, CancellationToken cancellationToken = default)
     {
         return (T)await CallAsync(methodName, methodParams, cancellationToken);
     }
 
-    public async Task<T> CallAsync<T>(string methodName, params object?[] methodParams)
+    public async Task<T> CallAsync<T>(string methodName, params object[] methodParams)
     {
         return (T)await CallAsync(methodName, methodParams);
     }
@@ -514,9 +514,9 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return dict;
     }
 
-    private static List<object?> ReadXmlRpcArray(ref MiniXmlReader r)
+    private static List<object> ReadXmlRpcArray(ref MiniXmlReader r)
     {
-        var list = new List<object?>();
+        var list = new List<object>();
 
         _ = r.SkipStartElement("data");
 
