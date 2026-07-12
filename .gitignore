@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 
 .idea
+
+Src\ManiaAPI.TMX\Generated\System.Text.Json.SourceGeneration.JsonSourceGenerator
