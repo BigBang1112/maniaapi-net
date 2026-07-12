@@ -52,6 +52,27 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
     public event XmlRpcCallback? Callback;
 
+    [LoggerMessage(EventId = 1, Level = LogLevel.Trace, Message = "Received XML response (0x{Handle:x8}): {Payload}")]
+    private static partial void LogReceivedXmlResponse(ILogger logger, uint handle, string payload);
+
+    [LoggerMessage(EventId = 2, Level = LogLevel.Trace, Message = "Received XML callback (0x{Handle:x8}): {Payload}")]
+    private static partial void LogReceivedXmlCallback(ILogger logger, uint handle, string payload);
+
+    [LoggerMessage(EventId = 3, Level = LogLevel.Warning, Message = "Unknown handle (0x{Handle:x8}), skipping...")]
+    private static partial void LogUnknownHandle(ILogger logger, uint handle);
+
+    [LoggerMessage(EventId = 4, Level = LogLevel.Debug, Message = "Calling {MethodName}...")]
+    private static partial void LogCallingMethod(ILogger logger, string methodName);
+
+    [LoggerMessage(EventId = 5, Level = LogLevel.Trace, Message = "Generated XML for {MethodName} (in {ElapsedMilliseconds}ms): {XmlPayload}")]
+    private static partial void LogGeneratedXml(ILogger logger, string methodName, double elapsedMilliseconds, string xmlPayload);
+
+    [LoggerMessage(EventId = 6, Level = LogLevel.Debug, Message = "{MethodName} (0x{Handle:x8}) has been sent. Waiting for response...")]
+    private static partial void LogMethodSent(ILogger logger, string methodName, uint handle);
+
+    [LoggerMessage(EventId = 7, Level = LogLevel.Debug, Message = "{MethodName} (0x{Handle:x8}) response received (in {ElapsedMilliseconds}ms).")]
+    private static partial void LogMethodResponseReceived(ILogger logger, string methodName, uint handle, double elapsedMilliseconds);
+
     private XmlRpcClient(TcpClient tcp, int version, ILogger<XmlRpcClient> logger)
     {
         this.tcp = tcp ?? throw new ArgumentNullException(nameof(tcp));
@@ -221,10 +242,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
             if (isCallback)
             {
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace("Received XML callback (0x{Handle}): {Payload}", handle.ToString("x8"), payload);
-                }
+                LogReceivedXmlCallback(logger, handle, payload);
 
                 await callbackChannel.Writer.WriteAsync(new(handle, payload), cancellationToken);
             }
@@ -232,11 +250,11 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             {
                 if (!pendingRequests.ContainsKey(handle))
                 {
-                    logger.LogWarning("Unknown handle (0x{Handle}), skipping...", handle.ToString("x8"));
+                    LogUnknownHandle(logger, handle);
                     continue;
                 }
 
-                logger.LogTrace("Received XML response (0x{Handle}): {Payload}", handle.ToString("x8"), payload);
+                LogReceivedXmlResponse(logger, handle, payload);
 
                 var channel = GetOrCreatePendingRequestChannel(handle);
                 await channel.Writer.WriteAsync(payload, cancellationToken);
@@ -324,13 +342,13 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        logger.LogDebug("Calling {MethodName}...", methodName);
+        LogCallingMethod(logger, methodName);
 
         var startTime = Stopwatch.GetTimestamp();
         var xmlPayload = GenerateXmlPayload(methodName, methodParams);
         var elapsed = Stopwatch.GetElapsedTime(startTime);
 
-        logger.LogTrace("Generated XML for {MethodName} (in {ElapsedMilliseconds}ms): {XmlPayload}", methodName, elapsed.TotalMilliseconds, xmlPayload);
+        LogGeneratedXml(logger, methodName, elapsed.TotalMilliseconds, xmlPayload);
 
         return await SendAndReceiveAsync(methodName, xmlPayload, cancellationToken);
     }
@@ -387,10 +405,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
             var handle = await SendXmlPayloadAsync(xmlPayload, cancellationToken);
 
-            if (logger.IsEnabled(LogLevel.Debug))
-            {
-                logger.LogDebug("{MethodName} (0x{Handle}) has been sent. Waiting for response...", methodName, handle.ToString("x8"));
-            }
+            LogMethodSent(logger, methodName, handle);
 
             var channel = GetOrCreatePendingRequestChannel(handle);
             var xml = await channel.Reader.ReadAsync(cancellationToken);
@@ -399,10 +414,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
             var elapsed = Stopwatch.GetElapsedTime(startTime);
 
-            if (logger.IsEnabled(LogLevel.Debug))
-            {
-                logger.LogDebug("{MethodName} (0x{Handle}) response received (in {ElapsedMilliseconds}ms).", methodName, handle.ToString("x8"), elapsed.TotalMilliseconds);
-            }
+            LogMethodResponseReceived(logger, methodName, handle, elapsed.TotalMilliseconds);
 
             return xml;
         }
