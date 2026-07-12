@@ -1,5 +1,6 @@
 using ManiaAPI.TMX.Attributes;
 using System.Net.Http.Headers;
+using System.Text;
 
 namespace ManiaAPI.TMX;
 
@@ -37,6 +38,14 @@ public interface IMX : IClient
     string GetMappackThumbnailUrl(MappackItem mappack);
     Task<HttpResponseMessage> GetMappackThumbnailResponseAsync(long mappackId, CancellationToken cancellationToken = default);
     Task<HttpResponseMessage> GetMappackThumbnailResponseAsync(MappackItem mappack, CancellationToken cancellationToken = default);
+
+    string GetMapRandomUrl();
+    Task<long?> GetRandomMapIdAsync(MX.SearchMapsParameters parameters, CancellationToken cancellationToken = default);
+    Task<MapItem?> GetRandomMapAsync(MX.SearchMapsParameters parameters, CancellationToken cancellationToken = default);
+
+    string GetMappackRandomUrl();
+    Task<long?> GetRandomMappackIdAsync(MX.SearchMappacksParameters parameters, CancellationToken cancellationToken = default);
+    Task<MappackItem?> GetRandomMappackAsync(MX.SearchMappacksParameters parameters, CancellationToken cancellationToken = default);
 
     Task<ItemCollection<MapItem>> SearchMapsAsync(MX.SearchMapsParameters parameters, CancellationToken cancellationToken = default);
 
@@ -77,7 +86,7 @@ public partial class MX : IMX
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.9.0";
+        const string version = "2.9.1";
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
@@ -90,7 +99,8 @@ public partial class MX : IMX
         Site = site;
         SiteName = site.ToString();
 
-        var url = site switch {
+        var url = site switch
+        {
             MxSite.Maniaplanet => "https://tm.mania.exchange/",
             MxSite.Trackmania => "https://trackmania.exchange/",
             MxSite.Shootmania => "https://sm.mania.exchange/",
@@ -102,6 +112,91 @@ public partial class MX : IMX
 
     public MX(MxSite site) : this(new HttpClient(), site) { }
 
+    public string GetMapRandomUrl() => $"{Client.BaseAddress}maprandom";
+
+    public async Task<long?> GetRandomMapIdAsync(SearchMapsParameters parameters, CancellationToken cancellationToken = default)
+    {
+        var sb = new StringBuilder("maprandom");
+        parameters.AppendQueryString(sb, appendFields: false);
+
+        using var request = new HttpRequestMessage(HttpMethod.Head, sb.ToString());
+        using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), out var trackId))
+        {
+            return trackId;
+        }
+
+        return null;
+    }
+
+    public async Task<MapItem?> GetRandomMapAsync(SearchMapsParameters parameters, CancellationToken cancellationToken = default)
+    {
+        var mapId = await GetRandomMapIdAsync(parameters, cancellationToken);
+
+        if (!mapId.HasValue)
+        {
+            return null;
+        }
+
+        var maps = await SearchMapsAsync(new SearchMapsParameters
+        {
+            Id = [mapId.Value],
+            Count = 1
+        }, cancellationToken);
+
+        return maps.Results.FirstOrDefault();
+    }
+
+    public string GetMappackRandomUrl() => $"{Client.BaseAddress}mappackrandom";
+
+    public async Task<long?> GetRandomMappackIdAsync(SearchMappacksParameters parameters, CancellationToken cancellationToken = default)
+    {
+        var sb = new StringBuilder("mappackrandom");
+        parameters.AppendQueryString(sb, appendFields: false);
+
+        using var request = new HttpRequestMessage(HttpMethod.Head, sb.ToString());
+        using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), out var mappackId))
+        {
+            return mappackId;
+        }
+
+        return null;
+    }
+
+    public async Task<MappackItem?> GetRandomMappackAsync(SearchMappacksParameters parameters, CancellationToken cancellationToken = default)
+    {
+        var mappackId = await GetRandomMappackIdAsync(parameters, cancellationToken);
+
+        if (!mappackId.HasValue)
+        {
+            return null;
+        }
+
+        var mappacks = await SearchMappacksAsync(new SearchMappacksParameters
+        {
+            Id = [mappackId.Value],
+            Count = 1
+        }, cancellationToken);
+
+        return mappacks.Results.FirstOrDefault();
+    }
 
     public string GetMapGbxUrl(long mapId) => $"{Client.BaseAddress}mapgbx/{mapId}";
     public string GetMapGbxUrl(MapItem map) => GetMapGbxUrl(map.MapId);

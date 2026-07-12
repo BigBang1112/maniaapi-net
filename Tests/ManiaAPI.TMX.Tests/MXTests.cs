@@ -189,4 +189,48 @@ public class MXTests
         var titlepacks = await tmx.GetTitlepacksAsync();
         Assert.NotEmpty(titlepacks);
     }
+
+    [Theory]
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task GetRandomMapIdAsync_Success(MxSite site)
+    {
+        var tmx = new MX(site);
+        var randomMapId = await tmx.GetRandomMapIdAsync(new ());
+        Assert.NotNull(randomMapId);
+    }
+
+    [Theory]
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task GetRandomMapAsync_Success(MxSite site)
+    {
+        var tmx = new MX(site);
+        var randomMap = await tmx.GetRandomMapAsync(new ());
+        Assert.NotNull(randomMap);
+    }
+
+    [Theory]
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task GetRandomMappackIdAsync_Success(MxSite site)
+    {
+        var tmx = new MX(site);
+        var randomMappackId = await tmx.GetRandomMappackIdAsync(new());
+        Assert.NotNull(randomMappackId);
+    }
+
+    [Theory]
+    [InlineData(MxSite.Trackmania)]
+    [InlineData(MxSite.Maniaplanet)]
+    [InlineData(MxSite.Shootmania)]
+    public async Task GetRandomMappackAsync_Success(MxSite site)
+    {
+        var tmx = new MX(site);
+        var randomMappack = await tmx.GetRandomMappackAsync(new());
+        Assert.NotNull(randomMappack);
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using ManiaAPI.TMX.Attributes;
 using System.Net.Http.Headers;
+using System.Text;
 
 namespace ManiaAPI.TMX;
 
@@ -30,6 +31,14 @@ public interface ITMX : IClient
     string GetTrackImageUrl(TrackItem track, int imageIndex);
     Task<HttpResponseMessage> GetTrackImageResponseAsync(long trackId, int imageIndex, CancellationToken cancellationToken = default);
     Task<HttpResponseMessage> GetTrackImageResponseAsync(TrackItem track, int imageIndex, CancellationToken cancellationToken = default);
+
+    string GetTrackRandomUrl();
+    Task<long?> GetRandomTrackIdAsync(TMX.SearchTracksParameters parameters, CancellationToken cancellationToken = default);
+    Task<TrackItem?> GetRandomTrackAsync(TMX.SearchTracksParameters parameters, CancellationToken cancellationToken = default);
+
+    string GetTrackpackRandomUrl();
+    Task<long?> GetRandomTrackpackIdAsync(TMX.SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
+    Task<TrackpackItem?> GetRandomTrackpackAsync(TMX.SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
 }
 
 public partial class TMX : ITMX
@@ -45,7 +54,7 @@ public partial class TMX : ITMX
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.9.0";
+        const string version = "2.9.1";
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
@@ -263,6 +272,92 @@ public partial class TMX : ITMX
 
     [GetMethod("api/users")]
     public virtual partial Task<ItemCollection<UserItem>> SearchUsersAsync(SearchUsersParameters parameters, CancellationToken cancellationToken = default);
+
+    public string GetTrackRandomUrl() => $"{Client.BaseAddress}trackrandom";
+
+    public async Task<long?> GetRandomTrackIdAsync(SearchTracksParameters parameters, CancellationToken cancellationToken = default)
+    {
+        var sb = new StringBuilder("trackrandom");
+        parameters.AppendQueryString(sb, appendFields: false);
+
+        using var request = new HttpRequestMessage(HttpMethod.Head, sb.ToString());
+        using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), out var trackId))
+        {
+            return trackId;
+        }
+
+        return null;
+    }
+
+    public async Task<TrackItem?> GetRandomTrackAsync(SearchTracksParameters parameters, CancellationToken cancellationToken = default)
+    {
+        var trackId = await GetRandomTrackIdAsync(parameters, cancellationToken);
+
+        if (!trackId.HasValue)
+        {
+            return null;
+        }
+
+        var tracks = await SearchTracksAsync(new SearchTracksParameters
+        {
+            Id = [trackId.Value],
+            Count = 1
+        }, cancellationToken);
+
+        return tracks.Results.FirstOrDefault();
+    }
+
+    public string GetTrackpackRandomUrl() => $"{Client.BaseAddress}trackpackrandom";
+
+    public async Task<long?> GetRandomTrackpackIdAsync(SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default)
+    {
+        var sb = new StringBuilder("trackpackrandom");
+        parameters.AppendQueryString(sb, appendFields: false);
+
+        using var request = new HttpRequestMessage(HttpMethod.Head, sb.ToString());
+        using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), out var trackpackId))
+        {
+            return trackpackId;
+        }
+
+        return null;
+    }
+
+    public async Task<TrackpackItem?> GetRandomTrackpackAsync(SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default)
+    {
+        var trackpackId = await GetRandomTrackpackIdAsync(parameters, cancellationToken);
+
+        if (!trackpackId.HasValue)
+        {
+            return null;
+        }
+
+        var trackpacks = await SearchTrackpacksAsync(new SearchTrackpacksParameters
+        {
+            Id = [trackpackId.Value],
+            Count = 1
+        }, cancellationToken);
+
+        return trackpacks.Results.FirstOrDefault();
+    }
 
     public string GetReplayGbxUrl(long replayId) => $"{Client.BaseAddress}recordgbx/{replayId}";
     public string GetReplayGbxUrl(ReplayItem replay) => GetReplayGbxUrl(replay.ReplayId);
