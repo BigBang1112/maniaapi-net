@@ -498,7 +498,8 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             "double" => double.Parse(r.ReadContent(), NumberStyles.Number, CultureInfo.InvariantCulture),
             "struct" => ReadXmlRpcStruct(ref r),
             "array" => ReadXmlRpcArray(ref r),
-            _ => throw new XmlRpcClientException($"unknown type {type}"),
+            "base64" => Convert.FromBase64String(r.ReadContentAsString()),
+            _ => throw new XmlRpcClientException($"Unsupported type: {type}"),
         };
 
         _ = r.SkipEndElement();
