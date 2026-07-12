@@ -527,7 +527,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return list;
     }
 
-    private static string GenerateXmlPayload(string methodName, object?[] methodParams)
+    public static string GenerateXmlPayload(string methodName, object[] methodParams)
     {
         var sb = new StringBuilder("<?xml version=\"1.0\"?><methodCall><methodName>");
         sb.Append(methodName);
