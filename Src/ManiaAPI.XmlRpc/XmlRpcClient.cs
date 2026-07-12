@@ -569,14 +569,23 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
         switch (value)
         {
-            case int integer:
+            case int:
+            case ushort:
+            case short:
+            case byte:
+            case sbyte:
                 sb.Append("<int>");
-                sb.Append(integer);
+                sb.Append(value);
                 sb.Append("</int>");
                 break;
             case double doub:
                 sb.Append("<double>");
-                sb.Append(doub);
+                sb.Append(doub.ToString(CultureInfo.InvariantCulture));
+                sb.Append("</double>");
+                break;
+            case float flo:
+                sb.Append("<double>");
+                sb.Append(flo.ToString(CultureInfo.InvariantCulture));
                 sb.Append("</double>");
                 break;
             case bool boolean:
