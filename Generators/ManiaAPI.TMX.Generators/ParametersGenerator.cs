@@ -174,6 +174,27 @@ public class ParametersGenerator : IIncrementalGenerator
                 sb.AppendLine("                first = false;");
                 sb.AppendLine("            }");
             }
+            else if (propSymbol.Type is INamedTypeSymbol { Name: "IEnumerable" } enumerableType
+                && enumerableType.TypeArguments.Length == 1
+                && enumerableType.TypeArguments[0] is INamedTypeSymbol { Name: "KeyValuePair" })
+            {
+                sb.Append("            if (");
+                sb.Append(propSymbol.Name);
+                sb.AppendLine(" is not null)");
+                sb.AppendLine("            {");
+                sb.Append("                foreach (var additionalParameter in ");
+                sb.Append(propSymbol.Name);
+                sb.AppendLine(")");
+                sb.AppendLine("                {");
+                sb.AppendLine("                    if (first) sb.Append('?');");
+                sb.AppendLine("                    else sb.Append('&');");
+                sb.AppendLine("                    sb.Append(additionalParameter.Key);");
+                sb.AppendLine("                    sb.Append('=');");
+                sb.AppendLine("                    sb.Append(WebUtility.UrlEncode(additionalParameter.Value));");
+                sb.AppendLine("                    first = false;");
+                sb.AppendLine("                }");
+                sb.AppendLine("            }");
+            }
             else
             {
                 sb.Append("            // TODO: ");

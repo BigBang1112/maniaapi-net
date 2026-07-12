@@ -96,6 +96,8 @@ public partial class TMX : ITMX
 
         [AsNumber] public bool? Best { get; init; }
         public long? UserId { get; init; }
+
+        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/replays")]
@@ -154,6 +156,8 @@ public partial class TMX : ITMX
         [AsNumber] public bool? InEnvMix { get; init; }
         [AsNumber] public bool? InUnlimiter { get; init; }
         public TrackOrder? Order2 { get; init; } // no longer?
+
+        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/tracks")]
@@ -181,6 +185,8 @@ public partial class TMX : ITMX
         public long? From { get; init; }
         public int? LbId { get; init; }
         public int? LbEnv { get; init; }
+
+        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/leaderboards")]
@@ -210,6 +216,8 @@ public partial class TMX : ITMX
         public long[]? Id { get; init; }
         public string? Name { get; init; }
         public string? Creator { get; init; }
+
+        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/trackpacks")]
@@ -249,6 +257,8 @@ public partial class TMX : ITMX
         public DateTimeOffset? RegisteredBefore { get; init; }
         [AsNumber] public bool? InSupporters { get; init; }
         [AsNumber] public bool? InModerators { get; init; }
+
+        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/users")]
