@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Security;
 using System.Text;
 using System.Threading.Channels;
 
@@ -579,7 +580,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             case string str:
                 sb.Append(SecurityElement.Escape(str));
                 break;
-            case IDictionary<string, object?> dict:
+            case IEnumerable<KeyValuePair<string, object>> dict:
                 sb.Append("<struct>");
                 foreach (var member in dict)
                 {
