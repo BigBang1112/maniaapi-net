@@ -6,7 +6,7 @@ using ManiaAPI.TMX.Converters;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public record struct MapMedals(
+public partial record struct MapMedals(
     [property: JsonConverter(typeof(JsonBuggedTimeInt32Converter))] TimeInt32 Author,
     [property: JsonConverter(typeof(JsonBuggedTimeInt32Converter))] TimeInt32 Gold,
     [property: JsonConverter(typeof(JsonBuggedTimeInt32Converter))] TimeInt32 Silver,

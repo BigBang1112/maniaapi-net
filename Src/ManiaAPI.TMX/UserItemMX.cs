@@ -3,7 +3,7 @@ using ManiaAPI.TMX.Attributes;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record UserItemMX : IItem
+public sealed partial record UserItemMX : IItem
 {
     public string Name { get; set; } = default!;
     public long UserId { get; set; }

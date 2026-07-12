@@ -3,7 +3,7 @@
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record Tag
+public sealed partial record Tag
 {
     public int TagId { get; set; }
     public string Name { get; set; } = default!;

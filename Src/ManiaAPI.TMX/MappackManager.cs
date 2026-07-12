@@ -3,4 +3,4 @@
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record MappackManager(User User);
+public sealed partial record MappackManager(User User);

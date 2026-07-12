@@ -8,7 +8,7 @@ var logger = LoggerFactory.Create(builder =>
         options.IncludeScopes = true;
         options.SingleLine = true;
     });
-    builder.SetMinimumLevel(LogLevel.Warning);
+    builder.SetMinimumLevel(LogLevel.Debug);
 }).CreateLogger<XmlRpcClient>();
 
 using var xmlRpc = await XmlRpcClient.ConnectAsync("127.0.0.1", logger: logger);
@@ -18,5 +18,5 @@ await xmlRpc.CallAsync("EnableCallbacks", true);
 
 await foreach (var callback in xmlRpc.StreamCallbacksAsync())
 {
-    Console.WriteLine($"{callback.MethodName}: {string.Join(", ", callback.MethodParams)}");
+    logger.LogInformation("{MethodName}: {MethodParams}", callback.MethodName, string.Join(", ", callback.MethodParams));
 }

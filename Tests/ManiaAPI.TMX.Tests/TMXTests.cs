@@ -53,4 +53,36 @@ public class TMXTests
         var users = await tmx.SearchUsersAsync(new());
         Assert.NotEmpty(users.Results);
     }
+
+    [Fact]
+    public async Task GetRandomTrackIdAsync_Success()
+    {
+        var tmx = new TMX(TmxSite.TMNF);
+        var randomTrackId = await tmx.GetRandomTrackIdAsync(new());
+        Assert.NotNull(randomTrackId);
+    }
+
+    [Fact]
+    public async Task GetRandomTrackAsync_Success()
+    {
+        var tmx = new TMX(TmxSite.TMNF);
+        var randomTrack = await tmx.GetRandomTrackAsync(new());
+        Assert.NotNull(randomTrack);
+    }
+
+    [Fact]
+    public async Task GetRandomTrackpackIdAsync_Success()
+    {
+        var tmx = new TMX(TmxSite.TMNF);
+        var randomTrackpackId = await tmx.GetRandomTrackpackIdAsync(new());
+        Assert.NotNull(randomTrackpackId);
+    }
+
+    [Fact]
+    public async Task GetRandomTrackpackAsync_Success()
+    {
+        var tmx = new TMX(TmxSite.TMNF);
+        var randomTrackpack = await tmx.GetRandomTrackpackAsync(new());
+        Assert.NotNull(randomTrackpack);
+    }
 }

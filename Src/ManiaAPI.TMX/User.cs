@@ -3,4 +3,4 @@
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record User(int UserId, string Name);
+public sealed partial record User(int UserId, string Name);

@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Security;
 using System.Text;
 using System.Threading.Channels;
 
@@ -30,7 +31,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 #endif
     private readonly Channel<KeyValuePair<uint, string>> callbackChannel = Channel.CreateUnbounded<KeyValuePair<uint, string>>();
     private readonly ConcurrentDictionary<uint, Channel<string>> pendingRequests = new();
-    private readonly ConcurrentDictionary<string, List<Func<object?[], CancellationToken, Task>>> routeHandlers = new();
+    private readonly ConcurrentDictionary<string, List<Func<object[], CancellationToken, Task>>> routeHandlers = new();
 
     // GBXRemote 1 has no handle to correlate requests/responses,
     // so calls must be strictly sequential to avoid cross-talk between callers
@@ -50,6 +51,27 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     private Task CallbackTask { get; }
 
     public event XmlRpcCallback? Callback;
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Trace, Message = "Received XML response (0x{Handle:x8}): {Payload}")]
+    private static partial void LogReceivedXmlResponse(ILogger logger, uint handle, string payload);
+
+    [LoggerMessage(EventId = 2, Level = LogLevel.Trace, Message = "Received XML callback (0x{Handle:x8}): {Payload}")]
+    private static partial void LogReceivedXmlCallback(ILogger logger, uint handle, string payload);
+
+    [LoggerMessage(EventId = 3, Level = LogLevel.Warning, Message = "Unknown handle (0x{Handle:x8}), skipping...")]
+    private static partial void LogUnknownHandle(ILogger logger, uint handle);
+
+    [LoggerMessage(EventId = 4, Level = LogLevel.Debug, Message = "Calling {MethodName}...")]
+    private static partial void LogCallingMethod(ILogger logger, string methodName);
+
+    [LoggerMessage(EventId = 5, Level = LogLevel.Trace, Message = "Generated XML for {MethodName} (in {ElapsedMilliseconds}ms): {XmlPayload}")]
+    private static partial void LogGeneratedXml(ILogger logger, string methodName, double elapsedMilliseconds, string xmlPayload);
+
+    [LoggerMessage(EventId = 6, Level = LogLevel.Debug, Message = "{MethodName} (0x{Handle:x8}) has been sent. Waiting for response...")]
+    private static partial void LogMethodSent(ILogger logger, string methodName, uint handle);
+
+    [LoggerMessage(EventId = 7, Level = LogLevel.Debug, Message = "{MethodName} (0x{Handle:x8}) response received (in {ElapsedMilliseconds}ms).")]
+    private static partial void LogMethodResponseReceived(ILogger logger, string methodName, uint handle, double elapsedMilliseconds);
 
     private XmlRpcClient(TcpClient tcp, int version, ILogger<XmlRpcClient> logger)
     {
@@ -169,7 +191,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         };
     }
 
-    public void On(string methodName, Func<object?[], CancellationToken, Task> handler)
+    public void On(string methodName, Func<object[], CancellationToken, Task> handler)
     {
         routeHandlers.AddOrUpdate(
             methodName,
@@ -220,10 +242,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
             if (isCallback)
             {
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace("Received XML callback (0x{Handle}): {Payload}", handle.ToString("x8"), payload);
-                }
+                LogReceivedXmlCallback(logger, handle, payload);
 
                 await callbackChannel.Writer.WriteAsync(new(handle, payload), cancellationToken);
             }
@@ -231,11 +250,11 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             {
                 if (!pendingRequests.ContainsKey(handle))
                 {
-                    logger.LogWarning("Unknown handle (0x{Handle}), skipping...", handle.ToString("x8"));
+                    LogUnknownHandle(logger, handle);
                     continue;
                 }
 
-                logger.LogTrace("Received XML response (0x{Handle}): {Payload}", handle.ToString("x8"), payload);
+                LogReceivedXmlResponse(logger, handle, payload);
 
                 var channel = GetOrCreatePendingRequestChannel(handle);
                 await channel.Writer.WriteAsync(payload, cancellationToken);
@@ -249,7 +268,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         
         var streamChannel = Channel.CreateUnbounded<XmlRpcCallbackMessage>();
 
-        Task HandleCallback(string methodName, object?[] parameters, CancellationToken token)
+        Task HandleCallback(string methodName, object[] parameters, CancellationToken token)
         {
             streamChannel.Writer.TryWrite(new XmlRpcCallbackMessage(methodName, parameters));
             return Task.CompletedTask;
@@ -319,17 +338,17 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         }
     }
 
-    public async Task<string> CallXmlAsync(string methodName, object?[] methodParams, CancellationToken cancellationToken = default)
+    public async Task<string> CallXmlAsync(string methodName, object[] methodParams, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        logger.LogDebug("Calling {MethodName}...", methodName);
+        LogCallingMethod(logger, methodName);
 
         var startTime = Stopwatch.GetTimestamp();
         var xmlPayload = GenerateXmlPayload(methodName, methodParams);
         var elapsed = Stopwatch.GetElapsedTime(startTime);
 
-        logger.LogTrace("Generated XML for {MethodName} (in {ElapsedMilliseconds}ms): {XmlPayload}", methodName, elapsed.TotalMilliseconds, xmlPayload);
+        LogGeneratedXml(logger, methodName, elapsed.TotalMilliseconds, xmlPayload);
 
         return await SendAndReceiveAsync(methodName, xmlPayload, cancellationToken);
     }
@@ -339,14 +358,14 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return await CallXmlAsync(methodName, [], cancellationToken);
     }
 
-    public async Task<object> CallAsync(string methodName, object?[] methodParams, CancellationToken cancellationToken = default)
+    public async Task<object> CallAsync(string methodName, object[] methodParams, CancellationToken cancellationToken = default)
     {
         var xmlResult = await CallXmlAsync(methodName, methodParams, cancellationToken);
 
         return ParseXmlRpcMethodResponse(xmlResult);
     }
 
-    public async Task<object> CallAsync(string methodName, params object?[] methodParams)
+    public async Task<object> CallAsync(string methodName, params object[] methodParams)
     {
         return await CallAsync(methodName, methodParams, CancellationToken.None);
     }
@@ -356,12 +375,12 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return await CallAsync(methodName, [], cancellationToken);
     }
 
-    public async Task<T> CallAsync<T>(string methodName, object?[] methodParams, CancellationToken cancellationToken = default)
+    public async Task<T> CallAsync<T>(string methodName, object[] methodParams, CancellationToken cancellationToken = default)
     {
         return (T)await CallAsync(methodName, methodParams, cancellationToken);
     }
 
-    public async Task<T> CallAsync<T>(string methodName, params object?[] methodParams)
+    public async Task<T> CallAsync<T>(string methodName, params object[] methodParams)
     {
         return (T)await CallAsync(methodName, methodParams);
     }
@@ -386,10 +405,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
             var handle = await SendXmlPayloadAsync(xmlPayload, cancellationToken);
 
-            if (logger.IsEnabled(LogLevel.Debug))
-            {
-                logger.LogDebug("{MethodName} (0x{Handle}) has been sent. Waiting for response...", methodName, handle.ToString("x8"));
-            }
+            LogMethodSent(logger, methodName, handle);
 
             var channel = GetOrCreatePendingRequestChannel(handle);
             var xml = await channel.Reader.ReadAsync(cancellationToken);
@@ -398,10 +414,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
             var elapsed = Stopwatch.GetElapsedTime(startTime);
 
-            if (logger.IsEnabled(LogLevel.Debug))
-            {
-                logger.LogDebug("{MethodName} (0x{Handle}) response received (in {ElapsedMilliseconds}ms).", methodName, handle.ToString("x8"), elapsed.TotalMilliseconds);
-            }
+            LogMethodResponseReceived(logger, methodName, handle, elapsed.TotalMilliseconds);
 
             return xml;
         }
@@ -513,9 +526,9 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return dict;
     }
 
-    private static List<object?> ReadXmlRpcArray(ref MiniXmlReader r)
+    private static List<object> ReadXmlRpcArray(ref MiniXmlReader r)
     {
-        var list = new List<object?>();
+        var list = new List<object>();
 
         _ = r.SkipStartElement("data");
 
@@ -527,10 +540,10 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         return list;
     }
 
-    private static string GenerateXmlPayload(string methodName, object?[] methodParams)
+    public static string GenerateXmlPayload(string methodName, object[] methodParams)
     {
         var sb = new StringBuilder("<?xml version=\"1.0\"?><methodCall><methodName>");
-        sb.Append(methodName);
+        sb.Append(SecurityElement.Escape(methodName));
         sb.Append("</methodName><params>");
 
         foreach (var param in methodParams)
@@ -577,14 +590,14 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
                 sb.Append("</base64>");
                 break;
             case string str:
-                sb.Append(str);
+                sb.Append(SecurityElement.Escape(str));
                 break;
-            case IDictionary<string, object?> dict:
+            case IEnumerable<KeyValuePair<string, object>> dict:
                 sb.Append("<struct>");
                 foreach (var member in dict)
                 {
                     sb.Append("<member><name>");
-                    sb.Append(member.Key);
+                    sb.Append(SecurityElement.Escape(member.Key));
                     sb.Append("</name>");
                     AppendXmlRpcValue(sb, member.Value);
                     sb.Append("</member>");
@@ -600,8 +613,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
                 sb.Append("</data></array>");
                 break;
             default:
-                sb.Append(value);
-                break;
+                throw new XmlRpcClientException($"Unsupported parameter type: {value?.GetType().FullName ?? "null"}");
         }
 
         sb.Append("</value>");

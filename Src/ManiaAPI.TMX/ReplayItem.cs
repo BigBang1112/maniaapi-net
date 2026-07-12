@@ -6,7 +6,7 @@ using TmEssentials.Converters;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record ReplayItem : IItem
+public sealed partial record ReplayItem : IItem
 {
     public int ReplayId { get; set; }
     [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32 ReplayTime { get; set; }

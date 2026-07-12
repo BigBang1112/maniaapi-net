@@ -6,4 +6,4 @@ using TmEssentials.Converters;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record UserReplay(int ReplayId, [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 ReplayTime, int ReplayScore);
+public sealed partial record UserReplay(int ReplayId, [property: JsonConverter(typeof(JsonTimeInt32Converter))] TimeInt32 ReplayTime, int ReplayScore);
