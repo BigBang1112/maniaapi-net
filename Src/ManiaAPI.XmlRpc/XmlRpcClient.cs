@@ -530,7 +530,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     public static string GenerateXmlPayload(string methodName, object[] methodParams)
     {
         var sb = new StringBuilder("<?xml version=\"1.0\"?><methodCall><methodName>");
-        sb.Append(methodName);
+        sb.Append(SecurityElement.Escape(methodName));
         sb.Append("</methodName><params>");
 
         foreach (var param in methodParams)
@@ -577,14 +577,14 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
                 sb.Append("</base64>");
                 break;
             case string str:
-                sb.Append(str);
+                sb.Append(SecurityElement.Escape(str));
                 break;
             case IDictionary<string, object?> dict:
                 sb.Append("<struct>");
                 foreach (var member in dict)
                 {
                     sb.Append("<member><name>");
-                    sb.Append(member.Key);
+                    sb.Append(SecurityElement.Escape(member.Key));
                     sb.Append("</name>");
                     AppendXmlRpcValue(sb, member.Value);
                     sb.Append("</member>");
@@ -600,8 +600,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
                 sb.Append("</data></array>");
                 break;
             default:
-                sb.Append(value);
-                break;
+                throw new XmlRpcClientException($"Unsupported parameter type: {value?.GetType().FullName ?? "null"}");
         }
 
         sb.Append("</value>");
