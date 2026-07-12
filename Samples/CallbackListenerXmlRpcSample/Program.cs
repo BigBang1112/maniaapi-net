@@ -18,5 +18,5 @@ await xmlRpc.CallAsync("EnableCallbacks", true);
 
 await foreach (var callback in xmlRpc.StreamCallbacksAsync())
 {
-    Console.WriteLine($"{callback.MethodName}: {string.Join(", ", callback.MethodParams)}");
+    logger.LogInformation("{MethodName}: {MethodParams}", callback.MethodName, string.Join(", ", callback.MethodParams));
 }
