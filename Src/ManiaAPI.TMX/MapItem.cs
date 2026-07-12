@@ -28,7 +28,7 @@ public sealed partial record MapItem : IItem
     public int Style { get; set; }
     public int Routes { get; set; }
     public int Difficulty { get; set; }
-    public MapMedals Medals { get; set; }
+    public MapMedals? Medals { get; set; }
     public int? CustomLength { get; set; }
     [JsonConverter(typeof(JsonBuggedInt32Converter))] public int Length { get; set; }
     public int AwardCount { get; set; }
