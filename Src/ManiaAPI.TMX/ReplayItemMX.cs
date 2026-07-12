@@ -6,7 +6,7 @@ using TmEssentials.Converters;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record ReplayItemMX : IItem
+public sealed partial record ReplayItemMX : IItem
 {
     public long ReplayId { get; set; }
     public User User { get; set; } = default!;

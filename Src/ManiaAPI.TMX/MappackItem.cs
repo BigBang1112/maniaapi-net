@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record MappackItem : IItem
+public sealed partial record MappackItem : IItem
 {
     public long MappackId { get; set; }
     public string Name { get; set; } = default!;

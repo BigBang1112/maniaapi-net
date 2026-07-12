@@ -3,7 +3,7 @@
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record VideoItem : IItem
+public sealed partial record VideoItem : IItem
 {
     public long VideoId { get; set; }
     public User Poster { get; set; } = default!;

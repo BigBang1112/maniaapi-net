@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record MapItem : IItem
+public sealed partial record MapItem : IItem
 {
     public long MapId { get; set; }
     public string MapUid { get; set; } = default!;

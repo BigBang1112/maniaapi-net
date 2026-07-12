@@ -100,8 +100,20 @@ public class FieldsGenerator : IIncrementalGenerator
             AppendFieldCheck(appendSb, propSymbol, isFields);
         }
 
+        propSb.AppendLine("    public IEnumerable<string>? AdditionalFields { get; init; }");
+
         allSb.AppendLine("    };");
 
+        appendSb.AppendLine();
+        appendSb.AppendLine("        if (AdditionalFields is not null)");
+        appendSb.AppendLine("        {");
+        appendSb.AppendLine("            foreach (var additionalField in AdditionalFields)");
+        appendSb.AppendLine("            {");
+        appendSb.AppendLine("                if (!first) sb.Append(\"%2C\");");
+        appendSb.AppendLine("                sb.Append(additionalField);");
+        appendSb.AppendLine("                first = false;");
+        appendSb.AppendLine("            }");
+        appendSb.AppendLine("        }");
         appendSb.AppendLine();
         appendSb.AppendLine("        return !first;");
         appendSb.AppendLine("    }");
@@ -111,6 +123,23 @@ public class FieldsGenerator : IIncrementalGenerator
         sb.Append(allSb);
         sb.AppendLine();
         sb.Append(appendSb);
+        sb.AppendLine("}");
+
+        sb.AppendLine();
+        sb.Append("public partial record ");
+
+        if (symbol.TypeKind == TypeKind.Struct)
+        {
+            sb.Append("struct ");
+        }
+
+        sb.AppendLine(symbol.Name);
+        sb.AppendLine("{");
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Values of fields requested via <c>AdditionalFields</c> that are not represented by a strongly-typed property.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    [global::System.Text.Json.Serialization.JsonExtensionData]");
+        sb.AppendLine("    public global::System.Collections.Generic.IDictionary<string, global::System.Text.Json.JsonElement>? AdditionalFields { get; set; }");
         sb.AppendLine("}");
 
         context.AddSource($"{symbol.ContainingNamespace.ToDisplayString()}.{symbol.Name}Fields.cs", sb.ToString());

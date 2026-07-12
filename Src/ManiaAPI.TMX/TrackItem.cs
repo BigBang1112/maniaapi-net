@@ -7,7 +7,7 @@ using TmEssentials.Converters;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record TrackItem : IItem
+public sealed partial record TrackItem : IItem
 {
     public long TrackId { get; set; }
     public string TrackName { get; set; } = default!;

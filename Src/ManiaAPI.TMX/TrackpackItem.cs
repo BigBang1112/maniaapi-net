@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 namespace ManiaAPI.TMX;
 
 [Fields]
-public sealed record TrackpackItem : IItem
+public sealed partial record TrackpackItem : IItem
 {
     public long PackId { get; set; }
     public string PackName { get; set; } = default!;
