@@ -493,12 +493,14 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         object value = type switch
         {
             "i4" or "int" => int.Parse(r.ReadContent()),
+            "i8" => long.Parse(r.ReadContent(), CultureInfo.InvariantCulture),
             "string" => WebUtility.HtmlDecode(r.ReadContentAsString()),
             "boolean" => r.ReadContentAsBoolean(),
             "double" => double.Parse(r.ReadContent(), NumberStyles.Number, CultureInfo.InvariantCulture),
             "struct" => ReadXmlRpcStruct(ref r),
             "array" => ReadXmlRpcArray(ref r),
-            _ => throw new XmlRpcClientException($"unknown type {type}"),
+            "base64" => Convert.FromBase64String(r.ReadContentAsString()),
+            _ => throw new XmlRpcClientException($"Unsupported type: {type}"),
         };
 
         _ = r.SkipEndElement();
@@ -569,14 +571,44 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 
         switch (value)
         {
-            case int integer:
+            case int:
+            case uint:
+            case ushort:
+            case short:
+            case byte:
+            case sbyte:
                 sb.Append("<int>");
-                sb.Append(integer);
+                sb.Append(value);
+                sb.Append("</int>");
+                break;
+            case long l:
+                sb.Append("<i8>");
+                sb.Append(l.ToString(CultureInfo.InvariantCulture));
+                sb.Append("</i8>");
+                break;
+            case ulong ul:
+                sb.Append("<i8>");
+                sb.Append(ul.ToString(CultureInfo.InvariantCulture));
+                sb.Append("</i8>");
+                break;
+            case Enum enumValue:
+                sb.Append("<int>");
+                sb.Append(Convert.ToInt64(enumValue, CultureInfo.InvariantCulture));
                 sb.Append("</int>");
                 break;
             case double doub:
                 sb.Append("<double>");
-                sb.Append(doub);
+                sb.Append(doub.ToString(CultureInfo.InvariantCulture));
+                sb.Append("</double>");
+                break;
+            case float flo:
+                sb.Append("<double>");
+                sb.Append(flo.ToString(CultureInfo.InvariantCulture));
+                sb.Append("</double>");
+                break;
+            case decimal dec:
+                sb.Append("<double>");
+                sb.Append(dec.ToString(CultureInfo.InvariantCulture));
                 sb.Append("</double>");
                 break;
             case bool boolean:
@@ -613,7 +645,8 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
                 sb.Append("</data></array>");
                 break;
             default:
-                throw new XmlRpcClientException($"Unsupported parameter type: {value?.GetType().FullName ?? "null"}");
+                sb.Append(SecurityElement.Escape(value?.ToString() ?? string.Empty));
+                break;
         }
 
         sb.Append("</value>");
