@@ -50,6 +50,8 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     private Task ListenTask { get; }
     private Task CallbackTask { get; }
 
+    public int Version => version;
+
     public event XmlRpcCallback? Callback;
 
     [LoggerMessage(EventId = 1, Level = LogLevel.Trace, Message = "Received XML response (0x{Handle:x8}): {Payload}")]
