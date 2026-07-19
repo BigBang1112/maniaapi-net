@@ -106,7 +106,7 @@ public partial class TMX : ITMX
         [AsNumber] public bool? Best { get; init; }
         public long? UserId { get; init; }
 
-        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
+        public IEnumerable<KeyValuePair<string, string>>? AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/replays")]
@@ -164,9 +164,12 @@ public partial class TMX : ITMX
         [AsNumber] public bool? InHasRecord { get; init; }
         [AsNumber] public bool? InEnvMix { get; init; }
         [AsNumber] public bool? InUnlimiter { get; init; }
+        [AsNumber] public bool? InAuthorTimeBeaten { get; init; }
+        [AsNumber] public bool? InCollaborative { get; init; }
+        [AsNumber] public bool? InBeta { get; init; }
         public TrackOrder? Order2 { get; init; } // no longer?
 
-        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
+        public IEnumerable<KeyValuePair<string, string>>? AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/tracks")]
@@ -195,7 +198,7 @@ public partial class TMX : ITMX
         public int? LbId { get; init; }
         public int? LbEnv { get; init; }
 
-        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
+        public IEnumerable<KeyValuePair<string, string>>? AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/leaderboards")]
@@ -226,7 +229,7 @@ public partial class TMX : ITMX
         public string? Name { get; init; }
         public string? Creator { get; init; }
 
-        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
+        public IEnumerable<KeyValuePair<string, string>>? AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/trackpacks")]
@@ -267,7 +270,7 @@ public partial class TMX : ITMX
         [AsNumber] public bool? InSupporters { get; init; }
         [AsNumber] public bool? InModerators { get; init; }
 
-        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
+        public IEnumerable<KeyValuePair<string, string>>? AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/users")]

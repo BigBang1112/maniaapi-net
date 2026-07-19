@@ -345,6 +345,33 @@ public partial class TMX
                 first = false;
             }
 
+            if (InAuthorTimeBeaten.HasValue)
+            {
+                if (first) sb.Append('?');
+                else sb.Append('&');
+                sb.Append("inauthortimebeaten=");
+                sb.Append(InAuthorTimeBeaten.Value ? '1' : '0');
+                first = false;
+            }
+
+            if (InCollaborative.HasValue)
+            {
+                if (first) sb.Append('?');
+                else sb.Append('&');
+                sb.Append("incollaborative=");
+                sb.Append(InCollaborative.Value ? '1' : '0');
+                first = false;
+            }
+
+            if (InBeta.HasValue)
+            {
+                if (first) sb.Append('?');
+                else sb.Append('&');
+                sb.Append("inbeta=");
+                sb.Append(InBeta.Value ? '1' : '0');
+                first = false;
+            }
+
             if (Order2.HasValue)
             {
                 if (first) sb.Append('?');

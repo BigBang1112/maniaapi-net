@@ -11,4 +11,4 @@ public sealed record CompetitionParticipant(Guid Participant,
                                             string? Team,
                                             [property: JsonConverter(typeof(NullableDateTimeOffsetUnixConverter))] DateTimeOffset? CheckInDate,
                                             string? GroupId,
-                                            string? SkillLevel);
+                                            int? SkillLevel);

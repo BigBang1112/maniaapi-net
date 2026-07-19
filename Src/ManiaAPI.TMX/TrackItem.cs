@@ -12,11 +12,11 @@ public sealed partial record TrackItem : IItem
     public long TrackId { get; set; }
     public string TrackName { get; set; } = default!;
     public string UId { get; set; } = default!;
-    [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32 AuthorTime { get; set; }
+    [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32? AuthorTime { get; set; }
     public int AuthorScore { get; set; }
-    [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32 GoldTarget { get; set; }
-    [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32 SilverTarget { get; set; }
-    [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32 BronzeTarget { get; set; }
+    [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32? GoldTarget { get; set; }
+    [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32? SilverTarget { get; set; }
+    [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32? BronzeTarget { get; set; }
     public User Uploader { get; set; } = default!;
     public DateTimeOffset UploadedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
@@ -34,6 +34,8 @@ public sealed partial record TrackItem : IItem
     public int Comments { get; set; }
     public int ReplayType { get; set; }
     public bool HasThumbnail { get; set; }
+    public bool AuthorBeaten { get; set; }
+    public bool AuthorBeatable { get; set; }
     public WRReplay? WRReplay { get; set; }
     public UserReplay? UserReplay { get; set; }
     public ImmutableList<Author>? Authors { get; set; }
