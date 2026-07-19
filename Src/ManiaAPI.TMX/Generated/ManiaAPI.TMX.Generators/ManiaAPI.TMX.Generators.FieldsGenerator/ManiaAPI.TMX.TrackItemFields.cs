@@ -29,6 +29,8 @@ public readonly record struct TrackItemFields
     public bool Comments { get; init; }
     public bool ReplayType { get; init; }
     public bool HasThumbnail { get; init; }
+    public bool AuthorBeaten { get; init; }
+    public bool AuthorBeatable { get; init; }
     public global::ManiaAPI.TMX.WRReplayFields WRReplay { get; init; }
     public global::ManiaAPI.TMX.UserReplayFields UserReplay { get; init; }
     public bool Authors { get; init; }
@@ -63,6 +65,8 @@ public readonly record struct TrackItemFields
         Comments = true,
         ReplayType = true,
         HasThumbnail = true,
+        AuthorBeaten = true,
+        AuthorBeatable = true,
         WRReplay = global::ManiaAPI.TMX.WRReplayFields.All,
         UserReplay = global::ManiaAPI.TMX.UserReplayFields.All,
         Authors = true,
@@ -257,6 +261,20 @@ public readonly record struct TrackItemFields
         {
             if (!first) sb.Append("%2C");
             sb.Append(nameof(global::ManiaAPI.TMX.TrackItem.HasThumbnail));
+            first = false;
+        }
+
+        if (AuthorBeaten)
+        {
+            if (!first) sb.Append("%2C");
+            sb.Append(nameof(global::ManiaAPI.TMX.TrackItem.AuthorBeaten));
+            first = false;
+        }
+
+        if (AuthorBeatable)
+        {
+            if (!first) sb.Append("%2C");
+            sb.Append(nameof(global::ManiaAPI.TMX.TrackItem.AuthorBeatable));
             first = false;
         }
 

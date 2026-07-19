@@ -45,6 +45,8 @@ public readonly record struct MapItemFields
     public bool Tags { get; init; }
     public bool Images { get; init; }
     public global::ManiaAPI.TMX.MappackInfoFields Mappack { get; init; }
+    public bool AuthorBeaten { get; init; }
+    public bool AuthorBeatable { get; init; }
     public IEnumerable<string>? AdditionalFields { get; init; }
 
     public static readonly MapItemFields All = new()
@@ -90,6 +92,8 @@ public readonly record struct MapItemFields
         Tags = true,
         Images = true,
         Mappack = global::ManiaAPI.TMX.MappackInfoFields.All,
+        AuthorBeaten = true,
+        AuthorBeatable = true,
     };
 
     internal bool Append(StringBuilder sb)
@@ -451,6 +455,20 @@ public readonly record struct MapItemFields
             sb.Append(nameof(global::ManiaAPI.TMX.MapItem.Mappack));
             sb.Append('.');
             sb.Append(nameof(global::ManiaAPI.TMX.MappackInfo.MapPosition));
+            first = false;
+        }
+
+        if (AuthorBeaten)
+        {
+            if (!first) sb.Append("%2C");
+            sb.Append(nameof(global::ManiaAPI.TMX.MapItem.AuthorBeaten));
+            first = false;
+        }
+
+        if (AuthorBeatable)
+        {
+            if (!first) sb.Append("%2C");
+            sb.Append(nameof(global::ManiaAPI.TMX.MapItem.AuthorBeatable));
             first = false;
         }
 
