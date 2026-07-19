@@ -49,6 +49,8 @@ public sealed partial record MapItem : IItem
     public ImmutableList<Tag>? Tags { get; set; }
     public ImmutableList<MapImage>? Images { get; set; }
     public MappackInfo? Mappack { get; set; }
+    public bool AuthorBeaten { get; set; }
+    public bool AuthorBeatable { get; set; }
     // public MapOnlineWR? OnlineWR { get; set; } // use Nadeo API!
     // public object? UserOnlineRecord { get; set; } // login required
     // public object? UserRecord { get; set; } // login required

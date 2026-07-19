@@ -164,6 +164,9 @@ public partial class TMX : ITMX
         [AsNumber] public bool? InHasRecord { get; init; }
         [AsNumber] public bool? InEnvMix { get; init; }
         [AsNumber] public bool? InUnlimiter { get; init; }
+        [AsNumber] public bool? InAuthorTimeBeaten { get; init; }
+        [AsNumber] public bool? InCollaborative { get; init; }
+        [AsNumber] public bool? InBeta { get; init; }
         public TrackOrder? Order2 { get; init; } // no longer?
 
         public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }

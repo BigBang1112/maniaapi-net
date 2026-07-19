@@ -34,6 +34,8 @@ public sealed partial record TrackItem : IItem
     public int Comments { get; set; }
     public int ReplayType { get; set; }
     public bool HasThumbnail { get; set; }
+    public bool AuthorBeaten { get; set; }
+    public bool AuthorBeatable { get; set; }
     public WRReplay? WRReplay { get; set; }
     public UserReplay? UserReplay { get; set; }
     public ImmutableList<Author>? Authors { get; set; }

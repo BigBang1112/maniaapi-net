@@ -516,6 +516,9 @@ public partial class MX : IMX
         [AsNumber]
         public bool? InLatestAwardedAuthor { get; init; }
 
+        [AsNumber]
+        public bool? InAuthorTimeBeaten { get; init; }
+
         /// <summary>
         /// An Author is MX Supporter (1) or not (0)
         /// </summary>
