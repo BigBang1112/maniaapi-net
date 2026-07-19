@@ -600,7 +600,7 @@ public partial class MX : IMX
         /// </summary>
         public string? DriverLogin { get; init; }
 
-        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
+        public IEnumerable<KeyValuePair<string, string>>? AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/maps")]
@@ -732,7 +732,7 @@ public partial class MX : IMX
         [AsNumber]
         public bool? InModerators { get; init; }
 
-        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
+        public IEnumerable<KeyValuePair<string, string>>? AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/users")]
@@ -885,7 +885,7 @@ public partial class MX : IMX
         /// </summary>
         public string? MappackSecret { get; init; }
 
-        public IEnumerable<KeyValuePair<string, string>> AdditionalParameters { get; init; }
+        public IEnumerable<KeyValuePair<string, string>>? AdditionalParameters { get; init; }
     }
 
     [GetMethod("api/mappacks")]
