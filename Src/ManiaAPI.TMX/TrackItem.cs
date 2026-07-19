@@ -20,7 +20,7 @@ public sealed partial record TrackItem : IItem
     public User Uploader { get; set; } = default!;
     public DateTimeOffset UploadedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
-    public DateTimeOffset ActivityAt { get; set; }
+    public DateTimeOffset? ActivityAt { get; set; }
     public TrackType PrimaryType { get; set; }
     public int TrackValue { get; set; }
     public string? AuthorComments { get; set; }
