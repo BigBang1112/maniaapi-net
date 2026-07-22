@@ -92,6 +92,11 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             {
                 await ListenAsync(cts.Token);
             }
+            catch (OperationCanceledException) {}
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Listen loop terminated unexpectedly.");
+            }
             finally
             {
                 callbackChannel.Writer.TryComplete();
@@ -610,9 +615,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             case short:
             case byte:
             case sbyte:
-                sb.Append("<int>");
-                sb.Append(value);
-                sb.Append("</int>");
+                sb.Append($"<int>{value}</int>");
                 break;
             case long l:
                 sb.Append("<i8>");
