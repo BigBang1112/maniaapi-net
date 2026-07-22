@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using MinimalXmlReader;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
@@ -31,7 +32,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 #endif
     private readonly Channel<KeyValuePair<uint, string>> callbackChannel = Channel.CreateUnbounded<KeyValuePair<uint, string>>();
     private readonly ConcurrentDictionary<uint, Channel<string>> pendingRequests = new();
-    private readonly ConcurrentDictionary<string, List<Func<object[], CancellationToken, Task>>> routeHandlers = new();
+    private readonly ConcurrentDictionary<string, ImmutableList<Func<object[], CancellationToken, Task>>> routeHandlers = new();
 
     // GBXRemote 1 has no handle to correlate requests/responses,
     // so calls must be strictly sequential to avoid cross-talk between callers
@@ -205,7 +206,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         routeHandlers.AddOrUpdate(
             methodName,
             _ => [handler],
-            (_, list) => { list.Add(handler); return list; }
+            (_, list) => list.Add(handler)
         );
     }
 
