@@ -23,7 +23,7 @@ public partial class XmlRpcClient
         return await CallAsync<string>("system.methodHelp", [methodName], cancellationToken);
     }
 
-    public async Task<IEnumerable<XmlRpcMulticallResult>> SystemMulticallAsync(IEnumerable<XmlRpcMulticall> calls, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<XmlRpcCallResult>> SystemMulticallAsync(IEnumerable<XmlRpcCall> calls, CancellationToken cancellationToken = default)
     {
         var multicallParams = calls
             .Select(call => new Dictionary<string, object?>
@@ -38,16 +38,16 @@ public partial class XmlRpcClient
         return results.Select(ParseMulticallResult);
     }
 
-    private static XmlRpcMulticallResult ParseMulticallResult(object item)
+    private static XmlRpcCallResult ParseMulticallResult(object item)
     {
         if (item is IEnumerable<object?> success)
         {
-            return new XmlRpcMulticallResult(success.FirstOrDefault(), FaultCode: null, FaultString: null);
+            return new XmlRpcCallResult(success.FirstOrDefault(), FaultCode: null, FaultString: null);
         }
 
         if (item is IDictionary<string, object?> fault)
         {
-            return new XmlRpcMulticallResult(
+            return new XmlRpcCallResult(
                 Value: null,
                 FaultCode: fault.TryGetValue("faultCode", out var code) ? code as int? : null,
                 FaultString: fault.TryGetValue("faultString", out var faultString) ? faultString as string : null);
