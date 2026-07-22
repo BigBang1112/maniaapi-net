@@ -13,7 +13,7 @@ public sealed partial record TrackItem : IItem
     public string TrackName { get; set; } = default!;
     public string UId { get; set; } = default!;
     [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32? AuthorTime { get; set; }
-    public int AuthorScore { get; set; }
+    public int? AuthorScore { get; set; }
     [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32? GoldTarget { get; set; }
     [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32? SilverTarget { get; set; }
     [JsonConverter(typeof(JsonTimeInt32Converter))] public TimeInt32? BronzeTarget { get; set; }

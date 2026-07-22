@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using MinimalXmlReader;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
@@ -31,7 +32,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
 #endif
     private readonly Channel<KeyValuePair<uint, string>> callbackChannel = Channel.CreateUnbounded<KeyValuePair<uint, string>>();
     private readonly ConcurrentDictionary<uint, Channel<string>> pendingRequests = new();
-    private readonly ConcurrentDictionary<string, List<Func<object[], CancellationToken, Task>>> routeHandlers = new();
+    private readonly ConcurrentDictionary<string, ImmutableList<Func<object[], CancellationToken, Task>>> routeHandlers = new();
 
     // GBXRemote 1 has no handle to correlate requests/responses,
     // so calls must be strictly sequential to avoid cross-talk between callers
@@ -91,6 +92,11 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             {
                 await ListenAsync(cts.Token);
             }
+            catch (OperationCanceledException) {}
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Listen loop terminated unexpectedly.");
+            }
             finally
             {
                 callbackChannel.Writer.TryComplete();
@@ -98,6 +104,13 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
                 if (!cts.IsCancellationRequested)
                 {
                     cts.Cancel();
+                }
+
+                // Unblock any calls still awaiting a response so they fail fast instead of
+                // hanging forever once the connection is lost/closed (see SendAndReceiveAsync).
+                foreach (var pendingChannel in pendingRequests.Values)
+                {
+                    pendingChannel.Writer.TryComplete();
                 }
             }
         });
@@ -198,7 +211,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         routeHandlers.AddOrUpdate(
             methodName,
             _ => [handler],
-            (_, list) => { list.Add(handler); return list; }
+            (_, list) => list.Add(handler)
         );
     }
 
@@ -396,33 +409,56 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (v1CallSemaphore is not null)
-        {
-            await v1CallSemaphore.WaitAsync(cancellationToken);
-        }
+        var semaphoreAcquired = false;
+        uint? handle = null;
 
         try
         {
+            if (v1CallSemaphore is not null)
+            {
+                await v1CallSemaphore.WaitAsync(cancellationToken);
+                semaphoreAcquired = true;
+            }
+
+            // Determine the handle and register its response channel *before* sending the
+            // request. Sending first and registering afterwards leaves a window where a very
+            // fast (local) response can arrive and be discarded as an "unknown handle"
+            // by ListenAsync before this method gets a chance to create the channel - the
+            // subsequent read would then wait forever with no writer left to complete it.
+            handle = version >= 2 ? GetNextHandle() : NoHandle;
+            var channel = GetOrCreatePendingRequestChannel(handle.Value);
+
             var startTime = Stopwatch.GetTimestamp();
 
-            var handle = await SendXmlPayloadAsync(xmlPayload, cancellationToken);
+            await SendXmlPayloadAsync(handle.Value, xmlPayload, cancellationToken);
 
-            LogMethodSent(logger, methodName, handle);
+            LogMethodSent(logger, methodName, handle.Value);
 
-            var channel = GetOrCreatePendingRequestChannel(handle);
+            // If the connection is lost/closed while this is pending, the ListenTask completes
+            // this channel's writer, which makes ReadAsync throw ChannelClosedException instead of hanging forever.
             var xml = await channel.Reader.ReadAsync(cancellationToken);
-
-            pendingRequests.Remove(handle, out _);
 
             var elapsed = Stopwatch.GetElapsedTime(startTime);
 
-            LogMethodResponseReceived(logger, methodName, handle, elapsed.TotalMilliseconds);
+            LogMethodResponseReceived(logger, methodName, handle.Value, elapsed.TotalMilliseconds);
 
             return xml;
         }
+        catch (ChannelClosedException ex)
+        {
+            throw new XmlRpcClientException($"Connection was closed while waiting for a response to {methodName}.", ex);
+        }
         finally
         {
-            v1CallSemaphore?.Release();
+            if (handle.HasValue)
+            {
+                pendingRequests.Remove(handle.Value, out _);
+            }
+
+            if (semaphoreAcquired)
+            {
+                v1CallSemaphore?.Release();
+            }
         }
     }
 
@@ -579,9 +615,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             case short:
             case byte:
             case sbyte:
-                sb.Append("<int>");
-                sb.Append(value);
-                sb.Append("</int>");
+                sb.Append($"<int>{value}</int>");
                 break;
             case long l:
                 sb.Append("<i8>");
@@ -654,7 +688,7 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
         sb.Append("</value>");
     }
 
-    private async Task<uint> SendXmlPayloadAsync(string xmlPayload, CancellationToken cancellationToken)
+    private async Task SendXmlPayloadAsync(uint handle, string xmlPayload, CancellationToken cancellationToken)
     {
         var xmlPayloadByteCount = Encoding.UTF8.GetByteCount(xmlPayload);
 
@@ -679,8 +713,6 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
                 throw new XmlRpcClientException("Failed to write XML payload byte count to buffer");
             }
 
-            var handle = GetNextHandle();
-
             // Write handle as uint32 at offset 4
             if (!BitConverter.TryWriteBytes(buffer.AsSpan().Slice(4), handle))
             {
@@ -688,8 +720,6 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             }
 
             await stream.WriteAsync(buffer, cancellationToken);
-
-            return handle;
         }
         else
         {
@@ -713,8 +743,6 @@ public partial class XmlRpcClient : IDisposable, IAsyncDisposable
             }
 
             await stream.WriteAsync(buffer, cancellationToken);
-
-            return NoHandle;
         }
     }
 
