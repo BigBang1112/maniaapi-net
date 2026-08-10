@@ -11,7 +11,7 @@ public interface ITrackmaniaIO : IDisposable
     HttpClient Client { get; }
 
     Task<CampaignCollection> GetSeasonalCampaignsAsync(int page = 0, CancellationToken cancellationToken = default);
-    Task<CampaignCollection> GetClubCampaignsAsync(int page = 0, CancellationToken cancellationToken = default);
+    Task<CampaignCollection> GetClubCampaignsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default);
     [Obsolete("Use GetWeeklyShortCampaignsAsync instead.")]
     Task<CampaignCollection> GetWeeklyCampaignsAsync(int page = 0, CancellationToken cancellationToken = default);
     Task<CampaignCollection> GetWeeklyShortCampaignsAsync(int page = 0, CancellationToken cancellationToken = default);
@@ -26,15 +26,15 @@ public interface ITrackmaniaIO : IDisposable
     Task<Leaderboard> GetLeaderboardAsync(string mapUid, int offset = 0, int length = 15, CancellationToken cancellationToken = default);
     Task<ImmutableList<WorldRecord>> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default);
     Task<Map> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default);
-    Task<ClubCollection> GetClubsAsync(int page = 0, CancellationToken cancellationToken = default);
+    Task<ClubCollection> GetClubsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default);
     Task<Club> GetClubAsync(int clubId, CancellationToken cancellationToken = default);
     Task<ClubMemberCollection> GetClubMembersAsync(int clubId, int page = 0, CancellationToken cancellationToken = default);
     Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int page = 0, CancellationToken cancellationToken = default);
-    Task<ClubRoomCollection> GetClubRoomsAsync(int page = 0, CancellationToken cancellationToken = default);
+    Task<ClubRoomCollection> GetClubRoomsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default);
     Task<ClubRoom> GetClubRoomAsync(int clubId, int roomId, CancellationToken cancellationToken = default);
     Task<TrackOfTheDayMonth> GetTrackOfTheDaysAsync(int page = 0, CancellationToken cancellationToken = default);
     Task<AdCollection> GetAdsAsync(CancellationToken cancellationToken = default);
-    Task<CompetitionCollection> GetCompetitionsAsync(int page = 0, CancellationToken cancellationToken = default);
+    Task<CompetitionCollection> GetCompetitionsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default);
     Task<Competition> GetCompetitionAsync(int competitionId, CancellationToken cancellationToken = default);
 }
 
@@ -91,9 +91,9 @@ public class TrackmaniaIO : ITrackmaniaIO
         return await GetJsonAsync($"campaigns/seasonal/{page}", TrackmaniaIOJsonContext.Default.CampaignCollection, cancellationToken);
     }
 
-    public virtual async Task<CampaignCollection> GetClubCampaignsAsync(int page = 0, CancellationToken cancellationToken = default)
+    public virtual async Task<CampaignCollection> GetClubCampaignsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"campaigns/club/{page}", TrackmaniaIOJsonContext.Default.CampaignCollection, cancellationToken);
+        return await GetJsonAsync($"campaigns/club/{page}{(string.IsNullOrEmpty(search) ? "" : $"?search={search}")}", TrackmaniaIOJsonContext.Default.CampaignCollection, cancellationToken);
     }
 
     [Obsolete("Use GetWeeklyShortCampaignsAsync instead.")]
@@ -167,9 +167,9 @@ public class TrackmaniaIO : ITrackmaniaIO
         return await GetJsonAsync($"map/{mapUid}", TrackmaniaIOJsonContext.Default.Map, cancellationToken);
     }
 
-    public virtual async Task<ClubCollection> GetClubsAsync(int page = 0, CancellationToken cancellationToken = default)
+    public virtual async Task<ClubCollection> GetClubsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"clubs/{page}", TrackmaniaIOJsonContext.Default.ClubCollection, cancellationToken);
+        return await GetJsonAsync($"clubs/{page}{(string.IsNullOrEmpty(search) ? "" : $"?search={search}")}", TrackmaniaIOJsonContext.Default.ClubCollection, cancellationToken);
     }
 
     public virtual async Task<Club> GetClubAsync(int clubId, CancellationToken cancellationToken = default)
@@ -187,9 +187,9 @@ public class TrackmaniaIO : ITrackmaniaIO
         return await GetJsonAsync($"club/{clubId}/activities/{page}", TrackmaniaIOJsonContext.Default.ClubActivityCollection, cancellationToken);
     }
 
-    public virtual async Task<ClubRoomCollection> GetClubRoomsAsync(int page = 0, CancellationToken cancellationToken = default)
+    public virtual async Task<ClubRoomCollection> GetClubRoomsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"rooms/{page}", TrackmaniaIOJsonContext.Default.ClubRoomCollection, cancellationToken);
+        return await GetJsonAsync($"rooms/{page}{(string.IsNullOrEmpty(search) ? "" : $"?search={search}")}", TrackmaniaIOJsonContext.Default.ClubRoomCollection, cancellationToken);
     }
 
     public virtual async Task<ClubRoom> GetClubRoomAsync(int clubId, int roomId, CancellationToken cancellationToken = default)
@@ -207,9 +207,9 @@ public class TrackmaniaIO : ITrackmaniaIO
         return await GetJsonAsync("ads", TrackmaniaIOJsonContext.Default.AdCollection, cancellationToken);
     }
 
-    public virtual async Task<CompetitionCollection> GetCompetitionsAsync(int page = 0, CancellationToken cancellationToken = default)
+    public virtual async Task<CompetitionCollection> GetCompetitionsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"competitions/{page}", TrackmaniaIOJsonContext.Default.CompetitionCollection, cancellationToken);
+        return await GetJsonAsync($"competitions/{page}{(string.IsNullOrEmpty(search) ? "" : $"?search={search}")}", TrackmaniaIOJsonContext.Default.CompetitionCollection, cancellationToken);
     }
 
     public virtual async Task<Competition> GetCompetitionAsync(int competitionId, CancellationToken cancellationToken = default)
