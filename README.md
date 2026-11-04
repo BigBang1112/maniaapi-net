@@ -1036,7 +1036,7 @@ await client.WaitForCloseAsync();
 
 ### Resilience
 
-`GBXRemoteClient` communicates over a raw TCP connection. Wrap `ConnectAsync` with a [`Polly`](https://www.nuget.org/packages/Polly) pipeline to retry on transient connection failures:
+`GBXRemoteClient` communicates over a raw TCP connection. Add [`Microsoft.Extensions.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Resilience) and wrap `ConnectAsync` in a retry pipeline to handle transient connection failures:
 
 ```cs
 using ManiaAPI.GBXRemote;
