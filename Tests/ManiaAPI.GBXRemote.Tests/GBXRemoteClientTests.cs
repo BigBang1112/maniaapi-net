@@ -27,6 +27,31 @@ public class GBXRemoteClientTests
     }
 
     [Test]
+    public async Task ConnectAsync_UnknownHeader_ClosesConnection()
+    {
+        using var server = new FakeGbxRemoteServer();
+        var clientTask = GBXRemoteClient.ConnectAsync(server.EndPoint).AsTask();
+        using var connection = await server.AcceptAsync("GBXRemote 3");
+
+        await Assert.ThrowsAsync<ClientException>(() => clientTask.WaitAsync(Timeout));
+        await connection.WaitForCloseAsync();
+    }
+
+    [Test]
+    public async Task ConnectAsync_CancelledDuringHandshake_ClosesConnection()
+    {
+        using var server = new FakeGbxRemoteServer();
+        using var cts = new CancellationTokenSource();
+        var clientTask = GBXRemoteClient.ConnectAsync(server.EndPoint, cancellationToken: cts.Token).AsTask();
+        using var connection = await server.AcceptAsync(header: null);
+
+        await cts.CancelAsync();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => clientTask.WaitAsync(Timeout));
+        await connection.WaitForCloseAsync();
+    }
+
+    [Test]
     public async Task CallAsync_SendsMethodCallWithResponseHandleAndParsesResult()
     {
         await using var session = await FakeGbxRemoteServer.ConnectAsync();

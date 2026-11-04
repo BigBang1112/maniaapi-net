@@ -22,11 +22,17 @@ internal sealed class FakeGbxRemoteServer : IDisposable
     }
 
     /// <summary>
-    /// Accepts the next client and sends it the handshake header.
+    /// Accepts the next client and sends it the handshake header. A null header sends nothing.
     /// </summary>
-    public async Task<FakeGbxRemoteConnection> AcceptAsync(string header = "GBXRemote 2")
+    public async Task<FakeGbxRemoteConnection> AcceptAsync(string? header = "GBXRemote 2")
     {
         var tcp = await listener.AcceptTcpClientAsync().WaitAsync(Timeout);
+
+        if (header is null)
+        {
+            return new FakeGbxRemoteConnection(tcp, version: 2);
+        }
+
         var stream = tcp.GetStream();
 
         var headerBytes = Encoding.ASCII.GetBytes(header);
@@ -132,6 +138,20 @@ internal sealed class FakeGbxRemoteConnection : IDisposable
     public Task SendCallbackAsync(string methodName, string paramsXml, uint handle = 1)
     {
         return SendAsync(handle, $"""<?xml version="1.0" encoding="UTF-8"?><methodCall><methodName>{methodName}</methodName><params>{paramsXml}</params></methodCall>""");
+    }
+
+    /// <summary>
+    /// Completes once the client closes its end of the connection.
+    /// </summary>
+    public async Task WaitForCloseAsync()
+    {
+        var buffer = new byte[1];
+        var read = await stream.ReadAsync(buffer).AsTask().WaitAsync(FakeGbxRemoteServer.Timeout);
+
+        if (read != 0)
+        {
+            throw new InvalidOperationException("Expected the client to close the connection, but it sent data.");
+        }
     }
 
     public void Dispose() => tcp.Dispose();

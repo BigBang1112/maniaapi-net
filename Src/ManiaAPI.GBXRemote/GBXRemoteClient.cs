@@ -134,10 +134,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         ILogger<GBXRemoteClient>? logger = null,
         CancellationToken cancellationToken = default)
     {
-        var tcp = new TcpClient();
-        await tcp.ConnectAsync(ip, port, cancellationToken);
-        var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new GBXRemoteClient(tcp, version, logger ?? NullLogger<GBXRemoteClient>.Instance);
+        return await ConnectCoreAsync(tcp => tcp.ConnectAsync(ip, port, cancellationToken), logger, cancellationToken);
     }
 
     /// <summary>
@@ -156,10 +153,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         ILogger<GBXRemoteClient>? logger = null,
         CancellationToken cancellationToken = default)
     {
-        var tcp = new TcpClient();
-        await tcp.ConnectAsync(ip, port, cancellationToken);
-        var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new GBXRemoteClient(tcp, version, logger ?? NullLogger<GBXRemoteClient>.Instance);
+        return await ConnectCoreAsync(tcp => tcp.ConnectAsync(ip, port, cancellationToken), logger, cancellationToken);
     }
 
     /// <summary>
@@ -176,10 +170,27 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         ILogger<GBXRemoteClient>? logger = null,
         CancellationToken cancellationToken = default)
     {
+        return await ConnectCoreAsync(tcp => tcp.ConnectAsync(endpoint, cancellationToken), logger, cancellationToken);
+    }
+
+    private static async ValueTask<GBXRemoteClient> ConnectCoreAsync(
+        Func<TcpClient, ValueTask> connect,
+        ILogger<GBXRemoteClient>? logger,
+        CancellationToken cancellationToken)
+    {
         var tcp = new TcpClient();
-        await tcp.ConnectAsync(endpoint, cancellationToken);
-        var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new GBXRemoteClient(tcp, version, logger ?? NullLogger<GBXRemoteClient>.Instance);
+
+        try
+        {
+            await connect(tcp);
+            var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
+            return new GBXRemoteClient(tcp, version, logger ?? NullLogger<GBXRemoteClient>.Instance);
+        }
+        catch
+        {
+            tcp.Dispose();
+            throw;
+        }
     }
 
     private static async Task<int> ValidateHeaderOrThrowAsync(NetworkStream stream, CancellationToken cancellationToken)
