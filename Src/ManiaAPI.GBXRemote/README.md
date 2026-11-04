@@ -24,8 +24,6 @@ Replace the package reference with `ManiaAPI.GBXRemote` and use the `ManiaAPI.GB
 
 Method names and the wire protocol are unchanged.
 
-`ManiaAPI.XmlRpc.XmlRpcClient` remains available as an obsolete compatibility class that inherits from `GBXRemoteClient`. Its `ConnectAsync` overloads return the compatibility type; new code should use `GBXRemoteClient`.
-
 ## Usage
 
 ```cs

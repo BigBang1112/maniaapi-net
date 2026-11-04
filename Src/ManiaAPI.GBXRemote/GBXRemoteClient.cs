@@ -76,7 +76,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     [LoggerMessage(EventId = 7, Level = LogLevel.Debug, Message = "{MethodName} (0x{Handle:x8}) response received (in {ElapsedMilliseconds}ms).")]
     private static partial void LogMethodResponseReceived(ILogger logger, string methodName, uint handle, double elapsedMilliseconds);
 
-    private protected GBXRemoteClient(TcpClient tcp, int version, ILogger<GBXRemoteClient> logger)
+    private GBXRemoteClient(TcpClient tcp, int version, ILogger<GBXRemoteClient> logger)
     {
         this.tcp = tcp ?? throw new ArgumentNullException(nameof(tcp));
         this.version = version;
@@ -182,7 +182,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         return new GBXRemoteClient(tcp, version, logger ?? NullLogger<GBXRemoteClient>.Instance);
     }
 
-    private protected static async Task<int> ValidateHeaderOrThrowAsync(NetworkStream stream, CancellationToken cancellationToken)
+    private static async Task<int> ValidateHeaderOrThrowAsync(NetworkStream stream, CancellationToken cancellationToken)
     {
         var lengthBuffer = new byte[4];
         await stream.ReadExactlyAsync(lengthBuffer, cancellationToken);
