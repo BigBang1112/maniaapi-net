@@ -1,6 +1,6 @@
 ﻿namespace ManiaAPI.GBXRemote;
 
-public partial class Client
+public partial class GBXRemoteClient
 {
     public async Task<IEnumerable<string>> SystemListMethodsAsync(CancellationToken cancellationToken = default)
     {

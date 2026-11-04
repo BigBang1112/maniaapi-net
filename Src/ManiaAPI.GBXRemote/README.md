@@ -16,7 +16,7 @@ Replace the package reference with `ManiaAPI.GBXRemote` and use the `ManiaAPI.GB
 
 | Previous name | New name |
 | --- | --- |
-| `XmlRpcClient` | `Client` |
+| `XmlRpcClient` | `GBXRemoteClient` |
 | `XmlRpcCall` | `Call` |
 | `XmlRpcCallResult` | `CallResult` |
 | `XmlRpcCallback` | `Callback` |
@@ -24,12 +24,14 @@ Replace the package reference with `ManiaAPI.GBXRemote` and use the `ManiaAPI.GB
 
 Method names and the wire protocol are unchanged.
 
+`ManiaAPI.XmlRpc.XmlRpcClient` remains available as an obsolete compatibility class that inherits from `GBXRemoteClient`. Its `ConnectAsync` overloads return the compatibility type; new code should use `GBXRemoteClient`.
+
 ## Usage
 
 ```cs
 using ManiaAPI.GBXRemote;
 
-await using var client = await Client.ConnectAsync("127.0.0.1");
+await using var client = await GBXRemoteClient.ConnectAsync("127.0.0.1");
 
 object authenticationResult = await client.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
 
@@ -70,7 +72,7 @@ await client.WaitForCloseAsync();
 
 ## Resilience
 
-`Client` communicates over a raw TCP connection. Wrap `ConnectAsync` with a [`Polly`](https://www.nuget.org/packages/Polly) pipeline to retry on transient connection failures:
+`GBXRemoteClient` communicates over a raw TCP connection. Wrap `ConnectAsync` with a [`Polly`](https://www.nuget.org/packages/Polly) pipeline to retry on transient connection failures:
 
 ```cs
 using ManiaAPI.GBXRemote;
@@ -86,5 +88,5 @@ var pipeline = new ResiliencePipelineBuilder()
     .Build();
 
 await using var client = await pipeline.ExecuteAsync(async token =>
-    await Client.ConnectAsync("127.0.0.1", 5000, cancellationToken: token));
+    await GBXRemoteClient.ConnectAsync("127.0.0.1", 5000, cancellationToken: token));
 ```

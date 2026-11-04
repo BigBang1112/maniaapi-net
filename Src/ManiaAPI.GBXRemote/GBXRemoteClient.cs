@@ -15,7 +15,7 @@ using System.Threading.Channels;
 
 namespace ManiaAPI.GBXRemote;
 
-public partial class Client : IDisposable, IAsyncDisposable
+public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
 {
     private const string HandshakeV1 = "GBXRemote 1";
     private const string HandshakeV2 = "GBXRemote 2";
@@ -40,7 +40,7 @@ public partial class Client : IDisposable, IAsyncDisposable
 
     private readonly TcpClient tcp;
     private readonly int version;
-    private readonly ILogger<Client> logger;
+    private readonly ILogger<GBXRemoteClient> logger;
 
     private readonly NetworkStream stream;
 
@@ -76,7 +76,7 @@ public partial class Client : IDisposable, IAsyncDisposable
     [LoggerMessage(EventId = 7, Level = LogLevel.Debug, Message = "{MethodName} (0x{Handle:x8}) response received (in {ElapsedMilliseconds}ms).")]
     private static partial void LogMethodResponseReceived(ILogger logger, string methodName, uint handle, double elapsedMilliseconds);
 
-    private Client(TcpClient tcp, int version, ILogger<Client> logger)
+    private protected GBXRemoteClient(TcpClient tcp, int version, ILogger<GBXRemoteClient> logger)
     {
         this.tcp = tcp ?? throw new ArgumentNullException(nameof(tcp));
         this.version = version;
@@ -128,16 +128,16 @@ public partial class Client : IDisposable, IAsyncDisposable
     /// <returns></returns>
     /// <exception cref="SocketException"></exception>
     /// <exception cref="ClientException">Header is invalid.</exception>
-    public static async ValueTask<Client> ConnectAsync(
+    public static async ValueTask<GBXRemoteClient> ConnectAsync(
         string ip,
         int port = 5000,
-        ILogger<Client>? logger = null,
+        ILogger<GBXRemoteClient>? logger = null,
         CancellationToken cancellationToken = default)
     {
         var tcp = new TcpClient();
         await tcp.ConnectAsync(ip, port, cancellationToken);
         var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new Client(tcp, version, logger ?? NullLogger<Client>.Instance);
+        return new GBXRemoteClient(tcp, version, logger ?? NullLogger<GBXRemoteClient>.Instance);
     }
 
     /// <summary>
@@ -150,16 +150,16 @@ public partial class Client : IDisposable, IAsyncDisposable
     /// <returns></returns>
     /// <exception cref="SocketException"></exception>
     /// <exception cref="ClientException">Header is invalid.</exception>
-    public static async ValueTask<Client> ConnectAsync(
+    public static async ValueTask<GBXRemoteClient> ConnectAsync(
         IPAddress ip,
         int port = 5000,
-        ILogger<Client>? logger = null,
+        ILogger<GBXRemoteClient>? logger = null,
         CancellationToken cancellationToken = default)
     {
         var tcp = new TcpClient();
         await tcp.ConnectAsync(ip, port, cancellationToken);
         var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new Client(tcp, version, logger ?? NullLogger<Client>.Instance);
+        return new GBXRemoteClient(tcp, version, logger ?? NullLogger<GBXRemoteClient>.Instance);
     }
 
     /// <summary>
@@ -171,18 +171,18 @@ public partial class Client : IDisposable, IAsyncDisposable
     /// <returns></returns>
     /// <exception cref="SocketException"></exception>
     /// <exception cref="ClientException">Header is invalid.</exception>
-    public static async ValueTask<Client> ConnectAsync(
+    public static async ValueTask<GBXRemoteClient> ConnectAsync(
         IPEndPoint endpoint,
-        ILogger<Client>? logger = null,
+        ILogger<GBXRemoteClient>? logger = null,
         CancellationToken cancellationToken = default)
     {
         var tcp = new TcpClient();
         await tcp.ConnectAsync(endpoint, cancellationToken);
         var version = await ValidateHeaderOrThrowAsync(tcp.GetStream(), cancellationToken);
-        return new Client(tcp, version, logger ?? NullLogger<Client>.Instance);
+        return new GBXRemoteClient(tcp, version, logger ?? NullLogger<GBXRemoteClient>.Instance);
     }
 
-    private static async Task<int> ValidateHeaderOrThrowAsync(NetworkStream stream, CancellationToken cancellationToken)
+    private protected static async Task<int> ValidateHeaderOrThrowAsync(NetworkStream stream, CancellationToken cancellationToken)
     {
         var lengthBuffer = new byte[4];
         await stream.ReadExactlyAsync(lengthBuffer, cancellationToken);

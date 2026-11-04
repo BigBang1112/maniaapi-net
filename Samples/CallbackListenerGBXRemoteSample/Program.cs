@@ -9,9 +9,9 @@ var logger = LoggerFactory.Create(builder =>
         options.SingleLine = true;
     });
     builder.SetMinimumLevel(LogLevel.Debug);
-}).CreateLogger<Client>();
+}).CreateLogger<GBXRemoteClient>();
 
-using var client = await Client.ConnectAsync("127.0.0.1", logger: logger);
+using var client = await GBXRemoteClient.ConnectAsync("127.0.0.1", logger: logger);
 
 await client.CallAsync("Authenticate", "SuperAdmin", "SuperAdmin");
 await client.CallAsync("EnableCallbacks", true);

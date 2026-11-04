@@ -990,26 +990,12 @@ This solution tries to be lightweight and compatible with as many Nadeo games as
 
 **This package is still experimental, the API can change drastically.**
 
-### Migration from ManiaAPI.XmlRpc
-
-Replace the package reference with `ManiaAPI.GBXRemote` and use the `ManiaAPI.GBXRemote` namespace. Types no longer have the `XmlRpc` prefix:
-
-| Previous name | New name |
-| --- | --- |
-| `XmlRpcClient` | `Client` |
-| `XmlRpcCall` | `Call` |
-| `XmlRpcCallResult` | `CallResult` |
-| `XmlRpcCallback` | `Callback` |
-| `XmlRpcCallbackMessage` | `CallbackMessage` |
-
-Method names and the wire protocol are unchanged.
-
 ### Usage
 
 ```cs
 using ManiaAPI.GBXRemote;
 
-await using var client = await Client.ConnectAsync("127.0.0.1");
+await using var client = await GBXRemoteClient.ConnectAsync("127.0.0.1");
 
 object authenticationResult = await client.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
 
@@ -1050,7 +1036,7 @@ await client.WaitForCloseAsync();
 
 ### Resilience
 
-`Client` communicates over a raw TCP connection. Wrap `ConnectAsync` with a [`Polly`](https://www.nuget.org/packages/Polly) pipeline to retry on transient connection failures:
+`GBXRemoteClient` communicates over a raw TCP connection. Wrap `ConnectAsync` with a [`Polly`](https://www.nuget.org/packages/Polly) pipeline to retry on transient connection failures:
 
 ```cs
 using ManiaAPI.GBXRemote;
@@ -1066,8 +1052,22 @@ var pipeline = new ResiliencePipelineBuilder()
     .Build();
 
 await using var client = await pipeline.ExecuteAsync(async token =>
-    await Client.ConnectAsync("127.0.0.1", 5000, cancellationToken: token));
+    await GBXRemoteClient.ConnectAsync("127.0.0.1", 5000, cancellationToken: token));
 ```
+
+### Migration from ManiaAPI.XmlRpc
+
+Replace the package reference with `ManiaAPI.GBXRemote` and use the `ManiaAPI.GBXRemote` namespace. Types no longer have the `XmlRpc` prefix:
+
+| Previous name | New name |
+| --- | --- |
+| `XmlRpcClient` | `GBXRemoteClient` |
+| `XmlRpcCall` | `Call` |
+| `XmlRpcCallResult` | `CallResult` |
+| `XmlRpcCallback` | `Callback` |
+| `XmlRpcCallbackMessage` | `CallbackMessage` |
+
+Method names and the wire protocol are unchanged.
 
 ## ManiaAPI.UnitedLadder
 
