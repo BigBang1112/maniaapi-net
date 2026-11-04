@@ -13,6 +13,15 @@ public interface INadeoLiveServices : INadeoAPI
     Task<MedalRecordCollection> GetMapMedalRecordsAsync(string mapUid, string groupUid, CancellationToken cancellationToken = default);
     Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, int length = 10, int offset = 0, bool onlyWorld = true, CancellationToken cancellationToken = default);
     Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, string groupUid, int length = 10, int offset = 0, bool onlyWorld = true, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets the top 5 records of a map in a specific zone. Paging is not available for zone leaderboards.
+    /// </summary>
+    /// <param name="mapUid">The UID of the map.</param>
+    /// <param name="groupUid">The ID of the group/season, "Personal_Best" for all-time records.</param>
+    /// <param name="zoneId">The ID of the zone to get records for.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, string groupUid, Guid zoneId, CancellationToken cancellationToken = default);
     Task<ImmutableList<Position>> GetLeaderboardPositionByTimeAsync(string mapUid, string groupUid, int score, CancellationToken cancellationToken = default);
     Task<ImmutableList<Position>> GetLeaderboardPositionsByTimeAsync(IEnumerable<string> mapUids, IEnumerable<string> groupUids, IEnumerable<int> scores, CancellationToken cancellationToken = default);
     Task<ImmutableList<Position>> GetLeaderboardPositionByTimeAsync(string mapUid, int score, CancellationToken cancellationToken = default);
@@ -31,6 +40,15 @@ public interface INadeoLiveServices : INadeoAPI
     Task<Club> GetClubAsync(int clubId, CancellationToken cancellationToken = default);
     Task<ClubCampaign> GetClubCampaignAsync(int clubId, int campaignId, CancellationToken cancellationToken = default);
     Task<ClubCampaignCollection> GetClubCampaignsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets the active campaigns of a specific club, most recently created first. Requires a token authenticated through a Ubisoft user account.
+    /// </summary>
+    /// <param name="clubId">The club's ID.</param>
+    /// <param name="length">The number of campaigns to retrieve (max 250).</param>
+    /// <param name="offset">The number of campaigns to skip.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<ClubCampaignCollection> GetClubCampaignsByClubAsync(int clubId, int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubCompetitionCollection> GetClubCompetitionsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
     Task<ClubMapReviewRoomCollection> GetClubMapReviewRoomsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
     Task<ClubMemberCollection> GetClubMembersAsync(int clubId, int length, int offset = 0, CancellationToken cancellationToken = default);
@@ -240,6 +258,23 @@ public interface INadeoLiveServices : INadeoAPI
     Task<ClubCampaign> CreateClubCampaignAsync(int clubId, ClubCampaignCreation creation, CancellationToken cancellationToken = default);
     Task<ClubRoom> CreateClubRoomAsync(int clubId, ClubRoomCreation creation, CancellationToken cancellationToken = default);
     Task<ClubRoom> EditClubRoomAsync(int clubId, int activityId, ClubRoomEdition edition, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Creates a club room that points to an existing dedicated server.
+    /// </summary>
+    /// <param name="clubId">The club's ID.</param>
+    /// <param name="creation">The room name, the dedicated server login and optionally the folder.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<ClubRoom> CreateClubRoomFromServerAsync(int clubId, ClubRoomFromServerCreation creation, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Edits a club room that points to a dedicated server.
+    /// </summary>
+    /// <param name="clubId">The club's ID.</param>
+    /// <param name="activityId">The room's activity ID.</param>
+    /// <param name="edition">The room name, the dedicated server login and the folder.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<ClubRoom> EditClubRoomFromServerAsync(int clubId, int activityId, ClubRoomFromServerEdition edition, CancellationToken cancellationToken = default);
     Task<ClubNews> CreateClubNewsAsync(int clubId, ClubNewsCreation creation, CancellationToken cancellationToken = default);
     Task<ClubNews> EditClubNewsAsync(int clubId, int activityId, ClubNewsEdition edition, CancellationToken cancellationToken = default);
     /// <summary>
@@ -388,6 +423,15 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
             NadeoAPIJsonContext.Default.TopLeaderboardCollection, cancellationToken);
     }
 
+    public virtual async Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, string groupUid, Guid zoneId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+        ArgumentException.ThrowIfNullOrEmpty(groupUid);
+
+        return await GetJsonAsync($"token/leaderboard/group/{groupUid}/map/{mapUid}/top?onlyWorld=false&zoneId={zoneId}",
+            NadeoAPIJsonContext.Default.TopLeaderboardCollection, cancellationToken);
+    }
+
     public async Task<ImmutableList<Position>> GetLeaderboardPositionByTimeAsync(string mapUid, string groupUid, int score, CancellationToken cancellationToken = default)
     {
         return await GetLeaderboardPositionsByTimeAsync([mapUid], [groupUid], [score], cancellationToken);
@@ -510,7 +554,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
 
     public virtual async Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int length, int offset = 0, bool active = true, int folderId = 0, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"token/club/{clubId}/activity?length={length}&offset={offset}&active={active}&folderId={active}",
+        return await GetJsonAsync($"token/club/{clubId}/activity?length={length}&offset={offset}&active={active}&folderId={folderId}",
             NadeoAPIJsonContext.Default.ClubActivityCollection, cancellationToken);
     }
 
@@ -528,6 +572,12 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     public virtual async Task<ClubCampaignCollection> GetClubCampaignsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"token/club/campaign?length={length}&offset={offset}{(name is null ? "" : $"&name={HttpUtility.UrlEncode(name)}")}",
+            NadeoAPIJsonContext.Default.ClubCampaignCollection, cancellationToken);
+    }
+
+    public virtual async Task<ClubCampaignCollection> GetClubCampaignsByClubAsync(int clubId, int length, int offset = 0, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"token/club/{clubId}/campaign?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.ClubCampaignCollection, cancellationToken);
     }
 
@@ -852,6 +902,18 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         var jsonContent = JsonContent.Create(edition, NadeoAPIJsonContext.Default.ClubRoomEdition);
         return await PostJsonAsync($"token/club/{clubId}/room/{activityId}/edit", jsonContent, NadeoAPIJsonContext.Default.ClubRoom, cancellationToken);
+    }
+
+    public virtual async Task<ClubRoom> CreateClubRoomFromServerAsync(int clubId, ClubRoomFromServerCreation creation, CancellationToken cancellationToken = default)
+    {
+        var jsonContent = JsonContent.Create(creation, NadeoAPIJsonContext.Default.ClubRoomFromServerCreation);
+        return await PostJsonAsync($"token/club/{clubId}/room/create-from-server", jsonContent, NadeoAPIJsonContext.Default.ClubRoom, cancellationToken);
+    }
+
+    public virtual async Task<ClubRoom> EditClubRoomFromServerAsync(int clubId, int activityId, ClubRoomFromServerEdition edition, CancellationToken cancellationToken = default)
+    {
+        var jsonContent = JsonContent.Create(edition, NadeoAPIJsonContext.Default.ClubRoomFromServerEdition);
+        return await PostJsonAsync($"token/club/{clubId}/room/{activityId}/edit-from-server", jsonContent, NadeoAPIJsonContext.Default.ClubRoom, cancellationToken);
     }
 
     public virtual async Task<ClubNews> CreateClubNewsAsync(int clubId, ClubNewsCreation creation, CancellationToken cancellationToken = default)

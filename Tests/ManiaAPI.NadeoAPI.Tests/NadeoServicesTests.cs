@@ -202,4 +202,37 @@ public class NadeoServicesTests
         await Assert.ThrowsAsync<ArgumentException>(() => ns.AddFavoriteMapAsync(""));
         await Assert.That(fake.Requests).IsEmpty();
     }
+
+    [Test]
+    public async Task GetAccountRecordsByMapIdsAsync_WithOffset_AddsOffset()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await ns.GetAccountRecordsByMapIdsAsync(AccountA, [MapA], "TimeAttack", offset: 50);
+
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/v2/accounts/{AccountA}/mapRecords/?mapIdList={MapA}&gameMode=TimeAttack&offset=50");
+    }
+
+    [Test]
+    public async Task GetAccountRecordsBySeasonIdsAsync_WithOffset_AddsOffset()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await ns.GetAccountRecordsBySeasonIdsAsync(AccountA, [MapB], gamemode: null, offset: 1000);
+
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/v2/accounts/{AccountA}/mapRecords/?seasonIdList={MapB}&offset=1000");
+    }
+
+    [Test]
+    public async Task GetAccountRecordsByMapIdsAsync_WithoutOffset_OmitsOffset()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await ns.GetAccountRecordsByMapIdsAsync(AccountA, [MapA], "TimeAttack");
+
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/v2/accounts/{AccountA}/mapRecords/?mapIdList={MapA}&gameMode=TimeAttack");
+    }
 }

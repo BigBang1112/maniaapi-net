@@ -28,11 +28,31 @@ public interface INadeoServices : INadeoAPI
     /// This request requires authentication through service account.
     /// </summary>
     /// <param name="accountId"></param>
+    /// <param name="mapIds"></param>
+    /// <param name="gamemode"></param>
+    /// <param name="offset">The number of records to skip.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<ImmutableList<MapRecord>> GetAccountRecordsByMapIdsAsync(Guid accountId, IEnumerable<Guid> mapIds, string? gamemode, int offset, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="accountId"></param>
     /// <param name="seasonIds"></param>
     /// <param name="gamemode"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<ImmutableList<MapRecord>> GetAccountRecordsBySeasonIdsAsync(Guid accountId, IEnumerable<Guid> seasonIds, string? gamemode = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// This request requires authentication through service account.
+    /// </summary>
+    /// <param name="accountId"></param>
+    /// <param name="seasonIds"></param>
+    /// <param name="gamemode"></param>
+    /// <param name="offset">The number of records to skip.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<ImmutableList<MapRecord>> GetAccountRecordsBySeasonIdsAsync(Guid accountId, IEnumerable<Guid> seasonIds, string? gamemode, int offset, CancellationToken cancellationToken = default);
     Task<MapRecord> GetMapRecordByIdAsync(Guid mapRecordId, CancellationToken cancellationToken = default);
     Task<ImmutableList<PlayerZone>> GetPlayerZonesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<ImmutableList<PlayerZone>> GetPlayerZonesAsync(params Guid[] accountIds);
@@ -216,6 +236,18 @@ public class NadeoServices : NadeoAPI, INadeoServices
     public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsBySeasonIdsAsync(Guid accountId, IEnumerable<Guid> seasonIds, string? gamemode = null, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/?seasonIdList={string.Join(',', seasonIds)}{(gamemode is null ? null : $"&gameMode={Uri.EscapeDataString(gamemode)}")}",
+            NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
+    }
+
+    public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsByMapIdsAsync(Guid accountId, IEnumerable<Guid> mapIds, string? gamemode, int offset, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/?mapIdList={string.Join(',', mapIds)}{(gamemode is null ? null : $"&gameMode={Uri.EscapeDataString(gamemode)}")}&offset={offset}",
+            NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
+    }
+
+    public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsBySeasonIdsAsync(Guid accountId, IEnumerable<Guid> seasonIds, string? gamemode, int offset, CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/?seasonIdList={string.Join(',', seasonIds)}{(gamemode is null ? null : $"&gameMode={Uri.EscapeDataString(gamemode)}")}&offset={offset}",
             NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
     }
 
