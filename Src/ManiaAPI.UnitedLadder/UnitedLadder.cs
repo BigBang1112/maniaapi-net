@@ -49,7 +49,7 @@ public class UnitedLadder : IUnitedLadder
 
     public virtual async Task<Player> GetPlayerAsync(string login, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"player/{login}", UnitedLadderJsonContext.Default.Player, cancellationToken);
+        return await GetJsonAsync($"player/{Uri.EscapeDataString(login)}", UnitedLadderJsonContext.Default.Player, cancellationToken);
     }
 
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)

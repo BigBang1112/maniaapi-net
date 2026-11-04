@@ -182,7 +182,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             return ImmutableDictionary<string, Guid>.Empty;
         }
 
-        return await GetJsonAsync($"display-names/account-ids?{string.Join('&', displayNames.Select((x, i) => $"displayName[{i}]={x}"))}",
+        return await GetJsonAsync($"display-names/account-ids?{string.Join('&', displayNames.Select((x, i) => $"displayName[{i}]={Uri.EscapeDataString(x)}"))}",
             TrackmaniaAPIJsonContext.Default.ImmutableDictionaryStringGuid, cancellationToken);
     }
 

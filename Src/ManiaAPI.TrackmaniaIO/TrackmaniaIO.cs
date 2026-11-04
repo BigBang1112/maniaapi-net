@@ -93,7 +93,7 @@ public class TrackmaniaIO : ITrackmaniaIO
 
     public virtual async Task<CampaignCollection> GetClubCampaignsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"campaigns/club/{page}{(string.IsNullOrEmpty(search) ? "" : $"?search={search}")}", TrackmaniaIOJsonContext.Default.CampaignCollection, cancellationToken);
+        return await GetJsonAsync($"campaigns/club/{page}{SearchQuery(search)}", TrackmaniaIOJsonContext.Default.CampaignCollection, cancellationToken);
     }
 
     [Obsolete("Use GetWeeklyShortCampaignsAsync instead.")]
@@ -169,7 +169,7 @@ public class TrackmaniaIO : ITrackmaniaIO
 
     public virtual async Task<ClubCollection> GetClubsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"clubs/{page}{(string.IsNullOrEmpty(search) ? "" : $"?search={search}")}", TrackmaniaIOJsonContext.Default.ClubCollection, cancellationToken);
+        return await GetJsonAsync($"clubs/{page}{SearchQuery(search)}", TrackmaniaIOJsonContext.Default.ClubCollection, cancellationToken);
     }
 
     public virtual async Task<Club> GetClubAsync(int clubId, CancellationToken cancellationToken = default)
@@ -189,7 +189,7 @@ public class TrackmaniaIO : ITrackmaniaIO
 
     public virtual async Task<ClubRoomCollection> GetClubRoomsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"rooms/{page}{(string.IsNullOrEmpty(search) ? "" : $"?search={search}")}", TrackmaniaIOJsonContext.Default.ClubRoomCollection, cancellationToken);
+        return await GetJsonAsync($"rooms/{page}{SearchQuery(search)}", TrackmaniaIOJsonContext.Default.ClubRoomCollection, cancellationToken);
     }
 
     public virtual async Task<ClubRoom> GetClubRoomAsync(int clubId, int roomId, CancellationToken cancellationToken = default)
@@ -209,7 +209,7 @@ public class TrackmaniaIO : ITrackmaniaIO
 
     public virtual async Task<CompetitionCollection> GetCompetitionsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"competitions/{page}{(string.IsNullOrEmpty(search) ? "" : $"?search={search}")}", TrackmaniaIOJsonContext.Default.CompetitionCollection, cancellationToken);
+        return await GetJsonAsync($"competitions/{page}{SearchQuery(search)}", TrackmaniaIOJsonContext.Default.CompetitionCollection, cancellationToken);
     }
 
     public virtual async Task<Competition> GetCompetitionAsync(int competitionId, CancellationToken cancellationToken = default)
@@ -253,6 +253,11 @@ public class TrackmaniaIO : ITrackmaniaIO
         }
 
         return long.TryParse(values.FirstOrDefault(), out long value) ? value : null;
+    }
+
+    private static string SearchQuery(string? search)
+    {
+        return string.IsNullOrEmpty(search) ? "" : $"?search={Uri.EscapeDataString(search)}";
     }
 
     public virtual void Dispose()

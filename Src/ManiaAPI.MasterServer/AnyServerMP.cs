@@ -68,7 +68,7 @@ internal static class AnyServerMP
         var i = 1;
         foreach (var login in logins)
         {
-            sb.Append($"\n<l{i}>{login}</l{i}>");
+            sb.Append($"\n<l{i}>{XmlHelper.Escape(login)}</l{i}>");
             i++;
         }
 
@@ -157,7 +157,7 @@ internal static class AnyServerMP
         var i = 1;
         foreach (var webIdentity in webIdentities)
         {
-            sb.Append($"\n<p{i}>{webIdentity.Platform}</p{i}>");
+            sb.Append($"\n<p{i}>{XmlHelper.Escape(webIdentity.Platform)}</p{i}>");
             sb.Append($"\n<u{i}>{webIdentity.UserId}</u{i}>");
             i++;
         }

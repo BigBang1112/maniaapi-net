@@ -259,7 +259,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
         try
         {
-            return await GetJsonAsync($"maps/{uid}", ManiaPlanetAPIJsonContext.Default.Map, cancellationToken);
+            return await GetJsonAsync($"maps/{UrlHelper.EscapePathSegment(uid)}", ManiaPlanetAPIJsonContext.Default.Map, cancellationToken);
         }
         catch (ManiaPlanetAPIResponseException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
@@ -340,7 +340,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
         try
         {
-            return await GetJsonAsync($"titles/{uid}", ManiaPlanetAPIJsonContext.Default.Title, cancellationToken);
+            return await GetJsonAsync($"titles/{UrlHelper.EscapePathSegment(uid)}", ManiaPlanetAPIJsonContext.Default.Title, cancellationToken);
         }
         catch (ManiaPlanetAPIResponseException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
@@ -351,7 +351,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     public virtual async Task<ImmutableList<TitleScript>> GetTitleScriptsAsync(string uid, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(uid);
-        return await GetJsonAsync($"titles/{uid}/scripts", ManiaPlanetAPIJsonContext.Default.ImmutableListTitleScript, cancellationToken);
+        return await GetJsonAsync($"titles/{UrlHelper.EscapePathSegment(uid)}/scripts", ManiaPlanetAPIJsonContext.Default.ImmutableListTitleScript, cancellationToken);
     }
 
     /// <summary>

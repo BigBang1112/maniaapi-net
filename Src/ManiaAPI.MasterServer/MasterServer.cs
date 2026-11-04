@@ -68,7 +68,7 @@ public abstract class MasterServer : AnyServer, IMasterServer
 
     public virtual async Task<MasterServerResponse<PlayerInfos>> GetPlayerInfosResponseAsync(string login, CancellationToken cancellationToken = default)
     {
-        return await RequestAsync("GetPlayerInfos", authorXml: null, $"<login>{login}</login>", (ref xml) =>
+        return await RequestAsync("GetPlayerInfos", authorXml: null, $"<login>{XmlHelper.Escape(login)}</login>", (ref xml) =>
         {
             var nickname = string.Empty;
             var zone = string.Empty;
@@ -122,7 +122,7 @@ public abstract class MasterServer : AnyServer, IMasterServer
 
     public virtual async Task<MasterServerResponse<CheckLoginResult>> CheckLoginResponseAsync(string login, CancellationToken cancellationToken = default)
     {
-        return await RequestAsync("CheckLogin", authorXml: null, $"<l>{login}</l>", (ref xml) =>
+        return await RequestAsync("CheckLogin", authorXml: null, $"<l>{XmlHelper.Escape(login)}</l>", (ref xml) =>
         {
             var exists = false;
             var paid = default(bool?);

@@ -12,7 +12,7 @@ public class MasterServerMP3 : MasterServerMP, IMasterServerMP3
     public const string DefaultUrlMP05 = "http://mp05.maniaplanet.com/game/request.php";
 
     protected override string GameXml => XmlHelperMP3.GameXml;
-    protected override string GetGameXml(string titleId) => $"{GameXml}<title>{titleId}</title>";
+    protected override string GetGameXml(string titleId) => $"{GameXml}<title>{XmlHelper.Escape(titleId)}</title>";
 
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerMP3"/> using the expected master server address. In case it's offline, you need to check <see cref="InitServerMP3"/>.

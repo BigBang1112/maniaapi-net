@@ -75,7 +75,7 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
     {
         ArgumentException.ThrowIfNullOrEmpty(titleId);
 
-        using var request = new HttpRequestMessage(method, $"public/titles/download/{titleId}.Title.Pack.gbx");
+        using var request = new HttpRequestMessage(method, $"public/titles/download/{UrlHelper.EscapePathSegment(titleId)}.Title.Pack.gbx");
         return await Client.SendAsync(request, cancellationToken);
     }
 
@@ -83,7 +83,7 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
     {
         ArgumentException.ThrowIfNullOrEmpty(uid);
 
-        using var response = await Client.GetAsync($"public/titles/{uid}", cancellationToken);
+        using var response = await Client.GetAsync($"public/titles/{UrlHelper.EscapePathSegment(uid)}", cancellationToken);
 
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
         {

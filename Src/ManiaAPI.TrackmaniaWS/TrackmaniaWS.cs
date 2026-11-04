@@ -61,7 +61,7 @@ public class TrackmaniaWS : ITrackmaniaWS
 
     public virtual async Task<Player> GetPlayerAsync(string login, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"tmf/players/{login}/", TrackmaniaWSJsonContext.Default.Player, cancellationToken);
+        return await GetJsonAsync($"tmf/players/{Uri.EscapeDataString(login)}/", TrackmaniaWSJsonContext.Default.Player, cancellationToken);
     }
 
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)

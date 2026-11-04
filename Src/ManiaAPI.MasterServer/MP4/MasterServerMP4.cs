@@ -191,7 +191,7 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
     public const string DefaultUrlRelay02 = "https://relay02.v04.maniaplanet.com/game/request.php";
 
     protected override string GameXml => XmlHelperMP4.GameXml;
-    protected override string GetGameXml(string titleId) => $"{GameXml}<title>{titleId}</title>";
+    protected override string GetGameXml(string titleId) => $"{GameXml}<title>{XmlHelper.Escape(titleId)}</title>";
 
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerMP4"/> using the expected master server address. In case it's offline, you need to check <see cref="InitServerMP4"/>.
@@ -239,10 +239,10 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
         var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, @$"
             <f>{offset}</f>
             <n>{count}</n>
-            <c>{campaignId ?? titleId}</c>
+            <c>{XmlHelper.Escape(campaignId ?? titleId)}</c>
             <m></m>
             <t></t>
-            <z>{zone}</z>
+            <z>{XmlHelper.Escape(zone)}</z>
             <s>{type}</s>", cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, ReadLeaderboardItems<uint>);
     }
@@ -270,12 +270,12 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
     {
         const string RequestName = "GetMapLeaderBoard";
         var response = await XmlHelper.SendAsync(Client, GetGameXml(titleId), authorXml: null, RequestName, @$"
-            <m>{mapUid}</m>
+            <m>{XmlHelper.Escape(mapUid)}</m>
             <n>{count}</n>
             <f>{offset}</f>
-            <z>{zone}</z>
+            <z>{XmlHelper.Escape(zone)}</z>
             <c></c>
-            <t>{context}</t>
+            <t>{XmlHelper.Escape(context)}</t>
             <s>MapRecord</s>", cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, ReadLeaderboardItems<TimeInt32>);
     }
@@ -303,10 +303,10 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
         var i = 1;
         foreach (var summary in summaries)
         {
-            sb.Append($"\n<c{i}>{summary.CampaignId ?? titleId}</c{i}>");
+            sb.Append($"\n<c{i}>{XmlHelper.Escape(summary.CampaignId ?? titleId)}</c{i}>");
             sb.Append($"\n<m{i}></m{i}>");
             sb.Append($"\n<t{i}></t{i}>");
-            sb.Append($"\n<z{i}>{summary.Zone}</z{i}>");
+            sb.Append($"\n<z{i}>{XmlHelper.Escape(summary.Zone)}</z{i}>");
             sb.Append($"\n<s{i}>{summary.Type}</s{i}>");
             i++;
         }
@@ -424,9 +424,9 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
         foreach (var summary in summaries)
         {
             sb.Append($"\n<c{i}></c{i}>");
-            sb.Append($"\n<m{i}>{summary.MapUid}</m{i}>");
-            sb.Append($"\n<t{i}>{summary.Context}</t{i}>");
-            sb.Append($"\n<z{i}>{summary.Zone}</z{i}>");
+            sb.Append($"\n<m{i}>{XmlHelper.Escape(summary.MapUid)}</m{i}>");
+            sb.Append($"\n<t{i}>{XmlHelper.Escape(summary.Context)}</t{i}>");
+            sb.Append($"\n<z{i}>{XmlHelper.Escape(summary.Zone)}</z{i}>");
             sb.Append($"\n<s{i}>{summary.Type}</s{i}>");
             i++;
         }

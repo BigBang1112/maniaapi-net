@@ -76,7 +76,7 @@ public abstract class MasterServerMP : MasterServer, IMasterServerMP
         var i = 1;
         foreach (var zone in zones)
         {
-            sb.Append($"\n<z{i}>{zone}</z{i}>");
+            sb.Append($"\n<z{i}>{XmlHelper.Escape(zone)}</z{i}>");
             i++;
         }
 

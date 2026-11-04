@@ -504,7 +504,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(displayName);
 
-        return await GetJsonAsync($"token/club/{clubId}/member/{displayName}/from-login",
+        return await GetJsonAsync($"token/club/{clubId}/member/{Uri.EscapeDataString(displayName)}/from-login",
             NadeoAPIJsonContext.Default.ClubMember, cancellationToken);
     }
 
@@ -576,7 +576,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
 
     public virtual async Task<ClubBucketCollection> GetClubBucketsAsync(string type, int length, int offset = 0, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"token/club/bucket/{type}/all?length={length}&offset={offset}",
+        return await GetJsonAsync($"token/club/bucket/{Uri.EscapeDataString(type)}/all?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.ClubBucketCollection, cancellationToken);
     }
 
@@ -765,8 +765,8 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
 
     public virtual async Task<MapInfoLiveCollection> GetFavoriteMapsAsync(int length, int offset = 0, string sort = "date", string order = "desc", string? mapTypeList = null, bool? playable = null, bool? onlyMine = null, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"token/map/favorite?offset={offset}&length={length}&sort={sort}&order={order}" +
-            $"{(mapTypeList is null ? "" : $"&mapTypeList={mapTypeList}")}" +
+        return await GetJsonAsync($"token/map/favorite?offset={offset}&length={length}&sort={Uri.EscapeDataString(sort)}&order={Uri.EscapeDataString(order)}" +
+            $"{(mapTypeList is null ? "" : $"&mapTypeList={Uri.EscapeDataString(mapTypeList)}")}" +
             $"{(playable is null ? "" : $"&playable={playable}")}" +
             $"{(onlyMine is null ? "" : $"&onlyMine={onlyMine}")}",
             NadeoAPIJsonContext.Default.MapInfoLiveCollection, cancellationToken);

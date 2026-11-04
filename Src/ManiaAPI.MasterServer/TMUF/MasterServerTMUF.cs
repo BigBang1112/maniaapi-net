@@ -86,7 +86,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
             <t>0</t>
             <st>g</st>
-            <f>{league}</f>
+            <f>{XmlHelper.Escape(league)}</f>
             <b>0</b>
             <p>{page}</p>
             <c>{count}</c>", cancellationToken);
@@ -166,7 +166,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
             <t>1</t>
             <st>g</st>
-            <f>{league}</f>
+            <f>{XmlHelper.Escape(league)}</f>
             <b>0</b>
             <p>{page}</p>
             <c>{count}</c>", cancellationToken);
@@ -242,7 +242,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
             <t>4</t>
             <st>-1||-1</st>
-            <f>{login}</f>
+            <f>{XmlHelper.Escape(login)}</f>
             <b>1</b>
             <p>{page}</p>
             <c>{count}</c>", cancellationToken);
@@ -334,11 +334,11 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         var i = 0;
         foreach (var league in leagues)
         {
-            leaguesXml.Append($"<f{i}>{league}</f{i}>");
+            leaguesXml.Append($"<f{i}>{XmlHelper.Escape(league)}</f{i}>");
             i++;
         }
         var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, $"""
-                <n>{campaignName}</n>
+                <n>{XmlHelper.Escape(campaignName)}</n>
                 {leaguesXml}
                 <s>0000:00:00:00:00:00</s>
                 <t>2</t>

@@ -27,7 +27,7 @@ public abstract class InitServerMP : AnyServer, IInitServerMP
     internal static async Task<MasterServerResponse<WaitingParams>> GetWaitingParamsResponseAsync(HttpClient client, string gameXml, string? login, CancellationToken cancellationToken)
     {
         const string RequestName = "GetWaitingParams";
-        var authorXml = login is null ? null : $"<author><login>{login}</login></author>";
+        var authorXml = login is null ? null : $"<author><login>{XmlHelper.Escape(login)}</login></author>";
         var response = await XmlHelper.SendAsync(client, gameXml, authorXml, RequestName, string.Empty, cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, (ref xml) =>
         {

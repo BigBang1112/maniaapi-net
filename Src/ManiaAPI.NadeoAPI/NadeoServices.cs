@@ -173,7 +173,7 @@ public class NadeoServices : NadeoAPI, INadeoServices
 
 	public virtual async Task<ImmutableList<MapRecord>> GetMapRecordsAsync(IEnumerable<Guid> accountIds, Guid mapId, string? seasonId = null, string? gamemode = null, CancellationToken cancellationToken = default)
 	{
-		return await GetJsonAsync($"v2/mapRecords/by-account/?accountIdList={string.Join(',', accountIds)}&mapId={mapId}{(seasonId is null ? null : $"&seasonId={seasonId}")}{(gamemode is null ? null : $"&gameMode={gamemode}")}",
+		return await GetJsonAsync($"v2/mapRecords/by-account/?accountIdList={string.Join(',', accountIds)}&mapId={mapId}{(seasonId is null ? null : $"&seasonId={Uri.EscapeDataString(seasonId)}")}{(gamemode is null ? null : $"&gameMode={Uri.EscapeDataString(gamemode)}")}",
 			NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
 	}
 
@@ -203,19 +203,19 @@ public class NadeoServices : NadeoAPI, INadeoServices
     [Obsolete("Use GetAccountRecordsByMapIdsAsync or GetAccountRecordsBySeasonIdsAsync instead.")]
     public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsAsync(Guid accountId, string? gamemode = null, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/{(gamemode is null ? null : $"?gameMode={gamemode}")}",
+        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/{(gamemode is null ? null : $"?gameMode={Uri.EscapeDataString(gamemode)}")}",
             NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
     }
 
     public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsByMapIdsAsync(Guid accountId, IEnumerable<Guid> mapIds, string? gamemode = null, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/?mapIdList={string.Join(',', mapIds)}{(gamemode is null ? null : $"&gameMode={gamemode}")}",
+        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/?mapIdList={string.Join(',', mapIds)}{(gamemode is null ? null : $"&gameMode={Uri.EscapeDataString(gamemode)}")}",
             NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
     }
 
     public virtual async Task<ImmutableList<MapRecord>> GetAccountRecordsBySeasonIdsAsync(Guid accountId, IEnumerable<Guid> seasonIds, string? gamemode = null, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/?seasonIdList={string.Join(',', seasonIds)}{(gamemode is null ? null : $"&gameMode={gamemode}")}",
+        return await GetJsonAsync($"v2/accounts/{accountId}/mapRecords/?seasonIdList={string.Join(',', seasonIds)}{(gamemode is null ? null : $"&gameMode={Uri.EscapeDataString(gamemode)}")}",
             NadeoAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
     }
 
@@ -371,8 +371,8 @@ public class NadeoServices : NadeoAPI, INadeoServices
 
     public virtual async Task<MapFavoriteCollection> GetFavoriteMapsAsync(int length, int offset = 0, string sort = "date", string order = "desc", string? mapTypeList = null, bool? playable = null, bool? onlyMine = null, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"maps/favorites?offset={offset}&length={length}&sort={sort}&order={order}" +
-            $"{(mapTypeList is null ? "" : $"&mapTypeList={mapTypeList}")}" +
+        return await GetJsonAsync($"maps/favorites?offset={offset}&length={length}&sort={Uri.EscapeDataString(sort)}&order={Uri.EscapeDataString(order)}" +
+            $"{(mapTypeList is null ? "" : $"&mapTypeList={Uri.EscapeDataString(mapTypeList)}")}" +
             $"{(playable is null ? "" : $"&playable={playable}")}" +
             $"{(onlyMine is null ? "" : $"&onlyMine={onlyMine}")}",
             NadeoAPIJsonContext.Default.MapFavoriteCollection, cancellationToken);

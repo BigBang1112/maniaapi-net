@@ -66,7 +66,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
         var i = 1;
         foreach (var zone in zones)
         {
-            sb.Append($"\n<z{i}>{zone}</z{i}>");
+            sb.Append($"\n<z{i}>{XmlHelper.Escape(zone)}</z{i}>");
             i++;
         }
 
@@ -103,11 +103,11 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
     {
         const string RequestName = "GetMapLeaderBoardSummaries";
 
-        var sb = new StringBuilder($"\n<c>TMTurbo@nadeolabs</c>\n<m>{mapUid}</m>\n<s>MapTime</s>");
+        var sb = new StringBuilder($"\n<c>TMTurbo@nadeolabs</c>\n<m>{XmlHelper.Escape(mapUid)}</m>\n<s>MapTime</s>");
         var i = 1;
         foreach (var zone in zones)
         {
-            sb.Append($"\n<z{i}>{zone}</z{i}>");
+            sb.Append($"\n<z{i}>{XmlHelper.Escape(zone)}</z{i}>");
             i++;
         }
 
@@ -148,7 +148,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
             <c>TMTurbo@nadeolabs</c>
             <m></m>
             <s>0</s>
-            <z>{zone}</z>", cancellationToken);
+            <z>{XmlHelper.Escape(zone)}</z>", cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, ReadSummary<int>);
     }
 
@@ -163,9 +163,9 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
         var response = await XmlHelper.SendAsync(Client, GameXml, authorXml: null, RequestName, @$"
             <t>Map</t>
             <c>TMTurbo@nadeolabs</c>
-            <m>{mapUid}</m>
+            <m>{XmlHelper.Escape(mapUid)}</m>
             <s>0</s>
-            <z>{zone}</z>", cancellationToken);
+            <z>{XmlHelper.Escape(zone)}</z>", cancellationToken);
         return XmlHelper.ProcessResponseResult(RequestName, response, ReadSummary<TimeInt32>);
     }
 

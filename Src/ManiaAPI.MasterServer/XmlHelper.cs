@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -11,6 +12,8 @@ internal static partial class XmlHelper
 {
     [GeneratedRegex(@"execution time\s*:\s*(\d+\.\d+)\s*s")]
     private static partial Regex ExecutionTimeRegex();
+
+    public static string? Escape(string? value) => SecurityElement.Escape(value);
 
     public static async Task<XmlResponse> SendAsync(HttpClient client, string gameXml, string? authorXml, string requestName, string parametersXml, CancellationToken cancellationToken)
     {
