@@ -1,0 +1,181 @@
+# ManiaAPI.MasterServer
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.MasterServer?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.MasterServer/)
+
+Wraps the TMF, TMT, and ManiaPlanet master server APIs, which communicate using XML.
+
+Previously named `ManiaAPI.Xml`. To migrate, replace the package reference and change `using ManiaAPI.Xml` to `using ManiaAPI.MasterServer`, including game-specific namespaces such as `.MP4` and `.TMT`. The client and model names are unchanged.
+
+It currently **does not support any authentication** for its complexity and security reasons. If some of the leaderboard methods will become secured with authentication though, this will be considered. For authenticated functionality in TMUF, use the [TMF.NET](https://github.com/Laiteux/TMF.NET) library.
+
+For dedicated server XML-RPC communication, see `ManiaAPI.GBXRemote` (lightweight, all Nadeo servers) or [GbxRemote.Net](https://github.com/EvoEsports/GbxRemote.Net) (TM2020-focused) library.
+
+## Features
+
+For TMUF:
+
+- Get scores
+  - Top 10 leaderboards
+  - All records (without identities)
+  - Skillpoints
+  - Medals
+- Get ladder zone rankings
+- Get ladder player rankings
+- Get player achievements
+
+For ManiaPlanet:
+
+- Get campaign and map leaderboard from multiple campaigns/maps at once
+  - Top 10 leaderboards
+  - All records (without identities)
+  - Skillpoints
+  - Medals
+- Get campaign and map leaderboards
+ - **Any range of records**
+ - Skillpoints
+ - Medals
+- Get multiplayer leaderboards (without identities)
+- Get login from Steam64 ID
+- Get available master servers (GetWaitingParams)
+
+For ManiaPlanet 3
+
+- Get multiplayer leaderboards (without identities)
+- Get login from Steam64 ID
+- Get available master servers (GetWaitingParams)
+
+For TMT:
+
+- Get all map records (without identities)
+- Get campaign medal rankings (without identities)
+- Get available master servers (GetWaitingParams)
+
+For all games:
+
+- Get player nickname, zone, creation/zone timestamp
+- Get all available zones
+- Check if login exists
+- Run Test request
+
+## Setup for TMUF
+
+```cs
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.TMUF;
+
+var masterServer = new MasterServerTMUF();
+```
+
+## Setup for ManiaPlanet
+
+First examples assume `Maniaplanet relay 1` master server is still running.
+
+```cs
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.MP4;
+
+var masterServer = new MasterServerMP4();
+```
+
+Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client.
+
+```cs
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.MP4;
+
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
+{
+    BaseAddress = new Uri(MasterServerMP4.DefaultUrl)
+};
+var masterServer = new MasterServerMP4(httpClient);
+```
+
+In case `Maniaplanet relay 1` shuts down / errors out, you have to reach out to the init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
+
+```cs
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.MP4;
+
+var initServer = new InitServerMP4();
+var waitingParams = await initServer.GetWaitingParamsAsync();
+
+var masterServer = new MasterServerMP4(waitingParams.MasterServers.First());
+
+// The master server is now ready to use
+```
+
+Example with enabled compression:
+
+```cs
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.MP4;
+
+var initServer = new InitServerMP4();
+var waitingParams = await initServer.GetWaitingParamsAsync();
+
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
+{
+    BaseAddress = waitingParams.MasterServers.First().GetUri()
+};
+var masterServer = new MasterServerMP4(httpClient);
+
+// The master server is now ready to use
+```
+
+The same idea works for ManiaPlanet 3 with `MasterServerMP3`, which uses `Maniaplanet relay 5` by default.
+
+## Setup for TMT
+
+TMT handles 3 platforms: PC, XB1, and PS4. Each have their own init server and master server. Nadeo still tends to change these master servers, so it's recommended to first go through the init server.
+
+```cs
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.TMT;
+
+var initServer = new InitServerTMT(Platform.PC);
+var waitingParams = await initServer.GetWaitingParamsAsync();
+
+var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+
+// You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
+```
+
+Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client for the **master server**. Init server does not return large responses, so it's not necessary for that one.
+
+```cs
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.TMT;
+
+var initServer = new InitServerTMT(Platform.PC);
+var waitingParams = await initServer.GetWaitingParamsAsync();
+
+var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
+{
+    BaseAddress = waitingParams.MasterServers.First().GetUri()
+};
+var masterServer = new MasterServerTMT(httpClient);
+
+// You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
+```
+
+**For a simple setup with multiple platforms, the `AggregatedMasterServerTMT` is recommended:**
+
+```cs
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.TMT;
+
+var waitingParams = Enum.GetValues<Platform>().ToDictionary(
+    platform => platform, 
+    platform => new InitServerTMT(platform).GetWaitingParamsAsync(cancellationToken));
+
+await Task.WhenAll(waitingParams.Values);
+
+var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDictionary(
+    pair => pair.Key,
+    pair => new MasterServerTMT(new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
+    {
+        BaseAddress = pair.Value.Result.MasterServers.First().GetUri()
+    })));
+
+// You can now use aggregatedMasterServer to work with all master servers at once
+```

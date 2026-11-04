@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<PackageId>ManiaAPI.MasterServer</PackageId>
+		<Version>2.9.0</Version>
+		<Authors>BigBang1112</Authors>
+		<Description>Wrapper for the master server APIs used in TMF, TMT, and ManiaPlanet. Part of the ManiaAPI.NET library set.</Description>
+		<Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
+		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
+		<PackageIcon>logo_icon_outline.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, masterserver, xml</PackageTags>
+		<PackageReleaseNotes></PackageReleaseNotes>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
+		<LangVersion>14</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsTrimmable>true</IsTrimmable>
+		<IsAotCompatible>true</IsAotCompatible>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+		<NoWarn>1591</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+        <None Include="../../logo_icon_outline.png" Pack="true" PackagePath="\" />
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+        <InternalsVisibleTo Include="ManiaAPI.MasterServer.Extensions.Hosting" />
+		<InternalsVisibleTo Include="ManiaAPI.MasterServer.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MinimalXmlReader" Version="0.2.1" />
+		<PackageReference Include="TmEssentials" Version="2.6.0" />
+		<PackageReference Include="TmScores" Version="1.0.0" />
+	</ItemGroup>
+
+</Project>

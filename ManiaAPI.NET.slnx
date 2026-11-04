@@ -11,17 +11,17 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/Samples/">
-    <Project Path="Samples/CallbackListenerXmlRpcSample/CallbackListenerXmlRpcSample.csproj" Id="21b593b7-e1eb-45f4-a279-90dd873c4cb8" />
-    <Project Path="Samples/ExportMethodsXmlRpcSample/ExportMethodsXmlRpcSample.csproj" />
-    <Project Path="Samples/ExportNetworkStatsXmlRpcSample/ExportNetworkStatsXmlRpcSample.csproj" Id="7419d5a4-8359-4aed-bce4-80dcbb78d0c3" />
+    <Project Path="Samples/CallbackListenerGBXRemoteSample/CallbackListenerGBXRemoteSample.csproj" Id="21b593b7-e1eb-45f4-a279-90dd873c4cb8" />
+    <Project Path="Samples/ExportMethodsGBXRemoteSample/ExportMethodsGBXRemoteSample.csproj" />
+    <Project Path="Samples/ExportNetworkStatsGBXRemoteSample/ExportNetworkStatsGBXRemoteSample.csproj" Id="7419d5a4-8359-4aed-bce4-80dcbb78d0c3" />
     <Project Path="Samples/ExtendApiSample/ExtendApiSample.csproj" />
-    <Project Path="Samples/ExtendXmlSample/ExtendXmlSample.csproj" />
+    <Project Path="Samples/ExtendMasterServerSample/ExtendMasterServerSample.csproj" />
     <Project Path="Samples/TrackmaniaWsSample/TrackmaniaWsSample.csproj" />
     <Project Path="Samples/UpdateTM2020MapSample/UpdateTM2020MapSample.csproj" />
     <Project Path="Samples/WebAppAuthorizationExample/WebAppAuthorizationExample.csproj" />
     <Project Path="Samples/WebAppNadeoAPIExample/WebAppNadeoAPIExample.csproj" />
     <Project Path="Samples/WebAppTmxExample/WebAppTmxExample.csproj" />
-    <Project Path="Samples/WebAppXmlExample/WebAppXmlExample.csproj" />
+    <Project Path="Samples/WebAppMasterServerExample/WebAppMasterServerExample.csproj" />
   </Folder>
   <Folder Name="/Src/">
     <Project Path="Src/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.csproj" />
@@ -38,9 +38,9 @@
     <Project Path="Src/ManiaAPI.TrackmaniaWS.Extensions.Hosting/ManiaAPI.TrackmaniaWS.Extensions.Hosting.csproj" />
     <Project Path="Src/ManiaAPI.TrackmaniaWS/ManiaAPI.TrackmaniaWS.csproj" />
     <Project Path="Src/ManiaAPI.UnitedLadder/ManiaAPI.UnitedLadder.csproj" Id="3d490138-d581-4889-9918-1e71be189cc5" />
-    <Project Path="Src/ManiaAPI.Xml.Extensions.Hosting/ManiaAPI.Xml.Extensions.Hosting.csproj" />
-    <Project Path="Src/ManiaAPI.Xml/ManiaAPI.Xml.csproj" />
-    <Project Path="Src/ManiaAPI.XmlRpc/ManiaAPI.XmlRpc.csproj" />
+    <Project Path="Src/ManiaAPI.MasterServer.Extensions.Hosting/ManiaAPI.MasterServer.Extensions.Hosting.csproj" />
+    <Project Path="Src/ManiaAPI.MasterServer/ManiaAPI.MasterServer.csproj" />
+    <Project Path="Src/ManiaAPI.GBXRemote/ManiaAPI.GBXRemote.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Tests/ManiaAPI.ManiaPlanetAPI.Tests.csproj" />
@@ -49,6 +49,6 @@
     <Project Path="Tests/ManiaAPI.TMX.Tests/ManiaAPI.TMX.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.TrackmaniaAPI.Tests/ManiaAPI.TrackmaniaAPI.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.TrackmaniaIO.Tests/ManiaAPI.TrackmaniaIO.Tests.csproj" />
-    <Project Path="Tests/ManiaAPI.Xml.Tests/ManiaAPI.Xml.Tests.csproj" />
+    <Project Path="Tests/ManiaAPI.MasterServer.Tests/ManiaAPI.MasterServer.Tests.csproj" />
   </Folder>
 </Solution>
