@@ -23,7 +23,7 @@ public partial class GBXRemoteClient
         return await CallAsync<string>("system.methodHelp", [methodName], cancellationToken);
     }
 
-    public async Task<IEnumerable<CallResult>> SystemMulticallAsync(IEnumerable<Call> calls, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<GBXRemoteCallResult>> SystemMulticallAsync(IEnumerable<GBXRemoteCall> calls, CancellationToken cancellationToken = default)
     {
         var multicallParams = calls
             .Select(call => new Dictionary<string, object?>
@@ -38,16 +38,16 @@ public partial class GBXRemoteClient
         return results.Select(ParseMulticallResult);
     }
 
-    private static CallResult ParseMulticallResult(object item)
+    private static GBXRemoteCallResult ParseMulticallResult(object item)
     {
         if (item is IEnumerable<object?> success)
         {
-            return new CallResult(success.FirstOrDefault(), FaultCode: null, FaultString: null);
+            return new GBXRemoteCallResult(success.FirstOrDefault(), FaultCode: null, FaultString: null);
         }
 
         if (item is IDictionary<string, object?> fault)
         {
-            return new CallResult(
+            return new GBXRemoteCallResult(
                 Value: null,
                 FaultCode: fault.TryGetValue("faultCode", out var code) ? code as int? : null,
                 FaultString: fault.TryGetValue("faultString", out var faultString) ? faultString as string : null);

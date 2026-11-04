@@ -53,7 +53,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
 
     public int Version => version;
 
-    public event Callback? Callback;
+    public event GBXRemoteCallback? Callback;
 
     [LoggerMessage(EventId = 1, Level = LogLevel.Trace, Message = "Received XML response (0x{Handle:x8}): {Payload}")]
     private static partial void LogReceivedXmlResponse(ILogger logger, uint handle, string payload);
@@ -277,15 +277,15 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         }
     }
 
-    public async IAsyncEnumerable<CallbackMessage> StreamCallbacksAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<GBXRemoteCallbackMessage> StreamCallbacksAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
         
-        var streamChannel = Channel.CreateUnbounded<CallbackMessage>();
+        var streamChannel = Channel.CreateUnbounded<GBXRemoteCallbackMessage>();
 
         Task HandleCallback(string methodName, object[] parameters, CancellationToken token)
         {
-            streamChannel.Writer.TryWrite(new CallbackMessage(methodName, parameters));
+            streamChannel.Writer.TryWrite(new GBXRemoteCallbackMessage(methodName, parameters));
             return Task.CompletedTask;
         }
 
@@ -343,7 +343,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
             {
                 try
                 {
-                    await ((Callback)invocation).Invoke(methodName, parameters, cancellationToken);
+                    await ((GBXRemoteCallback)invocation).Invoke(methodName, parameters, cancellationToken);
                 }
                 catch (Exception ex)
                 {

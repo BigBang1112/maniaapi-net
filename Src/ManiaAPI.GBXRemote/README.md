@@ -12,15 +12,15 @@ This solution tries to be lightweight and compatible with as many Nadeo games as
 
 ## Migration from ManiaAPI.XmlRpc
 
-Replace the package reference with `ManiaAPI.GBXRemote` and use the `ManiaAPI.GBXRemote` namespace. Types no longer have the `XmlRpc` prefix:
+Replace the package reference with `ManiaAPI.GBXRemote` and use the `ManiaAPI.GBXRemote` namespace. Types use the `GBXRemote` prefix in place of `XmlRpc`:
 
 | Previous name | New name |
 | --- | --- |
 | `XmlRpcClient` | `GBXRemoteClient` |
-| `XmlRpcCall` | `Call` |
-| `XmlRpcCallResult` | `CallResult` |
-| `XmlRpcCallback` | `Callback` |
-| `XmlRpcCallbackMessage` | `CallbackMessage` |
+| `XmlRpcCall` | `GBXRemoteCall` |
+| `XmlRpcCallResult` | `GBXRemoteCallResult` |
+| `XmlRpcCallback` | `GBXRemoteCallback` |
+| `XmlRpcCallbackMessage` | `GBXRemoteCallbackMessage` |
 
 Method names and the wire protocol are unchanged.
 

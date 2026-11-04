@@ -5,4 +5,4 @@
 /// </summary>
 /// <param name="MethodName">The name of the method to call.</param>
 /// <param name="Parameters">The parameters to pass to the method.</param>
-public readonly record struct Call(string MethodName, params object[] Parameters);
+public readonly record struct GBXRemoteCall(string MethodName, params object[] Parameters);
