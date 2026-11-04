@@ -73,11 +73,11 @@ jobs:
           - TrackmaniaIO
           - ManiaPlanetAPI
           - ManiaPlanetAPI.Extensions.Hosting
-          - Xml
-          - Xml.Extensions.Hosting
+          - MasterServer
+          - MasterServer.Extensions.Hosting
           - TrackmaniaWS
           - TrackmaniaWS.Extensions.Hosting
-          - XmlRpc
+          - GBXRemote
           - UnitedLadder
         
     runs-on: ubuntu-latest

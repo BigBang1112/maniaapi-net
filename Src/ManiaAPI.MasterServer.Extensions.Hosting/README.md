@@ -1,0 +1,103 @@
+# ManiaAPI.MasterServer.Extensions.Hosting
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.MasterServer.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.MasterServer.Extensions.Hosting/)
+
+Provides an efficient way to inject master server services into your application.
+
+Previously named `ManiaAPI.Xml.Extensions.Hosting`. To migrate, replace the package reference and use `ManiaAPI.MasterServer.Extensions.Hosting`. The service registration methods are unchanged.
+
+## Setup for TMUF
+
+```cs
+using ManiaAPI.MasterServer.Extensions.Hosting;
+
+builder.Services.AddMasterServerTMUF();
+```
+
+## Setup for ManiaPlanet
+
+```cs
+using ManiaAPI.MasterServer.Extensions.Hosting;
+
+builder.Services.AddMasterServerMP4();
+```
+
+You can now inject `MasterServerMP4`, as long as you're fine relying on `Maniaplanet relay 1` to continue running, and use it without additional steps. Compression is enabled.
+
+If you want to have better control over the selection of master servers, use this setup:
+
+```cs
+using ManiaAPI.MasterServer.Extensions.Hosting;
+
+builder.Services.AddMasterServerMP4();
+
+// --------------------
+// Do the setup
+var factory = provider.GetRequiredService<IMasterServerMP4Factory>();
+
+// RequestWaitingParamsAsync should run at the start of your application, and when you need to refresh the master servers
+var waitingParams = await factory.RequestWaitingParamsAsync();
+
+// For example selects the first available master server (more overloads are available)
+var masterServer = factory.CreateClient();
+```
+
+Features this setup brings:
+- You can inject `IMasterServerMP4Factory` to create multiple instances of `MasterServerMP4` with different master servers and refresh them
+- You can inject `MasterServerMP4` to get a default instance using `Maniaplanet relay 1`
+- You can inject `InitServerMP4` to get the init server
+- All `MasterServerMP4` handle GZIP compression
+
+The same idea works for ManiaPlanet 3 with `AddMasterServerMP3()`, which uses `Maniaplanet relay 5` by default.
+
+## Setup for TMT
+
+```cs
+using ManiaAPI.MasterServer.Extensions.Hosting;
+
+// Register the services
+builder.Services.AddMasterServerTMT();
+
+// --------------------
+// Do the setup
+var factory = provider.GetRequiredService<IMasterServerTMTFactory>();
+
+// RequestWaitingParamsAsync should run at the start of your application, and when you need to refresh the master servers
+await factory.RequestWaitingParamsAsync();
+
+// For example selects the PC master server
+var masterServerPC = factory.CreateClient(Platform.PC);
+```
+
+Features this last setup brings:
+
+- **You can inject `AggregatedMasterServerTMT` to conveniently work with all master servers**
+- You can inject `IMasterServerTMTFactory` to create multiple instances of `MasterServerTMT` with different master servers
+- You can inject `ImmutableDictionary<Platform, MasterServerTMT>` to get all master servers as individual instances
+- If you don't need specific platform context, you can inject `IEnumerable<MasterServerTMT>` to get all master servers
+- Specific `InitServerTMT` and `MasterServerTMT` can be injected using `[FromKeyedServices(Platform.PC)]`
+- All `MasterServerTMT` handle GZIP compression
+
+> [!WARNING]
+> If you just inject `MasterServerTMT` alone, it will give the last-registered one (in this case, PS4). If you need a specific platform, use `[FromKeyedServices(...)]`.
+
+## Resilience
+
+HTTP requests can transiently fail, so it's a good idea to add some retry logic.
+
+`AddMasterServerTMUF` returns an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
+
+```cs
+using ManiaAPI.MasterServer.Extensions.Hosting;
+
+builder.Services.AddMasterServerTMUF()
+    .AddStandardResilienceHandler();
+
+builder.Services.AddMasterServerMP4(
+    configureInitServer: http => http.AddStandardResilienceHandler(),
+    configureMasterServer: http => http.AddStandardResilienceHandler());
+
+builder.Services.AddMasterServerTMT(
+    configureInitServer: http => http.AddStandardResilienceHandler(),
+    configureMasterServer: http => http.AddStandardResilienceHandler());
+```
