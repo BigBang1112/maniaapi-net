@@ -254,6 +254,8 @@ Wraps https://api.trackmania.com/doc (Trackmania web API). **This API requires a
 - Get display names
 - Get account IDs from display names
 - Get user's map records
+- Get clubs the user is an admin of
+- Get, add, and remove user's favorite maps
 
 More will be added in the future.
 

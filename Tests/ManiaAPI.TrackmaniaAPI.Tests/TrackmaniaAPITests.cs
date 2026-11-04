@@ -176,4 +176,74 @@ public class TrackmaniaAPITests
         await Assert.That(payload.Subject).IsEqualTo("client-id");
         await Assert.That(payload.Scopes).IsEquivalentTo(["read_favorite"]);
     }
+
+    [Test]
+    public async Task GetUserAdminClubsAsync_ReturnsClubs()
+    {
+        var fake = FakeHttpMessageHandler.Json("""{"clubs":[{"id":12730,"name":"TM SCENERY HUB"}]}""");
+        using var api = new TrackmaniaAPI(fake.CreateClient(), new TrackmaniaAPIHandler());
+
+        var clubs = await api.GetUserAdminClubsAsync();
+
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/user/clubs/admin");
+        await Assert.That(clubs).IsEquivalentTo([new AdminClub(12730, "TM SCENERY HUB")]);
+    }
+
+    [Test]
+    public async Task GetUserFavoriteMapsAsync_ReturnsMaps()
+    {
+        var fake = FakeHttpMessageHandler.Json("""
+            {
+              "list": [
+                {
+                  "uid": "JlxlB7KbrCfhjAf5ld89ByXR987",
+                  "name": "Winter 2022 - 01",
+                  "author": "d2372a08-a8a1-46cb-97fb-23a161d85ad0",
+                  "thumbnailUrl": "https://prod.trackmania.core.nadeo.online/storageObjects/3ddb465d-0357-41c0-9946-394b96836577.jpg"
+                }
+              ]
+            }
+            """);
+        using var api = new TrackmaniaAPI(fake.CreateClient(), new TrackmaniaAPIHandler());
+
+        var maps = await api.GetUserFavoriteMapsAsync(length: 1, offset: 3);
+
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/user/maps/favorite?length=1&offset=3");
+        await Assert.That(maps).IsEquivalentTo([new FavoriteMap(
+            "JlxlB7KbrCfhjAf5ld89ByXR987",
+            "Winter 2022 - 01",
+            Guid.Parse("d2372a08-a8a1-46cb-97fb-23a161d85ad0"),
+            "https://prod.trackmania.core.nadeo.online/storageObjects/3ddb465d-0357-41c0-9946-394b96836577.jpg")]);
+    }
+
+    [Test]
+    [Arguments(true, "add")]
+    [Arguments(false, "remove")]
+    public async Task AddOrRemoveUserFavoriteMapAsync_PostsUid(bool add, string action)
+    {
+        var fake = new FakeHttpMessageHandler(_ => FakeResponse.Status(HttpStatusCode.NoContent));
+        using var api = new TrackmaniaAPI(fake.CreateClient(), new TrackmaniaAPIHandler());
+
+        if (add)
+        {
+            await api.AddUserFavoriteMapAsync("JlxlB7KbrCfhjAf5ld89ByXR987");
+        }
+        else
+        {
+            await api.RemoveUserFavoriteMapAsync("JlxlB7KbrCfhjAf5ld89ByXR987");
+        }
+
+        await Assert.That(fake.Request.Method).IsEqualTo(HttpMethod.Post);
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/user/maps/favorite/{action}");
+        await Assert.That(fake.Request.Body).IsEqualTo("""{"uid":"JlxlB7KbrCfhjAf5ld89ByXR987"}""");
+    }
+
+    [Test]
+    public async Task AddUserFavoriteMapAsync_Forbidden_ThrowsResponseException()
+    {
+        var fake = FakeHttpMessageHandler.Json("""{"message":"This action is unauthorized."}""", HttpStatusCode.Forbidden);
+        using var api = new TrackmaniaAPI(fake.CreateClient(), new TrackmaniaAPIHandler());
+
+        await Assert.ThrowsAsync<TrackmaniaAPIResponseException>(() => api.AddUserFavoriteMapAsync("JlxlB7KbrCfhjAf5ld89ByXR987"));
+    }
 }

@@ -19,6 +19,22 @@ public interface ITrackmaniaAPI : IDisposable
     Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(params Guid[] accountIds);
     Task<User> GetUserAsync(CancellationToken cancellationToken = default);
     Task<ImmutableList<MapRecord>> GetUserMapRecordsAsync(IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets the clubs the player is an admin of. Requires the <c>clubs</c> scope and a token associated with a player (not the client credentials flow).
+    /// </summary>
+    Task<ImmutableList<AdminClub>> GetUserAdminClubsAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets the player's favorite maps. Requires the <c>read_favorite</c> scope and a token associated with a player (not the client credentials flow).
+    /// </summary>
+    Task<ImmutableList<FavoriteMap>> GetUserFavoriteMapsAsync(int length = 10, int offset = 0, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Adds a map to the player's favorite maps. Requires the <c>write_favorite</c> scope and a token associated with a player (not the client credentials flow).
+    /// </summary>
+    Task AddUserFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Removes a map from the player's favorite maps. Requires the <c>write_favorite</c> scope and a token associated with a player (not the client credentials flow).
+    /// </summary>
+    Task RemoveUserFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
 }
 
 public class TrackmaniaAPI : ITrackmaniaAPI
@@ -211,7 +227,50 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             TrackmaniaAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
     }
 
+    public virtual async Task<ImmutableList<AdminClub>> GetUserAdminClubsAsync(CancellationToken cancellationToken = default)
+    {
+        return (await GetJsonAsync("user/clubs/admin", TrackmaniaAPIJsonContext.Default.AdminClubCollection, cancellationToken)).Clubs;
+    }
+
+    public virtual async Task<ImmutableList<FavoriteMap>> GetUserFavoriteMapsAsync(int length = 10, int offset = 0, CancellationToken cancellationToken = default)
+    {
+        return (await GetJsonAsync($"user/maps/favorite?length={length}&offset={offset}", TrackmaniaAPIJsonContext.Default.FavoriteMapCollection, cancellationToken)).List;
+    }
+
+    public virtual async Task AddUserFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+
+        var content = JsonContent.Create(new FavoriteMapRequest(mapUid), TrackmaniaAPIJsonContext.Default.FavoriteMapRequest);
+        using var response = await SendAsync(HttpMethod.Post, "user/maps/favorite/add", content, cancellationToken);
+    }
+
+    public virtual async Task RemoveUserFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+
+        var content = JsonContent.Create(new FavoriteMapRequest(mapUid), TrackmaniaAPIJsonContext.Default.FavoriteMapRequest);
+        using var response = await SendAsync(HttpMethod.Post, "user/maps/favorite/remove", content, cancellationToken);
+    }
+
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Get, endpoint, content: null, cancellationToken);
+
+        try
+        {
+            return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new TrackmaniaAPIResponseException(ex.Message, ex.InnerException);
+        }
+    }
+
+    /// <summary>
+    /// Sends an authorized request and validates the response. The caller is responsible for disposing the returned response.
+    /// </summary>
+    protected internal async Task<HttpResponseMessage> SendAsync(HttpMethod method, string? endpoint, HttpContent? content, CancellationToken cancellationToken = default)
     {
         await semaphore.WaitAsync(cancellationToken);
 
@@ -228,22 +287,32 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             semaphore.Release();
         }
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
+        using var request = new HttpRequestMessage(method, $"{BaseAddress}/{endpoint}") { Content = content };
         request.Headers.Authorization = Handler.Authorization;
+
+        HttpResponseMessage response;
 
         try
         {
-            using var response = await Client.SendAsync(request, cancellationToken);
-
-            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
-
-            await ValidateResponseAsync(response, cancellationToken);
-
-            return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+            response = await Client.SendAsync(request, cancellationToken);
         }
         catch (HttpRequestException ex)
         {
             throw new TrackmaniaAPIResponseException(ex.Message, ex.InnerException);
+        }
+
+        try
+        {
+            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
+
+            await ValidateResponseAsync(response, cancellationToken);
+
+            return response;
+        }
+        catch
+        {
+            response.Dispose();
+            throw;
         }
     }
 
