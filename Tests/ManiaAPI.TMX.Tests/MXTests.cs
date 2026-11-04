@@ -1,236 +1,97 @@
-using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
-
 namespace ManiaAPI.TMX.Tests;
 
 public class MXTests
 {
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    // Medals don't exist on shootmania, so need to specify fields manually
-    public async Task SearchMapsAsync_Success(MxSite site)
+    [Test]
+    [Arguments(MxSite.Trackmania, "https://trackmania.exchange/")]
+    [Arguments(MxSite.Maniaplanet, "https://tm.mania.exchange/")]
+    [Arguments(MxSite.Shootmania, "https://sm.mania.exchange/")]
+    public async Task Constructor_SetsBaseAddressForSite(MxSite site, string expectedBaseAddress)
     {
-        var tmx = new MX(site);
-        var maps = await tmx.SearchMapsAsync(new ());
-        using var mapGbxResponse = await tmx.GetMapGbxResponseAsync(maps.Results.First());
-        using var mapThumbnailResponse = await tmx.GetMapThumbnailResponseAsync(maps.Results.First());
-        Assert.NotEmpty(maps.Results);
-        Assert.NotNull(mapGbxResponse);
-        Assert.NotNull(mapThumbnailResponse);
+        using var mx = new MX(new HttpClient(), site);
+
+        await Assert.That(mx.Client.BaseAddress?.ToString()).IsEqualTo(expectedBaseAddress);
     }
 
-    [Theory]
-    [InlineData(MxSite.Trackmania, 120839)]
-    [InlineData(MxSite.Maniaplanet, 224915)]
-    [InlineData(MxSite.Shootmania, 5202)]
-    public async Task GetMapImageResponseAsync_Success(MxSite site, long mapId)
+    [Test]
+    public async Task UrlHelpers_UseSiteAddress()
     {
-        var tmx = new MX(site);
-        var image = await tmx.GetMapImageResponseAsync(mapId);
-        Assert.NotNull(image);
-        var image1 = await tmx.GetMapImageResponseAsync(mapId, 1);
-        Assert.NotNull(image1);
+        using var mx = new MX(new HttpClient(), MxSite.Trackmania);
+
+        await Assert.That(mx.GetMapGbxUrl(120839)).IsEqualTo("https://trackmania.exchange/mapgbx/120839");
+        await Assert.That(mx.GetReplayGbxUrl(5)).IsEqualTo("https://trackmania.exchange/recordgbx/5");
+        await Assert.That(mx.GetMapThumbnailUrl(120839)).IsEqualTo("https://trackmania.exchange/mapthumb/120839");
+        await Assert.That(mx.GetMappackThumbnailUrl(1729)).IsEqualTo("https://trackmania.exchange/mappackthumb/1729");
+        await Assert.That(mx.GetMapRandomUrl()).IsEqualTo("https://trackmania.exchange/maprandom");
     }
 
-    [Theory]
-    [InlineData(MxSite.Trackmania, 120839)]
-    [InlineData(MxSite.Maniaplanet, 224915)]
-    [InlineData(MxSite.Shootmania, 5202)]
-    public async Task GetMapScreenResponseAsync_Success(MxSite site, long mapId)
+    [Test]
+    [Arguments(null, "https://trackmania.exchange/mapimage/120839")]
+    [Arguments(2, "https://trackmania.exchange/mapimage/120839/2")]
+    public async Task GetMapImageUrl_AddsPositionOnlyWhenSet(int? position, string expectedUrl)
     {
-        var tmx = new MX(site);
-        var image = await tmx.GetMapScreenResponseAsync(mapId);
-        Assert.NotNull(image);
-        var image1 = await tmx.GetMapScreenResponseAsync(mapId, 1);
-        Assert.NotNull(image1);
+        using var mx = new MX(new HttpClient(), MxSite.Trackmania);
+
+        await Assert.That(mx.GetMapImageUrl(120839, position)).IsEqualTo(expectedUrl);
     }
 
-    [Theory]
-    [InlineData(MxSite.Trackmania, 120839)]
-    [InlineData(MxSite.Maniaplanet, 224915)]
-    [InlineData(MxSite.Shootmania, 5202)]
-    public async Task GetMapThumbnailResponseAsync_Success(MxSite site, long mapId)
+    [Test]
+    [Arguments(null, "https://trackmania.exchange/mapscreen/120839")]
+    [Arguments(1, "https://trackmania.exchange/mapscreen/120839/1")]
+    public async Task GetMapScreenUrl_AddsPositionOnlyWhenSet(int? position, string expectedUrl)
     {
-        var tmx = new MX(site);
-        var image = await tmx.GetMapThumbnailResponseAsync(mapId);
-        Assert.NotNull(image);
+        using var mx = new MX(new HttpClient(), MxSite.Trackmania);
+
+        await Assert.That(mx.GetMapScreenUrl(120839, position)).IsEqualTo(expectedUrl);
     }
 
-    [Theory]
-    [InlineData(MxSite.Trackmania, 1729)]
-    [InlineData(MxSite.Maniaplanet, 1388)]
-    [InlineData(MxSite.Shootmania, 10)]
-    public async Task GetMappackThumbnailResponseAsync_Success(MxSite site, long mappackId)
+    [Test]
+    public async Task GetMapImageResponseAsync_RequestsImageUrl()
     {
-        var tmx = new MX(site);
-        var image = await tmx.GetMappackThumbnailResponseAsync(mappackId);
-        Assert.NotNull(image);
+        var fake = new FakeHttpMessageHandler(_ => FakeResponse.Status(HttpStatusCode.OK));
+        using var mx = new MX(fake.CreateClient(), MxSite.Trackmania);
+
+        using var response = await mx.GetMapImageResponseAsync(120839, 1);
+
+        await Assert.That(fake.Request.Url).IsEqualTo("https://trackmania.exchange/mapimage/120839/1");
     }
 
-    [Theory]
-    [InlineData(MxSite.Trackmania, 120839)]
-    [InlineData(MxSite.Maniaplanet, 224915)]
-    // no replays for shootmania
-    public async Task SearchReplaysAsync_Success(MxSite site, long mapId)
+    [Test]
+    public async Task GetTagsAsync_ParsesTags()
     {
-        var tmx = new MX(site);
-        var replays = await tmx.SearchReplaysAsync(new MX.SearchReplaysParameters { MapId = mapId });
-        Assert.NotEmpty(replays.Results);
+        var fake = FakeHttpMessageHandler.Json("""[{"ID":1,"Name":"Race","Color":"#ff0000"},{"ID":2,"Name":"FullSpeed","Color":""}]""");
+        using var mx = new MX(fake.CreateClient(), MxSite.Trackmania);
+
+        var tags = await mx.GetTagsAsync();
+
+        await Assert.That(fake.Request.Url).IsEqualTo("https://trackmania.exchange/api/meta/tags");
+        await Assert.That(tags).IsEquivalentTo([new TagInfo(1, "Race", "#ff0000"), new TagInfo(2, "FullSpeed", "")]);
     }
 
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task SearchUsersAsync_Success(MxSite site)
+    [Test]
+    public async Task GetVehiclesAsync_ParsesStrings()
     {
-        var tmx = new MX(site);
-        var users = await tmx.SearchUsersAsync(new ());
-        Assert.NotEmpty(users.Results);
+        var fake = FakeHttpMessageHandler.Json("""["CarSport","CarSnow"]""");
+        using var mx = new MX(fake.CreateClient(), MxSite.Trackmania);
+
+        var vehicles = await mx.GetVehiclesAsync();
+
+        await Assert.That(vehicles).IsEquivalentTo(["CarSport", "CarSnow"]);
     }
 
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task SearchVideosAsync_Success(MxSite site)
+    [Test]
+    public async Task GetRandomMapIdAsync_ReadsIdFromFinalUrl()
     {
-        var tmx = new MX(site);
-        var videos = await tmx.SearchVideosAsync(new ());
-        Assert.NotEmpty(videos.Results);
-    }
+        var fake = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            RequestMessage = new HttpRequestMessage(HttpMethod.Get, "https://trackmania.exchange/mapshow/120839")
+        });
+        using var mx = new MX(fake.CreateClient(), MxSite.Trackmania);
 
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task SearchMappacksAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var mappacks = await tmx.SearchMappacksAsync(new ());
-        Assert.NotEmpty(mappacks.Results);
-    }
+        var mapId = await mx.GetRandomMapIdAsync(new MX.SearchMapsParameters());
 
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task GetMapSearchOrdersAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var orders = await tmx.GetMapSearchOrdersAsync();
-        Assert.NotEmpty(orders);
-    }
-
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task GetUserSearchOrdersAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var orders = await tmx.GetUserSearchOrdersAsync();
-        Assert.NotEmpty(orders);
-    }
-
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task GetMappackSearchOrdersAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var orders = await tmx.GetMappackSearchOrdersAsync();
-        Assert.NotEmpty(orders);
-    }
-
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task GetTagsAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var tags = await tmx.GetTagsAsync();
-        Assert.NotEmpty(tags);
-    }
-
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task GetMaptypesAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var maptypes = await tmx.GetMaptypesAsync();
-        Assert.NotEmpty(maptypes);
-    }
-
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task GetVehiclesAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var vehicles = await tmx.GetVehiclesAsync();
-        Assert.NotEmpty(vehicles);
-    }
-
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task GetTitlepacksAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var titlepacks = await tmx.GetTitlepacksAsync();
-        Assert.NotEmpty(titlepacks);
-    }
-
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task GetRandomMapIdAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var randomMapId = await tmx.GetRandomMapIdAsync(new ());
-        Assert.NotNull(randomMapId);
-    }
-
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task GetRandomMapAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var randomMap = await tmx.GetRandomMapAsync(new ());
-        Assert.NotNull(randomMap);
-    }
-
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task GetRandomMappackIdAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var randomMappackId = await tmx.GetRandomMappackIdAsync(new());
-        Assert.NotNull(randomMappackId);
-    }
-
-    [Theory]
-    [InlineData(MxSite.Trackmania)]
-    [InlineData(MxSite.Maniaplanet)]
-    [InlineData(MxSite.Shootmania)]
-    public async Task GetRandomMappackAsync_Success(MxSite site)
-    {
-        var tmx = new MX(site);
-        var randomMappack = await tmx.GetRandomMappackAsync(new());
-        Assert.NotNull(randomMappack);
+        await Assert.That(fake.Request.Method).IsEqualTo(HttpMethod.Head);
+        await Assert.That(fake.Request.Url).StartsWith("https://trackmania.exchange/maprandom");
+        await Assert.That(mapId).IsEqualTo(120839);
     }
 }

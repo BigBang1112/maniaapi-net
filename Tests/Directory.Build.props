@@ -1,0 +1,27 @@
+<Project>
+
+  <!-- Shared settings for every test project in this folder. -->
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The TUnit metapackage includes Microsoft.Testing.Extensions.CodeCoverage, which coverage collection with MTP needs. -->
+    <PackageReference Include="TUnit" Version="1.80.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Using Include="ManiaAPI.Testing" />
+    <Using Include="System.Net" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,9 @@
+<Project>
+
+  <!-- Projects with a UserSecretsId run live tests that need credentials. -->
+  <ItemGroup Condition="'$(UserSecretsId)' != ''">
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.2" />
+    <Compile Include="$(MSBuildThisFileDirectory)Shared\Secrets\*.cs" Link="Shared\Secrets\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>
