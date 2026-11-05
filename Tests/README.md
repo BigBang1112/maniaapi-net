@@ -14,8 +14,10 @@ dotnet test
 
 ```sh
 # PowerShell: $env:MANIAAPI_LIVE_TESTS = "true"
-MANIAAPI_LIVE_TESTS=true dotnet test --treenode-filter "/*/*/*/*[Category=Live]"
+MANIAAPI_LIVE_TESTS=true dotnet test --treenode-filter "/*/*/*/*[Category=Live]" --ignore-exit-code 8
 ```
+
+Some test projects have no live tests, so the filter matches nothing in them. Microsoft Testing Platform reports a run with zero tests as a failure with exit code 8. `--ignore-exit-code 8` stops those projects from failing the run.
 
 Live tests retry twice, because the services fail now and then on their own.
 

@@ -5,6 +5,7 @@ namespace ManiaAPI.ManiaPlanetAPI.Tests.Live;
 public class ManiaPlanetLiveTests
 {
     private const string TitleUid = "Nadeo_Envimix@bigbang1112";
+    private const string MapUid = "BSnAjxY3IlQQt4bg1I0PGdgrba0"; // Tiger Blood
 
     private static async Task<ManiaPlanetAPI> AuthorizeAsync()
     {
@@ -50,5 +51,28 @@ public class ManiaPlanetLiveTests
         await Assert.That(titles).IsNotEmpty();
         await Assert.That(title?.Uid).IsEqualTo(TitleUid);
         await Assert.That(download.IsSuccessStatusCode).IsTrue();
+    }
+
+    [Test]
+    public async Task ManiaPlanetAPI_MapsAndTitleScripts()
+    {
+        using var api = await AuthorizeAsync();
+
+        var map = await api.GetMapByUidAsync(MapUid);
+        var scripts = await api.GetTitleScriptsAsync("TMStadium@nadeo");
+
+        await Assert.That(map?.Uid).IsEqualTo(MapUid);
+        await Assert.That(scripts).IsNotEmpty();
+    }
+
+    [Test]
+    public async Task ManiaPlanetAPI_OtherUserEndpoints_RejectClientCredentials()
+    {
+        using var api = await AuthorizeAsync();
+
+        await Assert.ThrowsAsync<ManiaPlanetAPIResponseException>(() => api.GetTitlesAsync());
+        await Assert.ThrowsAsync<ManiaPlanetAPIResponseException>(() => api.GetDedicatedAccountsAsync());
+        await Assert.ThrowsAsync<ManiaPlanetAPIResponseException>(() => api.GetMapsAsync());
+        await Assert.ThrowsAsync<ManiaPlanetAPIResponseException>(() => api.GetEmailAsync());
     }
 }

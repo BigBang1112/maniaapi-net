@@ -41,7 +41,7 @@ public interface INadeoLiveServices : INadeoAPI
     Task<ClubCampaign> GetClubCampaignAsync(int clubId, int campaignId, CancellationToken cancellationToken = default);
     Task<ClubCampaignCollection> GetClubCampaignsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
     /// <summary>
-    /// Gets the active campaigns of a specific club, most recently created first. Requires a token authenticated through a Ubisoft user account.
+    /// Gets the active campaigns of a specific club, most recently created first. Requires a token authenticated through a Ubisoft user account that is a member of the club, otherwise the request is forbidden.
     /// </summary>
     /// <param name="clubId">The club's ID.</param>
     /// <param name="length">The number of campaigns to retrieve (max 250).</param>
