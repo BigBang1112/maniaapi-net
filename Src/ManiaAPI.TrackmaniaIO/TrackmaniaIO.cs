@@ -40,23 +40,35 @@ public interface ITrackmaniaIO : IDisposable
 
 public class TrackmaniaIO : ITrackmaniaIO
 {
-    internal static long? RateLimitRemaining;
-    internal static DateTimeOffset? RateLimitReset;
-
     public const string BaseAddress = "https://trackmania.io/api";
 
+    private readonly RateLimiter rateLimiter;
+
     public HttpClient Client { get; }
+
+    /// <summary>
+    /// How many times a request is retried after a 429 Too Many Requests response, waiting as long as the response asks each time. Set to 0 to throw on the first 429. Default is 3.
+    /// </summary>
+    /// <remarks>
+    /// Requests are already held back when the rate limit is used up, so a 429 only happens when something else uses the same rate limit, like another process.
+    /// </remarks>
+    public int MaxRateLimitRetries { get; set; } = 3;
 
     /// <summary>
     /// Make sure your user agent is descriptive enough, otherwise you might receive 403 Forbidden responses in the future.
     /// </summary>
     /// <param name="client">HTTP client.</param>
     /// <param name="userAgent">Custom user agent as explained here: https://openplanet.dev/tmio/api</param>
-    public TrackmaniaIO(HttpClient client, string userAgent)
+    public TrackmaniaIO(HttpClient client, string userAgent) : this(client, userAgent, RateLimiter.Shared)
+    {
+    }
+
+    internal TrackmaniaIO(HttpClient client, string userAgent, RateLimiter rateLimiter)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
 
         Client = client ?? throw new ArgumentNullException(nameof(client));
+        this.rateLimiter = rateLimiter;
 
         var headers = Client.DefaultRequestHeaders;
 
@@ -219,40 +231,40 @@ public class TrackmaniaIO : ITrackmaniaIO
 
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
-        if (RateLimitRemaining == 0)
+        for (var retry = 0; ; retry++)
         {
-            while (DateTime.UtcNow < RateLimitReset)
+            await rateLimiter.AcquireAsync(cancellationToken);
+
+            HttpResponseMessage response;
+
+            try
             {
-                await Task.Delay(100, cancellationToken);
+                response = await Client.GetAsync($"{BaseAddress}/{endpoint}", cancellationToken);
+            }
+            catch
+            {
+                rateLimiter.Cancel();
+                throw;
+            }
+
+            using (response)
+            {
+                // Read the rate limit before the status, so that error responses update it too.
+                var retryDelay = rateLimiter.Complete(response);
+
+                if (retryDelay.HasValue && retry < MaxRateLimitRetries)
+                {
+                    // The rate limiter now holds every request back until the delay passes, including this retry.
+                    continue;
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
+
+                return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
             }
         }
-
-        using var response = await Client.GetAsync($"{BaseAddress}/{endpoint}", cancellationToken);
-
-        response.EnsureSuccessStatusCode();
-
-        RateLimitRemaining = GetHeaderNumberValue("X-Ratelimit-Remaining", response) ?? RateLimitRemaining - 1;
-
-        var rateLimitResetCurrent = GetHeaderNumberValue("X-Ratelimit-Reset", response);
-
-        if (rateLimitResetCurrent.HasValue)
-        {
-            RateLimitReset = DateTimeOffset.UtcNow + TimeSpan.FromSeconds(rateLimitResetCurrent.Value);
-        }
-
-        Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
-
-        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
-    }
-
-    internal static long? GetHeaderNumberValue(string name, HttpResponseMessage response)
-    {
-        if (!response.Headers.TryGetValues(name, out IEnumerable<string>? values))
-        {
-            return null;
-        }
-
-        return long.TryParse(values.FirstOrDefault(), out long value) ? value : null;
     }
 
     private static string SearchQuery(string? search)

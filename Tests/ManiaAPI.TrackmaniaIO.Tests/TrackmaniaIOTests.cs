@@ -1,6 +1,6 @@
 namespace ManiaAPI.TrackmaniaIO.Tests;
 
-// TrackmaniaIO keeps its rate limit state in static fields, so requests from parallel tests would interfere.
+// The public constructors share one rate limiter, so requests from parallel tests would interfere.
 [NotInParallel(nameof(TrackmaniaIO))]
 public class TrackmaniaIOTests
 {
@@ -141,7 +141,7 @@ public class TrackmaniaIOTests
         using var response = new HttpResponseMessage();
         response.Headers.Add("X-Ratelimit-Remaining", "123");
 
-        var value = TrackmaniaIO.GetHeaderNumberValue("X-Ratelimit-Remaining", response);
+        var value = RateLimiter.GetHeaderNumberValue("X-Ratelimit-Remaining", response);
 
         await Assert.That(value).IsEqualTo(123);
     }
@@ -151,7 +151,7 @@ public class TrackmaniaIOTests
     {
         using var response = new HttpResponseMessage();
 
-        var value = TrackmaniaIO.GetHeaderNumberValue("X-Ratelimit-Remaining", response);
+        var value = RateLimiter.GetHeaderNumberValue("X-Ratelimit-Remaining", response);
 
         await Assert.That(value).IsNull();
     }
@@ -162,7 +162,7 @@ public class TrackmaniaIOTests
         using var response = new HttpResponseMessage();
         response.Headers.Add("X-Ratelimit-Remaining", "value");
 
-        var value = TrackmaniaIO.GetHeaderNumberValue("X-Ratelimit-Remaining", response);
+        var value = RateLimiter.GetHeaderNumberValue("X-Ratelimit-Remaining", response);
 
         await Assert.That(value).IsNull();
     }

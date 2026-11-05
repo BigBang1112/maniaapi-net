@@ -4,44 +4,9 @@ namespace ManiaAPI.TrackmaniaIO.Tests.Live;
 [NotInParallel(nameof(TrackmaniaIO))]
 public class TrackmaniaIOLiveTests
 {
-    private static TrackmaniaIO CreateClient() => new(new HttpClient(new RateLimitRetryHandler()), "ManiaAPI.TrackmaniaIO live tests (Discord=bigbang1112)");
-
-    /// <summary>
-    /// Waits out 429 responses. The library only tracks the rate limit within its own process,
-    /// but <c>dotnet test</c> runs each target framework in a separate process at the same time.
-    /// </summary>
-    private sealed class RateLimitRetryHandler() : DelegatingHandler(new HttpClientHandler())
-    {
-        private const int MaxAttempts = 6;
-        private static readonly TimeSpan MaxDelay = TimeSpan.FromSeconds(60);
-
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            for (var attempt = 1; ; attempt++)
-            {
-                var response = await base.SendAsync(request, cancellationToken);
-
-                if (response.StatusCode != HttpStatusCode.TooManyRequests || attempt == MaxAttempts)
-                {
-                    return response;
-                }
-
-                var delay = GetDelay(response);
-                response.Dispose();
-                await Task.Delay(delay, cancellationToken);
-            }
-        }
-
-        private static TimeSpan GetDelay(HttpResponseMessage response)
-        {
-            var delay = response.Headers.RetryAfter?.Delta
-                ?? (response.Headers.TryGetValues("X-Ratelimit-Reset", out var values) && int.TryParse(values.FirstOrDefault(), out var seconds)
-                    ? TimeSpan.FromSeconds(seconds + 1)
-                    : TimeSpan.FromSeconds(10));
-
-            return delay < MaxDelay ? delay : MaxDelay;
-        }
-    }
+    // dotnet test runs every target framework in its own process at the same time, and they all share one rate limit,
+    // so a request can be turned away more often than the default allows.
+    private static TrackmaniaIO CreateClient() => new("ManiaAPI.TrackmaniaIO live tests (Discord=bigbang1112)") { MaxRateLimitRetries = 10 };
 
     [Test]
     public async Task SeasonalCampaign_ResolvesMapsAndLeaderboards()
@@ -105,6 +70,7 @@ public class TrackmaniaIOLiveTests
     {
         using var tmio = CreateClient();
 
+#pragma warning disable CS0618 // The obsolete weekly methods are still public, so they still need to work.
         var weekly = await tmio.GetWeeklyCampaignsAsync();
         var weeklyShort = await tmio.GetWeeklyShortCampaignsAsync();
         var weeklyGrand = await tmio.GetWeeklyGrandCampaignsAsync();
@@ -114,6 +80,7 @@ public class TrackmaniaIOLiveTests
         await Assert.That(weeklyGrand.Campaigns).IsNotEmpty();
 
         var weeklyCampaign = await tmio.GetWeeklyCampaignAsync(weekly.Campaigns[0].Id);
+#pragma warning restore CS0618
         var weeklyShortCampaign = await tmio.GetWeeklyShortCampaignAsync(weeklyShort.Campaigns[0].Id);
         var weeklyGrandCampaign = await tmio.GetWeeklyGrandCampaignAsync(weeklyGrand.Campaigns[0].Id);
 
