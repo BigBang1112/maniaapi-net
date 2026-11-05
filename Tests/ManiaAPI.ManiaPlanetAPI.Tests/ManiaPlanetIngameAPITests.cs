@@ -2,20 +2,34 @@ namespace ManiaAPI.ManiaPlanetAPI.Tests;
 
 public class ManiaPlanetIngameAPITests
 {
-    private static ManiaPlanetIngameAPI CreateApi(FakeHttpMessageHandler fake) => new(fake.CreateClient(ManiaPlanetIngameAPI.BaseAddress));
+    private const string IngameUrl = "https://prod.live.maniaplanet.com/ingame";
+    private const string Login = "bigbang1112";
+    private const string TitleUid = "Nadeo_Envimix@bigbang1112";
+
+    private static readonly string AuthJson = $$"""{"login":"{{Login}}"}""";
 
     [Test]
     public async Task AuthenticateAsync_SendsManiaPlanetAuthHeader()
     {
-        var fake = FakeHttpMessageHandler.Json("""{"login":"bigbang1112"}""");
+        var fake = FakeHttpMessageHandler.Json(AuthJson);
         var api = CreateApi(fake);
 
-        var result = await api.AuthenticateAsync("bigbang1112", "secret-token");
+        await api.AuthenticateAsync(Login, "secret-token");
 
-        await Assert.That(fake.Request.Url).IsEqualTo("https://prod.live.maniaplanet.com/ingame/auth");
-        await Assert.That(fake.Request.Headers["Maniaplanet-Auth"]).IsEqualTo("Login=\"bigbang1112\", Token=\"secret-token\"");
+        await Assert.That(fake.Request.Url).IsEqualTo($"{IngameUrl}/auth");
+        await Assert.That(fake.Request.Headers["Maniaplanet-Auth"]).IsEqualTo($"Login=\"{Login}\", Token=\"secret-token\"");
         await Assert.That(fake.Request.Headers["Accept"]).IsEqualTo("application/json");
-        await Assert.That(result.Login).IsEqualTo("bigbang1112");
+    }
+
+    [Test]
+    public async Task AuthenticateAsync_ReturnsAuthenticatedLogin()
+    {
+        var fake = FakeHttpMessageHandler.Json(AuthJson);
+        var api = CreateApi(fake);
+
+        var result = await api.AuthenticateAsync(Login, "secret-token");
+
+        await Assert.That(result.Login).IsEqualTo(Login);
     }
 
     [Test]
@@ -24,19 +38,30 @@ public class ManiaPlanetIngameAPITests
         var fake = FakeHttpMessageHandler.Json("{}", HttpStatusCode.Unauthorized);
         var api = CreateApi(fake);
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => api.AuthenticateAsync("bigbang1112", "wrong"));
+        await Assert.ThrowsAsync<HttpRequestException>(() => api.AuthenticateAsync(Login, "wrong"));
     }
 
     [Test]
-    public async Task DownloadTitleAsync_UsesTitlePackPath()
+    public async Task DownloadTitleAsync_RequestsTitlePack()
     {
         var fake = new FakeHttpMessageHandler(_ => FakeResponse.Status(HttpStatusCode.OK));
         var api = CreateApi(fake);
 
-        using var response = await api.DownloadTitleAsync(HttpMethod.Head, "Nadeo_Envimix@bigbang1112");
+        using var response = await api.DownloadTitleAsync(HttpMethod.Head, TitleUid);
 
         await Assert.That(fake.Request.Method).IsEqualTo(HttpMethod.Head);
-        await Assert.That(fake.Request.Url).IsEqualTo("https://prod.live.maniaplanet.com/ingame/public/titles/download/Nadeo_Envimix@bigbang1112.Title.Pack.gbx");
+        await Assert.That(fake.Request.Url).IsEqualTo($"{IngameUrl}/public/titles/download/{TitleUid}.Title.Pack.gbx");
+    }
+
+    [Test]
+    public async Task GetTitleByUidAsync_RequestsPublicTitle()
+    {
+        var fake = new FakeHttpMessageHandler(_ => FakeResponse.Status(HttpStatusCode.NotFound));
+        var api = CreateApi(fake);
+
+        await api.GetTitleByUidAsync(TitleUid);
+
+        await Assert.That(fake.Request.Url).IsEqualTo($"{IngameUrl}/public/titles/{TitleUid}");
     }
 
     [Test]
@@ -47,18 +72,19 @@ public class ManiaPlanetIngameAPITests
 
         var title = await api.GetTitleByUidAsync("Missing@nobody");
 
-        await Assert.That(fake.Request.Url).IsEqualTo("https://prod.live.maniaplanet.com/ingame/public/titles/Missing@nobody");
         await Assert.That(title).IsNull();
     }
 
     [Test]
-    public async Task SearchTitlesAsync_BuildsQuery()
+    public async Task SearchTitlesAsync_AddsFiltersAndOrder()
     {
         var fake = FakeHttpMessageHandler.Json("[]");
         var api = CreateApi(fake);
 
         await api.SearchTitlesAsync(["trackmania", "solo"], orderBy: "lastUpdate");
 
-        await Assert.That(fake.Request.Url).IsEqualTo("https://prod.live.maniaplanet.com/ingame/public/titles?filters%5b%5d=trackmania&filters%5b%5d=solo&orderBy=lastUpdate");
+        await Assert.That(fake.Request.Url).IsEqualTo($"{IngameUrl}/public/titles?filters%5b%5d=trackmania&filters%5b%5d=solo&orderBy=lastUpdate");
     }
+
+    private static ManiaPlanetIngameAPI CreateApi(FakeHttpMessageHandler fake) => new(fake.CreateClient(ManiaPlanetIngameAPI.BaseAddress));
 }

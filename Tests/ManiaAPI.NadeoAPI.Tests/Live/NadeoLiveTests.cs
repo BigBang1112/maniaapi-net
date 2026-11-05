@@ -102,7 +102,9 @@ public class NadeoLiveTests
         var accountId = ns.Handler.JWT?.Subject ?? throw new InvalidOperationException("The token has no account ID.");
         var seasonId = Guid.Parse((await nls.GetSeasonalCampaignsAsync(1)).CampaignList[0].SeasonUid);
 
+#pragma warning disable CS0618 // Obsolete but still public, so it still needs to work.
         var records = await ns.GetAccountRecordsAsync(accountId);
+#pragma warning restore CS0618
         var recordsByMapIds = await ns.GetAccountRecordsByMapIdsAsync(accountId, MapIds);
         var recordsByMapIdsWithOffset = await ns.GetAccountRecordsByMapIdsAsync(accountId, MapIds, gamemode: null, offset: 0);
         var recordsBySeasonIds = await ns.GetAccountRecordsBySeasonIdsAsync(accountId, [seasonId]);
@@ -145,7 +147,9 @@ public class NadeoLiveTests
     {
         var nls = await LiveNadeo.GetLiveServicesAsync();
 
+#pragma warning disable CS0618 // Obsolete but still public, so it still needs to work.
         var weekly = await nls.GetWeeklyCampaignsAsync(1);
+#pragma warning restore CS0618
         var weeklyShort = await nls.GetWeeklyShortCampaignsAsync(1);
         var weeklyGrand = await nls.GetWeeklyGrandCampaignsAsync(1);
         var cupOfTheWeek = await nls.GetCupOfTheWeekCampaignsAsync(1);

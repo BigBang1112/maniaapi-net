@@ -8,6 +8,7 @@ public partial class NadeoServicesExtensionsTests
 {
     private const string MapFileName = "ManiaAPI-NET Test Map.Map.Gbx";
     private const string BaseUrl = "https://prod.trackmania.core.nadeo.online";
+    private const string OtherMapUid = "uid";
 
     private static readonly Guid MapId = Guid.Parse("ed53486f-a80d-419b-b073-54bb8944d502");
 
@@ -51,18 +52,29 @@ public partial class NadeoServicesExtensionsTests
     }
 
     [Test]
-    public async Task UploadMapAsync_PostsMapFieldsFromHeader()
+    public async Task UploadMapAsync_PostsMultipartFormToMaps()
     {
         var map = ReadMapHeader();
         var fake = FakeHttpMessageHandler.Json(MapInfoJson(map.MapUid));
         using var ns = new NadeoServices(fake.CreateClient());
         await using var stream = File.OpenRead(MapPath);
 
-        var result = await ns.UploadMapAsync(stream, MapFileName);
+        await ns.UploadMapAsync(stream, MapFileName);
 
         await Assert.That(fake.Request.Method).IsEqualTo(HttpMethod.Post);
         await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/maps/");
         await Assert.That(fake.Request.Headers["Content-Type"]).StartsWith("multipart/form-data");
+    }
+
+    [Test]
+    public async Task UploadMapAsync_SendsMapFieldsFromHeader()
+    {
+        var map = ReadMapHeader();
+        var fake = FakeHttpMessageHandler.Json(MapInfoJson(map.MapUid));
+        using var ns = new NadeoServices(fake.CreateClient());
+        await using var stream = File.OpenRead(MapPath);
+
+        await ns.UploadMapAsync(stream, MapFileName);
 
         var form = ReadForm(fake.Request.Body!);
         await Assert.That(form["mapUid"].Value).IsEqualTo(map.MapUid);
@@ -71,13 +83,25 @@ public partial class NadeoServicesExtensionsTests
         await Assert.That(form["collectionName"].Value).IsEqualTo("Stadium");
         await Assert.That(form["nadeoservices-core-parameters"].Value).IsEqualTo("""{"isPlayable":true}""");
         await Assert.That(form["data"].Disposition).Contains(MapFileName);
+    }
+
+    [Test]
+    public async Task UploadMapAsync_ReturnsUploadedMapInfo()
+    {
+        var map = ReadMapHeader();
+        var fake = FakeHttpMessageHandler.Json(MapInfoJson(map.MapUid));
+        using var ns = new NadeoServices(fake.CreateClient());
+        await using var stream = File.OpenRead(MapPath);
+
+        var result = await ns.UploadMapAsync(stream, MapFileName);
+
         await Assert.That(result.MapId).IsEqualTo(MapId);
     }
 
     [Test]
     public async Task UploadMapAsync_FromFilePath_UsesFileName()
     {
-        var fake = FakeHttpMessageHandler.Json(MapInfoJson("uid"));
+        var fake = FakeHttpMessageHandler.Json(MapInfoJson(OtherMapUid));
         using var ns = new NadeoServices(fake.CreateClient());
 
         await ns.UploadMapAsync(MapPath);
@@ -88,7 +112,7 @@ public partial class NadeoServicesExtensionsTests
     [Test]
     public async Task UpdateMapAsync_WithMapId_PostsToMap()
     {
-        var fake = FakeHttpMessageHandler.Json(MapInfoJson("uid"));
+        var fake = FakeHttpMessageHandler.Json(MapInfoJson(OtherMapUid));
         using var ns = new NadeoServices(fake.CreateClient());
         await using var stream = File.OpenRead(MapPath);
 
@@ -99,7 +123,7 @@ public partial class NadeoServicesExtensionsTests
     }
 
     [Test]
-    public async Task UpdateMapAsync_WithoutMapId_LooksUpMapByUid()
+    public async Task UpdateMapAsync_WithoutMapId_LooksUpMapIdByUid()
     {
         var map = ReadMapHeader();
         var fake = FakeHttpMessageHandler.Sequence(
@@ -115,23 +139,25 @@ public partial class NadeoServicesExtensionsTests
     }
 
     [Test]
-    public async Task UpdateMapAsync_UnknownMap_ThrowsMapNotFound()
+    public async Task UpdateMapAsync_UnknownMap_ThrowsMapNotFoundWithoutUploading()
     {
         var fake = FakeHttpMessageHandler.Json("[]");
         using var ns = new NadeoServices(fake.CreateClient());
         await using var stream = File.OpenRead(MapPath);
 
         await Assert.ThrowsAsync<MapNotFoundException>(() => ns.UpdateMapAsync(stream, MapFileName));
+
         await Assert.That(fake.Requests).Count().IsEqualTo(1);
     }
 
     [Test]
-    public async Task UploadMapAsync_NullStream_Throws()
+    public async Task UploadMapAsync_NullStream_ThrowsWithoutRequest()
     {
         var fake = FakeHttpMessageHandler.Json("{}");
         using var ns = new NadeoServices(fake.CreateClient());
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => ns.UploadMapAsync((Stream)null!, MapFileName));
+
         await Assert.That(fake.Requests).IsEmpty();
     }
 

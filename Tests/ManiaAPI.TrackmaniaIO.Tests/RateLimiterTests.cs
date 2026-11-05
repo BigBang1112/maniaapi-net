@@ -2,31 +2,307 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ManiaAPI.TrackmaniaIO.Tests;
 
+/// <summary>
+/// Every request goes through the same rate limiting, so <see cref="TrackmaniaIO.GetAdsAsync"/> stands in for all of them.
+/// </summary>
 public class RateLimiterTests
 {
     private const string UserAgent = "ManiaAPI.TrackmaniaIO.Tests";
-    private const string AdsJson = """{"ads":[]}""";
+    private const string EmptyAdsJson = """{"ads":[]}""";
+    private const string RemainingHeader = "X-Ratelimit-Remaining";
+    private const string ResetHeader = "X-Ratelimit-Reset";
+
+    private static readonly TimeSpan Reset = TimeSpan.FromSeconds(30);
 
     private readonly FakeTimeProvider time = new();
     private readonly List<DateTimeOffset> requestTimes = [];
 
-    private HttpResponseMessage Respond(HttpStatusCode statusCode = HttpStatusCode.OK, long? remaining = null, long? reset = null, TimeSpan? retryAfter = null)
+    [Test]
+    public async Task GetAdsAsync_LimitUsedUp_WaitsForReset()
+    {
+        var handler = FakeHttpMessageHandler.Sequence(
+            () => Respond(remaining: 0, reset: Reset),
+            () => Respond());
+        using var tmio = CreateClient(handler);
+        await tmio.GetAdsAsync();
+
+        await AdvanceUntilCompletedAsync(tmio.GetAdsAsync());
+
+        await AssertWaitedAsync(WaitBeforeRequest(1), Reset);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_LimitNotUsedUp_DoesNotWait()
+    {
+        var handler = FakeHttpMessageHandler.Sequence(
+            () => Respond(remaining: 1, reset: Reset),
+            () => Respond());
+        using var tmio = CreateClient(handler);
+        await tmio.GetAdsAsync();
+
+        await AdvanceUntilCompletedAsync(tmio.GetAdsAsync());
+
+        await AssertWaitedAsync(WaitBeforeRequest(1), TimeSpan.Zero);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_TooManyRequestsWithRetryAfter_RetriesAfterRetryAfter()
+    {
+        var retryAfter = TimeSpan.FromSeconds(5);
+        var handler = FakeHttpMessageHandler.Sequence(
+            () => Respond(HttpStatusCode.TooManyRequests, retryAfter: retryAfter),
+            () => Respond());
+        using var tmio = CreateClient(handler);
+
+        await AdvanceUntilCompletedAsync(tmio.GetAdsAsync());
+
+        await AssertWaitedAsync(WaitBeforeRequest(1), retryAfter);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_TooManyRequestsWithResetHeader_RetriesAfterReset()
+    {
+        var handler = FakeHttpMessageHandler.Sequence(
+            () => Respond(HttpStatusCode.TooManyRequests, remaining: 0, reset: Reset),
+            () => Respond());
+        using var tmio = CreateClient(handler);
+
+        await AdvanceUntilCompletedAsync(tmio.GetAdsAsync());
+
+        await AssertWaitedAsync(WaitBeforeRequest(1), Reset);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_TooManyRequestsWithoutHeaders_RetriesAfterDefaultDelay()
+    {
+        var handler = FakeHttpMessageHandler.Sequence(
+            () => Respond(HttpStatusCode.TooManyRequests),
+            () => Respond());
+        using var tmio = CreateClient(handler);
+
+        await AdvanceUntilCompletedAsync(tmio.GetAdsAsync());
+
+        await AssertWaitedAsync(WaitBeforeRequest(1), RateLimiter.DefaultRetryDelay);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_TooManyRequestsThenSuccess_ReturnsRetriedResponse()
+    {
+        var handler = FakeHttpMessageHandler.Sequence(
+            () => Respond(HttpStatusCode.TooManyRequests, retryAfter: TimeSpan.FromSeconds(1)),
+            () => Respond(json: """{"ads":[{"name":"Retried"}]}"""));
+        using var tmio = CreateClient(handler);
+
+        var ads = await AdvanceUntilCompletedAsync(tmio.GetAdsAsync());
+
+        await Assert.That(ads.Ads.Select(x => x.Name)).IsEquivalentTo(["Retried"]);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_TooManyRequestsBeyondMaxRetries_ThrowsTooManyRequests()
+    {
+        const int maxRetries = 2;
+        var handler = new FakeHttpMessageHandler(_ => Respond(HttpStatusCode.TooManyRequests, retryAfter: TimeSpan.FromSeconds(1)));
+        using var tmio = CreateClient(handler);
+        tmio.MaxRateLimitRetries = maxRetries;
+
+        var exception = await Assert.ThrowsAsync<HttpRequestException>(() => AdvanceUntilCompletedAsync(tmio.GetAdsAsync()));
+
+        await Assert.That(exception!.StatusCode).IsEqualTo(HttpStatusCode.TooManyRequests);
+        await Assert.That(requestTimes.Count).IsEqualTo(maxRetries + 1);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_TooManyRequestsWithRetriesDisabled_ThrowsWithoutRetrying()
+    {
+        var handler = new FakeHttpMessageHandler(_ => Respond(HttpStatusCode.TooManyRequests, retryAfter: TimeSpan.FromSeconds(1)));
+        using var tmio = CreateClient(handler);
+        tmio.MaxRateLimitRetries = 0;
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => tmio.GetAdsAsync());
+
+        await Assert.That(requestTimes.Count).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_AfterTooManyRequests_HoldsBackNextRequest()
+    {
+        var retryAfter = TimeSpan.FromSeconds(20);
+        var handler = FakeHttpMessageHandler.Sequence(
+            () => Respond(HttpStatusCode.TooManyRequests, retryAfter: retryAfter),
+            () => Respond());
+        using var tmio = CreateClient(handler);
+        tmio.MaxRateLimitRetries = 0;
+        await Assert.ThrowsAsync<HttpRequestException>(() => tmio.GetAdsAsync());
+
+        await AdvanceUntilCompletedAsync(tmio.GetAdsAsync());
+
+        await AssertWaitedAsync(WaitBeforeRequest(1), retryAfter);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_ErrorResponseWithLimitHeaders_WaitsForReset()
+    {
+        var handler = FakeHttpMessageHandler.Sequence(
+            () => Respond(HttpStatusCode.InternalServerError, remaining: 0, reset: Reset),
+            () => Respond());
+        using var tmio = CreateClient(handler);
+        await Assert.ThrowsAsync<HttpRequestException>(() => tmio.GetAdsAsync());
+
+        await AdvanceUntilCompletedAsync(tmio.GetAdsAsync());
+
+        await AssertWaitedAsync(WaitBeforeRequest(1), Reset);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_ParallelRequests_SendsOnlyRemainingBeforeReset()
+    {
+        const int remaining = 2;
+        const int parallelRequests = 5;
+        var isFirst = true;
+        var handler = new FakeHttpMessageHandler(_ =>
+        {
+            var response = isFirst ? Respond(remaining: remaining, reset: Reset) : Respond();
+            isFirst = false;
+            return response;
+        });
+        using var tmio = CreateClient(handler);
+        await tmio.GetAdsAsync();
+
+        await AdvanceUntilCompletedAsync(Task.WhenAll(Enumerable.Range(0, parallelRequests).Select(_ => tmio.GetAdsAsync())));
+
+        var sentBeforeReset = requestTimes.Skip(1).Count(x => x - requestTimes[0] < Reset);
+        await Assert.That(sentBeforeReset).IsEqualTo(remaining);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_RequestFailsWithoutResponse_DoesNotUseUpLimit()
+    {
+        var call = 0;
+        var handler = new FakeHttpMessageHandler(_ => ++call switch
+        {
+            1 => Respond(remaining: 1, reset: Reset),
+            2 => throw new HttpRequestException("Connection refused."),
+            _ => Respond()
+        });
+        using var tmio = CreateClient(handler);
+        await tmio.GetAdsAsync();
+        await Assert.ThrowsAsync<HttpRequestException>(() => tmio.GetAdsAsync());
+
+        await AdvanceUntilCompletedAsync(tmio.GetAdsAsync());
+
+        await AssertWaitedAsync(WaitBeforeRequest(1), TimeSpan.Zero);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_CancelledWhileWaitingForReset_ThrowsTaskCanceled()
+    {
+        var handler = FakeHttpMessageHandler.Sequence(() => Respond(remaining: 0, reset: Reset));
+        using var tmio = CreateClient(handler);
+        using var cts = new CancellationTokenSource();
+        await tmio.GetAdsAsync();
+        var waiting = tmio.GetAdsAsync(cts.Token);
+
+        await cts.CancelAsync();
+
+        await Assert.ThrowsAsync<TaskCanceledException>(() => waiting);
+    }
+
+    [Test]
+    public async Task GetAdsAsync_ClientsSharingRateLimiter_ShareLimit()
+    {
+        var limiter = new RateLimiter(time);
+        using var first = CreateClient(FakeHttpMessageHandler.Sequence(() => Respond(remaining: 0, reset: Reset)), limiter);
+        using var second = CreateClient(FakeHttpMessageHandler.Sequence(() => Respond()), limiter);
+        await first.GetAdsAsync();
+
+        await AdvanceUntilCompletedAsync(second.GetAdsAsync());
+
+        await AssertWaitedAsync(WaitBeforeRequest(1), Reset);
+    }
+
+    [Test]
+    public async Task AcquireAsync_ServerRemainingWithRequestsInFlight_CountsThemAsUsed()
+    {
+        var limiter = new RateLimiter(time);
+        await limiter.AcquireAsync(CancellationToken.None);
+        await limiter.AcquireAsync(CancellationToken.None);
+        // One request left according to the server, but the second request in flight will use it.
+        limiter.Complete(CreateResponse(HttpStatusCode.OK, EmptyAdsJson, remaining: 1, reset: Reset, retryAfter: null));
+        var start = time.GetUtcNow();
+
+        await AdvanceUntilCompletedAsync(limiter.AcquireAsync(CancellationToken.None));
+
+        await AssertWaitedAsync(time.GetUtcNow() - start, Reset);
+    }
+
+    [Test]
+    public async Task GetHeaderNumberValue_NumericHeader_ReturnsValue()
+    {
+        using var response = new HttpResponseMessage();
+        response.Headers.Add(RemainingHeader, "123");
+
+        var value = RateLimiter.GetHeaderNumberValue(RemainingHeader, response);
+
+        await Assert.That(value).IsEqualTo(123);
+    }
+
+    [Test]
+    public async Task GetHeaderNumberValue_MissingHeader_ReturnsNull()
+    {
+        using var response = new HttpResponseMessage();
+
+        var value = RateLimiter.GetHeaderNumberValue(RemainingHeader, response);
+
+        await Assert.That(value).IsNull();
+    }
+
+    [Test]
+    public async Task GetHeaderNumberValue_NonNumericHeader_ReturnsNull()
+    {
+        using var response = new HttpResponseMessage();
+        response.Headers.Add(RemainingHeader, "value");
+
+        var value = RateLimiter.GetHeaderNumberValue(RemainingHeader, response);
+
+        await Assert.That(value).IsNull();
+    }
+
+    private TrackmaniaIO CreateClient(FakeHttpMessageHandler handler, RateLimiter? limiter = null)
+    {
+        return new TrackmaniaIO(handler.CreateClient(), UserAgent, limiter ?? new RateLimiter(time));
+    }
+
+    /// <summary>
+    /// Records when the request arrived and answers it.
+    /// </summary>
+    private HttpResponseMessage Respond(
+        HttpStatusCode statusCode = HttpStatusCode.OK,
+        long? remaining = null,
+        TimeSpan? reset = null,
+        TimeSpan? retryAfter = null,
+        string json = EmptyAdsJson)
     {
         lock (requestTimes)
         {
             requestTimes.Add(time.GetUtcNow());
         }
 
-        var response = FakeResponse.Json(AdsJson, statusCode);
+        return CreateResponse(statusCode, json, remaining, reset, retryAfter);
+    }
+
+    private static HttpResponseMessage CreateResponse(HttpStatusCode statusCode, string json, long? remaining, TimeSpan? reset, TimeSpan? retryAfter)
+    {
+        var response = FakeResponse.Json(json, statusCode);
 
         if (remaining.HasValue)
         {
-            response.Headers.Add("X-Ratelimit-Remaining", remaining.Value.ToString());
+            response.Headers.Add(RemainingHeader, remaining.Value.ToString());
         }
 
         if (reset.HasValue)
         {
-            response.Headers.Add("X-Ratelimit-Reset", reset.Value.ToString());
+            response.Headers.Add(ResetHeader, ((long)reset.Value.TotalSeconds).ToString());
         }
 
         if (retryAfter.HasValue)
@@ -37,260 +313,40 @@ public class RateLimiterTests
         return response;
     }
 
-    private int RequestCount
+    private TimeSpan WaitBeforeRequest(int index)
     {
-        get
-        {
-            lock (requestTimes)
-            {
-                return requestTimes.Count;
-            }
-        }
-    }
-
-    private TrackmaniaIO CreateClient(FakeHttpMessageHandler handler)
-    {
-        return new TrackmaniaIO(handler.CreateClient(), UserAgent, new RateLimiter(time));
+        return requestTimes[index] - requestTimes[index - 1];
     }
 
     /// <summary>
-    /// Advances the fake clock one second at a time until the task completes, so that every pending delay can elapse.
+    /// Moves the fake clock forward one second at a time until the task completes, so that any wait can elapse.
+    /// The short real delay gives continuations a chance to run between steps.
     /// </summary>
-    private async Task<T> RunAsync<T>(Task<T> task, TimeSpan max)
+    private async Task AdvanceUntilCompletedAsync(Task task)
     {
-        for (var elapsed = TimeSpan.Zero; !task.IsCompleted && elapsed < max; elapsed += TimeSpan.FromSeconds(1))
+        var maxWait = TimeSpan.FromMinutes(5);
+
+        for (var elapsed = TimeSpan.Zero; !task.IsCompleted && elapsed < maxWait; elapsed += TimeSpan.FromSeconds(1))
         {
             await Task.Delay(10);
             time.Advance(TimeSpan.FromSeconds(1));
         }
 
-        return await task.WaitAsync(TimeSpan.FromSeconds(5));
+        await task.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    private async Task<T> AdvanceUntilCompletedAsync<T>(Task<T> task)
+    {
+        await AdvanceUntilCompletedAsync((Task)task);
+        return await task;
     }
 
     /// <summary>
-    /// The fake clock moves in one second steps, so a wait may show up to a second longer than requested, but never shorter.
+    /// The fake clock moves in one second steps, so a wait can show up to a second longer than requested, but never shorter.
     /// </summary>
     private static async Task AssertWaitedAsync(TimeSpan actual, TimeSpan expected)
     {
         await Assert.That(actual).IsGreaterThanOrEqualTo(expected);
         await Assert.That(actual).IsLessThanOrEqualTo(expected + TimeSpan.FromSeconds(1));
-    }
-
-    [Test]
-    public async Task UsedUpLimit_WaitsForReset()
-    {
-        var handler = FakeHttpMessageHandler.Sequence(
-            () => Respond(remaining: 0, reset: 30),
-            () => Respond());
-        using var tmio = CreateClient(handler);
-
-        await tmio.GetAdsAsync();
-        var second = tmio.GetAdsAsync();
-
-        await Task.Delay(50);
-        await Assert.That(RequestCount).IsEqualTo(1);
-
-        await RunAsync(second, TimeSpan.FromMinutes(1));
-
-        await AssertWaitedAsync(requestTimes[1] - requestTimes[0], TimeSpan.FromSeconds(30));
-    }
-
-    [Test]
-    public async Task TooManyRequests_RetriesAfterRetryAfter()
-    {
-        var handler = FakeHttpMessageHandler.Sequence(
-            () => Respond(HttpStatusCode.TooManyRequests, retryAfter: TimeSpan.FromSeconds(5)),
-            () => Respond());
-        using var tmio = CreateClient(handler);
-
-        var ads = await RunAsync(tmio.GetAdsAsync(), TimeSpan.FromMinutes(1));
-
-        await Assert.That(ads.Ads).IsEmpty();
-        await AssertWaitedAsync(requestTimes[1] - requestTimes[0], TimeSpan.FromSeconds(5));
-    }
-
-    [Test]
-    public async Task TooManyRequests_WithoutRetryAfter_WaitsForReset()
-    {
-        var handler = FakeHttpMessageHandler.Sequence(
-            () => Respond(HttpStatusCode.TooManyRequests, remaining: 0, reset: 12),
-            () => Respond());
-        using var tmio = CreateClient(handler);
-
-        await RunAsync(tmio.GetAdsAsync(), TimeSpan.FromMinutes(1));
-
-        await AssertWaitedAsync(requestTimes[1] - requestTimes[0], TimeSpan.FromSeconds(12));
-    }
-
-    [Test]
-    public async Task TooManyRequests_WithoutHeaders_WaitsDefaultDelay()
-    {
-        var handler = FakeHttpMessageHandler.Sequence(
-            () => Respond(HttpStatusCode.TooManyRequests),
-            () => Respond());
-        using var tmio = CreateClient(handler);
-
-        await RunAsync(tmio.GetAdsAsync(), TimeSpan.FromMinutes(1));
-
-        await AssertWaitedAsync(requestTimes[1] - requestTimes[0], RateLimiter.DefaultRetryDelay);
-    }
-
-    [Test]
-    public async Task TooManyRequests_AfterMaxRetries_Throws()
-    {
-        var handler = new FakeHttpMessageHandler(_ => Respond(HttpStatusCode.TooManyRequests, retryAfter: TimeSpan.FromSeconds(1)));
-        using var tmio = CreateClient(handler);
-        tmio.MaxRateLimitRetries = 2;
-
-        var exception = await Assert.ThrowsAsync<HttpRequestException>(() => RunAsync(tmio.GetAdsAsync(), TimeSpan.FromMinutes(1)));
-
-        await Assert.That(exception!.StatusCode).IsEqualTo(HttpStatusCode.TooManyRequests);
-        await Assert.That(RequestCount).IsEqualTo(3);
-    }
-
-    [Test]
-    public async Task TooManyRequests_NoRetries_ThrowsImmediately()
-    {
-        var handler = new FakeHttpMessageHandler(_ => Respond(HttpStatusCode.TooManyRequests, retryAfter: TimeSpan.FromSeconds(1)));
-        using var tmio = CreateClient(handler);
-        tmio.MaxRateLimitRetries = 0;
-
-        await Assert.ThrowsAsync<HttpRequestException>(() => tmio.GetAdsAsync());
-
-        await Assert.That(RequestCount).IsEqualTo(1);
-    }
-
-    [Test]
-    public async Task TooManyRequests_HoldsBackOtherRequests()
-    {
-        var handler = FakeHttpMessageHandler.Sequence(
-            () => Respond(HttpStatusCode.TooManyRequests, retryAfter: TimeSpan.FromSeconds(20)),
-            () => Respond());
-        using var tmio = CreateClient(handler);
-        tmio.MaxRateLimitRetries = 0;
-
-        await Assert.ThrowsAsync<HttpRequestException>(() => tmio.GetAdsAsync());
-        var next = tmio.GetAdsAsync();
-
-        await Task.Delay(50);
-        await Assert.That(RequestCount).IsEqualTo(1);
-
-        await RunAsync(next, TimeSpan.FromMinutes(1));
-
-        await AssertWaitedAsync(requestTimes[1] - requestTimes[0], TimeSpan.FromSeconds(20));
-    }
-
-    [Test]
-    public async Task ErrorResponse_StillUpdatesLimit()
-    {
-        var handler = FakeHttpMessageHandler.Sequence(
-            () => Respond(HttpStatusCode.InternalServerError, remaining: 0, reset: 15),
-            () => Respond());
-        using var tmio = CreateClient(handler);
-
-        await Assert.ThrowsAsync<HttpRequestException>(() => tmio.GetAdsAsync());
-        await RunAsync(tmio.GetAdsAsync(), TimeSpan.FromMinutes(1));
-
-        await AssertWaitedAsync(requestTimes[1] - requestTimes[0], TimeSpan.FromSeconds(15));
-    }
-
-    [Test]
-    public async Task ParallelRequests_DoNotExceedRemaining()
-    {
-        var first = true;
-        var handler = new FakeHttpMessageHandler(_ =>
-        {
-            if (first)
-            {
-                first = false;
-                return Respond(remaining: 2, reset: 60);
-            }
-
-            return Respond();
-        });
-        using var tmio = CreateClient(handler);
-
-        await tmio.GetAdsAsync();
-        var parallel = Enumerable.Range(0, 5).Select(_ => tmio.GetAdsAsync()).ToArray();
-
-        await Task.Delay(50);
-        await Assert.That(RequestCount).IsEqualTo(3);
-
-        await RunAsync(Task.WhenAll(parallel), TimeSpan.FromMinutes(2));
-
-        await Assert.That(RequestCount).IsEqualTo(6);
-        await Assert.That(requestTimes.Skip(3)).DoesNotContain(x => x - requestTimes[0] < TimeSpan.FromSeconds(60));
-    }
-
-    [Test]
-    public async Task ParallelRequests_ServerRemainingExcludesRequestsInFlight()
-    {
-        var limiter = new RateLimiter(time);
-
-        await limiter.AcquireAsync(CancellationToken.None);
-        await limiter.AcquireAsync(CancellationToken.None);
-
-        // The first of two requests in flight comes back saying one request is left, which the second one will use.
-        limiter.Complete(Respond(remaining: 1, reset: 60));
-
-        var third = limiter.AcquireAsync(CancellationToken.None);
-
-        await Task.Delay(50);
-        await Assert.That(third.IsCompleted).IsFalse();
-
-        time.Advance(TimeSpan.FromSeconds(60));
-        await third.WaitAsync(TimeSpan.FromSeconds(5));
-    }
-
-    [Test]
-    public async Task FailedRequest_ReleasesReservation()
-    {
-        var call = 0;
-        var handler = new FakeHttpMessageHandler(_ => ++call switch
-        {
-            1 => Respond(remaining: 1, reset: 60),
-            2 => throw new HttpRequestException("Connection refused."),
-            _ => Respond()
-        });
-        using var tmio = CreateClient(handler);
-
-        await tmio.GetAdsAsync();
-        await Assert.ThrowsAsync<HttpRequestException>(() => tmio.GetAdsAsync());
-
-        // The failed request never reached the server, so the last request of the window is still available without waiting.
-        await tmio.GetAdsAsync().WaitAsync(TimeSpan.FromSeconds(5));
-
-        await Assert.That(call).IsEqualTo(3);
-    }
-
-    [Test]
-    public async Task Cancellation_WhileWaiting_Throws()
-    {
-        var handler = FakeHttpMessageHandler.Sequence(() => Respond(remaining: 0, reset: 60));
-        using var tmio = CreateClient(handler);
-        using var cts = new CancellationTokenSource();
-
-        await tmio.GetAdsAsync();
-        var waiting = tmio.GetAdsAsync(cts.Token);
-        cts.Cancel();
-
-        await Assert.ThrowsAsync<TaskCanceledException>(() => waiting);
-    }
-
-    [Test]
-    public async Task PublicConstructors_ShareOneRateLimiter()
-    {
-        using var a = new TrackmaniaIO(new HttpClient(), UserAgent);
-        using var b = new TrackmaniaIO(UserAgent);
-
-        await Assert.That(GetRateLimiter(a)).IsSameReferenceAs(RateLimiter.Shared);
-        await Assert.That(GetRateLimiter(b)).IsSameReferenceAs(RateLimiter.Shared);
-    }
-
-    private static RateLimiter? GetRateLimiter(TrackmaniaIO tmio)
-    {
-        return (RateLimiter?)typeof(TrackmaniaIO)
-            .GetField("rateLimiter", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .GetValue(tmio);
     }
 }

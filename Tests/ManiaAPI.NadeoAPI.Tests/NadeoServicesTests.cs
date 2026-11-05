@@ -3,46 +3,31 @@ namespace ManiaAPI.NadeoAPI.Tests;
 public class NadeoServicesTests
 {
     private const string BaseUrl = "https://prod.trackmania.core.nadeo.online";
+    private const string MapUid = "UidOfTheMap";
+    private const string GameMode = "TimeAttack";
 
     private static readonly Guid AccountA = Guid.Parse("4a983dc3-a938-4564-8a1c-8be20779f069");
     private static readonly Guid AccountB = Guid.Parse("5dda004f-add9-43ad-b9cd-7a90101aa8f2");
     private static readonly Guid MapA = Guid.Parse("ed53486f-a80d-419b-b073-54bb8944d502");
     private static readonly Guid MapB = Guid.Parse("e8a02ba9-f418-463d-8a83-ac5fc465ca8a");
+    private static readonly Guid MapRecordId = Guid.Parse("0b3a6c9c-4a7f-4d0e-9a35-2b1d7d3e8f11");
 
-    private static string MapRecordJson(Guid accountId, Guid mapId, int time) => $$"""
+    private static readonly string MapInfoJson = $$"""
         {
-          "accountId": "{{accountId}}",
-          "filename": "Replays/record.Replay.Gbx",
-          "gameMode": "TimeAttack",
-          "gameModeCustomData": "",
-          "mapId": "{{mapId}}",
-          "mapRecordId": "{{Guid.NewGuid()}}",
-          "medal": 3,
-          "recordScore": { "time": {{time}}, "score": 0, "respawnCount": 2 },
-          "removed": false,
-          "scopeId": null,
-          "scopeType": "PersonalBest",
-          "timestamp": "2024-05-01T12:00:00+00:00",
-          "url": "https://example.com/record.Replay.Gbx"
-        }
-        """;
-
-    private const string MapInfoJson = """
-        {
-          "author": "4a983dc3-a938-4564-8a1c-8be20779f069",
+          "author": "{{AccountA}}",
           "authorScore": 45123,
           "bronzeScore": 68000,
           "collectionName": "Stadium",
           "filename": "Test.Map.Gbx",
           "goldScore": 48000,
           "isPlayable": true,
-          "mapId": "ed53486f-a80d-419b-b073-54bb8944d502",
+          "mapId": "{{MapA}}",
           "mapStyle": "",
           "mapType": "TrackMania\\TM_Race",
-          "mapUid": "UidOfTheMap",
+          "mapUid": "{{MapUid}}",
           "name": "$sTest map",
           "silverScore": 55000,
-          "submitter": "4a983dc3-a938-4564-8a1c-8be20779f069",
+          "submitter": "{{AccountA}}",
           "timestamp": "2024-05-01T12:00:00+00:00",
           "fileUrl": "https://example.com/map.Map.Gbx",
           "thumbnailUrl": "https://example.com/map.jpg"
@@ -50,22 +35,28 @@ public class NadeoServicesTests
         """;
 
     [Test]
-    public async Task GetMapRecordsAsync_SendsOneRequestPerMapAndCombinesResults()
+    public async Task GetMapRecordsAsync_MultipleMaps_SendsOneRequestPerMap()
     {
-        var fake = new FakeHttpMessageHandler(request =>
-        {
-            var mapId = request.RequestUri!.Query.Contains(MapA.ToString()) ? MapA : MapB;
-            return FakeResponse.Json($"[{MapRecordJson(AccountA, mapId, 45000)}]");
-        });
+        var fake = new FakeHttpMessageHandler(RespondWithRecordOfRequestedMap);
         using var ns = new NadeoServices(fake.CreateClient());
 
-        var records = await ns.GetMapRecordsAsync([AccountA, AccountB], [MapA, MapB]);
+        await ns.GetMapRecordsAsync([AccountA, AccountB], [MapA, MapB]);
 
         await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo(
         [
             $"{BaseUrl}/v2/mapRecords/by-account/?accountIdList={AccountA},{AccountB}&mapId={MapA}",
             $"{BaseUrl}/v2/mapRecords/by-account/?accountIdList={AccountA},{AccountB}&mapId={MapB}"
         ]);
+    }
+
+    [Test]
+    public async Task GetMapRecordsAsync_MultipleMaps_CombinesResults()
+    {
+        var fake = new FakeHttpMessageHandler(RespondWithRecordOfRequestedMap);
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        var records = await ns.GetMapRecordsAsync([AccountA], [MapA, MapB]);
+
         await Assert.That(records.Select(x => x.MapId)).IsEquivalentTo([MapA, MapB]);
     }
 
@@ -75,18 +66,18 @@ public class NadeoServicesTests
         var fake = FakeHttpMessageHandler.Json("[]");
         using var ns = new NadeoServices(fake.CreateClient());
 
-        await ns.GetMapRecordsAsync([AccountA], MapA, seasonId: "season", gamemode: "TimeAttack");
+        await ns.GetMapRecordsAsync([AccountA], MapA, seasonId: "season", gamemode: GameMode);
 
-        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/v2/mapRecords/by-account/?accountIdList={AccountA}&mapId={MapA}&seasonId=season&gameMode=TimeAttack");
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/v2/mapRecords/by-account/?accountIdList={AccountA}&mapId={MapA}&seasonId=season&gameMode={GameMode}");
     }
 
     [Test]
-    public async Task GetMapRecordsByIdsAsync_ParsesRecord()
+    public async Task GetMapRecordsByIdsAsync_ReturnsParsedRecord()
     {
-        var fake = FakeHttpMessageHandler.Json($"[{MapRecordJson(AccountA, MapA, 45123)}]");
+        var fake = FakeHttpMessageHandler.Json($"[{MapRecordJson(AccountA, MapA, time: 45123)}]");
         using var ns = new NadeoServices(fake.CreateClient());
 
-        var records = await ns.GetMapRecordsByIdsAsync(MapA);
+        var records = await ns.GetMapRecordsByIdsAsync(MapRecordId);
 
         var record = records.Single();
         await Assert.That(record.AccountId).IsEqualTo(AccountA);
@@ -98,14 +89,24 @@ public class NadeoServicesTests
     }
 
     [Test]
-    public async Task GetMapInfoAsync_ByUid_ParsesMapInfo()
+    public async Task GetMapInfoAsync_ByUid_RequestsMapByUid()
     {
         var fake = FakeHttpMessageHandler.Json($"[{MapInfoJson}]");
         using var ns = new NadeoServices(fake.CreateClient());
 
-        var map = await ns.GetMapInfoAsync("UidOfTheMap");
+        await ns.GetMapInfoAsync(MapUid);
 
-        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/maps/by-uid/?mapUidList=UidOfTheMap");
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/maps/by-uid/?mapUidList={MapUid}");
+    }
+
+    [Test]
+    public async Task GetMapInfoAsync_ByUid_ReturnsParsedMapInfo()
+    {
+        var fake = FakeHttpMessageHandler.Json($"[{MapInfoJson}]");
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        var map = await ns.GetMapInfoAsync(MapUid);
+
         await Assert.That(map).IsNotNull();
         await Assert.That(map!.MapId).IsEqualTo(MapA);
         await Assert.That(map.AuthorScore.TotalMilliseconds).IsEqualTo(45123);
@@ -114,19 +115,29 @@ public class NadeoServicesTests
     }
 
     [Test]
-    public async Task GetMapInfoAsync_ById_ReturnsNullWhenNotFound()
+    public async Task GetMapInfoAsync_ById_RequestsMapById()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await ns.GetMapInfoAsync(MapA);
+
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/maps/by-id/?mapIdList={MapA}");
+    }
+
+    [Test]
+    public async Task GetMapInfoAsync_UnknownId_ReturnsNull()
     {
         var fake = FakeHttpMessageHandler.Json("[]");
         using var ns = new NadeoServices(fake.CreateClient());
 
         var map = await ns.GetMapInfoAsync(MapA);
 
-        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/maps/by-id/?mapIdList={MapA}");
         await Assert.That(map).IsNull();
     }
 
     [Test]
-    public async Task GetZonesAsync_ParsesZones()
+    public async Task GetZonesAsync_ReturnsZonesWithParents()
     {
         var fake = FakeHttpMessageHandler.Json("""
             [
@@ -146,12 +157,22 @@ public class NadeoServicesTests
     [Test]
     public async Task GetApiRoutesAsync_AddsUsage()
     {
+        var fake = FakeHttpMessageHandler.Json("{}");
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await ns.GetApiRoutesAsync(ApiUsage.Server);
+
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/api/routes?usage=Server");
+    }
+
+    [Test]
+    public async Task GetApiRoutesAsync_ReturnsRoutesByName()
+    {
         var fake = FakeHttpMessageHandler.Json("""{"getZones":{"method":"GET","path":"/zones"}}""");
         using var ns = new NadeoServices(fake.CreateClient());
 
         var routes = await ns.GetApiRoutesAsync(ApiUsage.Server);
 
-        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/api/routes?usage=Server");
         await Assert.That(routes["getZones"].Path).IsEqualTo("/zones");
     }
 
@@ -174,23 +195,11 @@ public class NadeoServicesTests
         var fake = new FakeHttpMessageHandler(_ => FakeResponse.Status(HttpStatusCode.OK));
         using var ns = new NadeoServices(fake.CreateClient());
 
-        await ns.AddFavoriteMapAsync("UidOfTheMap");
+        await ns.AddFavoriteMapAsync(MapUid);
 
         await Assert.That(fake.Request.Method).IsEqualTo(HttpMethod.Post);
         await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/maps/favorites");
-        await Assert.That(fake.Request.Body).IsEqualTo("""{"mapUid":"UidOfTheMap"}""");
-    }
-
-    [Test]
-    public async Task RemoveFavoriteMapAsync_SendsDelete()
-    {
-        var fake = new FakeHttpMessageHandler(_ => FakeResponse.Status(HttpStatusCode.OK));
-        using var ns = new NadeoServices(fake.CreateClient());
-
-        await ns.RemoveFavoriteMapAsync("UidOfTheMap");
-
-        await Assert.That(fake.Request.Method).IsEqualTo(HttpMethod.Delete);
-        await Assert.That(fake.Request.Body).IsEqualTo("""{"mapUid":"UidOfTheMap"}""");
+        await Assert.That(fake.Request.Body).IsEqualTo($$"""{"mapUid":"{{MapUid}}"}""");
     }
 
     [Test]
@@ -200,7 +209,20 @@ public class NadeoServicesTests
         using var ns = new NadeoServices(fake.CreateClient());
 
         await Assert.ThrowsAsync<ArgumentException>(() => ns.AddFavoriteMapAsync(""));
+
         await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
+    public async Task RemoveFavoriteMapAsync_SendsDeleteWithMapUid()
+    {
+        var fake = new FakeHttpMessageHandler(_ => FakeResponse.Status(HttpStatusCode.OK));
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await ns.RemoveFavoriteMapAsync(MapUid);
+
+        await Assert.That(fake.Request.Method).IsEqualTo(HttpMethod.Delete);
+        await Assert.That(fake.Request.Body).IsEqualTo($$"""{"mapUid":"{{MapUid}}"}""");
     }
 
     [Test]
@@ -209,9 +231,20 @@ public class NadeoServicesTests
         var fake = FakeHttpMessageHandler.Json("[]");
         using var ns = new NadeoServices(fake.CreateClient());
 
-        await ns.GetAccountRecordsByMapIdsAsync(AccountA, [MapA], "TimeAttack", offset: 50);
+        await ns.GetAccountRecordsByMapIdsAsync(AccountA, [MapA], GameMode, offset: 50);
 
-        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/v2/accounts/{AccountA}/mapRecords/?mapIdList={MapA}&gameMode=TimeAttack&offset=50");
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/v2/accounts/{AccountA}/mapRecords/?mapIdList={MapA}&gameMode={GameMode}&offset=50");
+    }
+
+    [Test]
+    public async Task GetAccountRecordsByMapIdsAsync_WithoutOffset_OmitsOffset()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await ns.GetAccountRecordsByMapIdsAsync(AccountA, [MapA], GameMode);
+
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/v2/accounts/{AccountA}/mapRecords/?mapIdList={MapA}&gameMode={GameMode}");
     }
 
     [Test]
@@ -225,14 +258,30 @@ public class NadeoServicesTests
         await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/v2/accounts/{AccountA}/mapRecords/?seasonIdList={MapB}&offset=1000");
     }
 
-    [Test]
-    public async Task GetAccountRecordsByMapIdsAsync_WithoutOffset_OmitsOffset()
+    private static string MapRecordJson(Guid accountId, Guid mapId, int time) => $$"""
+        {
+          "accountId": "{{accountId}}",
+          "filename": "Replays/record.Replay.Gbx",
+          "gameMode": "{{GameMode}}",
+          "gameModeCustomData": "",
+          "mapId": "{{mapId}}",
+          "mapRecordId": "{{MapRecordId}}",
+          "medal": 3,
+          "recordScore": { "time": {{time}}, "score": 0, "respawnCount": 2 },
+          "removed": false,
+          "scopeId": null,
+          "scopeType": "PersonalBest",
+          "timestamp": "2024-05-01T12:00:00+00:00",
+          "url": "https://example.com/record.Replay.Gbx"
+        }
+        """;
+
+    /// <summary>
+    /// Answers a by-account records request with one record on the map it asked for.
+    /// </summary>
+    private static HttpResponseMessage RespondWithRecordOfRequestedMap(HttpRequestMessage request)
     {
-        var fake = FakeHttpMessageHandler.Json("[]");
-        using var ns = new NadeoServices(fake.CreateClient());
-
-        await ns.GetAccountRecordsByMapIdsAsync(AccountA, [MapA], "TimeAttack");
-
-        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/v2/accounts/{AccountA}/mapRecords/?mapIdList={MapA}&gameMode=TimeAttack");
+        var mapId = request.RequestUri!.Query.Contains(MapA.ToString()) ? MapA : MapB;
+        return FakeResponse.Json($"[{MapRecordJson(AccountA, mapId, time: 45000)}]");
     }
 }

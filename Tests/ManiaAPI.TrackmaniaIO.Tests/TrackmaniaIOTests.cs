@@ -64,14 +64,24 @@ public class TrackmaniaIOTests
     }
 
     [Test]
-    public async Task GetSeasonalCampaignsAsync_RequestsPageAndParsesCampaigns()
+    public async Task GetSeasonalCampaignsAsync_RequestsPage()
     {
         var handler = FakeHttpMessageHandler.Json(CampaignsJson);
         using var tmio = new TrackmaniaIO(handler.CreateClient(), UserAgent);
 
-        var result = await tmio.GetSeasonalCampaignsAsync(page: 2);
+        await tmio.GetSeasonalCampaignsAsync(page: 2);
 
         await Assert.That(handler.Request.Url).IsEqualTo("https://trackmania.io/api/campaigns/seasonal/2");
+    }
+
+    [Test]
+    public async Task GetSeasonalCampaignsAsync_ReturnsParsedCampaigns()
+    {
+        var handler = FakeHttpMessageHandler.Json(CampaignsJson);
+        using var tmio = new TrackmaniaIO(handler.CreateClient(), UserAgent);
+
+        var result = await tmio.GetSeasonalCampaignsAsync();
+
         await Assert.That(result.PageCount).IsEqualTo(4);
         await Assert.That(result.Campaigns).Count().IsEqualTo(1);
 
@@ -123,6 +133,7 @@ public class TrackmaniaIOTests
         using var tmio = new TrackmaniaIO(handler.CreateClient(), UserAgent);
 
         await Assert.ThrowsAsync<ArgumentException>(() => tmio.GetLeaderboardAsync(""));
+
         await Assert.That(handler.Requests).IsEmpty();
     }
 
@@ -133,37 +144,5 @@ public class TrackmaniaIOTests
         using var tmio = new TrackmaniaIO(handler.CreateClient(), UserAgent);
 
         await Assert.ThrowsAsync<HttpRequestException>(() => tmio.GetSeasonalCampaignsAsync());
-    }
-
-    [Test]
-    public async Task GetHeaderNumberValue_NumericHeader_ReturnsValue()
-    {
-        using var response = new HttpResponseMessage();
-        response.Headers.Add("X-Ratelimit-Remaining", "123");
-
-        var value = RateLimiter.GetHeaderNumberValue("X-Ratelimit-Remaining", response);
-
-        await Assert.That(value).IsEqualTo(123);
-    }
-
-    [Test]
-    public async Task GetHeaderNumberValue_MissingHeader_ReturnsNull()
-    {
-        using var response = new HttpResponseMessage();
-
-        var value = RateLimiter.GetHeaderNumberValue("X-Ratelimit-Remaining", response);
-
-        await Assert.That(value).IsNull();
-    }
-
-    [Test]
-    public async Task GetHeaderNumberValue_NonNumericHeader_ReturnsNull()
-    {
-        using var response = new HttpResponseMessage();
-        response.Headers.Add("X-Ratelimit-Remaining", "value");
-
-        var value = RateLimiter.GetHeaderNumberValue("X-Ratelimit-Remaining", response);
-
-        await Assert.That(value).IsNull();
     }
 }

@@ -2,8 +2,10 @@ namespace ManiaAPI.NadeoAPI.Tests;
 
 public class NadeoAPIErrorTests
 {
+    private static readonly Guid SkinId = Guid.Parse("8d1f5c2a-3b4e-4f60-9a7b-1c2d3e4f5a6b");
+
     [Test]
-    public async Task ErrorResponse_ThrowsWithMessageFromBody()
+    public async Task GetZonesAsync_ErrorResponse_ThrowsWithErrorDetails()
     {
         var fake = FakeHttpMessageHandler.Json("""
             {
@@ -25,14 +27,9 @@ public class NadeoAPIErrorTests
     }
 
     [Test]
-    public async Task ErrorResponseWithoutJson_ThrowsWithReasonPhrase()
+    public async Task GetZonesAsync_ErrorWithoutJson_ThrowsWithReasonPhrase()
     {
-        var fake = new FakeHttpMessageHandler(_ =>
-        {
-            var response = FakeResponse.Text("<html>Bad gateway</html>", "text/html", HttpStatusCode.BadGateway);
-            response.ReasonPhrase = "Bad Gateway";
-            return response;
-        });
+        var fake = new FakeHttpMessageHandler(_ => BadGatewayHtml());
         using var ns = new NadeoServices(fake.CreateClient());
 
         var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetZonesAsync());
@@ -43,7 +40,7 @@ public class NadeoAPIErrorTests
     }
 
     [Test]
-    public async Task NetworkFailure_IsWrappedInResponseException()
+    public async Task GetZonesAsync_NetworkFailure_ThrowsResponseException()
     {
         var fake = new FakeHttpMessageHandler(_ => throw new HttpRequestException("Connection refused"));
         using var ns = new NadeoServices(fake.CreateClient());
@@ -59,7 +56,7 @@ public class NadeoAPIErrorTests
         var fake = FakeHttpMessageHandler.Json("""{"code":"","correlation_id":"","message":"Not found","info":{}}""", HttpStatusCode.NotFound);
         using var ns = new NadeoServices(fake.CreateClient());
 
-        var skin = await ns.GetSkinInfoAsync(Guid.NewGuid());
+        var skin = await ns.GetSkinInfoAsync(SkinId);
 
         await Assert.That(skin).IsNull();
     }
@@ -70,6 +67,13 @@ public class NadeoAPIErrorTests
         var fake = FakeHttpMessageHandler.Json("""{"code":"","correlation_id":"","message":"Forbidden","info":{}}""", HttpStatusCode.Forbidden);
         using var ns = new NadeoServices(fake.CreateClient());
 
-        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetSkinInfoAsync(Guid.NewGuid()));
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetSkinInfoAsync(SkinId));
+    }
+
+    private static HttpResponseMessage BadGatewayHtml()
+    {
+        var response = FakeResponse.Text("<html>Bad gateway</html>", "text/html", HttpStatusCode.BadGateway);
+        response.ReasonPhrase = "Bad Gateway";
+        return response;
     }
 }

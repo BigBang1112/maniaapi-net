@@ -6,16 +6,8 @@ public class GenerateXmlPayloadTests
 {
     private enum Mode { Script = 0, Rounds = 1, TimeAttack = 2 }
 
-    private static string Value(object value)
-    {
-        var xml = GBXRemoteClient.GenerateXmlPayload("Method", [value]);
-        const string prefix = """<?xml version="1.0"?><methodCall><methodName>Method</methodName><params><param>""";
-        const string suffix = "</param></params></methodCall>";
-        return xml[prefix.Length..^suffix.Length];
-    }
-
     [Test]
-    public async Task NoParameters_ProducesEmptyParams()
+    public async Task GenerateXmlPayload_NoParameters_ProducesEmptyParams()
     {
         var xml = GBXRemoteClient.GenerateXmlPayload("GetVersion", []);
 
@@ -23,7 +15,7 @@ public class GenerateXmlPayloadTests
     }
 
     [Test]
-    public async Task MethodName_IsEscaped()
+    public async Task GenerateXmlPayload_SpecialCharactersInMethodName_EscapesThem()
     {
         var xml = GBXRemoteClient.GenerateXmlPayload("A<B>", []);
 
@@ -32,9 +24,11 @@ public class GenerateXmlPayloadTests
 
     [Test]
     [MethodDataSource(nameof(ScalarCases))]
-    public async Task Scalars_UseXmlRpcTypes(object value, string expectedXml)
+    public async Task GenerateXmlPayload_Scalar_UsesXmlRpcType(object value, string expectedXml)
     {
-        await Assert.That(Value(value)).IsEqualTo(expectedXml);
+        var xml = ValueXml(value);
+
+        await Assert.That(xml).IsEqualTo(expectedXml);
     }
 
     public static IEnumerable<Func<(object, string)>> ScalarCases()
@@ -52,34 +46,57 @@ public class GenerateXmlPayloadTests
     }
 
     [Test]
-    public async Task Double_IgnoresCurrentCulture()
+    public async Task GenerateXmlPayload_DoubleInCommaDecimalCulture_UsesInvariantCulture()
+    {
+        var xml = WithCulture("cs-CZ", () => ValueXml(0.5));
+
+        await Assert.That(xml).IsEqualTo("<value><double>0.5</double></value>");
+    }
+
+    [Test]
+    public async Task GenerateXmlPayload_Dictionary_ProducesStruct()
+    {
+        var value = new Dictionary<string, object> { ["Name"] = "a&b", ["Count"] = 1 };
+
+        var xml = ValueXml(value);
+
+        await Assert.That(xml).IsEqualTo(
+            "<value><struct><member><name>Name</name><value>a&amp;b</value></member><member><name>Count</name><value><int>1</int></value></member></struct></value>");
+    }
+
+    [Test]
+    public async Task GenerateXmlPayload_Enumerable_ProducesArray()
+    {
+        var xml = ValueXml(new object[] { 1, "x", true });
+
+        await Assert.That(xml).IsEqualTo(
+            "<value><array><data><value><int>1</int></value><value>x</value><value><boolean>1</boolean></value></data></array></value>");
+    }
+
+    /// <summary>
+    /// Generates a payload with one parameter and returns only the XML of that parameter.
+    /// </summary>
+    private static string ValueXml(object value)
+    {
+        const string prefix = """<?xml version="1.0"?><methodCall><methodName>Method</methodName><params><param>""";
+        const string suffix = "</param></params></methodCall>";
+
+        var xml = GBXRemoteClient.GenerateXmlPayload("Method", [value]);
+        return xml[prefix.Length..^suffix.Length];
+    }
+
+    private static T WithCulture<T>(string cultureName, Func<T> action)
     {
         var culture = CultureInfo.CurrentCulture;
-        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("cs-CZ");
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
 
         try
         {
-            await Assert.That(Value(0.5)).IsEqualTo("<value><double>0.5</double></value>");
+            return action();
         }
         finally
         {
             CultureInfo.CurrentCulture = culture;
         }
-    }
-
-    [Test]
-    public async Task Dictionary_BecomesStruct()
-    {
-        var value = new Dictionary<string, object> { ["Name"] = "a&b", ["Count"] = 1 };
-
-        await Assert.That(Value(value)).IsEqualTo(
-            "<value><struct><member><name>Name</name><value>a&amp;b</value></member><member><name>Count</name><value><int>1</int></value></member></struct></value>");
-    }
-
-    [Test]
-    public async Task Enumerable_BecomesArray()
-    {
-        await Assert.That(Value(new object[] { 1, "x", true })).IsEqualTo(
-            "<value><array><data><value><int>1</int></value><value>x</value><value><boolean>1</boolean></value></data></array></value>");
     }
 }

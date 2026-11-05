@@ -3,60 +3,92 @@ namespace ManiaAPI.ManiaPlanetAPI.Tests;
 public class ManiaPlanetAPITests
 {
     private const string BaseUrl = "https://maniaplanet.com/webservices";
+    private const string ClientId = "client-id";
+    private const string ClientSecret = "client-secret";
+    private const string TitleUid = "Nadeo_Envimix@bigbang1112";
+    private const string ZonesJson = """[{"path":"World"},{"path":"World|Europe"}]""";
 
-    private static HttpResponseMessage TokenResponse(DateTimeOffset expiresAt)
-    {
-        var accessToken = TestJwt.Create($$"""
-            {
-              "jti": "token-id",
-              "aud": "client-id",
-              "iat": {{expiresAt.AddHours(-1).ToUnixTimeSeconds()}},
-              "nbf": {{expiresAt.AddHours(-1).ToUnixTimeSeconds()}},
-              "exp": {{expiresAt.ToUnixTimeSeconds()}},
-              "sub": "client-id",
-              "scopes": ["basic", "titles"]
-            }
-            """);
+    private static readonly DateTimeOffset ExpiresAt = DateTimeOffset.FromUnixTimeSeconds(1_900_000_000);
 
-        return FakeResponse.Json($$"""{"token_type":"Bearer","expires_in":3600,"access_token":"{{accessToken}}","refresh_token":"refresh"}""");
-    }
-
-    private static ManiaPlanetAPI CreateApi(FakeHttpMessageHandler fake) => new(fake.CreateClient(), new ManiaPlanetAPIHandler());
+    private static readonly string TitleJson = $$"""
+        {
+          "uid": "{{TitleUid}}",
+          "cost": 0,
+          "name": "Nadeo Envimix",
+          "description": "Description",
+          "punchline": "Punchline",
+          "card_url": "https://example.com/card.png",
+          "download_url": "https://example.com/title.pack.gbx",
+          "background_url": "https://example.com/background.png",
+          "logo_url": "https://example.com/logo.png",
+          "title_maker_uid": "TMStadium@nadeo",
+          "public": true
+        }
+        """;
 
     [Test]
     public async Task AuthorizeAsync_PostsClientCredentialsToManiaPlanetLogin()
     {
-        var expiresAt = DateTimeOffset.FromUnixTimeSeconds(1_900_000_000);
-        var fake = FakeHttpMessageHandler.Sequence(() => TokenResponse(expiresAt));
+        var fake = FakeHttpMessageHandler.Sequence(() => TokenResponse(ExpiresAt));
         using var api = CreateApi(fake);
 
-        await api.AuthorizeAsync("client-id", "client-secret", ["basic"]);
+        await api.AuthorizeAsync(ClientId, ClientSecret, ["basic"]);
 
         await Assert.That(fake.Request.Url).IsEqualTo("https://prod.live.maniaplanet.com/login/oauth2/access_token");
-        await Assert.That(fake.Request.Body).IsEqualTo("grant_type=client_credentials&client_id=client-id&client_secret=client-secret&scope=basic");
-        await Assert.That(api.ExpirationTime).IsEqualTo(expiresAt);
+        await Assert.That(fake.Request.Body).IsEqualTo($"grant_type=client_credentials&client_id={ClientId}&client_secret={ClientSecret}&scope=basic");
+    }
+
+    [Test]
+    public async Task AuthorizeAsync_ValidToken_StoresExpirationAndScopes()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(() => TokenResponse(ExpiresAt));
+        using var api = CreateApi(fake);
+
+        await api.AuthorizeAsync(ClientId, ClientSecret, ["basic"]);
+
+        await Assert.That(api.ExpirationTime).IsEqualTo(ExpiresAt);
         await Assert.That(api.Handler.Credentials!.Scopes).IsEquivalentTo(["basic"]);
     }
 
     [Test]
-    public async Task Requests_AfterAuthorization_UseBearerToken()
+    public async Task GetZonesAsync_AfterAuthorization_SendsBearerToken()
     {
         var fake = FakeHttpMessageHandler.Sequence(
             () => TokenResponse(DateTimeOffset.UtcNow.AddHours(1)),
-            () => FakeResponse.Json("""[{"path":"World"},{"path":"World|Europe"}]"""));
+            () => FakeResponse.Json(ZonesJson));
         using var api = CreateApi(fake);
-        await api.AuthorizeAsync("client-id", "client-secret");
+        await api.AuthorizeAsync(ClientId, ClientSecret);
+
+        await api.GetZonesAsync();
+
+        await Assert.That(fake.Requests[1].Authorization?.Scheme).IsEqualTo("Bearer");
+    }
+
+    [Test]
+    public async Task GetZonesAsync_RequestsZones()
+    {
+        var fake = FakeHttpMessageHandler.Json(ZonesJson);
+        using var api = CreateApi(fake);
+
+        await api.GetZonesAsync();
+
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/zones");
+    }
+
+    [Test]
+    public async Task GetZonesAsync_ReturnsZonePaths()
+    {
+        var fake = FakeHttpMessageHandler.Json(ZonesJson);
+        using var api = CreateApi(fake);
 
         var zones = await api.GetZonesAsync();
 
-        await Assert.That(fake.Requests[1].Url).IsEqualTo($"{BaseUrl}/zones");
-        await Assert.That(fake.Requests[1].Authorization?.Scheme).IsEqualTo("Bearer");
         await Assert.That(zones).IsEquivalentTo(["World", "World|Europe"]);
     }
 
     [Test]
     [MethodDataSource(nameof(SearchTitlesCases))]
-    public async Task SearchTitlesAsync_BuildsQuery(string[]? filters, string? orderBy, int offset, int length, string expectedUrl)
+    public async Task SearchTitlesAsync_AddsOnlyNonDefaultParameters(string[]? filters, string? orderBy, int offset, int length, string expectedUrl)
     {
         var fake = FakeHttpMessageHandler.Json("[]");
         using var api = CreateApi(fake);
@@ -75,7 +107,7 @@ public class ManiaPlanetAPITests
     }
 
     [Test]
-    public async Task SearchOnlineServersAsync_DefaultsSendNoQuery()
+    public async Task SearchOnlineServersAsync_Defaults_SendsNoQuery()
     {
         var fake = FakeHttpMessageHandler.Json("[]");
         using var api = CreateApi(fake);
@@ -86,7 +118,7 @@ public class ManiaPlanetAPITests
     }
 
     [Test]
-    public async Task SearchOnlineServersAsync_AddsEveryNonDefaultParameter()
+    public async Task SearchOnlineServersAsync_EveryParameterSet_AddsEveryParameter()
     {
         var fake = FakeHttpMessageHandler.Json("[]");
         using var api = CreateApi(fake);
@@ -112,28 +144,24 @@ public class ManiaPlanetAPITests
     }
 
     [Test]
-    public async Task GetTitleByUidAsync_ParsesTitle()
+    public async Task GetTitleByUidAsync_RequestsTitle()
     {
-        var fake = FakeHttpMessageHandler.Json("""
-            {
-              "uid": "Nadeo_Envimix@bigbang1112",
-              "cost": 0,
-              "name": "Nadeo Envimix",
-              "description": "Description",
-              "punchline": "Punchline",
-              "card_url": "https://example.com/card.png",
-              "download_url": "https://example.com/title.pack.gbx",
-              "background_url": "https://example.com/background.png",
-              "logo_url": "https://example.com/logo.png",
-              "title_maker_uid": "TMStadium@nadeo",
-              "public": true
-            }
-            """);
+        var fake = FakeHttpMessageHandler.Json(TitleJson);
         using var api = CreateApi(fake);
 
-        var title = await api.GetTitleByUidAsync("Nadeo_Envimix@bigbang1112");
+        await api.GetTitleByUidAsync(TitleUid);
 
-        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/titles/Nadeo_Envimix@bigbang1112");
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/titles/{TitleUid}");
+    }
+
+    [Test]
+    public async Task GetTitleByUidAsync_ReturnsParsedTitle()
+    {
+        var fake = FakeHttpMessageHandler.Json(TitleJson);
+        using var api = CreateApi(fake);
+
+        var title = await api.GetTitleByUidAsync(TitleUid);
+
         await Assert.That(title?.Name).IsEqualTo("Nadeo Envimix");
         await Assert.That(title?.TitleMakerUid).IsEqualTo("TMStadium@nadeo");
         await Assert.That(title?.Public).IsTrue();
@@ -151,7 +179,7 @@ public class ManiaPlanetAPITests
     }
 
     [Test]
-    public async Task Forbidden_ThrowsWithoutReadingBody()
+    public async Task GetPlayerAsync_ForbiddenHtml_ThrowsWithoutResponse()
     {
         var fake = FakeHttpMessageHandler.Text("<html>Forbidden</html>", "text/html", HttpStatusCode.Forbidden);
         using var api = CreateApi(fake);
@@ -163,7 +191,7 @@ public class ManiaPlanetAPITests
     }
 
     [Test]
-    public async Task ErrorResponse_ThrowsWithMessageFromBody()
+    public async Task GetPlayerAsync_ErrorResponse_ThrowsWithMessageFromBody()
     {
         var fake = FakeHttpMessageHandler.Json("""{"error":"invalid_request","message":"Missing scope","error_description":"The basic scope is required"}""", HttpStatusCode.BadRequest);
         using var api = CreateApi(fake);
@@ -175,6 +203,17 @@ public class ManiaPlanetAPITests
     }
 
     [Test]
+    public async Task GetEmailAsync_RequestsEmail()
+    {
+        var fake = FakeHttpMessageHandler.Text("player@example.com");
+        using var api = CreateApi(fake);
+
+        await api.GetEmailAsync();
+
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/me/email");
+    }
+
+    [Test]
     public async Task GetEmailAsync_ReturnsRawBody()
     {
         var fake = FakeHttpMessageHandler.Text("player@example.com");
@@ -182,7 +221,25 @@ public class ManiaPlanetAPITests
 
         var email = await api.GetEmailAsync();
 
-        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/me/email");
         await Assert.That(email).IsEqualTo("player@example.com");
+    }
+
+    private static ManiaPlanetAPI CreateApi(FakeHttpMessageHandler fake) => new(fake.CreateClient(), new ManiaPlanetAPIHandler());
+
+    private static HttpResponseMessage TokenResponse(DateTimeOffset expiresAt)
+    {
+        var accessToken = TestJwt.Create($$"""
+            {
+              "jti": "token-id",
+              "aud": "{{ClientId}}",
+              "iat": {{expiresAt.AddHours(-1).ToUnixTimeSeconds()}},
+              "nbf": {{expiresAt.AddHours(-1).ToUnixTimeSeconds()}},
+              "exp": {{expiresAt.ToUnixTimeSeconds()}},
+              "sub": "{{ClientId}}",
+              "scopes": ["basic", "titles"]
+            }
+            """);
+
+        return FakeResponse.Json($$"""{"token_type":"Bearer","expires_in":3600,"access_token":"{{accessToken}}","refresh_token":"refresh"}""");
     }
 }

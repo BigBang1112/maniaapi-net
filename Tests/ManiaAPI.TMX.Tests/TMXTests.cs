@@ -2,12 +2,15 @@ namespace ManiaAPI.TMX.Tests;
 
 public class TMXTests
 {
-    private const string TracksJson = """
+    private const string SiteUrl = "https://tmnf.exchange";
+    private const int TrackId = 2233;
+
+    private static readonly string TracksJson = $$"""
         {
           "More": true,
           "Results": [
             {
-              "TrackId": 2233,
+              "TrackId": {{TrackId}},
               "TrackName": "A01-Race",
               "UId": "TrackUid",
               "AuthorTime": 23450,
@@ -28,38 +31,98 @@ public class TMXTests
     [Arguments(TmxSite.Nations, "https://nations.tm-exchange.com/")]
     [Arguments(TmxSite.Sunrise, "https://sunrise.tm-exchange.com/")]
     [Arguments(TmxSite.Original, "https://original.tm-exchange.com/")]
-    public async Task Constructor_SetsBaseAddressForSite(TmxSite site, string expectedBaseAddress)
+    public async Task Constructor_Site_SetsBaseAddressOfSite(TmxSite site, string expectedBaseAddress)
     {
         using var tmx = new TMX(new HttpClient(), site);
 
-        await Assert.That(tmx.Client.BaseAddress?.ToString()).IsEqualTo(expectedBaseAddress);
-        await Assert.That(tmx.SiteName).IsEqualTo(site.ToString());
+        var baseAddress = tmx.Client.BaseAddress?.ToString();
+
+        await Assert.That(baseAddress).IsEqualTo(expectedBaseAddress);
     }
 
     [Test]
-    public async Task UrlHelpers_UseSiteAddress()
+    [Arguments(TmxSite.TMUF)]
+    [Arguments(TmxSite.Original)]
+    public async Task Constructor_Site_SetsSiteName(TmxSite site)
     {
-        using var tmx = new TMX(new HttpClient(), TmxSite.TMNF);
+        using var tmx = new TMX(new HttpClient(), site);
 
-        await Assert.That(tmx.GetTrackGbxUrl(2233)).IsEqualTo("https://tmnf.exchange/trackgbx/2233");
-        await Assert.That(tmx.GetReplayGbxUrl(99)).IsEqualTo("https://tmnf.exchange/recordgbx/99");
-        await Assert.That(tmx.GetTrackThumbnailUrl(2233)).IsEqualTo("https://tmnf.exchange/trackshow/2233/image/0");
-        await Assert.That(tmx.GetTrackImageUrl(2233, 2)).IsEqualTo("https://tmnf.exchange/trackshow/2233/image/2");
-        await Assert.That(tmx.GetTrackRandomUrl()).IsEqualTo("https://tmnf.exchange/trackrandom");
-        await Assert.That(tmx.GetTrackpackRandomUrl()).IsEqualTo("https://tmnf.exchange/trackpackrandom");
+        var siteName = tmx.SiteName;
+
+        await Assert.That(siteName).IsEqualTo(site.ToString());
     }
 
     [Test]
-    public async Task SearchTracksAsync_ParsesResults()
+    public async Task GetTrackGbxUrl_ReturnsSiteUrl()
+    {
+        using var tmx = CreateTmx();
+
+        var url = tmx.GetTrackGbxUrl(TrackId);
+
+        await Assert.That(url).IsEqualTo($"{SiteUrl}/trackgbx/{TrackId}");
+    }
+
+    [Test]
+    public async Task GetReplayGbxUrl_ReturnsSiteUrl()
+    {
+        using var tmx = CreateTmx();
+
+        var url = tmx.GetReplayGbxUrl(99);
+
+        await Assert.That(url).IsEqualTo($"{SiteUrl}/recordgbx/99");
+    }
+
+    [Test]
+    public async Task GetTrackThumbnailUrl_ReturnsFirstImage()
+    {
+        using var tmx = CreateTmx();
+
+        var url = tmx.GetTrackThumbnailUrl(TrackId);
+
+        await Assert.That(url).IsEqualTo($"{SiteUrl}/trackshow/{TrackId}/image/0");
+    }
+
+    [Test]
+    public async Task GetTrackImageUrl_ReturnsImageAtIndex()
+    {
+        using var tmx = CreateTmx();
+
+        var url = tmx.GetTrackImageUrl(TrackId, 2);
+
+        await Assert.That(url).IsEqualTo($"{SiteUrl}/trackshow/{TrackId}/image/2");
+    }
+
+    [Test]
+    public async Task GetTrackRandomUrl_ReturnsSiteUrl()
+    {
+        using var tmx = CreateTmx();
+
+        var url = tmx.GetTrackRandomUrl();
+
+        await Assert.That(url).IsEqualTo($"{SiteUrl}/trackrandom");
+    }
+
+    [Test]
+    public async Task GetTrackpackRandomUrl_ReturnsSiteUrl()
+    {
+        using var tmx = CreateTmx();
+
+        var url = tmx.GetTrackpackRandomUrl();
+
+        await Assert.That(url).IsEqualTo($"{SiteUrl}/trackpackrandom");
+    }
+
+    [Test]
+    public async Task SearchTracksAsync_ReturnsParsedTracks()
     {
         var fake = FakeHttpMessageHandler.Json(TracksJson);
-        using var tmx = new TMX(fake.CreateClient(), TmxSite.TMNF);
+        using var tmx = CreateTmx(fake);
 
         var tracks = await tmx.SearchTracksAsync(new TMX.SearchTracksParameters());
 
-        await Assert.That(tracks.HasMoreItems).IsTrue();
         var track = tracks.Results.Single();
-        await Assert.That(track.TrackId).IsEqualTo(2233);
+        await Assert.That(tracks.HasMoreItems).IsTrue();
+        await Assert.That(track.TrackId).IsEqualTo(TrackId);
         await Assert.That(track.UId).IsEqualTo("TrackUid");
         await Assert.That(track.AuthorTime?.TotalMilliseconds).IsEqualTo(23450);
         await Assert.That(track.Uploader.Name).IsEqualTo("Nadeo");
@@ -67,10 +130,10 @@ public class TMXTests
     }
 
     [Test]
-    public async Task SearchTracksAsync_BuildsQueryWithEncodedValues()
+    public async Task SearchTracksAsync_WithParameters_AddsEncodedQuery()
     {
         var fake = FakeHttpMessageHandler.Json(TracksJson);
-        using var tmx = new TMX(fake.CreateClient(), TmxSite.TMNF);
+        using var tmx = CreateTmx(fake);
 
         await tmx.SearchTracksAsync(new TMX.SearchTracksParameters
         {
@@ -81,56 +144,69 @@ public class TMXTests
             Fields = new TrackItemFields { TrackId = true, TrackName = true }
         });
 
-        await Assert.That(fake.Request.Url).IsEqualTo("https://tmnf.exchange/api/tracks?count=5&id=1%2C2&name=A01+%26+co&custom=a+b&fields=TrackId%2CTrackName");
-    }
-
-    [Test]
-    public async Task GetReplaysAsync_DefaultParametersRequestAllFields()
-    {
-        var fake = FakeHttpMessageHandler.Json("""{"More":false,"Results":[]}""");
-        using var tmx = new TMX(fake.CreateClient(), TmxSite.TMUF);
-
-        var replays = await tmx.GetReplaysAsync(new TMX.GetReplaysParameters { TrackId = 754327, Best = true });
-
-        await Assert.That(fake.Request.Url).StartsWith("https://tmuf.exchange/api/replays?trackid=754327&best=1&fields=ReplayId%2CReplayTime%2C");
-        await Assert.That(fake.Request.Url).EndsWith("%2CUser.UserId%2CUser.Name");
-        await Assert.That(replays.Results).IsEmpty();
+        await Assert.That(fake.Request.Url).IsEqualTo($"{SiteUrl}/api/tracks?count=5&id=1%2C2&name=A01+%26+co&custom=a+b&fields=TrackId%2CTrackName");
     }
 
     [Test]
     public async Task SearchTracksAsync_ErrorStatus_Throws()
     {
         var fake = FakeHttpMessageHandler.Json("{}", HttpStatusCode.InternalServerError);
-        using var tmx = new TMX(fake.CreateClient(), TmxSite.TMNF);
+        using var tmx = CreateTmx(fake);
 
         await Assert.ThrowsAsync<HttpRequestException>(() => tmx.SearchTracksAsync(new TMX.SearchTracksParameters()));
     }
 
     [Test]
-    public async Task GetRandomTrackAsync_FollowsRedirectAndLoadsTrack()
+    public async Task GetReplaysAsync_WithoutFields_RequestsAllFields()
     {
-        var fake = new FakeHttpMessageHandler(request => request.Method == HttpMethod.Head
-            ? new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                // HttpClient reports the final URL after following the redirect.
-                RequestMessage = new HttpRequestMessage(HttpMethod.Get, "https://tmnf.exchange/trackshow/2233")
-            }
-            : FakeResponse.Json(TracksJson));
-        using var tmx = new TMX(fake.CreateClient(), TmxSite.TMNF);
+        var fake = FakeHttpMessageHandler.Json("""{"More":false,"Results":[]}""");
+        using var tmx = new TMX(fake.CreateClient(), TmxSite.TMUF);
 
-        var track = await tmx.GetRandomTrackAsync(new TMX.SearchTracksParameters { Name = "A01" });
+        await tmx.GetReplaysAsync(new TMX.GetReplaysParameters { TrackId = 754327, Best = true });
+
+        await Assert.That(fake.Request.Url).StartsWith("https://tmuf.exchange/api/replays?trackid=754327&best=1&fields=ReplayId%2CReplayTime%2C");
+        await Assert.That(fake.Request.Url).EndsWith("%2CUser.UserId%2CUser.Name");
+    }
+
+    [Test]
+    public async Task GetRandomTrackAsync_SendsHeadToRandomTrack()
+    {
+        var fake = new FakeHttpMessageHandler(RespondToRandomTrack);
+        using var tmx = CreateTmx(fake);
+
+        await tmx.GetRandomTrackAsync(new TMX.SearchTracksParameters { Name = "A01" });
 
         await Assert.That(fake.Requests[0].Method).IsEqualTo(HttpMethod.Head);
-        await Assert.That(fake.Requests[0].Url).IsEqualTo("https://tmnf.exchange/trackrandom?name=A01");
-        await Assert.That(fake.Requests[1].Url).StartsWith("https://tmnf.exchange/api/tracks?count=1&id=2233&fields=");
-        await Assert.That(track?.TrackId).IsEqualTo(2233);
+        await Assert.That(fake.Requests[0].Url).IsEqualTo($"{SiteUrl}/trackrandom?name=A01");
+    }
+
+    [Test]
+    public async Task GetRandomTrackAsync_RequestsTrackFromFinalUrl()
+    {
+        var fake = new FakeHttpMessageHandler(RespondToRandomTrack);
+        using var tmx = CreateTmx(fake);
+
+        await tmx.GetRandomTrackAsync(new TMX.SearchTracksParameters());
+
+        await Assert.That(fake.Requests[1].Url).StartsWith($"{SiteUrl}/api/tracks?count=1&id={TrackId}&fields=");
+    }
+
+    [Test]
+    public async Task GetRandomTrackAsync_ReturnsTrack()
+    {
+        var fake = new FakeHttpMessageHandler(RespondToRandomTrack);
+        using var tmx = CreateTmx(fake);
+
+        var track = await tmx.GetRandomTrackAsync(new TMX.SearchTracksParameters());
+
+        await Assert.That(track?.TrackId).IsEqualTo(TrackId);
     }
 
     [Test]
     public async Task GetRandomTrackIdAsync_NotFound_ReturnsNull()
     {
         var fake = new FakeHttpMessageHandler(_ => FakeResponse.Status(HttpStatusCode.NotFound));
-        using var tmx = new TMX(fake.CreateClient(), TmxSite.TMNF);
+        using var tmx = CreateTmx(fake);
 
         var trackId = await tmx.GetRandomTrackIdAsync(new TMX.SearchTracksParameters());
 
@@ -141,10 +217,31 @@ public class TMXTests
     public async Task GetRandomTrackIdAsync_NoTrackIdInFinalUrl_ReturnsNull()
     {
         var fake = new FakeHttpMessageHandler(_ => FakeResponse.Status(HttpStatusCode.OK));
-        using var tmx = new TMX(fake.CreateClient(), TmxSite.TMNF);
+        using var tmx = CreateTmx(fake);
 
         var trackId = await tmx.GetRandomTrackIdAsync(new TMX.SearchTracksParameters());
 
         await Assert.That(trackId).IsNull();
+    }
+
+    private static TMX CreateTmx() => new(new HttpClient(), TmxSite.TMNF);
+
+    private static TMX CreateTmx(FakeHttpMessageHandler fake) => new(fake.CreateClient(), TmxSite.TMNF);
+
+    /// <summary>
+    /// Answers the HEAD request to the random track page as if it redirected to a track, and any other request with that track.
+    /// </summary>
+    private static HttpResponseMessage RespondToRandomTrack(HttpRequestMessage request)
+    {
+        if (request.Method != HttpMethod.Head)
+        {
+            return FakeResponse.Json(TracksJson);
+        }
+
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            // HttpClient reports the final URL after following the redirect.
+            RequestMessage = new HttpRequestMessage(HttpMethod.Get, $"{SiteUrl}/trackshow/{TrackId}")
+        };
     }
 }

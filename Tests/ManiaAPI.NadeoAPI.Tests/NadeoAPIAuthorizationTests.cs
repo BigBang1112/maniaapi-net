@@ -6,14 +6,11 @@ public class NadeoAPIAuthorizationTests
 {
     private const string AuthenticationUrl = "https://prod.trackmania.core.nadeo.online/v2/authentication/token/basic";
     private const string RefreshUrl = "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh";
-
-    private static NadeoAPI CreateService(string name, HttpClient http, NadeoAPIHandler? handler = null) => name switch
-    {
-        nameof(NadeoServices) => new NadeoServices(http, handler),
-        nameof(NadeoLiveServices) => new NadeoLiveServices(http, handler),
-        nameof(NadeoMeetServices) => new NadeoMeetServices(http, handler),
-        _ => throw new ArgumentOutOfRangeException(nameof(name))
-    };
+    private const string ZonesUrl = "https://prod.trackmania.core.nadeo.online/zones/";
+    private const string Audience = "NadeoServices";
+    private const string Login = "login";
+    private const string Password = "password";
+    private const string RefreshToken = "first-refresh-token";
 
     [Test]
     [Arguments(nameof(NadeoServices), "NadeoServices")]
@@ -24,26 +21,25 @@ public class NadeoAPIAuthorizationTests
         var fake = new FakeHttpMessageHandler(request => NadeoTokens.Valid(expectedAudience, out _));
         using var api = CreateService(service, fake.CreateClient());
 
-        await api.AuthorizeAsync("login", "password");
+        await api.AuthorizeAsync(Login, Password);
 
-        var request = fake.Request;
-        await Assert.That(request.Method).IsEqualTo(HttpMethod.Post);
-        await Assert.That(request.Url).IsEqualTo(AuthenticationUrl);
-        await Assert.That(request.Authorization?.Scheme).IsEqualTo("Basic");
-        await Assert.That(request.Authorization?.Parameter).IsEqualTo(Convert.ToBase64String(Encoding.UTF8.GetBytes("login:password")));
-        await Assert.That(request.Body).IsEqualTo($$"""{"audience":"{{expectedAudience}}"}""");
+        await Assert.That(fake.Request.Method).IsEqualTo(HttpMethod.Post);
+        await Assert.That(fake.Request.Url).IsEqualTo(AuthenticationUrl);
+        await Assert.That(fake.Request.Authorization?.Scheme).IsEqualTo("Basic");
+        await Assert.That(fake.Request.Authorization?.Parameter).IsEqualTo(Convert.ToBase64String(Encoding.UTF8.GetBytes($"{Login}:{Password}")));
+        await Assert.That(fake.Request.Body).IsEqualTo($$"""{"audience":"{{expectedAudience}}"}""");
     }
 
     [Test]
-    public async Task AuthorizeAsync_DecodesTokenTimes()
+    public async Task AuthorizeAsync_ValidToken_StoresTokenClaims()
     {
         var expiresAt = DateTimeOffset.FromUnixTimeSeconds(1_900_000_000);
         var refreshAt = DateTimeOffset.FromUnixTimeSeconds(1_899_998_000);
-        var accessToken = NadeoTokens.AccessToken("NadeoServices", expiresAt, refreshAt, account: "my-account");
+        var accessToken = NadeoTokens.AccessToken(Audience, expiresAt, refreshAt, account: "my-account");
         var fake = FakeHttpMessageHandler.Json(NadeoTokens.Response(accessToken));
         using var ns = new NadeoServices(fake.CreateClient());
 
-        await ns.AuthorizeAsync("login", "password");
+        await ns.AuthorizeAsync(Login, Password);
 
         await Assert.That(ns.ExpirationTime).IsEqualTo(expiresAt);
         await Assert.That(ns.RefreshAt).IsEqualTo(refreshAt);
@@ -51,14 +47,15 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
-    [Arguments("", "password")]
-    [Arguments("login", "")]
+    [Arguments("", Password)]
+    [Arguments(Login, "")]
     public async Task AuthorizeAsync_EmptyCredentials_ThrowsWithoutRequest(string login, string password)
     {
         var fake = FakeHttpMessageHandler.Json("{}");
         using var ns = new NadeoServices(fake.CreateClient());
 
         await Assert.ThrowsAsync<ArgumentException>(() => ns.AuthorizeAsync(login, password));
+
         await Assert.That(fake.Requests).IsEmpty();
     }
 
@@ -68,91 +65,117 @@ public class NadeoAPIAuthorizationTests
         var fake = FakeHttpMessageHandler.Json("{}", HttpStatusCode.Unauthorized);
         using var ns = new NadeoServices(fake.CreateClient());
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => ns.AuthorizeAsync("login", "wrong"));
+        await Assert.ThrowsAsync<HttpRequestException>(() => ns.AuthorizeAsync(Login, "wrong"));
+    }
+
+    [Test]
+    public async Task AuthorizeAsync_FailedAuthentication_StoresNoToken()
+    {
+        var fake = FakeHttpMessageHandler.Json("{}", HttpStatusCode.Unauthorized);
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => ns.AuthorizeAsync(Login, "wrong"));
+
         await Assert.That(ns.ExpirationTime).IsNull();
     }
 
     [Test]
-    public async Task Requests_AfterAuthorization_UseNadeoTokenHeader()
+    public async Task GetZonesAsync_AfterAuthorization_SendsNadeoTokenHeader()
     {
         var accessToken = "";
         var fake = FakeHttpMessageHandler.Sequence(
-            () => NadeoTokens.Valid("NadeoServices", out accessToken),
+            () => NadeoTokens.Valid(Audience, out accessToken),
             () => FakeResponse.Json("[]"));
         using var ns = new NadeoServices(fake.CreateClient());
+        await ns.AuthorizeAsync(Login, Password);
 
-        await ns.AuthorizeAsync("login", "password");
         await ns.GetZonesAsync();
 
-        var request = fake.Requests[1];
-        await Assert.That(request.Url).IsEqualTo("https://prod.trackmania.core.nadeo.online/zones/");
-        await Assert.That(request.Authorization?.Scheme).IsEqualTo("nadeo_v1");
-        await Assert.That(request.Authorization?.Parameter).IsEqualTo($"t={accessToken}");
+        await Assert.That(fake.Requests[1].Authorization?.Scheme).IsEqualTo("nadeo_v1");
+        await Assert.That(fake.Requests[1].Authorization?.Parameter).IsEqualTo($"t={accessToken}");
     }
 
     [Test]
-    public async Task Requests_WithPendingCredentials_AuthorizeOnlyOnce()
+    public async Task GetZonesAsync_WithPendingCredentials_AuthorizesOnlyOnce()
     {
         var fake = FakeHttpMessageHandler.Sequence(
-            () => NadeoTokens.Valid("NadeoServices", out _),
+            () => NadeoTokens.Valid(Audience, out _),
             () => FakeResponse.Json("[]"),
             () => FakeResponse.Json("[]"));
-        var handler = new NadeoAPIHandler { PendingCredentials = new NadeoAPICredentials("login", "password") };
+        using var ns = new NadeoServices(fake.CreateClient(), PendingCredentialsHandler());
+
+        await ns.GetZonesAsync();
+        await ns.GetZonesAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl, ZonesUrl, ZonesUrl]);
+    }
+
+    [Test]
+    public async Task GetZonesAsync_WithPendingCredentials_ClearsPendingCredentials()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            () => NadeoTokens.Valid(Audience, out _),
+            () => FakeResponse.Json("[]"));
+        var handler = PendingCredentialsHandler();
         using var ns = new NadeoServices(fake.CreateClient(), handler);
 
         await ns.GetZonesAsync();
-        await ns.GetZonesAsync();
 
-        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo(
-        [
-            AuthenticationUrl,
-            "https://prod.trackmania.core.nadeo.online/zones/",
-            "https://prod.trackmania.core.nadeo.online/zones/"
-        ]);
         await Assert.That(handler.PendingCredentials).IsNull();
     }
 
     [Test]
-    public async Task Requests_AfterExpiration_RefreshTokenFirst()
+    public async Task GetZonesAsync_TokenExpired_RefreshesWithRefreshToken()
     {
-        var expiredToken = NadeoTokens.AccessToken("NadeoServices", DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddMinutes(-30));
-        var refreshedToken = "";
         var fake = FakeHttpMessageHandler.Sequence(
-            () => FakeResponse.Json(NadeoTokens.Response(expiredToken, refreshToken: "first-refresh-token")),
-            () => NadeoTokens.Valid("NadeoServices", out refreshedToken),
+            ExpiredTokenResponse,
+            () => NadeoTokens.Valid(Audience, out _),
             () => FakeResponse.Json("[]"));
         using var ns = new NadeoServices(fake.CreateClient());
+        await ns.AuthorizeAsync(Login, Password);
 
-        await ns.AuthorizeAsync("login", "password");
         await ns.GetZonesAsync();
 
-        var refresh = fake.Requests[1];
-        await Assert.That(refresh.Url).IsEqualTo(RefreshUrl);
-        await Assert.That(refresh.Authorization?.Parameter).IsEqualTo("t=first-refresh-token");
+        await Assert.That(fake.Requests[1].Url).IsEqualTo(RefreshUrl);
+        await Assert.That(fake.Requests[1].Authorization?.Parameter).IsEqualTo($"t={RefreshToken}");
+    }
+
+    [Test]
+    public async Task GetZonesAsync_TokenExpired_SendsRefreshedToken()
+    {
+        var refreshedToken = "";
+        var fake = FakeHttpMessageHandler.Sequence(
+            ExpiredTokenResponse,
+            () => NadeoTokens.Valid(Audience, out refreshedToken),
+            () => FakeResponse.Json("[]"));
+        using var ns = new NadeoServices(fake.CreateClient());
+        await ns.AuthorizeAsync(Login, Password);
+
+        await ns.GetZonesAsync();
+
         await Assert.That(fake.Requests[2].Authorization?.Parameter).IsEqualTo($"t={refreshedToken}");
     }
 
     [Test]
-    public async Task Requests_AfterExpiration_WithoutAutomaticAuthorization_DoNotRefresh()
+    public async Task GetZonesAsync_TokenExpiredWithoutAutomaticAuthorization_DoesNotRefresh()
     {
-        var expiredToken = NadeoTokens.AccessToken("NadeoServices", DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddMinutes(-30));
         var fake = FakeHttpMessageHandler.Sequence(
-            () => FakeResponse.Json(NadeoTokens.Response(expiredToken)),
+            ExpiredTokenResponse,
             () => FakeResponse.Json("[]"));
         using var ns = new NadeoServices(fake.CreateClient(), automaticallyAuthorize: false);
+        await ns.AuthorizeAsync(Login, Password);
 
-        await ns.AuthorizeAsync("login", "password");
         await ns.GetZonesAsync();
 
-        await Assert.That(fake.Requests[1].Url).IsEqualTo("https://prod.trackmania.core.nadeo.online/zones/");
+        await Assert.That(fake.Requests[1].Url).IsEqualTo(ZonesUrl);
     }
 
     [Test]
     public async Task RefreshAsync_BeforeRefreshTime_ReturnsFalseWithoutRequest()
     {
-        var fake = FakeHttpMessageHandler.Sequence(() => NadeoTokens.Valid("NadeoServices", out _));
+        var fake = FakeHttpMessageHandler.Sequence(() => NadeoTokens.Valid(Audience, out _));
         using var ns = new NadeoServices(fake.CreateClient());
-        await ns.AuthorizeAsync("login", "password");
+        await ns.AuthorizeAsync(Login, Password);
 
         var refreshed = await ns.RefreshAsync();
 
@@ -161,7 +184,7 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
-    public async Task RefreshAsync_WithoutAuthorization_ReturnsFalse()
+    public async Task RefreshAsync_WithoutAuthorization_ReturnsFalseWithoutRequest()
     {
         var fake = FakeHttpMessageHandler.Json("{}");
         using var ns = new NadeoServices(fake.CreateClient());
@@ -173,7 +196,7 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
-    public async Task Constructor_AddsLibraryUserAgentOnce()
+    public async Task Constructor_SameClientForTwoServices_AddsLibraryUserAgentOnce()
     {
         using var http = new HttpClient();
 
@@ -188,14 +211,32 @@ public class NadeoAPIAuthorizationTests
     [Arguments("aa")]
     [Arguments("aaa")]
     [Arguments("aaaa")]
-    public async Task JwtPayload_DecodesEveryPaddingLength(string account)
+    public async Task DecodeFromAccessToken_AnyBase64Padding_DecodesClaims(string account)
     {
         var expiresAt = DateTimeOffset.FromUnixTimeSeconds(1_900_000_000);
-        var token = NadeoTokens.AccessToken("NadeoServices", expiresAt, expiresAt.AddMinutes(-30), account);
+        var token = NadeoTokens.AccessToken(Audience, expiresAt, expiresAt.AddMinutes(-30), account);
 
         var payload = JwtPayloadNadeoAPI.DecodeFromAccessToken(token);
 
         await Assert.That(payload.Account).IsEqualTo(account);
-        await Assert.That(payload.ExpirationTime).IsEqualTo(expiresAt);
+    }
+
+    private static NadeoAPI CreateService(string name, HttpClient http) => name switch
+    {
+        nameof(NadeoServices) => new NadeoServices(http),
+        nameof(NadeoLiveServices) => new NadeoLiveServices(http),
+        nameof(NadeoMeetServices) => new NadeoMeetServices(http),
+        _ => throw new ArgumentOutOfRangeException(nameof(name))
+    };
+
+    private static NadeoAPIHandler PendingCredentialsHandler() => new() { PendingCredentials = new NadeoAPICredentials(Login, Password) };
+
+    /// <summary>
+    /// A token response that has already expired, so the next request refreshes it with <see cref="RefreshToken"/>.
+    /// </summary>
+    private static HttpResponseMessage ExpiredTokenResponse()
+    {
+        var expiredToken = NadeoTokens.AccessToken(Audience, DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddMinutes(-30));
+        return FakeResponse.Json(NadeoTokens.Response(expiredToken, refreshToken: RefreshToken));
     }
 }
