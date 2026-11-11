@@ -241,6 +241,33 @@ public class TrackmaniaAPITests
     }
 
     [Test]
+    public async Task GetUserAsync_TwoClientsSharingHandler_AuthorizesOnce()
+    {
+        var authorization = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var fake = new ConcurrentFakeHttpMessageHandler(async request =>
+        {
+            if (request.RequestUri!.ToString() == $"{BaseUrl}/access_token")
+            {
+                await authorization.Task;
+                return TokenResponse(DateTimeOffset.UtcNow.AddHours(1), out _);
+            }
+
+            return FakeResponse.Json(UserJson);
+        });
+        // Like the hosting package, which gives every transient client the same handler with the credentials
+        var handler = new TrackmaniaAPIHandler { Credentials = new TrackmaniaAPICredentials(ClientId, ClientSecret) };
+        using var first = new TrackmaniaAPI(fake.CreateClient(), handler);
+        using var second = new TrackmaniaAPI(fake.CreateClient(), handler);
+
+        // Both requests start while the first authorization is still waiting for its response
+        var requests = Task.WhenAll(first.GetUserAsync(), second.GetUserAsync());
+        authorization.SetResult();
+        await requests;
+
+        await Assert.That(fake.Urls.Count(x => x == $"{BaseUrl}/access_token")).IsEqualTo(1);
+    }
+
+    [Test]
     public async Task GetUserAsync_TokenExpiredWithoutAutomaticAuthorization_DoesNotAuthorize()
     {
         var fake = FakeHttpMessageHandler.Sequence(

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -116,8 +117,6 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     public HttpClient Client { get; }
 
     public bool AutomaticallyAuthorize { get; }
-
-    private readonly SemaphoreSlim semaphore = new(1, 1);
 
     /// <summary>
     /// Creates a new instance of the ManiaPlanet API client.
@@ -504,19 +503,22 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     protected internal async Task<HttpResponseMessage> GetResponseAsync(string endpoint, CancellationToken cancellationToken = default)
     {
-        await semaphore.WaitAsync(cancellationToken);
+        if (AutomaticallyAuthorize && IsAuthorizationDue(out _))
+        {
+            await Handler.AuthorizationLock.WaitAsync(cancellationToken);
 
-        try
-        {
-            if (AutomaticallyAuthorize && Handler.Credentials is not null
-                && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime))
+            try
             {
-                await AuthorizeAsync(Handler.Credentials, cancellationToken);
+                // Another client sharing the handler may have authorized while this one waited
+                if (IsAuthorizationDue(out var credentials))
+                {
+                    await AuthorizeAsync(credentials, cancellationToken);
+                }
             }
-        }
-        finally
-        {
-            semaphore.Release();
+            finally
+            {
+                Handler.AuthorizationLock.Release();
+            }
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
@@ -542,6 +544,12 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     {
         using var response = await GetResponseAsync(endpoint, cancellationToken);
         return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+    }
+
+    private bool IsAuthorizationDue([NotNullWhen(true)] out ManiaPlanetAPICredentials? credentials)
+    {
+        credentials = Handler.Credentials;
+        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime);
     }
 
     public virtual void Dispose()

@@ -8,5 +8,7 @@ public sealed class ManiaPlanetAPIHandler
 
     internal AuthenticationHeaderValue? Authorization { get; set; }
 
+    internal SemaphoreSlim AuthorizationLock { get; } = new(1, 1);
+
     internal JwtPayloadManiaPlanetAPI? Payload { get; set; }
 }

@@ -34,8 +34,6 @@ public abstract class NadeoAPI : INadeoAPI
     public DateTimeOffset? RefreshAt => Handler.JWT?.RefreshAt;
     public DateTimeOffset? ExpirationTime => Handler.JWT?.ExpirationTime;
 
-    private readonly SemaphoreSlim semaphore = new(1, 1);
-
     /// <summary>
     /// 
     /// </summary>
@@ -167,29 +165,52 @@ public abstract class NadeoAPI : INadeoAPI
 
     public virtual async ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default)
     {
-        if (Handler.RefreshToken is null || RefreshAt is null || DateTimeOffset.UtcNow < RefreshAt.Value || ExpirationTime is null)
+        if (!IsRefreshDue())
         {
             return false;
         }
 
-        // If expired for over 20 hours, the refresh token is likely expired too, so reauthorize when credentials were saved.
-        // Without saved credentials, try the refresh token anyway.
-        if (Handler.SaveCredentials && Handler.SavedCredentials is not null && DateTimeOffset.UtcNow >= ExpirationTime.Value.AddHours(20))
+        await Handler.AuthorizationLock.WaitAsync(cancellationToken);
+
+        try
         {
-            await AuthorizeAsync(Handler.SavedCredentials, cancellationToken);
+            // Another client sharing the handler may have refreshed while this one waited
+            if (!IsRefreshDue())
+            {
+                return false;
+            }
+
+            // If expired for over 20 hours, the refresh token is likely expired too, so reauthorize when credentials were saved.
+            // Without saved credentials, try the refresh token anyway.
+            if (Handler.SaveCredentials && Handler.SavedCredentials is not null && DateTimeOffset.UtcNow >= ExpirationTime!.Value.AddHours(20))
+            {
+                await AuthorizeAsync(Handler.SavedCredentials, cancellationToken);
+                return true;
+            }
+
+            using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh")
+            {
+                Headers = { Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={Handler.RefreshToken}") }
+            };
+
+            using var response = await Client.SendAsync(message, cancellationToken);
+
+            await SaveTokenResponseAsync(response, cancellationToken);
+
             return true;
         }
-
-        using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh")
+        finally
         {
-            Headers = { Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={Handler.RefreshToken}") }
-        };
+            Handler.AuthorizationLock.Release();
+        }
+    }
 
-        using var response = await Client.SendAsync(message, cancellationToken);
-
-        await SaveTokenResponseAsync(response, cancellationToken);
-
-        return true;
+    private bool IsRefreshDue()
+    {
+        return Handler.RefreshToken is not null
+            && RefreshAt.HasValue
+            && ExpirationTime.HasValue
+            && DateTimeOffset.UtcNow >= RefreshAt.Value;
     }
 
     /// <summary>
@@ -207,9 +228,10 @@ public abstract class NadeoAPI : INadeoAPI
 
         if (Handler.PendingCredentials is not null)
         {
-            await semaphore.WaitAsync(cancellationToken);
+            await Handler.AuthorizationLock.WaitAsync(cancellationToken);
             try
             {
+                // Another client sharing the handler may have authorized while this one waited
                 if (Handler.PendingCredentials is not null)
                 {
                     await AuthorizeAsync(Handler.PendingCredentials, cancellationToken);
@@ -219,7 +241,7 @@ public abstract class NadeoAPI : INadeoAPI
             }
             finally
             {
-                semaphore.Release();
+                Handler.AuthorizationLock.Release();
             }
         }
 

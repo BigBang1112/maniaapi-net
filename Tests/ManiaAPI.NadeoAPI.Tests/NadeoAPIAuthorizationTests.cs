@@ -217,6 +217,62 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
+    public async Task GetZonesAsync_TwoClientsSharingHandlerWithPendingCredentials_AuthorizesOnce()
+    {
+        var authorization = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var fake = new ConcurrentFakeHttpMessageHandler(async request =>
+        {
+            if (request.RequestUri!.ToString() == AuthenticationUrl)
+            {
+                await authorization.Task;
+                return NadeoTokens.Valid(Audience, out _);
+            }
+
+            return FakeResponse.Json("[]");
+        });
+        var handler = PendingCredentialsHandler();
+        using var first = new NadeoServices(fake.CreateClient(), handler);
+        using var second = new NadeoServices(fake.CreateClient(), handler);
+
+        // Both requests start while the first authorization is still waiting for its response
+        var requests = Task.WhenAll(first.GetZonesAsync(), second.GetZonesAsync());
+        authorization.SetResult();
+        await requests;
+
+        await Assert.That(fake.Urls.Count(x => x == AuthenticationUrl)).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task RefreshAsync_TwoClientsSharingHandlerAtOnce_RefreshesOnce()
+    {
+        var refresh = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var fake = new ConcurrentFakeHttpMessageHandler(async request =>
+        {
+            switch (request.RequestUri!.ToString())
+            {
+                case AuthenticationUrl:
+                    return ExpiredTokenResponse();
+                case RefreshUrl:
+                    await refresh.Task;
+                    return NadeoTokens.Valid(Audience, out _);
+                default:
+                    return FakeResponse.Json("[]");
+            }
+        });
+        var handler = new NadeoAPIHandler();
+        using var background = new NadeoServices(fake.CreateClient(), handler);
+        using var request = new NadeoServices(fake.CreateClient(), handler);
+        await background.AuthorizeAsync(Login, Password);
+
+        // Like the hosting package's background refresh running into a request that also finds the token expired
+        var refreshes = Task.WhenAll(background.RefreshAsync().AsTask(), request.GetZonesAsync());
+        refresh.SetResult();
+        await refreshes;
+
+        await Assert.That(fake.Urls.Count(x => x == RefreshUrl)).IsEqualTo(1);
+    }
+
+    [Test]
     public async Task RefreshAsync_BeforeRefreshTime_ReturnsFalseWithoutRequest()
     {
         var fake = FakeHttpMessageHandler.Sequence(() => NadeoTokens.Valid(Audience, out _));

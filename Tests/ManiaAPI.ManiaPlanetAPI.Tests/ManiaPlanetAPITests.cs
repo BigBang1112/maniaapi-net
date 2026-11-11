@@ -62,6 +62,34 @@ public class ManiaPlanetAPITests
     }
 
     [Test]
+    public async Task GetZonesAsync_TwoClientsSharingHandler_AuthorizesOnce()
+    {
+        const string tokenUrl = "https://prod.live.maniaplanet.com/login/oauth2/access_token";
+        var authorization = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var fake = new ConcurrentFakeHttpMessageHandler(async request =>
+        {
+            if (request.RequestUri!.ToString() == tokenUrl)
+            {
+                await authorization.Task;
+                return TokenResponse(DateTimeOffset.UtcNow.AddHours(1));
+            }
+
+            return FakeResponse.Json(ZonesJson);
+        });
+        // Like the hosting package, which gives every transient client the same handler with the credentials
+        var handler = new ManiaPlanetAPIHandler { Credentials = new ManiaPlanetAPICredentials(ClientId, ClientSecret) };
+        using var first = new ManiaPlanetAPI(fake.CreateClient(), handler);
+        using var second = new ManiaPlanetAPI(fake.CreateClient(), handler);
+
+        // Both requests start while the first authorization is still waiting for its response
+        var requests = Task.WhenAll(first.GetZonesAsync(), second.GetZonesAsync());
+        authorization.SetResult();
+        await requests;
+
+        await Assert.That(fake.Urls.Count(x => x == tokenUrl)).IsEqualTo(1);
+    }
+
+    [Test]
     public async Task GetZonesAsync_AfterAuthorization_SendsBearerToken()
     {
         var fake = FakeHttpMessageHandler.Sequence(

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Reflection.PortableExecutable;
@@ -47,8 +48,6 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
     public HttpClient Client { get; }
     public bool AutomaticallyAuthorize { get; }
-
-    private readonly SemaphoreSlim semaphore = new(1, 1);
 
     /// <summary>
     /// Creates a new instance of the Trackmania API client.
@@ -272,19 +271,22 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// </summary>
     protected internal async Task<HttpResponseMessage> SendAsync(HttpMethod method, string? endpoint, HttpContent? content, CancellationToken cancellationToken = default)
     {
-        await semaphore.WaitAsync(cancellationToken);
+        if (AutomaticallyAuthorize && IsAuthorizationDue(out _))
+        {
+            await Handler.AuthorizationLock.WaitAsync(cancellationToken);
 
-        try
-        {
-            if (AutomaticallyAuthorize && Handler.Credentials is not null
-                && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime))
+            try
             {
-                await AuthorizeAsync(Handler.Credentials, cancellationToken);
+                // Another client sharing the handler may have authorized while this one waited
+                if (IsAuthorizationDue(out var credentials))
+                {
+                    await AuthorizeAsync(credentials, cancellationToken);
+                }
             }
-        }
-        finally
-        {
-            semaphore.Release();
+            finally
+            {
+                Handler.AuthorizationLock.Release();
+            }
         }
 
         using var request = new HttpRequestMessage(method, $"{BaseAddress}/{endpoint}") { Content = content };
@@ -314,6 +316,12 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             response.Dispose();
             throw;
         }
+    }
+
+    private bool IsAuthorizationDue([NotNullWhen(true)] out TrackmaniaAPICredentials? credentials)
+    {
+        credentials = Handler.Credentials;
+        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime);
     }
 
     public virtual void Dispose()

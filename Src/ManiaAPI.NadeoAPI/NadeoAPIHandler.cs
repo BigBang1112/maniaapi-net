@@ -16,6 +16,12 @@ public sealed class NadeoAPIHandler
 
     internal AuthenticationHeaderValue? Authorization { get; set; }
 
+    /// <summary>
+    /// Held while authorizing or refreshing. It lives here, not in the client, because every client sharing this handler
+    /// (like the transient clients from DI) must take turns, otherwise they authorize or refresh with the same refresh token at once.
+    /// </summary>
+    internal SemaphoreSlim AuthorizationLock { get; } = new(1, 1);
+
     internal string? RefreshToken { get; set; }
 
     public JwtPayloadNadeoAPI? JWT { get; internal set; }
