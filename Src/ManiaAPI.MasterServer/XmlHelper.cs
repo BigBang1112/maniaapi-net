@@ -25,7 +25,7 @@ internal static partial class XmlHelper
 
         var startTime = Stopwatch.GetTimestamp();
 
-        var response = await client.PostAsync(default(Uri), content, cancellationToken);
+        using var response = await client.PostAsync(default(Uri), content, cancellationToken);
 
         var requestTime = Stopwatch.GetElapsedTime(startTime);
 
