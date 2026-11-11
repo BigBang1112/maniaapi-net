@@ -161,7 +161,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             { "grant_type", "client_credentials" },
             { "client_id", clientId },
             { "client_secret", clientSecret },
-            { "scope", string.Join("%20", scopes) }
+            { "scope", string.Join(' ', scopes) }
         };
 
         using var response = await Client.PostAsync("https://prod.live.maniaplanet.com/login/oauth2/access_token", new FormUrlEncodedContent(values), cancellationToken);

@@ -49,6 +49,17 @@ public class TrackmaniaAPITests
     }
 
     [Test]
+    public async Task AuthorizeAsync_MultipleScopes_PostsSpaceSeparatedScopes()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(() => TokenResponse(ExpiresAt, out _));
+        using var api = CreateApi(fake);
+
+        await api.AuthorizeAsync(ClientId, ClientSecret, ["clubs", "read_favorite"]);
+
+        await Assert.That(fake.Request.Body).IsEqualTo($"grant_type=client_credentials&client_id={ClientId}&client_secret={ClientSecret}&scope=clubs+read_favorite");
+    }
+
+    [Test]
     public async Task AuthorizeAsync_ValidToken_StoresTokenClaims()
     {
         var fake = FakeHttpMessageHandler.Sequence(() => TokenResponse(ExpiresAt, out _));

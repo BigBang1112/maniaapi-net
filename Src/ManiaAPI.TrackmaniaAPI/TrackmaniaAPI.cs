@@ -99,7 +99,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             { "grant_type", "client_credentials" },
             { "client_id", clientId },
             { "client_secret", clientSecret },
-            { "scope", string.Join("%20", scopes) }
+            { "scope", string.Join(' ', scopes) }
         };
 
         using var response = await Client.PostAsync($"{BaseAddress}/access_token", new FormUrlEncodedContent(values), cancellationToken);

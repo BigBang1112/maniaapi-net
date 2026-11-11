@@ -39,6 +39,17 @@ public class ManiaPlanetAPITests
     }
 
     [Test]
+    public async Task AuthorizeAsync_MultipleScopes_PostsSpaceSeparatedScopes()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(() => TokenResponse(ExpiresAt));
+        using var api = CreateApi(fake);
+
+        await api.AuthorizeAsync(ClientId, ClientSecret, ["basic", "titles"]);
+
+        await Assert.That(fake.Request.Body).IsEqualTo($"grant_type=client_credentials&client_id={ClientId}&client_secret={ClientSecret}&scope=basic+titles");
+    }
+
+    [Test]
     public async Task AuthorizeAsync_ValidToken_StoresExpirationAndScopes()
     {
         var fake = FakeHttpMessageHandler.Sequence(() => TokenResponse(ExpiresAt));
