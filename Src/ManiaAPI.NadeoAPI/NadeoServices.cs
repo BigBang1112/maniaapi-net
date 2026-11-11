@@ -376,7 +376,8 @@ public class NadeoServices : NadeoAPI, INadeoServices
 
     public virtual async Task<TrophyHistoryCollection> GetPlayerTrophyHistoryAsync(Guid accountId, int count = 100, int offset = 0, int? trophyType = null, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"accounts/{accountId}/trophies?count={count}&offset={offset}{(trophyType is null ? "" : $"&trophyType={trophyType}")}",
+        // Without the slash before the query, the API answers with a redirect to this route
+        return await GetJsonAsync($"accounts/{accountId}/trophies/?count={count}&offset={offset}{(trophyType is null ? "" : $"&trophyType={trophyType}")}",
             NadeoAPIJsonContext.Default.TrophyHistoryCollection, cancellationToken);
     }
 

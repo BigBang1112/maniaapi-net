@@ -186,7 +186,7 @@ public class NadeoServicesTests
 
         await ns.GetPlayerTrophyHistoryAsync(AccountA, count: 50, offset: 10, trophyType: trophyType);
 
-        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/accounts/{AccountA}/trophies?{expectedQuery}");
+        await Assert.That(fake.Request.Url).IsEqualTo($"{BaseUrl}/accounts/{AccountA}/trophies/?{expectedQuery}");
     }
 
     [Test]

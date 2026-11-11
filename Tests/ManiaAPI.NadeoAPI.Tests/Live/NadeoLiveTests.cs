@@ -1,7 +1,8 @@
 namespace ManiaAPI.NadeoAPI.Tests.Live;
 
 /// <summary>
-/// Requests that work with both kinds of account, so each one runs once per <see cref="NadeoAccount"/>.
+/// Every test runs once per <see cref="NadeoAccount"/>, so it's known which requests work with which account.
+/// A request that only a service account may send is checked to be denied with a dedicated server account, see <see cref="AssertDeniedAsync"/>.
 /// </summary>
 [LiveTest]
 [NotInParallel("Nadeo")]
@@ -43,12 +44,10 @@ public class NadeoLiveTests(NadeoAccount account)
         var ns = await LiveNadeo.GetServicesAsync(account);
 
         var zones = await ns.GetZonesAsync();
-        var playerZones = await ns.GetPlayerZonesAsync(AccountIds);
         var webIdentities = await ns.GetPlayerWebIdentitiesAsync(AccountIds);
         var routes = await ns.GetApiRoutesAsync(ApiUsage.Server);
 
         await Assert.That(zones).IsNotEmpty();
-        await Assert.That(playerZones.Select(x => x.AccountId)).IsEquivalentTo(AccountIds);
         await Assert.That(webIdentities).IsNotEmpty();
         await Assert.That(routes).IsNotEmpty();
     }
@@ -99,9 +98,32 @@ public class NadeoLiveTests(NadeoAccount account)
     }
 
     [Test]
+    public async Task NadeoServices_PlayerWebIdentity()
+    {
+        var ns = await LiveNadeo.GetServicesAsync(account);
+
+        var webIdentity = await ns.GetPlayerWebIdentityAsync(AccountIds[0]);
+
+        await Assert.That(webIdentity?.AccountId).IsEqualTo(AccountIds[0]);
+    }
+
+    [Test]
+    public async Task NadeoServices_PlayerZones()
+    {
+        // The Openplanet documentation says dedicated server accounts get 401 here, but they can read player zones.
+        var ns = await LiveNadeo.GetServicesAsync(account);
+
+        var playerZones = await ns.GetPlayerZonesAsync(AccountIds);
+        var playerZone = await ns.GetPlayerZoneAsync(AccountIds[0]);
+
+        await Assert.That(playerZones.Select(x => x.AccountId)).IsEquivalentTo(AccountIds);
+        await Assert.That(playerZone?.AccountId).IsEqualTo(AccountIds[0]);
+    }
+
+    [Test]
     public async Task NadeoServices_OwnAccountRecords()
     {
-        // Own records, because dedicated server accounts are forbidden from reading other accounts' records.
+        // A dedicated server account can send these requests, but it has no records of its own, so it gets none.
         var ns = await LiveNadeo.GetServicesAsync(account);
         var nls = await LiveNadeo.GetLiveServicesAsync(account);
         var accountId = ns.Handler.JWT?.Subject ?? throw new InvalidOperationException("The token has no account ID.");
@@ -123,15 +145,49 @@ public class NadeoLiveTests(NadeoAccount account)
     }
 
     [Test]
-    public async Task NadeoServices_Players()
+    public async Task NadeoServices_OtherAccountRecords_AreForbidden()
+    {
+        // Account records are only for the authenticated account itself, with either kind of account.
+        var ns = await LiveNadeo.GetServicesAsync(account);
+
+        await AssertDeniedAsync(() => ns.GetAccountRecordsByMapIdsAsync(AccountIds[0], MapIds), HttpStatusCode.Forbidden);
+    }
+
+    [Test]
+    public async Task NadeoServices_PlayerClubTags()
     {
         var ns = await LiveNadeo.GetServicesAsync(account);
 
-        var playerZone = await ns.GetPlayerZoneAsync(AccountIds[0]);
-        var webIdentity = await ns.GetPlayerWebIdentityAsync(AccountIds[0]);
+        if (account is NadeoAccount.DedicatedServer)
+        {
+            await AssertDeniedAsync(() => ns.GetPlayerClubTagsAsync(AccountIds));
+            return;
+        }
 
-        await Assert.That(playerZone?.AccountId).IsEqualTo(AccountIds[0]);
-        await Assert.That(webIdentity?.AccountId).IsEqualTo(AccountIds[0]);
+        var clubTags = await ns.GetPlayerClubTagsAsync(AccountIds);
+
+        // Accounts without a club tag are left out of the response.
+        await Assert.That(clubTags).IsNotEmpty();
+        await Assert.That(clubTags.Select(x => x.AccountId)).DoesNotContain(x => !AccountIds.Contains(x));
+    }
+
+    [Test]
+    public async Task NadeoServices_PlayerTrophies()
+    {
+        var ns = await LiveNadeo.GetServicesAsync(account);
+
+        if (account is NadeoAccount.DedicatedServer)
+        {
+            await AssertDeniedAsync(() => ns.GetPlayerTrophySummaryAsync(AccountIds[0]));
+            await AssertDeniedAsync(() => ns.GetPlayerTrophyHistoryAsync(AccountIds[0], count: 5));
+            return;
+        }
+
+        var summary = await ns.GetPlayerTrophySummaryAsync(AccountIds[0]);
+        var history = await ns.GetPlayerTrophyHistoryAsync(AccountIds[0], count: 5);
+
+        await Assert.That(summary.AccountId).IsEqualTo(AccountIds[0]);
+        await Assert.That(history.Data).IsNotEmpty();
     }
 
     [Test]
@@ -203,7 +259,8 @@ public class NadeoLiveTests(NadeoAccount account)
         await Assert.That(mapInfos.Select(x => x.Uid)).IsEquivalentTo(campaign.Playlist.Select(x => x.MapUid));
         await Assert.That(medals.MapUid).IsEqualTo(mapUid);
         await Assert.That(zoneTop.Tops.SelectMany(x => x.Top)).IsNotEmpty();
-        await Assert.That(positions).IsNotEmpty();
+        // Not IsNotEmpty: the position endpoint is documented to return [] now and then, even for valid requests.
+        await Assert.That(positions).IsNotNull();
         await Assert.That(surrounding.Tops.SelectMany(x => x.Top)).IsNotEmpty();
         await Assert.That(campaignLeaderboard.Tops).IsNotEmpty();
         await Assert.That(seasonRankings.Zones).IsNotEmpty();
@@ -371,6 +428,17 @@ public class NadeoLiveTests(NadeoAccount account)
         await Assert.That(divisions.Divisions).IsNotEmpty();
         await Assert.That(status).IsNotNull();
         await Assert.That(myClubCompetitions).IsNotNull();
+    }
+
+    /// <summary>
+    /// Checks that the account isn't allowed to send the request: 401 by default, which is what a dedicated server account gets
+    /// for a request that only a service account may send.
+    /// </summary>
+    private static async Task AssertDeniedAsync(Func<Task> request, HttpStatusCode statusCode = HttpStatusCode.Unauthorized)
+    {
+        var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(request);
+
+        await Assert.That(ex!.StatusCode).IsEqualTo(statusCode);
     }
 
     private static async Task<CupOfTheDay> GetFinishedCupOfTheDayAsync(NadeoMeetServices nms)

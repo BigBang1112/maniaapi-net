@@ -10,7 +10,7 @@ dotnet test
 
 **Unit tests** run by default. They replace the network with a fake `HttpMessageHandler` (or, for GBXRemote, a loopback TCP server), so they are fast and don't depend on any service being online.
 
-**Live tests** send real requests. They are marked with `[LiveTest]`, which puts them in the `Live` category and retries them twice, because the services fail now and then on their own. They are skipped unless the `LiveTests:Enabled` setting is `true`.
+**Live tests** send real requests. They are marked with `[LiveTest]`, which puts them in the `Live` category and retries them twice (after 2 and then 4 seconds), because the services fail now and then on their own. They are skipped unless the `LiveTests:Enabled` setting is `true`.
 
 ```sh
 # Once, for every test project
@@ -46,10 +46,7 @@ A live test whose credentials are missing is skipped.
 dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests set "NadeoAPI:ServiceAccount:Login" "<login>"
 ```
 
-The Nadeo API has two kinds of accounts, and some endpoints work with only one of them, so they have separate settings:
-
-- `NadeoLiveTests` work with both, so each of them runs once with the dedicated server and once with the service account.
-- `NadeoServiceAccountLiveTests` read other players' data, which only a service account can.
+The Nadeo API has two kinds of accounts, and some endpoints work with only one of them, so they have separate settings. Every test in `NadeoLiveTests` runs once with each, so the tests show which endpoints are for a service account only: with a dedicated server account, those tests check that the request is denied (`401`).
 
 Either kind can be left out. Its tests are then skipped.
 
