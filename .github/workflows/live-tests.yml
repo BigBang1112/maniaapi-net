@@ -37,14 +37,17 @@ jobs:
       # solution, because the TMX source generator targets netstandard2.0.
       # Projects without live tests run zero tests, which Microsoft Testing Platform reports as exit code 8.
       - name: Test
+        # Each variable sets a LiveSettings key: MANIAAPI_ + the key with ':' replaced by '__', like NadeoAPI:ServiceAccount:Login.
         env:
-          MANIAAPI_LIVE_TESTS: true
-          NADEO_API_LOGIN: ${{ secrets.NADEO_API_LOGIN }}
-          NADEO_API_PASSWORD: ${{ secrets.NADEO_API_PASSWORD }}
-          TRACKMANIA_API_CLIENTID: ${{ secrets.TRACKMANIA_API_CLIENTID }}
-          TRACKMANIA_API_CLIENTSECRET: ${{ secrets.TRACKMANIA_API_CLIENTSECRET }}
-          MANIAPLANET_API_CLIENTID: ${{ secrets.MANIAPLANET_API_CLIENTID }}
-          MANIAPLANET_API_CLIENTSECRET: ${{ secrets.MANIAPLANET_API_CLIENTSECRET }}
+          MANIAAPI_LIVETESTS__ENABLED: true
+          MANIAAPI_NADEOAPI__DEDICATEDSERVER__LOGIN: ${{ secrets.NADEO_API_LOGIN }}
+          MANIAAPI_NADEOAPI__DEDICATEDSERVER__PASSWORD: ${{ secrets.NADEO_API_PASSWORD }}
+          MANIAAPI_NADEOAPI__SERVICEACCOUNT__LOGIN: ${{ secrets.NADEO_API_SERVICEACCOUNT_LOGIN }}
+          MANIAAPI_NADEOAPI__SERVICEACCOUNT__PASSWORD: ${{ secrets.NADEO_API_SERVICEACCOUNT_PASSWORD }}
+          MANIAAPI_TRACKMANIA__CLIENTID: ${{ secrets.TRACKMANIA_API_CLIENTID }}
+          MANIAAPI_TRACKMANIA__CLIENTSECRET: ${{ secrets.TRACKMANIA_API_CLIENTSECRET }}
+          MANIAAPI_MANIAPLANET__CLIENTID: ${{ secrets.MANIAPLANET_API_CLIENTID }}
+          MANIAAPI_MANIAPLANET__CLIENTSECRET: ${{ secrets.MANIAPLANET_API_CLIENTSECRET }}
         run: |
           status=0
           for project in Tests/*/*.csproj; do

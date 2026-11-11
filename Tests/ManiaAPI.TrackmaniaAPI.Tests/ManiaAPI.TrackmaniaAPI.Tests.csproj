@@ -1,9 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <UserSecretsId>d864cd9f-edad-4ebf-b6e2-9c0c91bd62f8</UserSecretsId>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\Src\ManiaAPI.TrackmaniaAPI\ManiaAPI.TrackmaniaAPI.csproj" />
   </ItemGroup>

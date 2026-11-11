@@ -11,11 +11,16 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    
+    <!-- One user secrets store for every test project, so live test settings are set once. See LiveSettings. -->
+    <UserSecretsId>ManiaAPI.NET.Tests</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- The TUnit metapackage includes Microsoft.Testing.Extensions.CodeCoverage, which coverage collection with MTP needs. -->
     <PackageReference Include="TUnit" Version="1.80.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup>

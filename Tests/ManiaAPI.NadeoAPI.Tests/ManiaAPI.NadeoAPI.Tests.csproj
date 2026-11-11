@@ -1,9 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <UserSecretsId>d7b44d16-a183-42ef-95f5-cdcb6be7869a</UserSecretsId>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\Src\ManiaAPI.NadeoAPI\ManiaAPI.NadeoAPI.csproj" />
   </ItemGroup>

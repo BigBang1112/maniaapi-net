@@ -1,6 +1,6 @@
 namespace ManiaAPI.TrackmaniaIO.Tests.Live;
 
-[Category("Live"), LiveTest, Retry(2)]
+[LiveTest]
 [NotInParallel(nameof(TrackmaniaIO))]
 public class TrackmaniaIOLiveTests
 {

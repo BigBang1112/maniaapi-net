@@ -1,6 +1,6 @@
 namespace ManiaAPI.TMX.Tests.Live;
 
-[Category("Live"), LiveTest, Retry(2)]
+[LiveTest]
 [NotInParallel("Exchange")]
 public class ExchangeLiveTests
 {

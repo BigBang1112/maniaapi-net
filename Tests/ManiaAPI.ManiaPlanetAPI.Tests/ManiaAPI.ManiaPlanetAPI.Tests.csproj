@@ -1,9 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <UserSecretsId>30cef84f-5408-4999-896b-5fcf61a115fc</UserSecretsId>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\Src\ManiaAPI.ManiaPlanetAPI\ManiaAPI.ManiaPlanetAPI.csproj" />
   </ItemGroup>

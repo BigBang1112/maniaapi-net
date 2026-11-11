@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 
 namespace ManiaAPI.MasterServer.Tests.Live;
 
-[Category("Live"), LiveTest, Retry(2)]
+[LiveTest]
 [NotInParallel("MasterServer")]
 public class MasterServerLiveTests
 {

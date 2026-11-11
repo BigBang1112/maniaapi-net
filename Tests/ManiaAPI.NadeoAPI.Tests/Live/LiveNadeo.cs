@@ -1,17 +1,34 @@
 namespace ManiaAPI.NadeoAPI.Tests.Live;
 
 /// <summary>
-/// Authorizes each service once per test session, so the live tests don't hit the authentication rate limit.
+/// The kind of account a live test authorizes with. Some endpoints behave differently for each.
+/// </summary>
+public enum NadeoAccount
+{
+    DedicatedServer,
+    ServiceAccount
+}
+
+/// <summary>
+/// Authorizes each service once per account and test session, so the live tests don't hit the authentication rate limit.
 /// </summary>
 internal static class LiveNadeo
 {
-    private static readonly Lazy<Task<NadeoServices>> services = new(() => AuthorizeAsync(new NadeoServices(CreateClient())));
-    private static readonly Lazy<Task<NadeoLiveServices>> liveServices = new(() => AuthorizeAsync(new NadeoLiveServices(CreateClient())));
-    private static readonly Lazy<Task<NadeoMeetServices>> meetServices = new(() => AuthorizeAsync(new NadeoMeetServices(CreateClient())));
+    private static readonly Dictionary<NadeoAccount, Lazy<Task<NadeoServices>>> services = ForEachAccount(
+        account => AuthorizeAsync(new NadeoServices(CreateClient()), account));
+    private static readonly Dictionary<NadeoAccount, Lazy<Task<NadeoLiveServices>>> liveServices = ForEachAccount(
+        account => AuthorizeAsync(new NadeoLiveServices(CreateClient()), account));
+    private static readonly Dictionary<NadeoAccount, Lazy<Task<NadeoMeetServices>>> meetServices = ForEachAccount(
+        account => AuthorizeAsync(new NadeoMeetServices(CreateClient()), account));
 
-    public static Task<NadeoServices> GetServicesAsync() => services.Value;
-    public static Task<NadeoLiveServices> GetLiveServicesAsync() => liveServices.Value;
-    public static Task<NadeoMeetServices> GetMeetServicesAsync() => meetServices.Value;
+    public static Task<NadeoServices> GetServicesAsync(NadeoAccount account) => services[account].Value;
+    public static Task<NadeoLiveServices> GetLiveServicesAsync(NadeoAccount account) => liveServices[account].Value;
+    public static Task<NadeoMeetServices> GetMeetServicesAsync(NadeoAccount account) => meetServices[account].Value;
+
+    private static Dictionary<NadeoAccount, Lazy<Task<T>>> ForEachAccount<T>(Func<NadeoAccount, Task<T>> authorize)
+    {
+        return Enum.GetValues<NadeoAccount>().ToDictionary(account => account, account => new Lazy<Task<T>>(() => authorize(account)));
+    }
 
     private static HttpClient CreateClient()
     {
@@ -25,11 +42,14 @@ internal static class LiveNadeo
         return http;
     }
 
-    private static async Task<T> AuthorizeAsync<T>(T api) where T : NadeoAPI
+    private static async Task<T> AuthorizeAsync<T>(T api, NadeoAccount account) where T : NadeoAPI
     {
-        // Works with a dedicated server account or a service account.
-        var login = LiveSecrets.Require("DedicatedServer:Login", "NADEO_API_LOGIN");
-        var password = LiveSecrets.Require("DedicatedServer:Password", "NADEO_API_PASSWORD");
+        var (login, password) = account switch
+        {
+            NadeoAccount.DedicatedServer => (LiveSettings.NadeoAPI.DedicatedServer.Login, LiveSettings.NadeoAPI.DedicatedServer.Password),
+            NadeoAccount.ServiceAccount => (LiveSettings.NadeoAPI.ServiceAccount.Login, LiveSettings.NadeoAPI.ServiceAccount.Password),
+            _ => throw new ArgumentOutOfRangeException(nameof(account))
+        };
 
         await api.AuthorizeAsync(login, password);
 

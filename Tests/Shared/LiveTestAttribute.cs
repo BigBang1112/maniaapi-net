@@ -1,23 +1,33 @@
+using TUnit.Core.Interfaces;
+
 namespace ManiaAPI.Testing;
 
 /// <summary>
 /// Marks a test or class that sends requests to the real service.
-/// Live tests are skipped unless the <c>MANIAAPI_LIVE_TESTS</c> environment variable is <c>true</c> or <c>1</c>.
-/// Combine it with <c>[Category("Live")]</c> so live tests can be selected with <c>--treenode-filter</c>.
+/// It puts the test in the <c>Live</c> category, so live tests can be selected with <c>--treenode-filter</c>,
+/// and retries it, because the services fail now and then on their own.
+/// Live tests are skipped unless <see cref="LiveSettings.EnabledKey"/> is <c>true</c>, see <see cref="LiveSettings"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method)]
-internal sealed class LiveTestAttribute : SkipAttribute
+internal sealed class LiveTestAttribute : SkipAttribute, ITestDiscoveryEventReceiver
 {
-    public const string EnvironmentVariable = "MANIAAPI_LIVE_TESTS";
+    public const string Category = "Live";
+    public const int RetryLimit = 2;
 
-    public static bool Enabled => Environment.GetEnvironmentVariable(EnvironmentVariable) is "1" or "true" or "True" or "TRUE";
-
-    public LiveTestAttribute() : base($"Live test. Set {EnvironmentVariable}=true to run it.")
+    public LiveTestAttribute()
+        : base($"Live test. Set the '{LiveSettings.EnabledKey}' user secret or the {LiveSettings.ToEnvironmentVariable(LiveSettings.EnabledKey)} environment variable to true to run it.")
     {
     }
 
     public override Task<bool> ShouldSkip(TestRegisteredContext context)
     {
-        return Task.FromResult(!Enabled);
+        return Task.FromResult(!LiveSettings.Enabled);
+    }
+
+    public ValueTask OnTestDiscovered(DiscoveredTestContext context)
+    {
+        context.AddCategory(Category);
+        context.SetRetryLimit(RetryLimit);
+        return ValueTask.CompletedTask;
     }
 }

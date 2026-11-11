@@ -44,7 +44,6 @@
   </Folder>
   <Folder Name="/Tests/">
     <File Path="Tests/Directory.Build.props" />
-    <File Path="Tests/Directory.Build.targets" />
     <File Path="Tests/README.md" />
     <Project Path="Tests/ManiaAPI.GBXRemote.Tests/ManiaAPI.GBXRemote.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests.csproj" />

@@ -10,36 +10,50 @@ dotnet test
 
 **Unit tests** run by default. They replace the network with a fake `HttpMessageHandler` (or, for GBXRemote, a loopback TCP server), so they are fast and don't depend on any service being online.
 
-**Live tests** send real requests. They are marked with `[Category("Live"), LiveTest]` and are skipped unless `MANIAAPI_LIVE_TESTS` is `true`:
+**Live tests** send real requests. They are marked with `[LiveTest]`, which puts them in the `Live` category and retries them twice, because the services fail now and then on their own. They are skipped unless the `LiveTests:Enabled` setting is `true`.
 
 ```sh
-# PowerShell: $env:MANIAAPI_LIVE_TESTS = "true"
-MANIAAPI_LIVE_TESTS=true dotnet test --treenode-filter "/*/*/*/*[Category=Live]" --ignore-exit-code 8
+# Once, for every test project
+dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests set "LiveTests:Enabled" true
+
+dotnet test --treenode-filter "/*/*/*/*[Category=Live]" --ignore-exit-code 8
 ```
 
 Some test projects have no live tests, so the filter matches nothing in them. Microsoft Testing Platform reports a run with zero tests as a failure with exit code 8. `--ignore-exit-code 8` stops those projects from failing the run.
 
-Live tests retry twice, because the services fail now and then on their own.
+## Settings
 
-## Credentials
+Live test settings are read by [`LiveSettings`](Shared/LiveSettings.cs). Each setting has one key, which is read from:
 
-Some live tests need credentials. Each one is read from an environment variable first, then from the test project's user secrets. A live test whose credentials are missing is skipped.
+1. **User secrets**, for local development. Every test project shares the same store (`ManiaAPI.NET.Tests`), so a setting is set once, through any test project.
+2. **Environment variables**, for CI. They override user secrets. The name is `MANIAAPI_` followed by the key, with `:` replaced by `__`.
 
-| Project | User secret | Environment variable |
+A live test whose credentials are missing is skipped.
+
+| Key | Environment variable | Used by |
 |---|---|---|
-| `ManiaAPI.NadeoAPI.Tests` | `DedicatedServer:Login` | `NADEO_API_LOGIN` |
-| | `DedicatedServer:Password` | `NADEO_API_PASSWORD` |
-| `ManiaAPI.TrackmaniaAPI.Tests` | `ClientId` | `TRACKMANIA_API_CLIENTID` |
-| | `ClientSecret` | `TRACKMANIA_API_CLIENTSECRET` |
-| `ManiaAPI.ManiaPlanetAPI.Tests` | `ClientId` | `MANIAPLANET_API_CLIENTID` |
-| | `ClientSecret` | `MANIAPLANET_API_CLIENTSECRET` |
+| `LiveTests:Enabled` | `MANIAAPI_LIVETESTS__ENABLED` | every live test |
+| `NadeoAPI:DedicatedServer:Login` | `MANIAAPI_NADEOAPI__DEDICATEDSERVER__LOGIN` | `ManiaAPI.NadeoAPI.Tests` |
+| `NadeoAPI:DedicatedServer:Password` | `MANIAAPI_NADEOAPI__DEDICATEDSERVER__PASSWORD` | |
+| `NadeoAPI:ServiceAccount:Login` | `MANIAAPI_NADEOAPI__SERVICEACCOUNT__LOGIN` | `ManiaAPI.NadeoAPI.Tests` |
+| `NadeoAPI:ServiceAccount:Password` | `MANIAAPI_NADEOAPI__SERVICEACCOUNT__PASSWORD` | |
+| `Trackmania:ClientId` | `MANIAAPI_TRACKMANIA__CLIENTID` | `ManiaAPI.TrackmaniaAPI.Tests` |
+| `Trackmania:ClientSecret` | `MANIAAPI_TRACKMANIA__CLIENTSECRET` | |
+| `ManiaPlanet:ClientId` | `MANIAAPI_MANIAPLANET__CLIENTID` | `ManiaAPI.ManiaPlanetAPI.Tests` |
+| `ManiaPlanet:ClientSecret` | `MANIAAPI_MANIAPLANET__CLIENTSECRET` | |
 
 ```sh
-dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests set "DedicatedServer:Login" "<login>"
+dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests set "NadeoAPI:ServiceAccount:Login" "<login>"
 ```
+
+The Nadeo API has two kinds of accounts, and some endpoints work with only one of them, so they have separate settings:
+
+- `NadeoLiveTests` work with both, so each of them runs once with the dedicated server and once with the service account.
+- `NadeoServiceAccountLiveTests` read other players' data, which only a service account can.
+
+Either kind can be left out. Its tests are then skipped.
 
 ## Layout
 
-- [`Shared`](Shared) is compiled into every test project: the fake HTTP handler, a JWT builder for authorization tests, and `LiveTestAttribute`.
-- [`Shared/Secrets`](Shared/Secrets) is compiled only into projects with a `UserSecretsId`.
+- [`Shared`](Shared) is compiled into every test project: the fake HTTP handlers, a JWT builder for authorization tests, `LiveSettings`, and `LiveTestAttribute`.
 - Live tests are in the `Live` folder of each project.

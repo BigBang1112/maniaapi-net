@@ -1,6 +1,6 @@
 namespace ManiaAPI.UnitedLadder.Tests.Live;
 
-[Category("Live"), LiveTest, Retry(2)]
+[LiveTest]
 public class UnitedLadderLiveTests
 {
     [Test]

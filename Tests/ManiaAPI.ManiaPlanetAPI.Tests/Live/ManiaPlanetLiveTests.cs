@@ -1,6 +1,6 @@
 namespace ManiaAPI.ManiaPlanetAPI.Tests.Live;
 
-[Category("Live"), LiveTest, Retry(2)]
+[LiveTest]
 [NotInParallel("ManiaPlanet")]
 public class ManiaPlanetLiveTests
 {
@@ -9,8 +9,8 @@ public class ManiaPlanetLiveTests
 
     private static async Task<ManiaPlanetAPI> AuthorizeAsync()
     {
-        var clientId = LiveSecrets.Require("ClientId", "MANIAPLANET_API_CLIENTID");
-        var clientSecret = LiveSecrets.Require("ClientSecret", "MANIAPLANET_API_CLIENTSECRET");
+        var clientId = LiveSettings.ManiaPlanet.ClientId;
+        var clientSecret = LiveSettings.ManiaPlanet.ClientSecret;
 
         var api = new ManiaPlanetAPI();
         await api.AuthorizeAsync(clientId, clientSecret);

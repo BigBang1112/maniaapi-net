@@ -1,8 +1,13 @@
 namespace ManiaAPI.NadeoAPI.Tests.Live;
 
-[Category("Live"), LiveTest, Retry(2)]
+/// <summary>
+/// Requests that work with both kinds of account, so each one runs once per <see cref="NadeoAccount"/>.
+/// </summary>
+[LiveTest]
 [NotInParallel("Nadeo")]
-public class NadeoLiveTests
+[Arguments(NadeoAccount.DedicatedServer)]
+[Arguments(NadeoAccount.ServiceAccount)]
+public class NadeoLiveTests(NadeoAccount account)
 {
     private static readonly Guid[] AccountIds =
     [
@@ -19,7 +24,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoServices_MapsAndRecords()
     {
-        var ns = await LiveNadeo.GetServicesAsync();
+        var ns = await LiveNadeo.GetServicesAsync(account);
 
         var mapInfos = await ns.GetMapInfosAsync(MapIds);
         var mapInfoByUid = await ns.GetMapInfoAsync(mapInfos[0].MapUid);
@@ -35,7 +40,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoServices_AccountsAndZones()
     {
-        var ns = await LiveNadeo.GetServicesAsync();
+        var ns = await LiveNadeo.GetServicesAsync(account);
 
         var zones = await ns.GetZonesAsync();
         var playerZones = await ns.GetPlayerZonesAsync(AccountIds);
@@ -51,7 +56,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoLiveServices_CampaignsAndLeaderboards()
     {
-        var nls = await LiveNadeo.GetLiveServicesAsync();
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
         var campaigns = await nls.GetSeasonalCampaignsAsync(1);
         var campaign = campaigns.CampaignList[0];
@@ -69,7 +74,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoLiveServices_Clubs()
     {
-        var nls = await LiveNadeo.GetLiveServicesAsync();
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
         var clubs = await nls.GetClubsAsync(1);
         var club = await nls.GetClubAsync(clubs.ClubList[0].Id);
@@ -82,7 +87,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoMeetServices_CompetitionsAndMatchmaking()
     {
-        var nms = await LiveNadeo.GetMeetServicesAsync();
+        var nms = await LiveNadeo.GetMeetServicesAsync(account);
 
         var competitions = await nms.GetCompetitionsAsync(1);
         var competition = await nms.GetCompetitionAsync(competitions[0].LiveId);
@@ -96,9 +101,9 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoServices_OwnAccountRecords()
     {
-        // Dedicated server accounts are forbidden from reading other accounts' records, only their own.
-        var ns = await LiveNadeo.GetServicesAsync();
-        var nls = await LiveNadeo.GetLiveServicesAsync();
+        // Own records, because dedicated server accounts are forbidden from reading other accounts' records.
+        var ns = await LiveNadeo.GetServicesAsync(account);
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
         var accountId = ns.Handler.JWT?.Subject ?? throw new InvalidOperationException("The token has no account ID.");
         var seasonId = Guid.Parse((await nls.GetSeasonalCampaignsAsync(1)).CampaignList[0].SeasonUid);
 
@@ -120,7 +125,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoServices_Players()
     {
-        var ns = await LiveNadeo.GetServicesAsync();
+        var ns = await LiveNadeo.GetServicesAsync(account);
 
         var playerZone = await ns.GetPlayerZoneAsync(AccountIds[0]);
         var webIdentity = await ns.GetPlayerWebIdentityAsync(AccountIds[0]);
@@ -132,7 +137,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoServices_MapInfosByUid()
     {
-        var ns = await LiveNadeo.GetServicesAsync();
+        var ns = await LiveNadeo.GetServicesAsync(account);
 
         var mapInfos = await ns.GetMapInfosAsync(MapIds);
         var mapInfosByUid = await ns.GetMapInfosAsync(mapInfos.Select(x => x.MapUid));
@@ -145,7 +150,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoLiveServices_OfficialCampaigns()
     {
-        var nls = await LiveNadeo.GetLiveServicesAsync();
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
 #pragma warning disable CS0618 // Obsolete but still public, so it still needs to work.
         var weekly = await nls.GetWeeklyCampaignsAsync(1);
@@ -165,7 +170,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoLiveServices_TrackOfTheDay()
     {
-        var nls = await LiveNadeo.GetLiveServicesAsync();
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
         var totds = await nls.GetTrackOfTheDaysAsync(1);
         var mapUid = totds.MonthList[0].Days.First(x => !string.IsNullOrEmpty(x.MapUid)).MapUid;
@@ -178,7 +183,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoLiveServices_Leaderboards()
     {
-        var nls = await LiveNadeo.GetLiveServicesAsync();
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
         var campaign = (await nls.GetSeasonalCampaignsAsync(1)).CampaignList[0];
         var mapUid = campaign.Playlist[0].MapUid;
@@ -208,7 +213,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoLiveServices_ClubCampaigns()
     {
-        var nls = await LiveNadeo.GetLiveServicesAsync();
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
         var clubCampaign = (await nls.GetClubCampaignsAsync(1)).ClubCampaignList[0];
         var clubId = clubCampaign.ClubId;
@@ -230,7 +235,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoLiveServices_ClubActivities()
     {
-        var nls = await LiveNadeo.GetLiveServicesAsync();
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
         var room = (await nls.GetClubRoomsAsync(1)).ClubRoomList[0];
         var roomById = await nls.GetClubRoomAsync(room.ClubId, room.ActivityId);
@@ -251,7 +256,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoLiveServices_ClubMember()
     {
-        var nls = await LiveNadeo.GetLiveServicesAsync();
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
         var club = (await nls.GetClubsAsync(1)).ClubList[0];
         var member = (await nls.GetClubMembersAsync(club.Id, 1)).ClubMemberList[0];
@@ -264,7 +269,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoLiveServices_OwnAccount()
     {
-        var nls = await LiveNadeo.GetLiveServicesAsync();
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
         var campaign = (await nls.GetSeasonalCampaignsAsync(1)).CampaignList[0];
 
@@ -290,7 +295,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoMeetServices_CupOfTheDay()
     {
-        var nms = await LiveNadeo.GetMeetServicesAsync();
+        var nms = await LiveNadeo.GetMeetServicesAsync(account);
 
         var current = await nms.GetCurrentCupOfTheDayAsync();
         var cotd = await GetFinishedCupOfTheDayAsync(nms);
@@ -324,8 +329,8 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoMeetServices_Challenges()
     {
-        var nms = await LiveNadeo.GetMeetServicesAsync();
-        var nls = await LiveNadeo.GetLiveServicesAsync();
+        var nms = await LiveNadeo.GetMeetServicesAsync(account);
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
         var challenges = await nms.GetChallengesAsync(1);
         var cotd = await GetFinishedCupOfTheDayAsync(nms);
@@ -348,7 +353,7 @@ public class NadeoLiveTests
     [Test]
     public async Task NadeoMeetServices_Matchmaking()
     {
-        var nms = await LiveNadeo.GetMeetServicesAsync();
+        var nms = await LiveNadeo.GetMeetServicesAsync(account);
 
         var summary = await nms.GetMatchmakingSummaryAsync();
         var players = (await nms.GetMatchmakingRankingsAsync(summary.Ranked3v3Id, 2)).Results.Select(x => x.Player).ToList();

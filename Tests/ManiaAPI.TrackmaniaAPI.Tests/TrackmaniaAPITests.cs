@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Text.Json;
 
 namespace ManiaAPI.TrackmaniaAPI.Tests;
 
@@ -166,6 +167,51 @@ public class TrackmaniaAPITests
         var names = await api.GetDisplayNamesAsync(AccountA);
 
         await Assert.That(names).IsSameReferenceAs(ImmutableDictionary<Guid, string>.Empty);
+    }
+
+    [Test]
+    public async Task GetDisplayNamesAsync_ApiReturnsEmptyArrayWithCancellationToken_ReturnsEmpty()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var api = CreateApi(fake);
+
+        var names = await api.GetDisplayNamesAsync([AccountA], CancellationToken.None);
+
+        await Assert.That(names).IsEmpty();
+    }
+
+    [Test]
+    [Arguments("[1]")]
+    [Arguments("{")]
+    public async Task GetDisplayNamesAsync_InvalidJson_Throws(string json)
+    {
+        var fake = FakeHttpMessageHandler.Json(json);
+        using var api = CreateApi(fake);
+
+        await Assert.ThrowsAsync<JsonException>(() => api.GetDisplayNamesAsync(AccountA));
+    }
+
+    [Test]
+    public async Task GetAccountIdsAsync_ApiReturnsEmptyArray_ReturnsEmpty()
+    {
+        // The API answers with [] instead of {} when none of the display names exist.
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var api = CreateApi(fake);
+
+        var ids = await api.GetAccountIdsAsync([DisplayName], CancellationToken.None);
+
+        await Assert.That(ids).IsEmpty();
+    }
+
+    [Test]
+    [Arguments("[1]")]
+    [Arguments("{")]
+    public async Task GetAccountIdsAsync_InvalidJson_Throws(string json)
+    {
+        var fake = FakeHttpMessageHandler.Json(json);
+        using var api = CreateApi(fake);
+
+        await Assert.ThrowsAsync<JsonException>(() => api.GetAccountIdsAsync(DisplayName));
     }
 
     [Test]

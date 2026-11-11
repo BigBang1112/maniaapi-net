@@ -1,6 +1,6 @@
 namespace ManiaAPI.TrackmaniaAPI.Tests.Live;
 
-[Category("Live"), LiveTest, Retry(2)]
+[LiveTest]
 [NotInParallel(nameof(TrackmaniaAPI))]
 public class TrackmaniaAPILiveTests
 {
@@ -12,8 +12,8 @@ public class TrackmaniaAPILiveTests
 
     private static async Task<TrackmaniaAPI> AuthorizeAsync()
     {
-        var clientId = LiveSecrets.Require("ClientId", "TRACKMANIA_API_CLIENTID");
-        var clientSecret = LiveSecrets.Require("ClientSecret", "TRACKMANIA_API_CLIENTSECRET");
+        var clientId = LiveSettings.Trackmania.ClientId;
+        var clientSecret = LiveSettings.Trackmania.ClientSecret;
 
         var api = new TrackmaniaAPI();
         await api.AuthorizeAsync(clientId, clientSecret, ["read_favorite"]);
