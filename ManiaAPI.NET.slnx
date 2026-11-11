@@ -50,6 +50,7 @@
     <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Tests/ManiaAPI.ManiaPlanetAPI.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.MasterServer.Tests/ManiaAPI.MasterServer.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.NadeoAPI.Extensions.Gbx.Tests/ManiaAPI.NadeoAPI.Extensions.Gbx.Tests.csproj" />
+    <Project Path="Tests/ManiaAPI.NadeoAPI.Extensions.Hosting.Tests/ManiaAPI.NadeoAPI.Extensions.Hosting.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.NadeoAPI.Tests/ManiaAPI.NadeoAPI.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.TMX.Tests/ManiaAPI.TMX.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.TrackmaniaAPI.Tests/ManiaAPI.TrackmaniaAPI.Tests.csproj" />
