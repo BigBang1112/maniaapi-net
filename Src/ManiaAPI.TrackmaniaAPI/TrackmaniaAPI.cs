@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Reflection.PortableExecutable;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
@@ -167,20 +166,13 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             return ImmutableDictionary<Guid, string>.Empty;
         }
 
-        return await GetJsonAsync($"display-names?{string.Join('&', accountIds.Select((x, i) => $"accountId[{i}]={x}"))}",
+        return await GetDictionaryJsonAsync($"display-names?{string.Join('&', accountIds.Select((x, i) => $"accountId[{i}]={x}"))}",
             TrackmaniaAPIJsonContext.Default.ImmutableDictionaryGuidString, cancellationToken);
     }
 
     public async Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(params Guid[] accountIds)
     {
-        try
-        {
-            return await GetDisplayNamesAsync(accountIds, CancellationToken.None);
-        }
-        catch (JsonException)
-        {
-            return ImmutableDictionary<Guid, string>.Empty;
-        }
+        return await GetDisplayNamesAsync(accountIds, CancellationToken.None);
     }
 
     public virtual async Task<User> GetUserAsync(CancellationToken cancellationToken = default)
@@ -197,20 +189,13 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             return ImmutableDictionary<string, Guid>.Empty;
         }
 
-        return await GetJsonAsync($"display-names/account-ids?{string.Join('&', displayNames.Select((x, i) => $"displayName[{i}]={Uri.EscapeDataString(x)}"))}",
+        return await GetDictionaryJsonAsync($"display-names/account-ids?{string.Join('&', displayNames.Select((x, i) => $"displayName[{i}]={Uri.EscapeDataString(x)}"))}",
             TrackmaniaAPIJsonContext.Default.ImmutableDictionaryStringGuid, cancellationToken);
     }
 
     public async Task<ImmutableDictionary<string, Guid>> GetAccountIdsAsync(params string[] accountIds)
     {
-        try
-        {
-            return await GetAccountIdsAsync(accountIds, CancellationToken.None);
-        }
-        catch (JsonException)
-        {
-            return ImmutableDictionary<string, Guid>.Empty;
-        }
+        return await GetAccountIdsAsync(accountIds, CancellationToken.None);
     }
 
     public virtual async Task<ImmutableList<MapRecord>> GetUserMapRecordsAsync(IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
@@ -250,6 +235,43 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
         var content = JsonContent.Create(new FavoriteMapRequest(mapUid), TrackmaniaAPIJsonContext.Default.FavoriteMapRequest);
         using var response = await SendAsync(HttpMethod.Post, "user/maps/favorite/remove", content, cancellationToken);
+    }
+
+    /// <summary>
+    /// Like <see cref="GetJsonAsync{T}"/>, but for endpoints that answer with an empty array instead of an empty object when nothing matches.
+    /// </summary>
+    private async Task<ImmutableDictionary<TKey, TValue>> GetDictionaryJsonAsync<TKey, TValue>(
+        string endpoint,
+        JsonTypeInfo<ImmutableDictionary<TKey, TValue>> jsonTypeInfo,
+        CancellationToken cancellationToken) where TKey : notnull
+    {
+        using var response = await SendAsync(HttpMethod.Get, endpoint, content: null, cancellationToken);
+
+        byte[] json;
+
+        try
+        {
+            json = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new TrackmaniaAPIResponseException(ex.Message, ex.InnerException);
+        }
+
+        if (IsEmptyArray(json))
+        {
+            return ImmutableDictionary<TKey, TValue>.Empty;
+        }
+
+        return JsonSerializer.Deserialize(json, jsonTypeInfo) ?? throw new JsonException("The response body is null.");
+    }
+
+    private static bool IsEmptyArray(ReadOnlySpan<byte> json)
+    {
+        var reader = new Utf8JsonReader(json);
+
+        return reader.Read() && reader.TokenType == JsonTokenType.StartArray
+            && reader.Read() && reader.TokenType == JsonTokenType.EndArray;
     }
 
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
