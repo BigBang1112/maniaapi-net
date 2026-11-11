@@ -48,4 +48,8 @@
 		<ProjectReference Include="..\ManiaAPI.TrackmaniaAPI\ManiaAPI.TrackmaniaAPI.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="ManiaAPI.TrackmaniaAPI.Extensions.Hosting.Tests" />
+	</ItemGroup>
+
 </Project>

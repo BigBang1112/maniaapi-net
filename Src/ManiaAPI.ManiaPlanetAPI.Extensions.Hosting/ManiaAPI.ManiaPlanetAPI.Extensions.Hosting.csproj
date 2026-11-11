@@ -48,4 +48,8 @@
 		<ProjectReference Include="..\ManiaAPI.ManiaPlanetAPI\ManiaAPI.ManiaPlanetAPI.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests" />
+	</ItemGroup>
+
 </Project>
