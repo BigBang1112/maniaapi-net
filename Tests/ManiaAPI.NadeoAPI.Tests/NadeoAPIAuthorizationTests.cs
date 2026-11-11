@@ -171,6 +171,52 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
+    public async Task GetZonesAsync_TokenExpiredOver20HoursAfterAuthorizeAsync_ReauthorizesWithCredentials()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            LongExpiredTokenResponse,
+            () => NadeoTokens.Valid(Audience, out _),
+            () => FakeResponse.Json("[]"));
+        using var ns = new NadeoServices(fake.CreateClient());
+        await ns.AuthorizeAsync(Login, Password);
+
+        await ns.GetZonesAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl, AuthenticationUrl, ZonesUrl]);
+        await Assert.That(fake.Requests[1].Authorization?.Parameter).IsEqualTo(Convert.ToBase64String(Encoding.UTF8.GetBytes($"{Login}:{Password}")));
+    }
+
+    [Test]
+    public async Task GetZonesAsync_TokenExpiredOver20HoursWithoutSavedCredentials_RefreshesWithRefreshToken()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            LongExpiredTokenResponse,
+            () => NadeoTokens.Valid(Audience, out _),
+            () => FakeResponse.Json("[]"));
+        using var ns = new NadeoServices(fake.CreateClient(), new NadeoAPIHandler { SaveCredentials = false });
+        await ns.AuthorizeAsync(Login, Password);
+
+        await ns.GetZonesAsync();
+
+        await Assert.That(fake.Requests[1].Url).IsEqualTo(RefreshUrl);
+        await Assert.That(fake.Requests[1].Authorization?.Parameter).IsEqualTo($"t={RefreshToken}");
+    }
+
+    [Test]
+    public async Task GetZonesAsync_TokenExpiredOver20HoursWithPendingCredentials_ReauthorizesWithCredentials()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            LongExpiredTokenResponse,
+            () => NadeoTokens.Valid(Audience, out _),
+            () => FakeResponse.Json("[]"));
+        using var ns = new NadeoServices(fake.CreateClient(), PendingCredentialsHandler());
+
+        await ns.GetZonesAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl, AuthenticationUrl, ZonesUrl]);
+    }
+
+    [Test]
     public async Task RefreshAsync_BeforeRefreshTime_ReturnsFalseWithoutRequest()
     {
         var fake = FakeHttpMessageHandler.Sequence(() => NadeoTokens.Valid(Audience, out _));
@@ -237,6 +283,15 @@ public class NadeoAPIAuthorizationTests
     private static HttpResponseMessage ExpiredTokenResponse()
     {
         var expiredToken = NadeoTokens.AccessToken(Audience, DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddMinutes(-30));
+        return FakeResponse.Json(NadeoTokens.Response(expiredToken, refreshToken: RefreshToken));
+    }
+
+    /// <summary>
+    /// A token response that expired over 20 hours ago, so its refresh token is likely expired too.
+    /// </summary>
+    private static HttpResponseMessage LongExpiredTokenResponse()
+    {
+        var expiredToken = NadeoTokens.AccessToken(Audience, DateTimeOffset.UtcNow.AddHours(-21), DateTimeOffset.UtcNow.AddHours(-21.5));
         return FakeResponse.Json(NadeoTokens.Response(expiredToken, refreshToken: RefreshToken));
     }
 }

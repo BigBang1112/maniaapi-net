@@ -107,6 +107,12 @@ public abstract class NadeoAPI : INadeoAPI
         using var response = await Client.SendAsync(authRequest, cancellationToken);
 
         await SaveTokenResponseAsync(response, cancellationToken);
+
+        // Kept so RefreshAsync can reauthorize once the refresh token has expired too
+        if (Handler.SaveCredentials)
+        {
+            Handler.SavedCredentials = new NadeoAPICredentials(login, password);
+        }
     }
 
     public async Task AuthorizeAsync(NadeoAPICredentials credentials, CancellationToken cancellationToken = default)
@@ -166,10 +172,11 @@ public abstract class NadeoAPI : INadeoAPI
             return false;
         }
 
-        // if older than 20 hours, reauthorize if SaveCredentials
-        if (Handler.SaveCredentials && DateTimeOffset.UtcNow >= ExpirationTime.Value.AddHours(20))
+        // If expired for over 20 hours, the refresh token is likely expired too, so reauthorize when credentials were saved.
+        // Without saved credentials, try the refresh token anyway.
+        if (Handler.SaveCredentials && Handler.SavedCredentials is not null && DateTimeOffset.UtcNow >= ExpirationTime.Value.AddHours(20))
         {
-            await AuthorizeAsync(Handler.SavedCredentials ?? throw new Exception("No credentials available to reauthorize."), cancellationToken);
+            await AuthorizeAsync(Handler.SavedCredentials, cancellationToken);
             return true;
         }
 
@@ -206,11 +213,6 @@ public abstract class NadeoAPI : INadeoAPI
                 if (Handler.PendingCredentials is not null)
                 {
                     await AuthorizeAsync(Handler.PendingCredentials, cancellationToken);
-
-                    if (Handler.SaveCredentials)
-                    {
-                        Handler.SavedCredentials = Handler.PendingCredentials;
-                    }
 
                     Handler.PendingCredentials = null;
                 }
