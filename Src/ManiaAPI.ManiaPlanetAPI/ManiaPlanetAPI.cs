@@ -171,7 +171,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
         await ValidateResponseAsync(response, cancellationToken);
 
-        var (_, _, accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        var (_, _, accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new JsonException("The response body is null.");
 
         Handler.Payload = JwtPayloadManiaPlanetAPI.DecodeFromAccessToken(accessToken);
 
@@ -543,7 +543,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     protected internal async Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await GetResponseAsync(endpoint, cancellationToken);
-        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
     private bool IsAuthorizationDue([NotNullWhen(true)] out ManiaPlanetAPICredentials? credentials)

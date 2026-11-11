@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Web;
 
 namespace ManiaAPI.NadeoAPI;
@@ -684,7 +685,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     public virtual async Task<string> JoinDailyChannelAsync(CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, "token/channel/daily/join", cancellationToken: cancellationToken);
-        return (await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.DailyChannelJoin, cancellationToken))?.JoinLink ?? throw new Exception("This shouldn't be null.");
+        return (await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.DailyChannelJoin, cancellationToken))?.JoinLink ?? throw new JsonException("The response body is null.");
     }
 
     public virtual async Task<PlayerServerAccountCollection> GetDedicatedServerAccountsAsync(CancellationToken cancellationToken = default)
@@ -837,7 +838,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     public virtual async Task<ClubMember> JoinClubAsync(int clubId, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, $"token/club/{clubId}/member/create", cancellationToken: cancellationToken);
-        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubMember, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubMember, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
     public virtual async Task<ClubNews> GetClubNewsAsync(int clubId, int activityId, CancellationToken cancellationToken = default)
@@ -848,13 +849,13 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     public virtual async Task<ClubTagInfo> PinClubAsync(int clubId, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, $"token/club/{clubId}/pin", cancellationToken: cancellationToken);
-        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubTagInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubTagInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
     public virtual async Task<ClubRoomJoinLink> JoinClubRoomAsync(int clubId, int activityId, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, $"token/club/{clubId}/room/{activityId}/join", cancellationToken: cancellationToken);
-        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubRoomJoinLink, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubRoomJoinLink, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
     public virtual async Task<string> GetClubRoomPasswordAsync(int clubId, int activityId, CancellationToken cancellationToken = default)
@@ -866,7 +867,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     public virtual async Task<ClubTagInfo> SetClubTagAsync(int clubId, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, $"token/club/{clubId}/tag", cancellationToken: cancellationToken);
-        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubTagInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubTagInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
     public virtual async Task<Club> CreateClubAsync(ClubCreation creation, CancellationToken cancellationToken = default)
@@ -955,13 +956,13 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     public virtual async Task<ClubMember> SetClubMemberVipAsync(int clubId, Guid accountId, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, $"token/club/{clubId}/vip/{accountId}/set", cancellationToken: cancellationToken);
-        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubMember, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubMember, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
     public virtual async Task<ClubMember> UnsetClubMemberVipAsync(int clubId, Guid accountId, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, $"token/club/{clubId}/vip/{accountId}/unset", cancellationToken: cancellationToken);
-        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubMember, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ClubMember, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
     public virtual async Task<ClubMember> EditClubMemberAsync(int clubId, Guid accountId, ClubMemberEdition edition, CancellationToken cancellationToken = default)

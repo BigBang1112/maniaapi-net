@@ -19,7 +19,7 @@ public sealed record JwtPayloadManiaPlanetAPI(
     public static JwtPayloadManiaPlanetAPI DecodeFromAccessToken(string accessToken)
     {
         return JsonSerializer.Deserialize(DecodeToJsonBytesFromAccessToken(accessToken), ManiaPlanetAPIJsonContext.Default.JwtPayloadManiaPlanetAPI)
-            ?? throw new Exception("This should never happen");
+            ?? throw new JsonException("The access token payload is null.");
     }
 
     private static byte[] DecodeToJsonBytesFromAccessToken(string accessToken)

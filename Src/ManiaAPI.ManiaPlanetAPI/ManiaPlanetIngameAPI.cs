@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text;
 
 namespace ManiaAPI.ManiaPlanetAPI;
@@ -61,7 +62,7 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
 
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync(ManiaPlanetIngameAPIJsonContext.Default.ManiaPlanetIngameAuthResponse, cancellationToken) ?? throw new Exception("This should never happen");
+        return await response.Content.ReadFromJsonAsync(ManiaPlanetIngameAPIJsonContext.Default.ManiaPlanetIngameAuthResponse, cancellationToken) ?? throw new JsonException("The access token payload is null.");
     }
 
     public async Task<HttpResponseMessage> DownloadTitleAsync(string titleId, CancellationToken cancellationToken = default)
@@ -157,7 +158,7 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync(ManiaPlanetIngameAPIJsonContext.Default.ImmutableListIngameTitle, cancellationToken)
-            ?? throw new Exception("This shouldn't be null.");
+            ?? throw new JsonException("The response body is null.");
     }
 
     /// <summary>
@@ -330,6 +331,6 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.ImmutableListOnlineServer, cancellationToken)
-            ?? throw new Exception("This shouldn't be null.");
+            ?? throw new JsonException("The response body is null.");
     }
 }

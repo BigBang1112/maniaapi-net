@@ -1,6 +1,7 @@
 ﻿using GBX.NET;
 using GBX.NET.Engines.Game;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text;
 using TmEssentials;
 
@@ -123,7 +124,7 @@ public static class NadeoServicesExtensions
     private static async Task<MapInfo> UploadMapAsync(INadeoServices services, MultipartFormDataContent content, CancellationToken cancellationToken)
     {
         using var response = await services.SendAsync(HttpMethod.Post, "maps/", content, cancellationToken);
-        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.MapInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.MapInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
 
@@ -351,7 +352,7 @@ public static class NadeoServicesExtensions
     private static async Task<MapInfo> UpdateMapAsync(INadeoServices services, Guid mapId, MultipartFormDataContent content, CancellationToken cancellationToken)
     {
         using var response = await services.SendAsync(HttpMethod.Post, $"maps/{mapId}", content, cancellationToken);
-        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.MapInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.MapInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
 

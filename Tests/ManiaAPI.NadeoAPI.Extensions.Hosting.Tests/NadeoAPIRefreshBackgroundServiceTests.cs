@@ -33,7 +33,7 @@ public class NadeoAPIRefreshBackgroundServiceTests
 
         var warning = host.RefreshWarnings.First();
         await Assert.That(warning.Message).Contains(nameof(NadeoServices));
-        await Assert.That(warning.Exception).IsTypeOf<HttpRequestException>();
+        await Assert.That(warning.Exception).IsTypeOf<NadeoAPIResponseException>();
     }
 
     [Test]

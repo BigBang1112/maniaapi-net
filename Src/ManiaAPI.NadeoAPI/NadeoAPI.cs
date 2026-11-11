@@ -102,9 +102,7 @@ public abstract class NadeoAPI : INadeoAPI
             Content = content
         };
 
-        using var response = await Client.SendAsync(authRequest, cancellationToken);
-
-        await SaveTokenResponseAsync(response, cancellationToken);
+        await RequestTokenAsync(authRequest, cancellationToken);
 
         // Kept so RefreshAsync can reauthorize once the refresh token has expired too
         if (Handler.SaveCredentials)
@@ -146,21 +144,45 @@ public abstract class NadeoAPI : INadeoAPI
         throw new NadeoAPIResponseException(error, response.StatusCode, response.ReasonPhrase);
     }
 
-    internal async Task SaveTokenResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    /// <summary>
+    /// Sends a request to the authentication endpoint and stores the tokens from the response.
+    /// </summary>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
+    /// <exception cref="JsonException">The response has no usable tokens.</exception>
+    private async Task RequestTokenAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        response.EnsureSuccessStatusCode();
+        HttpResponseMessage response;
+
+        try
+        {
+            response = await Client.SendAsync(request, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new NadeoAPIResponseException(ex.Message, ex);
+        }
+
+        using (response)
+        {
+            await ValidateResponseAsync(response, cancellationToken);
 
 #if DEBUG
-        var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
+            var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 #endif
 
-        var (accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.AuthorizationResponse, cancellationToken)
-            ?? throw new Exception("This shouldn't be null.");
+            var (accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.AuthorizationResponse, cancellationToken)
+                ?? throw new JsonException("The authentication response body is null.");
 
-        Handler.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken ?? throw new Exception("accessToken is null")}");
-        Handler.RefreshToken = refreshToken ?? throw new Exception("refreshToken is null");
+            if (accessToken is null || refreshToken is null)
+            {
+                throw new JsonException("The authentication response is missing the access token or the refresh token.");
+            }
 
-        Handler.JWT = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);
+            Handler.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
+            Handler.RefreshToken = refreshToken;
+
+            Handler.JWT = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);
+        }
     }
 
     public virtual async ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default)
@@ -193,9 +215,7 @@ public abstract class NadeoAPI : INadeoAPI
                 Headers = { Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={Handler.RefreshToken}") }
             };
 
-            using var response = await Client.SendAsync(message, cancellationToken);
-
-            await SaveTokenResponseAsync(response, cancellationToken);
+            await RequestTokenAsync(message, cancellationToken);
 
             return true;
         }
@@ -286,7 +306,7 @@ public abstract class NadeoAPI : INadeoAPI
     protected async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
-        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
     /// <summary>
@@ -323,7 +343,7 @@ public abstract class NadeoAPI : INadeoAPI
     protected async Task<T> PostJsonAsync<T>(string? endpoint, JsonContent content, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, endpoint, content, cancellationToken: cancellationToken);
-        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
 #if DEBUG

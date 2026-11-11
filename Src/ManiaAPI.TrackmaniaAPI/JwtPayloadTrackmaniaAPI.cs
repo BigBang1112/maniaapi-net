@@ -19,7 +19,7 @@ public sealed record JwtPayloadTrackmaniaAPI(
     public static JwtPayloadTrackmaniaAPI DecodeFromAccessToken(string accessToken)
     {
         return JsonSerializer.Deserialize(DecodeToJsonBytesFromAccessToken(accessToken), TrackmaniaAPIJsonContext.Default.JwtPayloadTrackmaniaAPI)
-            ?? throw new Exception("This should never happen");
+            ?? throw new JsonException("The access token payload is null.");
     }
 
     private static byte[] DecodeToJsonBytesFromAccessToken(string accessToken)

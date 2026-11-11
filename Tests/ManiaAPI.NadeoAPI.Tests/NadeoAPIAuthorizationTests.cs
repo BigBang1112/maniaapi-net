@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 
 namespace ManiaAPI.NadeoAPI.Tests;
 
@@ -60,12 +61,15 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
-    public async Task AuthorizeAsync_FailedAuthentication_Throws()
+    public async Task AuthorizeAsync_FailedAuthentication_ThrowsWithErrorDetails()
     {
-        var fake = FakeHttpMessageHandler.Json("{}", HttpStatusCode.Unauthorized);
+        var fake = FakeHttpMessageHandler.Json("""{"code":"C-AA-00-03","message":"Invalid credentials."}""", HttpStatusCode.Unauthorized);
         using var ns = new NadeoServices(fake.CreateClient());
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => ns.AuthorizeAsync(Login, "wrong"));
+        var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.AuthorizeAsync(Login, "wrong"));
+
+        await Assert.That(ex!.Message).IsEqualTo("Invalid credentials.");
+        await Assert.That(ex.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
     }
 
     [Test]
@@ -74,9 +78,45 @@ public class NadeoAPIAuthorizationTests
         var fake = FakeHttpMessageHandler.Json("{}", HttpStatusCode.Unauthorized);
         using var ns = new NadeoServices(fake.CreateClient());
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => ns.AuthorizeAsync(Login, "wrong"));
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.AuthorizeAsync(Login, "wrong"));
 
         await Assert.That(ns.ExpirationTime).IsNull();
+    }
+
+    [Test]
+    public async Task AuthorizeAsync_NetworkFailure_ThrowsResponseException()
+    {
+        var fake = new FakeHttpMessageHandler(_ => throw new HttpRequestException("Connection refused"));
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.AuthorizeAsync(Login, Password));
+
+        await Assert.That(ex!.InnerException).IsTypeOf<HttpRequestException>();
+    }
+
+    [Test]
+    [Arguments("null")]
+    [Arguments("""{"accessToken":null,"refreshToken":"refresh-token"}""")]
+    public async Task AuthorizeAsync_ResponseWithoutTokens_ThrowsJsonException(string json)
+    {
+        var fake = FakeHttpMessageHandler.Json(json);
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await Assert.ThrowsAsync<JsonException>(() => ns.AuthorizeAsync(Login, Password));
+    }
+
+    [Test]
+    public async Task RefreshAsync_FailedRefresh_ThrowsResponseException()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            ExpiredTokenResponse,
+            () => FakeResponse.Json("""{"message":"Refresh token expired."}""", HttpStatusCode.Unauthorized));
+        using var ns = new NadeoServices(fake.CreateClient());
+        await ns.AuthorizeAsync(Login, Password);
+
+        var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.RefreshAsync().AsTask());
+
+        await Assert.That(ex!.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
     }
 
     [Test]

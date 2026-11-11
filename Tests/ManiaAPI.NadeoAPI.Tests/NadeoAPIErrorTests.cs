@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace ManiaAPI.NadeoAPI.Tests;
 
 public class NadeoAPIErrorTests
@@ -37,6 +39,15 @@ public class NadeoAPIErrorTests
         await Assert.That(ex!.Message).IsEqualTo("Bad Gateway");
         await Assert.That(ex.StatusCode).IsEqualTo(HttpStatusCode.BadGateway);
         await Assert.That(ex.Response).IsNull();
+    }
+
+    [Test]
+    public async Task GetZonesAsync_NullBody_ThrowsJsonException()
+    {
+        var fake = FakeHttpMessageHandler.Json("null");
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await Assert.ThrowsAsync<JsonException>(() => ns.GetZonesAsync());
     }
 
     [Test]

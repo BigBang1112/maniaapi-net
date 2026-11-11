@@ -23,7 +23,7 @@ public sealed record JwtPayloadNadeoAPI(
     public static JwtPayloadNadeoAPI DecodeFromAccessToken(string accessToken)
     {
         return JsonSerializer.Deserialize(DecodeToJsonBytesFromAccessToken(accessToken), NadeoAPIJsonContext.Default.JwtPayloadNadeoAPI)
-            ?? throw new Exception("This should never happen");
+            ?? throw new JsonException("The access token payload is null.");
     }
 
     private static byte[] DecodeToJsonBytesFromAccessToken(string accessToken)

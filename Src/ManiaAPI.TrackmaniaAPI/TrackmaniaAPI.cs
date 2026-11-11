@@ -109,7 +109,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
         await ValidateResponseAsync(response, cancellationToken);
 
-        var (_, _, accessToken) = await response.Content.ReadFromJsonAsync(TrackmaniaAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        var (_, _, accessToken) = await response.Content.ReadFromJsonAsync(TrackmaniaAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new JsonException("The response body is null.");
 
         Handler.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         Handler.Payload = JwtPayloadTrackmaniaAPI.DecodeFromAccessToken(accessToken);
@@ -258,7 +258,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
         try
         {
-            return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+            return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
         }
         catch (HttpRequestException ex)
         {
