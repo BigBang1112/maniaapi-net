@@ -4,7 +4,13 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI.Converters;
 
-internal sealed class NullableGuidConverter : JsonConverter<Guid?>
+/// <summary>
+/// Converts an optional GUID that the Nadeo API sends as an empty string when there is none.
+/// </summary>
+/// <remarks>
+/// Public so that a <see cref="JsonSerializerContext"/> outside this library can use it when it includes Nadeo API models.
+/// </remarks>
+public sealed class NullableGuidConverter : JsonConverter<Guid?>
 {
     public override Guid? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
