@@ -86,7 +86,7 @@ public partial class MX : IMX
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.9.1";
+        const string version = PackageInfo.Version;
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 

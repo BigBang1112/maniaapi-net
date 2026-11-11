@@ -310,6 +310,18 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
+    public async Task Constructor_AddsLibraryUserAgentWithPackageVersion()
+    {
+        using var http = new HttpClient();
+
+        _ = new NadeoServices(http);
+
+        var product = http.DefaultRequestHeaders.UserAgent.Single(x => x.Product?.Name == "ManiaAPI.NET").Product!;
+        // The assembly version comes from the same <Version> in the project file
+        await Assert.That(product.Version).IsEqualTo(typeof(NadeoServices).Assembly.GetName().Version!.ToString(3));
+    }
+
+    [Test]
     [Arguments("aa")]
     [Arguments("aaa")]
     [Arguments("aaaa")]

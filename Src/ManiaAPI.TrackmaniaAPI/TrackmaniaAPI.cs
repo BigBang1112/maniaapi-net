@@ -65,7 +65,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.8.5";
+        const string version = PackageInfo.Version;
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
