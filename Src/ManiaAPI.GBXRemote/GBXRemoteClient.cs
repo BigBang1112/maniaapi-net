@@ -23,6 +23,9 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     // GBXRemote 1 messages carry no handle, so a fixed placeholder is used to key pending requests
     private const uint NoHandle = 0;
 
+    // Far above any real response, but stops a corrupt length prefix from allocating gigabytes
+    private const int MaxPayloadSize = 64 * 1024 * 1024;
+
     private uint handle = 0x80000000;
 
 #if NET9_0_OR_GREATER
@@ -75,6 +78,9 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
 
     [LoggerMessage(EventId = 7, Level = LogLevel.Debug, Message = "{MethodName} (0x{Handle:x8}) response received (in {ElapsedMilliseconds}ms).")]
     private static partial void LogMethodResponseReceived(ILogger logger, string methodName, uint handle, double elapsedMilliseconds);
+
+    [LoggerMessage(EventId = 8, Level = LogLevel.Error, Message = "Failed to read XML callback (0x{Handle:x8}), skipping...")]
+    private static partial void LogInvalidCallback(ILogger logger, Exception exception, uint handle);
 
     private GBXRemoteClient(TcpClient tcp, int version, ILogger<GBXRemoteClient> logger)
     {
@@ -253,6 +259,12 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
                 handle = NoHandle;
             }
 
+            if (payloadSize < 0 || payloadSize > MaxPayloadSize)
+            {
+                // The framing can't be trusted anymore, so the connection can't continue
+                throw new ClientException($"GBXRemote message has invalid size ({payloadSize} bytes, maximum is {MaxPayloadSize} bytes)");
+            }
+
             var payloadBuffer = new byte[payloadSize];
             await stream.ReadExactlyAsync(payloadBuffer, cancellationToken);
 
@@ -320,17 +332,19 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     {
         await foreach (var (handle, xml) in callbackChannel.Reader.ReadAllAsync(cancellationToken))
         {
-            var r = new MiniXmlReader(xml);
+            string methodName;
+            object[] parameters;
 
-            _ = r.SkipProcessingInstruction();
-            _ = r.SkipStartElement("methodCall");
-            _ = r.SkipStartElement("methodName");
-
-            var methodName = r.ReadContentAsString();
-
-            _ = r.SkipEndElement();
-
-            var parameters = ReadXmlRpcParams(xml, ref r);
+            try
+            {
+                parameters = ParseXmlRpcMethodCall(xml, out methodName);
+            }
+            catch (Exception ex)
+            {
+                // One unreadable callback must not stop the ones after it
+                LogInvalidCallback(logger, ex, handle);
+                continue;
+            }
 
             if (routeHandlers.TryGetValue(methodName, out var handlers))
             {
@@ -439,15 +453,19 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
             handle = version >= 2 ? GetNextHandle() : NoHandle;
             var channel = GetOrCreatePendingRequestChannel(handle.Value);
 
+            // The ListenTask cancels cts once the connection is lost/closed. Watching it covers calls made after that,
+            // whose channel the ListenTask never completes, and whose write can still succeed into the socket buffer.
+            using var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
+
             var startTime = Stopwatch.GetTimestamp();
 
-            await SendXmlPayloadAsync(handle.Value, xmlPayload, cancellationToken);
+            await SendXmlPayloadAsync(handle.Value, xmlPayload, connectionCts.Token);
 
             LogMethodSent(logger, methodName, handle.Value);
 
             // If the connection is lost/closed while this is pending, the ListenTask completes
             // this channel's writer, which makes ReadAsync throw ChannelClosedException instead of hanging forever.
-            var xml = await channel.Reader.ReadAsync(cancellationToken);
+            var xml = await channel.Reader.ReadAsync(connectionCts.Token);
 
             var elapsed = Stopwatch.GetElapsedTime(startTime);
 
@@ -457,7 +475,11 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         }
         catch (ChannelClosedException ex)
         {
-            throw new ClientException($"Connection was closed while waiting for a response to {methodName}.", ex);
+            throw new ClientException($"Connection was closed before a response to {methodName} arrived.", ex);
+        }
+        catch (OperationCanceledException ex) when (cts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            throw new ClientException($"Connection was closed before a response to {methodName} arrived.", ex);
         }
         finally
         {
@@ -487,6 +509,21 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     private Channel<string> GetOrCreatePendingRequestChannel(uint handle)
     {
         return pendingRequests.GetOrAdd(handle, _ => Channel.CreateBounded<string>(1));
+    }
+
+    private static object[] ParseXmlRpcMethodCall(string xml, out string methodName)
+    {
+        var r = new MiniXmlReader(xml);
+
+        _ = r.SkipProcessingInstruction();
+        _ = r.SkipStartElement("methodCall");
+        _ = r.SkipStartElement("methodName");
+
+        methodName = r.ReadContentAsString();
+
+        _ = r.SkipEndElement();
+
+        return ReadXmlRpcParams(xml, ref r);
     }
 
     private static object ParseXmlRpcMethodResponse(string xml)
@@ -541,7 +578,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
 
         object value = type switch
         {
-            "i4" or "int" => int.Parse(r.ReadContent()),
+            "i4" or "int" => int.Parse(r.ReadContent(), CultureInfo.InvariantCulture),
             "i8" => long.Parse(r.ReadContent(), CultureInfo.InvariantCulture),
             "string" => WebUtility.HtmlDecode(r.ReadContentAsString()),
             "boolean" => r.ReadContentAsBoolean(),
@@ -626,7 +663,10 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
             case short:
             case byte:
             case sbyte:
-                sb.Append($"<int>{value}</int>");
+                // Not StringBuilder.Append(int), which formats with the current culture (like U+2212 as the minus sign)
+                sb.Append("<int>");
+                sb.Append(((IFormattable)value).ToString(null, CultureInfo.InvariantCulture));
+                sb.Append("</int>");
                 break;
             case long l:
                 sb.Append("<i8>");
@@ -640,7 +680,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
                 break;
             case Enum enumValue:
                 sb.Append("<int>");
-                sb.Append(Convert.ToInt64(enumValue, CultureInfo.InvariantCulture));
+                sb.Append(Convert.ToInt64(enumValue, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture));
                 sb.Append("</int>");
                 break;
             case double doub:

@@ -5,6 +5,7 @@ namespace ManiaAPI.GBXRemote.Tests;
 public class GenerateXmlPayloadTests
 {
     private enum Mode { Script = 0, Rounds = 1, TimeAttack = 2 }
+    private enum Direction { Backward = -1, Forward = 1 }
 
     [Test]
     public async Task GenerateXmlPayload_NoParameters_ProducesEmptyParams()
@@ -51,6 +52,24 @@ public class GenerateXmlPayloadTests
         var xml = WithCulture("cs-CZ", () => ValueXml(0.5));
 
         await Assert.That(xml).IsEqualTo("<value><double>0.5</double></value>");
+    }
+
+    [Test]
+    [MethodDataSource(nameof(NegativeIntegerCases))]
+    public async Task GenerateXmlPayload_NegativeIntegerInSwedishCulture_UsesAsciiMinus(object value, string expectedXml)
+    {
+        // Swedish formats the minus sign as U+2212, which the server doesn't accept
+        var xml = WithCulture("sv-SE", () => ValueXml(value));
+
+        await Assert.That(xml).IsEqualTo(expectedXml);
+    }
+
+    public static IEnumerable<Func<(object, string)>> NegativeIntegerCases()
+    {
+        yield return () => (-5, "<value><int>-5</int></value>");
+        yield return () => ((short)-5, "<value><int>-5</int></value>");
+        yield return () => (-9_000_000_000L, "<value><i8>-9000000000</i8></value>");
+        yield return () => (Direction.Backward, "<value><int>-1</int></value>");
     }
 
     [Test]

@@ -115,6 +115,22 @@ internal sealed class FakeGbxRemoteConnection : IDisposable
     }
 
     /// <summary>
+    /// Sends only a message header that announces the given payload size, without any payload.
+    /// </summary>
+    public async Task SendHeaderAsync(int payloadSize, uint handle)
+    {
+        var header = new byte[version >= 2 ? 8 : 4];
+        BinaryPrimitives.WriteInt32LittleEndian(header, payloadSize);
+
+        if (version >= 2)
+        {
+            BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(4), handle);
+        }
+
+        await stream.WriteAsync(header);
+    }
+
+    /// <summary>
     /// Answers a call with a single return value, given as the inner XML of &lt;value&gt;.
     /// </summary>
     public Task RespondAsync(uint handle, string valueXml)

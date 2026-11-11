@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Threading.Channels;
 
 namespace ManiaAPI.GBXRemote.Tests;
@@ -189,6 +190,53 @@ public class GBXRemoteClientTests
     }
 
     [Test]
+    public async Task CallAsync_AfterServerClosedConnection_Throws()
+    {
+        await using var session = await FakeGbxRemoteServer.ConnectAsync();
+        session.Connection.Dispose();
+        await session.Client.WaitForCloseAsync().WaitAsync(Timeout);
+
+        await Assert.ThrowsAsync<ClientException>(() => session.Client.CallAsync("GetVersion").WaitAsync(Timeout));
+    }
+
+    [Test]
+    [Arguments(-1)]
+    [Arguments(64 * 1024 * 1024 + 1)] // One byte over the client's limit
+    public async Task CallAsync_ServerSendsInvalidMessageSize_Throws(int payloadSize)
+    {
+        await using var session = await FakeGbxRemoteServer.ConnectAsync();
+        var call = session.Client.CallAsync("GetVersion");
+        var (handle, _) = await session.Connection.ReadAsync();
+
+        await session.Connection.SendHeaderAsync(payloadSize, handle);
+
+        await Assert.ThrowsAsync<ClientException>(() => call.WaitAsync(Timeout));
+    }
+
+    [Test]
+    public async Task CallAsync_NegativeIntInHebrewCulture_ParsesInvariant()
+    {
+        var culture = CultureInfo.CurrentCulture;
+        // Hebrew uses U+200E before the minus sign, so parsing a plain "-5" with it fails
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("he-IL");
+
+        try
+        {
+            await using var session = await FakeGbxRemoteServer.ConnectAsync();
+            var call = session.Client.CallAsync<int>("GetNumber");
+            var (handle, _) = await session.Connection.ReadAsync();
+
+            await session.Connection.RespondAsync(handle, "<int>-5</int>");
+
+            await Assert.That(await call.WaitAsync(Timeout)).IsEqualTo(-5);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
+    }
+
+    [Test]
     public async Task CallAsync_Version1_SendsFrameWithoutHandle()
     {
         await using var session = await FakeGbxRemoteServer.ConnectAsync("GBXRemote 1");
@@ -236,6 +284,26 @@ public class GBXRemoteClientTests
             "<param><value><string>bigbang1112</string></value></param><param><value><boolean>0</boolean></value></param>");
 
         await Assert.That(await received.Task.WaitAsync(Timeout)).IsEquivalentTo(new object[] { "bigbang1112", false });
+    }
+
+    [Test]
+    public async Task On_ServerSendsUnreadableCallback_StillInvokesHandlerForNextCallback()
+    {
+        await using var session = await FakeGbxRemoteServer.ConnectAsync();
+        var received = new TaskCompletionSource<object[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+        session.Client.On(PlayerConnect, (parameters, _) =>
+        {
+            received.TrySetResult(parameters);
+            return Task.CompletedTask;
+        });
+
+        // dateTime.iso8601 isn't a supported type, so this callback can't be read
+        await session.Connection.SendCallbackAsync(PlayerConnect,
+            "<param><value><dateTime.iso8601>20260101T00:00:00</dateTime.iso8601></value></param>");
+        await session.Connection.SendCallbackAsync(PlayerConnect,
+            "<param><value><string>bigbang1112</string></value></param>");
+
+        await Assert.That(await received.Task.WaitAsync(Timeout)).IsEquivalentTo(new object[] { "bigbang1112" });
     }
 
     [Test]
