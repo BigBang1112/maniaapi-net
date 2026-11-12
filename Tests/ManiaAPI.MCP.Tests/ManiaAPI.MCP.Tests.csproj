@@ -3,7 +3,7 @@
     <TargetFrameworks>net11.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../MCP/ManiaAPI.MCP/ManiaAPI.MCP.csproj" />
+    <ProjectReference Include="../../Src/ManiaAPI.MCP/ManiaAPI.MCP.csproj" />
     <ProjectReference Include="../../Generators/ManiaAPI.MCP.Generators/ManiaAPI.MCP.Generators.csproj" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="11.0.0" />

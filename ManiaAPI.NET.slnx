@@ -11,9 +11,6 @@
     <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
-  <Folder Name="/MCP/">
-    <Project Path="MCP/ManiaAPI.MCP/ManiaAPI.MCP.csproj" />
-  </Folder>
   <Folder Name="/Samples/">
     <Project Path="Samples/CallbackListenerGBXRemoteSample/CallbackListenerGBXRemoteSample.csproj" Id="21b593b7-e1eb-45f4-a279-90dd873c4cb8" />
     <Project Path="Samples/ExportMethodsGBXRemoteSample/ExportMethodsGBXRemoteSample.csproj" />
@@ -44,6 +41,7 @@
     <Project Path="Src/ManiaAPI.UnitedLadder/ManiaAPI.UnitedLadder.csproj" Id="3d490138-d581-4889-9918-1e71be189cc5" />
     <Project Path="Src/ManiaAPI.MasterServer.Extensions.Hosting/ManiaAPI.MasterServer.Extensions.Hosting.csproj" />
     <Project Path="Src/ManiaAPI.MasterServer/ManiaAPI.MasterServer.csproj" />
+    <Project Path="Src/ManiaAPI.MCP/ManiaAPI.MCP.csproj" />
     <Project Path="Src/ManiaAPI.GBXRemote/ManiaAPI.GBXRemote.csproj" />
   </Folder>
   <Folder Name="/Tests/">

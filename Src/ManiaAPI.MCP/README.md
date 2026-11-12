@@ -15,7 +15,7 @@ The featured tools cover Trackmania 2020 players, maps, leaderboards, campaigns,
 Use the .NET 11 SDK from the repository root:
 
 ```powershell
-dotnet run --project MCP/ManiaAPI.MCP -- --toolsets exchange
+dotnet run --project Src/ManiaAPI.MCP -- --toolsets exchange
 ```
 
 Stdio is the default transport. Stdout contains protocol messages; logs go to stderr. The repository's workspace-local SDK, when present, can be used as `artifacts/dotnet11/dotnet.exe` instead of `dotnet`.
@@ -23,7 +23,7 @@ Stdio is the default transport. Stdout contains protocol messages; logs go to st
 To run Streamable HTTP, configure at least one `ManiaApiMcp:Http:ApiKeys` secret, then run:
 
 ```powershell
-dotnet run --project MCP/ManiaAPI.MCP -- --http --urls http://localhost:5199
+dotnet run --project Src/ManiaAPI.MCP -- --http --urls http://localhost:5199
 ```
 
 Clients send the key in `X-Api-Key`. `/mcp` exposes every enabled toolset. The game endpoints are `/mcp/trackmania2020`, `/mcp/tmuf`, `/mcp/tmnf`, `/mcp/maniaplanet`, and `/mcp/trackmaniaturbo`; `/mcp/exchange` exposes all configured exchange sites. Disabled toolsets have no mapped endpoint.
@@ -163,7 +163,7 @@ The tool list remains stable per endpoint when linking is enabled: configured pl
 
 ```powershell
 dotnet test --project Tests/ManiaAPI.MCP.Tests/ManiaAPI.MCP.Tests.csproj -f net11.0
-dotnet pack MCP/ManiaAPI.MCP -c Release
+dotnet pack Src/ManiaAPI.MCP -c Release
 ```
 
 The package ID is `ManiaAPI.MCP`; the installed tool command is `maniaapi-mcp`. Tests cover catalog snapshots, generated invokers, scopes, schemas, binary resources, Gbx headers and map writes, game bindings, HTTP/stdio protocol calls, MRTR approval/decline, OAuth consent, caller isolation, encrypted storage, refresh-token concurrency, and the configured tool-list budget. Live tests retain the repository's explicit `[LiveTest]` opt-in.
