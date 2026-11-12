@@ -69,9 +69,13 @@ public class LiveGatewayTests
         var result = await services.GetRequiredService<GatewayTools>().CallAsync(new CallToolRequestParams
         {
             Name = tool,
-            Arguments = tool == "trackmaniaturbo_leaderboard"
-                ? new Dictionary<string, System.Text.Json.JsonElement>()
-                : new Dictionary<string, System.Text.Json.JsonElement> { ["login"] = EngineTests.Json("\"bigbang1112\"") }
+            Arguments = tool switch
+            {
+                "trackmaniaturbo_leaderboard" => new Dictionary<string, System.Text.Json.JsonElement>(),
+                // United and Nations master servers have separate accounts, so TMNF needs a Nations login.
+                "tmnf_player" => new Dictionary<string, System.Text.Json.JsonElement> { ["login"] = EngineTests.Json("\"thaumictom\"") },
+                _ => new Dictionary<string, System.Text.Json.JsonElement> { ["login"] = EngineTests.Json("\"bigbang1112\"") }
+            }
         }, request.ServiceProvider, CancellationToken.None);
 
         await Assert.That(result.IsError ?? false).IsFalse();
