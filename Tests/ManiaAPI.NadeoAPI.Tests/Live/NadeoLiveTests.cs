@@ -61,13 +61,18 @@ public class NadeoLiveTests(NadeoAccount account)
         var zones = await ns.GetZonesAsync();
         var webIdentities = await ns.GetPlayerWebIdentitiesAsync(AccountIds);
         var webIdentity = await ns.GetPlayerWebIdentityAsync(AccountIds[0]);
-        var routes = await ns.GetApiRoutesAsync(ApiUsage.Server);
+        var serverRoutes = await ns.GetApiRoutesAsync(ApiUsage.Server);
+        var clientRoutes = await ns.GetApiRoutesAsync(ApiUsage.Client);
 
         await Assert.That(zones).Contains(x => x.Name == "World" && x.ParentId is null);
         await Assert.That(webIdentities.Select(x => x.AccountId)).DoesNotContain(x => !AccountIds.Contains(x));
         await Assert.That(webIdentities).DoesNotContain(x => string.IsNullOrEmpty(x.Provider));
         await Assert.That(webIdentity?.AccountId).IsEqualTo(AccountIds[0]);
-        await Assert.That(routes.Values).DoesNotContain(x => string.IsNullOrEmpty(x.Method) || string.IsNullOrEmpty(x.Path));
+        // The lists overlap, but neither contains the other: a few routes are listed only for servers.
+        await Assert.That(serverRoutes).IsNotEmpty();
+        await Assert.That(serverRoutes.Values).DoesNotContain(x => string.IsNullOrEmpty(x.Method) || string.IsNullOrEmpty(x.Path));
+        await Assert.That(clientRoutes).IsNotEmpty();
+        await Assert.That(clientRoutes.Values).DoesNotContain(x => string.IsNullOrEmpty(x.Method) || string.IsNullOrEmpty(x.Path));
     }
 
     [Test]
