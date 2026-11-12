@@ -1019,7 +1019,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(reviewType);
 
-        return await GetJsonAsync($"token/map/map-review/{reviewType}/submitted-map?length={length}&offset={offset}",
+        return await GetJsonAsync($"token/map-review/{reviewType}/submitted-map?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.SubmittedMapCollection, cancellationToken);
     }
 

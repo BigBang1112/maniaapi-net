@@ -439,7 +439,7 @@ public class NadeoServices : NadeoAPI, INadeoServices
 
     public virtual async Task<MapInfoCollection> GetSubmittedMapsAsync(CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync("maps/by-submitter", NadeoAPIJsonContext.Default.MapInfoCollection, cancellationToken);
+        return await GetJsonAsync("maps/by-submitter/", NadeoAPIJsonContext.Default.MapInfoCollection, cancellationToken);
     }
 
     public virtual async Task<ImmutableList<SkinFavorite>> GetFavoriteSkinsAsync(Guid accountId, CancellationToken cancellationToken = default)
