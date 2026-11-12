@@ -1,87 +1,40 @@
 name: Publish
 
 on:
-  release:
-    types: [ published ]
+  push:
+    tags: ["v*"]
   workflow_dispatch:
-    
-permissions:
-  contents: write # important for release description edit and asset upload
-  packages: write
+    inputs:
+      description:
+        description: Text before the release notes
+        type: string
+        default: ""
 
 jobs:
-  build:
-    name: Build
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v6
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: latest
-   
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    - name: Build
-      run: dotnet build -c Release --no-restore /p:ContinuousIntegrationBuild=true
-      
-    - name: Test
-      run: dotnet test -c Release --no-build --verbosity normal
-      
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: build
-        path: Src/ManiaAPI.*/bin/Release/*.*nupkg
-  
   publish:
-    name: Publish ManiaAPI.${{ matrix.lib }}
-    needs: build
-    
-    strategy:
-      matrix:
-        lib:
-          - NadeoAPI
-          - NadeoAPI.Extensions.Hosting
-          - NadeoAPI.Extensions.Gbx
-          - TMX
-          - TMX.Extensions.Hosting
-          - TMX.Extensions.Gbx
-          - TrackmaniaAPI
-          - TrackmaniaAPI.Extensions.Hosting
-          - TrackmaniaIO
-          - ManiaPlanetAPI
-          - ManiaPlanetAPI.Extensions.Hosting
-          - MasterServer
-          - MasterServer.Extensions.Hosting
-          - TrackmaniaWS
-          - TrackmaniaWS.Extensions.Hosting
-          - GBXRemote
-          - UnitedLadder
-        
+    name: Publish
     runs-on: ubuntu-latest
-    
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Download a Build Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: build
-    
-    - name: Publish the ManiaAPI.${{ matrix.lib }} package to nuget.org
-      run: dotnet nuget push ManiaAPI.${{ matrix.lib }}/bin/Release/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
-    
-    - name: Publish the ManiaAPI.${{ matrix.lib }} package to github.com
-      run: dotnet nuget push ManiaAPI.${{ matrix.lib }}/bin/Release/*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/bigbang1112/index.json --skip-duplicate
+    timeout-minutes: 30
 
-    - name: Attach the ManiaAPI.${{ matrix.lib }} package to the release
-      if: github.event_name == 'release'
-      run: gh release upload ${{ github.ref_name }} ManiaAPI.${{ matrix.lib }}/bin/Release/*.nupkg
+    permissions:
+      contents: write # create the release and attach the packages
+      packages: write # push to GitHub Packages
+      id-token: write # request the GitHub OIDC token for NuGet.org trusted publishing
+
+    concurrency:
+      group: publish-nuget-${{ github.ref }}
+      cancel-in-progress: false
+
+    steps:
+      # A composite action rather than the reusable workflow, because NuGet.org matches the trusted publishing policy
+      # against this workflow file, which a reusable workflow in another repository replaces with its own.
+      - name: Build, test, and publish NuGet packages
+        uses: bigbang1112/workflows/publish-nuget-immutable@main
+        with:
+          dotnet-version: latest
+          project-path: Src/*/*.csproj
+          test-path: Tests/*/*.csproj
+          pack-path: Src/*/*.csproj
+          package-prefix: ManiaAPI.
+          nuget-user: ${{ vars.NUGET_USER }}
+          release-description: ${{ inputs.description }}
