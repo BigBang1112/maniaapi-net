@@ -31,13 +31,13 @@ public class CatalogTests
     {
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaApiMcp(new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(
+        collection.AddManiaAPI(new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(
             new Dictionary<string, string?>
             {
-                ["ManiaApiMcp:NadeoAPI:Accounts:ServiceAccount:Login"] = "test-login",
-                ["ManiaApiMcp:NadeoAPI:Accounts:ServiceAccount:Password"] = "test-password",
-                ["ManiaApiMcp:TrackmaniaApi:ClientId"] = "test-client",
-                ["ManiaApiMcp:TrackmaniaApi:ClientSecret"] = "test-secret"
+                ["ManiaAPI:NadeoAPI:Login"] = "test-login",
+                ["ManiaAPI:NadeoAPI:Password"] = "test-password",
+                ["ManiaAPI:TrackmaniaAPI:ClientId"] = "test-client",
+                ["ManiaAPI:TrackmaniaAPI:ClientSecret"] = "test-secret"
             }).Build());
 
         using var services = collection.BuildServiceProvider();

@@ -4,7 +4,7 @@ namespace ManiaAPI.MCP.Configuration;
 
 public sealed class McpOptions
 {
-    public const string Section = "ManiaApiMcp";
+    public const string Section = "ManiaAPI";
     public static readonly string[] SupportedToolsets =
         ["trackmania2020", "exchange", "tmuf", "tmnf", "maniaplanet", "trackmaniaturbo"];
 
@@ -14,7 +14,7 @@ public sealed class McpOptions
     public HttpOptions Http { get; set; } = new();
     public ShapingOptions Shaping { get; set; } = new();
     public NadeoOptions NadeoAPI { get; set; } = new();
-    public OAuthOptions TrackmaniaApi { get; set; } = new();
+    public OAuthOptions TrackmaniaAPI { get; set; } = new();
     public OAuthOptions ManiaPlanet { get; set; } = new();
     public TrackmaniaWsOptions TrackmaniaWS { get; set; } = new();
     public MasterServerOptions MasterServer { get; set; } = new();
@@ -45,10 +45,10 @@ public sealed class MasterServerOptions
 
 public sealed class TrackmaniaWsOptions
 {
-    public string? ApiUsername { get; set; }
-    public string? ApiPassword { get; set; }
+    public string? Username { get; set; }
+    public string? Password { get; set; }
 
-    public bool Configured => !string.IsNullOrWhiteSpace(ApiUsername) && !string.IsNullOrWhiteSpace(ApiPassword);
+    public bool Configured => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(Password);
 }
 
 public sealed class HttpOptions
@@ -66,15 +66,9 @@ public sealed class ShapingOptions
 
 public sealed class NadeoOptions
 {
-    public string? UserAgent { get; set; }
-    public string DefaultAccount { get; set; } = "ServiceAccount";
-    public Dictionary<string, AccountOptions> Accounts { get; set; } = [];
-}
-
-public sealed class AccountOptions
-{
     public string? Login { get; set; }
     public string? Password { get; set; }
+    public string? UserAgent { get; set; }
     public bool Configured => !string.IsNullOrWhiteSpace(Login) && !string.IsNullOrWhiteSpace(Password);
 }
 
@@ -135,12 +129,6 @@ public sealed class McpOptionsValidator : IValidateOptions<McpOptions>
             options.Shaping.MaxResourceBytes is < 1 or > 104857600)
         {
             errors.Add("Shaping limits must be positive: MaxItems <= 10000, 256 <= MaxChars <= MaxCharsLimit <= 1000000.");
-        }
-
-        if (options.NadeoAPI.Accounts.Keys.Any(x => x is not ("ServiceAccount" or "DedicatedServer")) ||
-            options.NadeoAPI.DefaultAccount is not ("ServiceAccount" or "DedicatedServer"))
-        {
-            errors.Add("NadeoAPI account names must be ServiceAccount or DedicatedServer.");
         }
 
         return errors.Count == 0 ? ValidateOptionsResult.Success : ValidateOptionsResult.Fail(errors);

@@ -24,15 +24,15 @@ public class MapWriteTests
 
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaApiMcp(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        collection.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ManiaApiMcp:AllowWrites"] = "true",
-            ["ManiaApiMcp:NadeoAPI:Accounts:ServiceAccount:Login"] = "service-login",
-            ["ManiaApiMcp:NadeoAPI:Accounts:ServiceAccount:Password"] = "service-password"
+            ["ManiaAPI:AllowWrites"] = "true",
+            ["ManiaAPI:NadeoAPI:Login"] = "service-login",
+            ["ManiaAPI:NadeoAPI:Password"] = "service-password"
         }).Build());
 
         collection.AddSingleton(_ => new NadeoServices(fake.CreateClient(), new NadeoAPIHandler(), automaticallyAuthorize: false));
-        collection.AddSingleton<INadeoAccounts>(provider => new FakeAccounts(provider));
+        collection.AddSingleton<INadeoAccount>(provider => new FakeAccount(provider));
 
         using var services = collection.BuildServiceProvider();
         using var request = services.CreateScope();
@@ -56,8 +56,8 @@ public class MapWriteTests
         await Assert.That(result["data"]!["mapUid"]!.GetValue<string>()).IsEqualTo("test");
     }
 
-    private sealed class FakeAccounts(IServiceProvider provider) : INadeoAccounts
+    private sealed class FakeAccount(IServiceProvider provider) : INadeoAccount
     {
-        public IServiceProvider Get(string? account) => provider;
+        public IServiceProvider Services => provider;
     }
 }

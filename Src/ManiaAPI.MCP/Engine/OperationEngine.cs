@@ -35,11 +35,13 @@ public sealed class OperationEngine
         this.health = health ?? new UpstreamHealth(options);
         this.operations = operations.ToDictionary(x => x.Id, StringComparer.Ordinal);
 
-        sensitiveValues = options.NadeoAPI.Accounts.Values
-            .SelectMany(account => new[] { account.Login, account.Password })
-            .Concat([options.TrackmaniaApi.ClientId, options.TrackmaniaApi.ClientSecret,
+        sensitiveValues = new[]
+            {
+                options.NadeoAPI.Login, options.NadeoAPI.Password,
+                options.TrackmaniaAPI.ClientId, options.TrackmaniaAPI.ClientSecret,
                 options.ManiaPlanet.ClientId, options.ManiaPlanet.ClientSecret,
-                options.TrackmaniaWS.ApiUsername, options.TrackmaniaWS.ApiPassword])
+                options.TrackmaniaWS.Username, options.TrackmaniaWS.Password
+            }
             .Concat(options.Http.ApiKeys)
             .Where(value => !string.IsNullOrEmpty(value))
             .Select(value => value!)
@@ -78,7 +80,6 @@ public sealed class OperationEngine
         GameScope scope,
         IServiceProvider services,
         ResultShape? shape = null,
-        string? account = null,
         CancellationToken cancellationToken = default,
         bool confirmed = false,
         BinaryCapture? capture = null)
@@ -118,7 +119,6 @@ public sealed class OperationEngine
                     : null);
         }
 
-        var effectiveAccount = SelectAccount(operation, account);
         var schema = operation.Schema(scope.Sites(operation), scope.InferSite && scope.Sites(operation).Length == 1);
         var validation = Validate(schema, arguments);
 
@@ -165,13 +165,13 @@ public sealed class OperationEngine
             var uri = operation.ReturnsBinary ? ResourceUri.Create(id, resourceDocument.RootElement) : null;
             var platform = arguments.TryGetProperty("platform", out var platformValue) ? platformValue.GetString() : null;
 
-            var context = new InvocationContext(services, services.GetRequiredService<INadeoAccounts>(), effectiveAccount,
+            var context = new InvocationContext(services, services.GetRequiredService<INadeoAccount>(),
                 site, platform, uri, capture, operation);
             var raw = await overload.Invoke(context, boundArguments, cancellationToken);
 
             if (!operation.PlayerOnly)
             {
-                health.Record(operation.Requires, effectiveAccount, authorized: true, operation.OAuthProvider);
+                health.Record(operation.Requires, authorized: true, operation.OAuthProvider);
             }
 
             if (IsSecret(raw))
@@ -200,8 +200,16 @@ public sealed class OperationEngine
 
             if (!operation.PlayerOnly && (status == 401 || exception is HttpRequestException { StatusCode: null }))
             {
-                health.Record(operation.Requires, effectiveAccount, authorized: false, operation.OAuthProvider);
+                health.Record(operation.Requires, authorized: false, operation.OAuthProvider);
             }
+
+            if (status == 401 && operation.ServiceAccountOnly)
+            {
+                throw new ArgumentException(
+                    "Upstream authorization was denied. This operation needs a NadeoAPI service account; dedicated server logins are not allowed.",
+                    exception);
+            }
+
             throw;
         }
         finally
@@ -212,53 +220,18 @@ public sealed class OperationEngine
         }
     }
 
-    private string? SelectAccount(Operation operation, string? requested)
-    {
-        if (operation.Requires != "nadeo")
-        {
-            if (requested is not null)
-            {
-                throw new ArgumentException("account is only supported for NadeoAPI operations.");
-            }
-
-            return null;
-        }
-
-        var selected = requested ?? (operation.ServiceAccountOnly ? "ServiceAccount" : options.NadeoAPI.DefaultAccount);
-
-        if (requested is null && !operation.ServiceAccountOnly &&
-            (!options.NadeoAPI.Accounts.TryGetValue(selected, out var preferred) || !preferred.Configured))
-        {
-            selected = options.NadeoAPI.Accounts.First(x => x.Value.Configured).Key;
-        }
-
-        if (operation.ServiceAccountOnly && selected != "ServiceAccount")
-        {
-            throw new ArgumentException("This operation needs a service account: pass account: ServiceAccount.");
-        }
-
-        if (!options.NadeoAPI.Accounts.TryGetValue(selected, out var credentials) || !credentials.Configured)
-        {
-            throw new ArgumentException("The selected NadeoAPI account is not configured.");
-        }
-
-        return selected;
-    }
-
     private bool IsConfigured(Operation operation)
     {
         if (operation.PlayerOnly)
         {
             return options.AccountLinking.Enabled &&
-                (operation.OAuthProvider == "trackmania" ? options.TrackmaniaApi.Configured : options.ManiaPlanet.Configured);
+                (operation.OAuthProvider == "trackmania" ? options.TrackmaniaAPI.Configured : options.ManiaPlanet.Configured);
         }
 
         return operation.Requires switch
         {
-            "nadeo" => operation.ServiceAccountOnly
-                ? options.NadeoAPI.Accounts.TryGetValue("ServiceAccount", out var account) && account.Configured
-                : options.NadeoAPI.Accounts.Values.Any(x => x.Configured),
-            "oauth" => options.TrackmaniaApi.Configured,
+            "nadeo" => options.NadeoAPI.Configured,
+            "oauth" => options.TrackmaniaAPI.Configured,
             "tmws" => options.TrackmaniaWS.Configured,
             _ when operation.Id.StartsWith("masterserver.", StringComparison.Ordinal) => options.MasterServer.Games.Contains(
                 operation.Id.Split('.')[1] switch

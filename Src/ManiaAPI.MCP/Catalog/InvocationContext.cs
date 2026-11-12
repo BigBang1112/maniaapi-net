@@ -15,8 +15,7 @@ namespace ManiaAPI.MCP.Catalog;
 
 public sealed class InvocationContext(
     IServiceProvider services,
-    INadeoAccounts accounts,
-    string? account,
+    INadeoAccount nadeo,
     string? site,
     string? platform = null,
     string? resourceUri = null,
@@ -148,9 +147,9 @@ public sealed class InvocationContext(
     {
         object client = prefix switch
         {
-            "nadeo.core" => accounts.Get(account).GetRequiredService<NadeoServices>(),
-            "nadeo.live" => accounts.Get(account).GetRequiredService<NadeoLiveServices>(),
-            "nadeo.meet" => accounts.Get(account).GetRequiredService<NadeoMeetServices>(),
+            "nadeo.core" => nadeo.Services.GetRequiredService<NadeoServices>(),
+            "nadeo.live" => nadeo.Services.GetRequiredService<NadeoLiveServices>(),
+            "nadeo.meet" => nadeo.Services.GetRequiredService<NadeoMeetServices>(),
             "trackmania.api" => services.GetRequiredService<TrackmaniaAPI.TrackmaniaAPI>(),
             "tmx" => services.GetRequiredKeyedService<TMX.TMX>(Enum.Parse<TmxSite>(site!)),
             "mx" => services.GetRequiredKeyedService<MX>(Enum.Parse<MxSite>(site!)),
@@ -171,47 +170,41 @@ public sealed class InvocationContext(
     }
 }
 
-// The existing hosting package keys token handlers by audience. Each configured account has its
-// own container so accounts never share those handlers. Clients still authorize and refresh lazily.
-public interface INadeoAccounts
+// The NadeoAPI clients live in their own container, so the hosting package's audience-keyed token
+// handlers never mix with the rest of the server. Clients still authorize and refresh lazily.
+public interface INadeoAccount
 {
-    IServiceProvider Get(string? account);
+    IServiceProvider Services { get; }
 }
 
-public sealed class NadeoAccounts : INadeoAccounts, IHostedService, IDisposable
+public sealed class NadeoAccount : INadeoAccount, IHostedService, IDisposable
 {
-    private readonly Dictionary<string, ServiceProvider> providers = [];
-    private readonly string defaultAccount;
+    private readonly ServiceProvider? provider;
 
-    public NadeoAccounts(McpOptions options)
+    public NadeoAccount(McpOptions options)
     {
-        defaultAccount = options.NadeoAPI.DefaultAccount;
-
-        foreach (var (name, account) in options.NadeoAPI.Accounts.Where(x => x.Value.Configured))
+        if (!options.NadeoAPI.Configured)
         {
-            var services = new ServiceCollection();
-            services.AddLogging();
-
-            services.AddNadeoAPI(o =>
-            {
-                o.Credentials = new NadeoAPICredentials(account.Login!, account.Password!);
-                o.UserAgent = options.NadeoAPI.UserAgent;
-            });
-
-            providers.Add(name, services.BuildServiceProvider());
+            return;
         }
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+
+        services.AddNadeoAPI(o =>
+        {
+            o.Credentials = new NadeoAPICredentials(options.NadeoAPI.Login!, options.NadeoAPI.Password!);
+            o.UserAgent = options.NadeoAPI.UserAgent;
+        });
+
+        provider = services.BuildServiceProvider();
     }
 
-    public IServiceProvider Get(string? account)
-    {
-        return providers.TryGetValue(account ?? defaultAccount, out var provider)
-            ? provider
-            : throw new ArgumentException("The selected NadeoAPI account is not configured.");
-    }
+    public IServiceProvider Services => provider ?? throw new ArgumentException("The NadeoAPI account is not configured.");
 
-    public IEnumerable<DateTimeOffset> Expirations(string account)
+    public IEnumerable<DateTimeOffset> Expirations()
     {
-        if (!providers.TryGetValue(account, out var provider))
+        if (provider is null)
         {
             yield break;
         }
@@ -227,31 +220,22 @@ public sealed class NadeoAccounts : INadeoAccounts, IHostedService, IDisposable
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        foreach (var provider in providers.Values)
+        foreach (var service in provider?.GetServices<IHostedService>() ?? [])
         {
-            foreach (var service in provider.GetServices<IHostedService>())
-            {
-                await service.StartAsync(cancellationToken);
-            }
+            await service.StartAsync(cancellationToken);
         }
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        foreach (var provider in providers.Values)
+        foreach (var service in provider?.GetServices<IHostedService>() ?? [])
         {
-            foreach (var service in provider.GetServices<IHostedService>())
-            {
-                await service.StopAsync(cancellationToken);
-            }
+            await service.StopAsync(cancellationToken);
         }
     }
 
     public void Dispose()
     {
-        foreach (var provider in providers.Values)
-        {
-            provider.Dispose();
-        }
+        provider?.Dispose();
     }
 }

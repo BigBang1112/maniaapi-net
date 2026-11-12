@@ -32,7 +32,7 @@ public sealed class LinkedAccountTokens(
             throw new ArgumentException("The linked player token expired. Link the account again.");
         }
 
-        var credentials = provider == "trackmania" ? options.TrackmaniaApi : options.ManiaPlanet;
+        var credentials = provider == "trackmania" ? options.TrackmaniaAPI : options.ManiaPlanet;
         var endpoint = provider == "trackmania"
             ? TrackmaniaAuthenticationDefaults.TokenEndpoint
             : ManiaPlanetAuthenticationDefaults.TokenEndpoint;

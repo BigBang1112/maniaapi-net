@@ -64,17 +64,50 @@ public class ConfigurationTests
     }
 
     [Test]
-    public async Task CommandLineToolsetsReplaceConfiguredArray()
+    public async Task AllToolsetsAreEnabledByDefault()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddManiaAPI(new ConfigurationBuilder().Build());
+
+        using var provider = services.BuildServiceProvider();
+
+        await Assert.That(provider.GetRequiredService<McpOptions>().Toolsets).IsEquivalentTo(McpOptions.SupportedToolsets);
+    }
+
+    [Test]
+    public async Task ConfiguredArraysReplaceDefaults()
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ManiaApiMcp:Toolsets:0"] = "trackmania2020",
-            ["ManiaApiMcp:Toolsets:1"] = "exchange"
+            ["ManiaAPI:Toolsets:0"] = "exchange",
+            ["ManiaAPI:Exchange:Sites:0"] = "TMNF"
         }).Build();
 
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddManiaApiMcp(configuration, ["exchange"]);
+        services.AddManiaAPI(configuration);
+
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<McpOptions>();
+
+        await Assert.That(options.Toolsets).IsEquivalentTo(["exchange"]);
+        await Assert.That(options.Exchange.Sites).IsEquivalentTo(["TMNF"]);
+        await Assert.That(options.Exchange.MxSites).IsEquivalentTo(["Trackmania", "Maniaplanet", "Shootmania"]);
+    }
+
+    [Test]
+    public async Task CommandLineToolsetsReplaceConfiguredArray()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ManiaAPI:Toolsets:0"] = "trackmania2020",
+            ["ManiaAPI:Toolsets:1"] = "exchange"
+        }).Build();
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddManiaAPI(configuration, ["exchange"]);
 
         using var provider = services.BuildServiceProvider();
 
@@ -86,7 +119,7 @@ public class ConfigurationTests
     {
         var options = new McpOptions
         {
-            TrackmaniaApi = new OAuthOptions { ClientId = "test", ClientSecret = "test" }
+            TrackmaniaAPI = new OAuthOptions { ClientId = "test", ClientSecret = "test" }
         };
 
         var health = new UpstreamHealth(options);
@@ -94,10 +127,10 @@ public class ConfigurationTests
         await Assert.That(health.Ready).IsTrue();
         await Assert.That(health.Snapshot()["oauth:trackmania"]!.GetValue<string>()).IsEqualTo("notYetAuthorized");
 
-        health.Record("oauth", null, authorized: false);
+        health.Record("oauth", authorized: false);
         await Assert.That(health.Ready).IsFalse();
 
-        health.Record("oauth", null, authorized: true);
+        health.Record("oauth", authorized: true);
         await Assert.That(health.Ready).IsTrue();
     }
 }

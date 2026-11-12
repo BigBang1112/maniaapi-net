@@ -11,12 +11,12 @@ public sealed class UpstreamHealth
 
     public UpstreamHealth(McpOptions options)
     {
-        foreach (var account in options.NadeoAPI.Accounts.Where(x => x.Value.Configured))
+        if (options.NadeoAPI.Configured)
         {
-            states["nadeo:" + account.Key] = "notYetAuthorized";
+            states["nadeo"] = "notYetAuthorized";
         }
 
-        if (options.TrackmaniaApi.Configured)
+        if (options.TrackmaniaAPI.Configured)
         {
             states["oauth:trackmania"] = "notYetAuthorized";
         }
@@ -34,14 +34,14 @@ public sealed class UpstreamHealth
 
     public bool Ready => states.Values.All(value => value != "failed");
 
-    public void Record(string requires, string? account, bool authorized, string? provider = null)
+    public void Record(string requires, bool authorized, string? provider = null)
     {
         if (requires == "none" && provider != "maniaplanet")
         {
             return;
         }
 
-        var key = requires == "nadeo" ? "nadeo:" + account : requires == "tmws" ? "tmws" : "oauth:" + (provider ?? "trackmania");
+        var key = requires == "nadeo" ? "nadeo" : requires == "tmws" ? "tmws" : "oauth:" + (provider ?? "trackmania");
 
         if (requires == "none" && !states.ContainsKey(key))
         {
@@ -64,8 +64,8 @@ public sealed class UpstreamHealth
                     continue;
                 }
 
-                var expirations = key.StartsWith("nadeo:", StringComparison.Ordinal)
-                    ? services.GetRequiredService<NadeoAccounts>().Expirations(key[6..]).ToArray()
+                var expirations = key == "nadeo"
+                    ? services.GetRequiredService<NadeoAccount>().Expirations().ToArray()
                     : key == "oauth:trackmania" && services.GetRequiredService<TrackmaniaAPI.TrackmaniaAPIHandler>().Payload?.ExpirationTime is { } trackmania
                         ? [trackmania]
                         : key == "oauth:maniaplanet" && services.GetRequiredService<ManiaPlanetAPI.ManiaPlanetAPIHandler>().Payload?.ExpirationTime is { } planet

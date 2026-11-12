@@ -36,13 +36,13 @@ public class LiveGatewayTests
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ManiaApiMcp:NadeoAPI:Accounts:ServiceAccount:Login"] = LiveSettings.NadeoAPI.ServiceAccount.Login,
-            ["ManiaApiMcp:NadeoAPI:Accounts:ServiceAccount:Password"] = LiveSettings.NadeoAPI.ServiceAccount.Password
+            ["ManiaAPI:NadeoAPI:Login"] = LiveSettings.NadeoAPI.ServiceAccount.Login,
+            ["ManiaAPI:NadeoAPI:Password"] = LiveSettings.NadeoAPI.ServiceAccount.Password
         }).Build();
 
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaApiMcp(configuration);
+        collection.AddManiaAPI(configuration);
 
         using var services = collection.BuildServiceProvider();
         using var request = services.CreateScope();

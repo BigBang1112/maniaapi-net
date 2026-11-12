@@ -22,7 +22,7 @@ public class LegacyTests
 
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaApiMcp(new ConfigurationBuilder().Build());
+        collection.AddManiaAPI(new ConfigurationBuilder().Build());
         collection.AddHttpClient(client).ConfigurePrimaryHttpMessageHandler(() => fake);
 
         using var services = collection.BuildServiceProvider();
@@ -51,7 +51,7 @@ public class LegacyTests
     {
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaApiMcp(new ConfigurationBuilder().Build());
+        collection.AddManiaAPI(new ConfigurationBuilder().Build());
         collection.Configure<McpOptions>(options => options.Featured["exchange"] = new FeaturedOptions { Tools = [] });
 
         using var services = collection.BuildServiceProvider();

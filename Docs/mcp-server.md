@@ -108,7 +108,7 @@ Returns the full details of up to 10 operations:
 
 - the JSON Schema of the input
 - an outline of the result's fields, two levels deep
-- which accounts the operation needs, and which are known to be denied (taken from the live tests)
+- for NadeoAPI operations, whether a dedicated server login is known to be denied (taken from the live tests)
 - for OAuth operations, the upstream provider, required grant type, and scopes
 - pagination parameters
 - supported games, allowed exchange sites, when to use the operation, and related operations available in the current scope
@@ -129,7 +129,6 @@ Runs one operation.
     "maxItems": 50,
     "maxChars": 20000
   },
-  "account": "ServiceAccount",    // optional; NadeoAPI only, defaults per operation
   "confirm": false                // needed for writes when the client can't answer an MRTR prompt
 }
 ```
@@ -188,7 +187,7 @@ Game toolsets are `trackmania2020`, `tmuf` (Trackmania United Forever), `tmnf` (
 | `/mcp/maniaplanet` | `maniaplanet` + scoped `exchange` | Trackmania 2 and ShootMania through ManiaPlanet APIs, plus their MX sites |
 | `/mcp/trackmaniaturbo` | `trackmaniaturbo` | Trackmania Turbo, including aggregated platform results |
 
-- **stdio:** the same selection comes from the `ManiaApiMcp:Toolsets` setting, or `--toolsets trackmania2020,exchange` on the command line.
+- **stdio:** the same selection comes from the `ManiaAPI:Toolsets` setting, or `--toolsets trackmania2020,exchange` on the command line.
 - **Scoping:** gateway tools only search, describe, and invoke operations of the endpoint's effective toolsets. A game endpoint adds the relevant subset of `exchange` only when that toolset is enabled and a mapped site is configured. Site restrictions apply to featured tools, per-operation tools, invocations, and resource reads as well as discovery.
 - **Shared clients:** TMUF and TMNF use the same library interface, but each has its own catalog descriptors and featured tools bound to the United or Nations server. The `tmuf` toolset also includes TrackmaniaWS and UnitedLadder. A game-specific endpoint cannot select the other game's server through an argument.
 - **List caching:** `tools/list` returns a fixed result per endpoint, so it sets the cacheable-list fields from the 2026-07-28 revision: a long `ttlMs`, and a `cacheScope` that lets every user of the endpoint share the cached list.
@@ -326,7 +325,7 @@ Library exceptions become tool results with `isError: true`, a short message, an
 
 | Exception | Example result |
 |---|---|
-| `NadeoAPIResponseException` 401 with a dedicated server account | `Denied for the DedicatedServer account. This operation needs a service account: pass "account": "ServiceAccount".` |
+| `NadeoAPIResponseException` 401 on a service-account-only operation | `Upstream authorization was denied. This operation needs a NadeoAPI service account; dedicated server logins are not allowed.` |
 | `NadeoAPIResponseException` 403 (club activities) | `Only for members of club 146883.` |
 | `TrackmaniaAPIResponseException` 400 | The API's message, with the 50-names-per-request limit pointed out |
 | `HttpRequestException` 404 (UnitedLadder, TMWS) | `Player 'x' not found.` |
@@ -338,11 +337,11 @@ Schema validation errors list each invalid argument. Upstream timeouts and 5xx r
 
 ## Credentials and configuration
 
-All credentials live in the `ManiaApiMcp` configuration section. Locally they come from user secrets or environment variables set in the MCP client's server entry. On a server they come from any `IConfiguration` provider: environment variables, key-per-file container secrets (`/run/secrets`), Azure Key Vault, AWS Secrets Manager, and so on.
+All credentials live in the `ManiaAPI` configuration section. Locally they come from user secrets or environment variables set in the MCP client's server entry. On a server they come from any `IConfiguration` provider: environment variables, key-per-file container secrets (`/run/secrets`), Azure Key Vault, AWS Secrets Manager, and so on.
 
 ```jsonc
 {
-  "ManiaApiMcp": {
+  "ManiaAPI": {
     "Toolsets": ["trackmania2020", "exchange", "tmuf", "tmnf", "maniaplanet", "trackmaniaturbo"],
     "Http": { "ApiKeys": [] },   // populate from secrets for HTTP hosting
     "AllowWrites": false,        // local only: stdio, or HTTP bound to loopback
@@ -350,16 +349,13 @@ All credentials live in the `ManiaApiMcp` configuration section. Locally they co
     "Shaping": { "MaxItems": 50, "MaxChars": 20000, "MaxCharsLimit": 100000, "MaxResourceBytes": 5242880 },
 
     "NadeoAPI": {
-      "UserAgent": "my-assistant (contact: you@example.com)",
-      "Accounts": {
-        "ServiceAccount":  { "Login": "", "Password": "" },   // from secrets
-        "DedicatedServer": { "Login": "", "Password": "" }    // optional
-      },
-      "DefaultAccount": "ServiceAccount"
+      "Login": "",      // from secrets; a service account, or a dedicated server login with fewer permissions
+      "Password": "",
+      "UserAgent": "my-assistant (contact: you@example.com)"
     },
-    "TrackmaniaApi": { "ClientId": "", "ClientSecret": "", "Scopes": [] },
+    "TrackmaniaAPI": { "ClientId": "", "ClientSecret": "", "Scopes": [] },
     "ManiaPlanet":   { "ClientId": "", "ClientSecret": "", "Scopes": [] },   // optional
-    "TrackmaniaWS":  { "ApiUsername": "", "ApiPassword": "" },
+    "TrackmaniaWS":  { "Username": "", "Password": "" },
     "Exchange":      { "Sites": ["TMNF", "TMUF", "Nations", "Sunrise", "Original"], "MxSites": ["Trackmania", "Maniaplanet", "Shootmania"] },
     "MasterServer":  { "Games": ["TMUF", "TMNF", "MP4", "TMT"] }
   }
@@ -371,11 +367,11 @@ All credentials live in the `ManiaApiMcp` configuration section. Locally they co
 - **Clients come from the existing Hosting packages:** `AddNadeoAPI`, `AddTrackmaniaAPI`, `AddManiaPlanetAPI`, `AddTMX`, `AddMasterServer*`, `AddTrackmaniaWS`.
   - **Tokens:** NadeoAPI, Trackmania OAuth and ManiaPlanet OAuth tokens are cached for the life of the process in the singleton handlers. The handlers already authorize lazily on the first request and refresh before tokens expire. The protocol is stateless, but the process may still cache tokens.
   - **Multiple instances:** each instance authorizes on its own. That's fine for a few instances. Nadeo rate-limits authentication, so a large deployment would need a shared token cache.
-- **Two NadeoAPI accounts.** Each operation's descriptor records which account it needs, as observed by the live tests. Most work with either account. Map uploads, skins, favorites, club tags and trophies need the service account. The engine picks the default, and `account` overrides it.
+- **One NadeoAPI login.** Service accounts and dedicated server logins authenticate the same way, so the server takes a single login and doesn't need to know which kind it is. A service account can do everything a dedicated server login can. Each operation's descriptor records whether a dedicated server login is denied, as observed by the live tests (map uploads, skins, favorites, club tags and trophies), and a 401 on such an operation is reported as needing a service account.
 
 ### Protecting the endpoint
 
-A server with credentials behind it acts as those accounts for anyone who can reach it, so **the initial HTTP deployment uses API-key authentication**. The MCP client supplies a key in a header, checked against `ManiaApiMcp:Http:ApiKeys`. HTTP requests without a valid key are rejected, and HTTP hosting requires at least one non-empty configured key. A local stdio server needs no endpoint authentication.
+A server with credentials behind it acts as those accounts for anyone who can reach it, so **the initial HTTP deployment uses API-key authentication**. The MCP client supplies a key in a header, checked against `ManiaAPI:Http:ApiKeys`. HTTP requests without a valid key are rejected, and HTTP hosting requires at least one non-empty configured key. A local stdio server needs no endpoint authentication.
 
 This is a separate authentication layer from the game APIs:
 
@@ -449,7 +445,7 @@ The host references the C# SDK packages `ModelContextProtocol` (stdio, hosting) 
 var http = args.Contains("--http");
 var builder = http ? WebApplication.CreateBuilder(args) : Host.CreateApplicationBuilder(args);
 
-builder.Services.AddManiaApiMcp(builder.Configuration);   // clients, catalog, engine, featured tools
+builder.Services.AddManiaAPI(builder.Configuration);   // clients, catalog, engine, featured tools
 
 var mcp = builder.Services.AddMcpServer()
     .WithTools<GatewayTools>()
@@ -469,7 +465,7 @@ else
 
 ### Configuration validation
 
-The host checks `ManiaApiMcp` at startup and fails with a message that says what to fix, without including secret values.
+The host checks `ManiaAPI` at startup and fails with a message that says what to fix, without including secret values.
 
 - **Structural checks run locally:** toolset and site names, shaping limits within `MaxCharsLimit`, and, for HTTP hosting, at least one non-empty API key and no `AllowWrites: true` unless every listening address is loopback. The validator is registered in DI and attached with .NET 11's [`OptionsBuilder<TOptions>.Validate<TValidator>()`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.options.optionsbuilder-1.validate?view=net-11.0-pp) plus `ValidateOnStart()`. Check the overload in the installed Microsoft.Extensions.Options version before relying on it.
 - **Missing credentials aren't errors.** They hide the affected operations, as described in [Credentials and configuration](#credentials-and-configuration).
@@ -496,11 +492,11 @@ The host is packed as a .NET tool package, so an MCP client can start it with `d
       "command": "dnx",
       "args": ["ManiaAPI.MCP", "--yes"],
       "env": {
-        "ManiaApiMcp__Toolsets__0": "trackmania2020",
-        "ManiaApiMcp__Toolsets__1": "exchange",
-        "ManiaApiMcp__Exchange__MxSites__0": "Trackmania",
-        "ManiaApiMcp__NadeoAPI__Accounts__ServiceAccount__Login": "…",
-        "ManiaApiMcp__NadeoAPI__Accounts__ServiceAccount__Password": "…"
+        "ManiaAPI__Toolsets__0": "trackmania2020",
+        "ManiaAPI__Toolsets__1": "exchange",
+        "ManiaAPI__Exchange__MxSites__0": "Trackmania",
+        "ManiaAPI__NadeoAPI__Login": "…",
+        "ManiaAPI__NadeoAPI__Password": "…"
       }
     }
   }

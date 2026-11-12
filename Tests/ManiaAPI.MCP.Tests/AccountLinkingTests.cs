@@ -40,18 +40,18 @@ public class AccountLinkingTests
         {
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.UseTestServer();
-            builder.Services.AddManiaApiMcp(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+            builder.Services.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ManiaApiMcp:AccountLinking:Enabled"] = "true",
-                ["ManiaApiMcp:AccountLinking:PublicOrigin"] = "https://localhost",
-                ["ManiaApiMcp:AccountLinking:StorePath"] = Path.Combine(directory, "tokens"),
-                ["ManiaApiMcp:AccountLinking:DataProtectionKeyPath"] = Path.Combine(directory, "keys"),
-                ["ManiaApiMcp:Http:ApiKeys:0"] = "caller-a",
-                ["ManiaApiMcp:Http:ApiKeys:1"] = "caller-b",
-                ["ManiaApiMcp:TrackmaniaApi:ClientId"] = "client-id",
-                ["ManiaApiMcp:TrackmaniaApi:ClientSecret"] = "client-secret",
-                ["ManiaApiMcp:ManiaPlanet:ClientId"] = "client-id",
-                ["ManiaApiMcp:ManiaPlanet:ClientSecret"] = "client-secret"
+                ["ManiaAPI:AccountLinking:Enabled"] = "true",
+                ["ManiaAPI:AccountLinking:PublicOrigin"] = "https://localhost",
+                ["ManiaAPI:AccountLinking:StorePath"] = Path.Combine(directory, "tokens"),
+                ["ManiaAPI:AccountLinking:DataProtectionKeyPath"] = Path.Combine(directory, "keys"),
+                ["ManiaAPI:Http:ApiKeys:0"] = "caller-a",
+                ["ManiaAPI:Http:ApiKeys:1"] = "caller-b",
+                ["ManiaAPI:TrackmaniaAPI:ClientId"] = "client-id",
+                ["ManiaAPI:TrackmaniaAPI:ClientSecret"] = "client-secret",
+                ["ManiaAPI:ManiaPlanet:ClientId"] = "client-id",
+                ["ManiaAPI:ManiaPlanet:ClientSecret"] = "client-secret"
             }).Build());
 
             builder.Services.PostConfigure<ManiaAPI.TrackmaniaAPI.Extensions.Hosting.Authentication.TrackmaniaAuthenticationOptions>(

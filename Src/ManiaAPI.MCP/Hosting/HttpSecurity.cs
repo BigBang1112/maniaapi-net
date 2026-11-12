@@ -15,7 +15,7 @@ public static class HttpSecurity
     {
         if (!options.Http.ApiKeys.Any(key => !string.IsNullOrWhiteSpace(key)))
         {
-            throw new InvalidOperationException("HTTP hosting requires at least one non-empty ManiaApiMcp:Http:ApiKeys entry.");
+            throw new InvalidOperationException("HTTP hosting requires at least one non-empty ManiaAPI:Http:ApiKeys entry.");
         }
 
         var bindings = addresses.ToArray();

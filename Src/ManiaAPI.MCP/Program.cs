@@ -42,7 +42,7 @@ public static class Program
             builder.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
             Configure(builder.Configuration, hostArgs.ToArray());
 
-            builder.Services.AddManiaApiMcp(builder.Configuration, toolsets);
+            builder.Services.AddManiaAPI(builder.Configuration, toolsets);
             HttpSecurity.AddRateLimiting(builder.Services);
 
             AddGateway(builder.Services)
@@ -85,9 +85,9 @@ public static class Program
 
             builder.Logging.ClearProviders();
             builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
-            builder.Services.AddManiaApiMcp(builder.Configuration, toolsets);
+            builder.Services.AddManiaAPI(builder.Configuration, toolsets);
 
-            if (builder.Configuration.GetValue<bool>("ManiaApiMcp:AccountLinking:Enabled"))
+            if (builder.Configuration.GetValue<bool>("ManiaAPI:AccountLinking:Enabled"))
             {
                 throw new InvalidOperationException("Player account linking requires the HTTP transport.");
             }

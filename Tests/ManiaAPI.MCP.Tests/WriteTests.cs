@@ -39,11 +39,11 @@ public class WriteTests
         var calls = 0;
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseUrls("http://127.0.0.1:0");
-        builder.Services.AddManiaApiMcp(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        builder.Services.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ManiaApiMcp:AllowWrites"] = "true",
-            ["ManiaApiMcp:Toolsets:0"] = "exchange",
-            ["ManiaApiMcp:Http:ApiKeys:0"] = "write-test"
+            ["ManiaAPI:AllowWrites"] = "true",
+            ["ManiaAPI:Toolsets:0"] = "exchange",
+            ["ManiaAPI:Http:ApiKeys:0"] = "write-test"
         }).Build());
 
         builder.Services.AddSingleton(new[] { WriteOperation(() => Interlocked.Increment(ref calls)) });
@@ -106,10 +106,10 @@ public class WriteTests
         var operation = WriteOperation(() => { });
         var request = new CallToolRequestParams { Name = "maniaapi_invoke" };
 
-        await Assert.That(() => confirmation.Authorize(operation, EngineTests.Json("{}"), null,
+        await Assert.That(() => confirmation.Authorize(operation, EngineTests.Json("{}"),
             "exchange", "stdio", false, request, null)).Throws<ArgumentException>();
 
-        await Assert.That(confirmation.Authorize(operation, EngineTests.Json("{}"), null,
+        await Assert.That(confirmation.Authorize(operation, EngineTests.Json("{}"),
             "exchange", "stdio", true, request, null)).IsTrue();
     }
 

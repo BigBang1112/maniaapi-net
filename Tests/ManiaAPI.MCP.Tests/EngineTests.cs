@@ -14,7 +14,7 @@ public class EngineTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddManiaApiMcp(new ConfigurationBuilder().Build());
+        services.AddManiaAPI(new ConfigurationBuilder().Build());
 
         if (handler is not null)
         {
@@ -131,7 +131,8 @@ public class EngineTests
     public async Task ZoneLeaderboardRejectsPaging()
     {
         var options = new McpOptions();
-        options.NadeoAPI.Accounts["ServiceAccount"] = new AccountOptions { Login = "test", Password = "test" };
+        options.NadeoAPI.Login = "test";
+        options.NadeoAPI.Password = "test";
 
         var engine = new OperationEngine(options, GeneratedCatalog.Create());
         using var services = CreateServices();

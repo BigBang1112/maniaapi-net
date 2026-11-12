@@ -22,7 +22,7 @@ namespace ManiaAPI.MCP.Hosting;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddManiaApiMcp(
+    public static IServiceCollection AddManiaAPI(
         this IServiceCollection services,
         IConfiguration configuration,
         string[]? toolsets = null)
@@ -33,6 +33,16 @@ public static class ServiceCollectionExtensions
             .Bind(configuration.GetSection(McpOptions.Section))
             .PostConfigure(options =>
             {
+                // The binder appends configured array items to non-empty defaults, so a configured array
+                // would only ever add to the defaults. Replace them instead.
+                var section = configuration.GetSection(McpOptions.Section);
+                ReplaceArray(section, "Toolsets", values => options.Toolsets = values);
+                ReplaceArray(section, "MasterServer:Games", values => options.MasterServer.Games = values);
+                ReplaceArray(section, "Exchange:Sites", values => options.Exchange.Sites = values);
+                ReplaceArray(section, "Exchange:MxSites", values => options.Exchange.MxSites = values);
+                ReplaceArray(section, "AccountLinking:TrackmaniaScopes", values => options.AccountLinking.TrackmaniaScopes = values);
+                ReplaceArray(section, "AccountLinking:ManiaPlanetScopes", values => options.AccountLinking.ManiaPlanetScopes = values);
+
                 if (toolsets is not null)
                 {
                     options.Toolsets = toolsets;
@@ -41,9 +51,9 @@ public static class ServiceCollectionExtensions
             .ValidateOnStart();
 
         services.AddSingleton(provider => provider.GetRequiredService<IOptions<McpOptions>>().Value);
-        services.AddSingleton<NadeoAccounts>();
-        services.AddSingleton<INadeoAccounts>(provider => provider.GetRequiredService<NadeoAccounts>());
-        services.AddHostedService(provider => provider.GetRequiredService<NadeoAccounts>());
+        services.AddSingleton<NadeoAccount>();
+        services.AddSingleton<INadeoAccount>(provider => provider.GetRequiredService<NadeoAccount>());
+        services.AddHostedService(provider => provider.GetRequiredService<NadeoAccount>());
         services.AddSingleton<UpstreamHealth>();
         services.AddSingleton<WriteHostingGuard>();
         services.AddHostedService(provider => provider.GetRequiredService<WriteHostingGuard>());
@@ -92,19 +102,19 @@ public static class ServiceCollectionExtensions
         {
             services.AddTrackmaniaWS(new TrackmaniaWSOptions
             {
-                Credentials = new TrackmaniaWSCredentials(options.TrackmaniaWS.ApiUsername!, options.TrackmaniaWS.ApiPassword!)
+                Credentials = new TrackmaniaWSCredentials(options.TrackmaniaWS.Username!, options.TrackmaniaWS.Password!)
             });
         }
 
         services.AddHttpClient<UnitedLadder.UnitedLadder>();
         services.AddTrackmaniaAPI(o =>
         {
-            if (options.TrackmaniaApi.Configured)
+            if (options.TrackmaniaAPI.Configured)
             {
                 o.Credentials = new TrackmaniaAPICredentials(
-                    options.TrackmaniaApi.ClientId!,
-                    options.TrackmaniaApi.ClientSecret!,
-                    options.TrackmaniaApi.Scopes.ToImmutableArray());
+                    options.TrackmaniaAPI.ClientId!,
+                    options.TrackmaniaAPI.ClientSecret!,
+                    options.TrackmaniaAPI.Scopes.ToImmutableArray());
             }
         });
 
@@ -124,5 +134,13 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ResourceService>();
 
         return services;
+    }
+
+    private static void ReplaceArray(IConfigurationSection section, string key, Action<string[]> set)
+    {
+        if (section.GetSection(key).Get<string[]>() is { } values)
+        {
+            set(values);
+        }
     }
 }

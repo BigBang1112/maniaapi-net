@@ -51,7 +51,7 @@ See the [Samples](Samples) folder for more.
 
 ### MCP server
 
-[ManiaAPI.MCP](Src/ManiaAPI.MCP) provides a .NET 11 MCP gateway over stdio or stateless Streamable HTTP, with game-scoped discovery, featured tools, binary resources, optional local writes, and linked player OAuth accounts. See its [setup and configuration guide](Src/ManiaAPI.MCP/README.md).
+[ManiaAPI.MCP](Src/ManiaAPI.MCP) lets AI assistants use ManiaAPI libraries effectively. Install it with `dotnet tool install -g ManiaAPI.MCP` and see [how to connect it](Src/ManiaAPI.MCP/README.md).
 
 ## ManiaAPI.NadeoAPI
 

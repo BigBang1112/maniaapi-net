@@ -94,13 +94,6 @@ public sealed class GatewayTools(
             "arguments": {
               "type": "object"
             },
-            "account": {
-              "type": "string",
-              "enum": [
-                "ServiceAccount",
-                "DedicatedServer"
-              ]
-            },
             "confirm": {
               "type": "boolean",
               "default": false
@@ -225,15 +218,14 @@ public sealed class GatewayTools(
 
                     var id = RequiredString(args, "operation");
                     var invokeArguments = Required(args, "arguments");
-                    var account = OptionalString(args, "account");
                     var descriptor = engine.Describe(id, scope);
                     engine.ValidateArguments(Parse(descriptor.Schema(scope.Sites(descriptor),
                         scope.InferSite && scope.Sites(descriptor).Length == 1).ToJsonString()), invokeArguments);
 
-                    var approved = Confirm(descriptor, invokeArguments, account, scope, args, request, server);
+                    var approved = Confirm(descriptor, invokeArguments, scope, args, request, server);
 
                     result = await engine.InvokeAsync(id, invokeArguments,
-                        scope, services, shape, account, cancellationToken, confirmed: approved);
+                        scope, services, shape, cancellationToken, confirmed: approved);
                     break;
 
                 default:
@@ -257,7 +249,7 @@ public sealed class GatewayTools(
                     arguments.Remove("confirm");
 
                     var directArguments = Parse(arguments.ToJsonString());
-                    var directApproved = Confirm(operation, directArguments, null, scope, args, request, server);
+                    var directApproved = Confirm(operation, directArguments, scope, args, request, server);
 
                     result = await engine.InvokeAsync(operation.Id, directArguments, scope,
                         services, cancellationToken: cancellationToken, confirmed: directApproved);
@@ -376,8 +368,7 @@ public sealed class GatewayTools(
                 ["resultOutline"] = Outline(operation.Overloads[0].OutputSchema, 2),
                 ["signatures"] = new JsonArray(operation.Overloads.Select(x => (JsonNode?)JsonValue.Create(x.Signature)).ToArray()),
                 ["requires"] = operation.Requires,
-                ["account"] = operation.Requires == "nadeo" ? operation.ServiceAccountOnly ? "ServiceAccount" : "ServiceAccount or DedicatedServer" : null,
-                ["deniedAccounts"] = operation.ServiceAccountOnly ? new JsonArray("DedicatedServer") : new JsonArray(),
+                ["serviceAccountOnly"] = operation.Requires == "nadeo" ? operation.ServiceAccountOnly : null,
                 ["oauth"] = operation.OAuthProvider is not null ? new JsonObject
                 {
                     ["provider"] = operation.OAuthProvider,
@@ -492,14 +483,14 @@ public sealed class GatewayTools(
         };
     }
 
-    private bool Confirm(Operation operation, JsonElement arguments, string? account, GameScope scope,
+    private bool Confirm(Operation operation, JsonElement arguments, GameScope scope,
         IDictionary<string, JsonElement> args, CallToolRequestParams request, McpServer? server)
     {
         var caller = httpContext.HttpContext?.Items["ManiaApiIdentity"]?.ToString() ?? "stdio";
         var scopeKey = string.Join(',', scope.Toolsets.Order(StringComparer.Ordinal)) + ":" +
             string.Join(',', scope.TmxSites.Concat(scope.MxSites));
 
-        return confirmation.Authorize(operation, arguments, account, scopeKey, caller,
+        return confirmation.Authorize(operation, arguments, scopeKey, caller,
             args.TryGetValue("confirm", out var value) && value.ValueKind == JsonValueKind.True, request, server);
     }
 

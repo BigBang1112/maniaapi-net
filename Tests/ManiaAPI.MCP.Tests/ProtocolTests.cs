@@ -19,7 +19,7 @@ public class ProtocolTests
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
-        builder.Services.AddManiaApiMcp(new ConfigurationBuilder().Build());
+        builder.Services.AddManiaAPI(new ConfigurationBuilder().Build());
 
         if (handler is not null)
         {

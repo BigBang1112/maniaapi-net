@@ -15,7 +15,6 @@ public sealed class WriteConfirmation(IDataProtectionProvider protection, TimePr
     public bool Authorize(
         Operation operation,
         JsonElement arguments,
-        string? account,
         string scope,
         string caller,
         bool confirm,
@@ -38,7 +37,7 @@ public sealed class WriteConfirmation(IDataProtectionProvider protection, TimePr
         }
 
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-            string.Join('\n', operation.Id, arguments.GetRawText(), account, scope, caller, request.Name))));
+            string.Join('\n', operation.Id, arguments.GetRawText(), scope, caller, request.Name))));
 
         if (request.RequestState is { } state)
         {

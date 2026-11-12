@@ -22,10 +22,10 @@ public static class AccountLinking
 
         var authentication = services.AddAuthentication("LinkCookie").AddCookie("LinkCookie");
 
-        if (options.TrackmaniaApi.Configured)
+        if (options.TrackmaniaAPI.Configured)
         {
             authentication.AddTrackmania("LinkTrackmania", settings =>
-                Configure(settings, options.TrackmaniaApi, options.AccountLinking.TrackmaniaScopes, "trackmania"));
+                Configure(settings, options.TrackmaniaAPI, options.AccountLinking.TrackmaniaScopes, "trackmania"));
         }
 
         if (options.ManiaPlanet.Configured)
@@ -181,7 +181,7 @@ public static class AccountLinking
     private static void ValidateProvider(string provider, McpOptions options)
     {
         if (provider is not ("trackmania" or "maniaplanet") ||
-            !(provider == "trackmania" ? options.TrackmaniaApi.Configured : options.ManiaPlanet.Configured))
+            !(provider == "trackmania" ? options.TrackmaniaAPI.Configured : options.ManiaPlanet.Configured))
         {
             throw new BadHttpRequestException("This OAuth provider is not configured.");
         }

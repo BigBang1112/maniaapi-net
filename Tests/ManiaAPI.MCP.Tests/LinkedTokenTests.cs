@@ -17,7 +17,7 @@ public class LinkedTokenTests
             var options = new McpOptions
             {
                 AccountLinking = new AccountLinkingOptions { Enabled = true, StorePath = directory },
-                TrackmaniaApi = new OAuthOptions { ClientId = "client", ClientSecret = "secret" }
+                TrackmaniaAPI = new OAuthOptions { ClientId = "client", ClientSecret = "secret" }
             };
 
             var store = new LinkedAccountStore(options, new EphemeralDataProtectionProvider());
