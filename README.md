@@ -1104,15 +1104,7 @@ builder.Services.AddHttpClient<UnitedLadder>();
 > [!NOTE]
 > You don't need to build the solution/repository to use ManiaAPI.NET, **NuGet packages have been made for you**. This is only for internal development purposes.
 
-Make sure you have these framework SDKs available:
-
-- .NET 10
-- .NET 9
-- .NET 8
-
-**Visual Studio 2026** should be able to install those with default installation settings. Using Visual Studio 2022 might work, but Visual Studio 2019 will not work.
-
-In Visual Studio, you can just use Build Solution and everything should build. JetBrains Rider has been tested and also works.
+Make sure you have .NET 11 SDK available.
 
 In .NET CLI, run `dotnet build` on the solution (`.slnx`) level.
 

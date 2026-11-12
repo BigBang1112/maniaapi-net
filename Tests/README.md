@@ -1,6 +1,6 @@
 # Tests
 
-The tests use [TUnit](https://tunit.dev) on Microsoft Testing Platform, which [`global.json`](../global.json) selects for `dotnet test`. Every test project targets .NET 10, 9, and 8.
+The tests use [TUnit](https://tunit.dev) on Microsoft Testing Platform, which [`global.json`](../global.json) selects for `dotnet test`. Every test project targets .NET 11, 10, 9, and 8.
 
 ```sh
 dotnet test
