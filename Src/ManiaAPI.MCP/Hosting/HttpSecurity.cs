@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.RateLimiting;
 using ManiaAPI.MCP.Configuration;
-using Microsoft.AspNetCore.RateLimiting;
 
 namespace ManiaAPI.MCP.Hosting;
 

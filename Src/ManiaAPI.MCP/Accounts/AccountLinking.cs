@@ -3,7 +3,6 @@ using ManiaAPI.MCP.Configuration;
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace ManiaAPI.MCP.Accounts;

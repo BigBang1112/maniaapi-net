@@ -3,8 +3,6 @@ using ManiaAPI.MCP.Configuration;
 
 namespace ManiaAPI.MCP.Engine;
 
-public sealed record ResultShape(string[]? Fields = null, int? MaxItems = null, int? MaxChars = null);
-
 public static class ResultShaper
 {
     public static JsonObject Shape(JsonNode? value, ResultShape? shape, ShapingOptions options)
