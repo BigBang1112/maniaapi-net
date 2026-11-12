@@ -129,7 +129,7 @@ Runs one operation.
     "maxItems": 50,
     "maxChars": 20000
   },
-  "account": "ServiceAccount",    // optional; Nadeo only, defaults per operation
+  "account": "ServiceAccount",    // optional; NadeoAPI only, defaults per operation
   "confirm": false                // needed for writes when the client can't answer an MRTR prompt
 }
 ```
@@ -253,7 +253,7 @@ Hand-written partial `OperationOverrides` files hold what generation can't infer
 - better summaries
 - tags and synonyms for search ("TOTD", "COTD", "PB", "WR")
 - game aliases and family hints, game-to-exchange mappings, site selection guidance, and related operations for discovery
-- the account requirements per Nadeo operation, taken from the live tests (for example, `GetPlayerClubTagsAsync` returns 401 for a dedicated server account)
+- the account requirements per NadeoAPI operation, taken from the live tests (for example, `GetPlayerClubTagsAsync` returns 401 for a dedicated server account)
 - excluded operations
 - which operations write
 
@@ -349,7 +349,7 @@ All credentials live in the `ManiaApiMcp` configuration section. Locally they co
     "ExposeOperationsAsTools": false,
     "Shaping": { "MaxItems": 50, "MaxChars": 20000, "MaxCharsLimit": 100000, "MaxResourceBytes": 5242880 },
 
-    "Nadeo": {
+    "NadeoAPI": {
       "UserAgent": "my-assistant (contact: you@example.com)",
       "Accounts": {
         "ServiceAccount":  { "Login": "", "Password": "" },   // from secrets
@@ -369,9 +369,9 @@ All credentials live in the `ManiaApiMcp` configuration section. Locally they co
 - **Operations without credentials are hidden.** If a credential is missing, its operations disappear from search and featured tools, and `maniaapi_invoke` reports that the server isn't configured. The other toolsets still work. ManiaPlanet credentials are optional: the application-level ManiaPlanet web API operations work without them (see [Upstream OAuth 2.0](#upstream-oauth-20)).
 - **Exchange availability:** `exchange` must be enabled in `Toolsets`; `Exchange:Sites` and `Exchange:MxSites` select the available sites. Game endpoints automatically include only the mapped subset. Removing a site from configuration removes it from discovery and rejects its invocations and resource reads in every scope.
 - **Clients come from the existing Hosting packages:** `AddNadeoAPI`, `AddTrackmaniaAPI`, `AddManiaPlanetAPI`, `AddTMX`, `AddMasterServer*`, `AddTrackmaniaWS`.
-  - **Tokens:** Nadeo, Trackmania OAuth and ManiaPlanet OAuth tokens are cached for the life of the process in the singleton handlers. The handlers already authorize lazily on the first request and refresh before tokens expire. The protocol is stateless, but the process may still cache tokens.
+  - **Tokens:** NadeoAPI, Trackmania OAuth and ManiaPlanet OAuth tokens are cached for the life of the process in the singleton handlers. The handlers already authorize lazily on the first request and refresh before tokens expire. The protocol is stateless, but the process may still cache tokens.
   - **Multiple instances:** each instance authorizes on its own. That's fine for a few instances. Nadeo rate-limits authentication, so a large deployment would need a shared token cache.
-- **Two Nadeo accounts.** Each operation's descriptor records which account it needs, as observed by the live tests. Most work with either account. Map uploads, skins, favorites, club tags and trophies need the service account. The engine picks the default, and `account` overrides it.
+- **Two NadeoAPI accounts.** Each operation's descriptor records which account it needs, as observed by the live tests. Most work with either account. Map uploads, skins, favorites, club tags and trophies need the service account. The engine picks the default, and `account` overrides it.
 
 ### Protecting the endpoint
 
@@ -421,7 +421,7 @@ The MCP HTTP endpoint continues to authenticate callers with API keys. Linked up
   
   MRTR is the 2026-07-28 replacement for server-initiated elicitation, which doesn't work in stateless mode.
 - **Rate limits.**
-  - **Nadeo:** limited to a few concurrent requests per audience.
+  - **NadeoAPI:** limited to a few concurrent requests per audience.
   - **The MCP endpoint itself:** ASP.NET Core rate limiting per API key or user.
 
 ## Hosting
@@ -499,8 +499,8 @@ The host is packed as a .NET tool package, so an MCP client can start it with `d
         "ManiaApiMcp__Toolsets__0": "trackmania2020",
         "ManiaApiMcp__Toolsets__1": "exchange",
         "ManiaApiMcp__Exchange__MxSites__0": "Trackmania",
-        "ManiaApiMcp__Nadeo__Accounts__ServiceAccount__Login": "…",
-        "ManiaApiMcp__Nadeo__Accounts__ServiceAccount__Password": "…"
+        "ManiaApiMcp__NadeoAPI__Accounts__ServiceAccount__Login": "…",
+        "ManiaApiMcp__NadeoAPI__Accounts__ServiceAccount__Password": "…"
       }
     }
   }

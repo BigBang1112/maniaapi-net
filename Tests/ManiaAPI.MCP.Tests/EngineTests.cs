@@ -131,7 +131,7 @@ public class EngineTests
     public async Task ZoneLeaderboardRejectsPaging()
     {
         var options = new McpOptions();
-        options.Nadeo.Accounts["ServiceAccount"] = new AccountOptions { Login = "test", Password = "test" };
+        options.NadeoAPI.Accounts["ServiceAccount"] = new AccountOptions { Login = "test", Password = "test" };
 
         var engine = new OperationEngine(options, GeneratedCatalog.Create());
         using var services = CreateServices();

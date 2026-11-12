@@ -13,7 +13,7 @@ public sealed class McpOptions
     public bool ExposeOperationsAsTools { get; set; }
     public HttpOptions Http { get; set; } = new();
     public ShapingOptions Shaping { get; set; } = new();
-    public NadeoOptions Nadeo { get; set; } = new();
+    public NadeoOptions NadeoAPI { get; set; } = new();
     public OAuthOptions TrackmaniaApi { get; set; } = new();
     public OAuthOptions ManiaPlanet { get; set; } = new();
     public TrackmaniaWsOptions TrackmaniaWS { get; set; } = new();
@@ -137,10 +137,10 @@ public sealed class McpOptionsValidator : IValidateOptions<McpOptions>
             errors.Add("Shaping limits must be positive: MaxItems <= 10000, 256 <= MaxChars <= MaxCharsLimit <= 1000000.");
         }
 
-        if (options.Nadeo.Accounts.Keys.Any(x => x is not ("ServiceAccount" or "DedicatedServer")) ||
-            options.Nadeo.DefaultAccount is not ("ServiceAccount" or "DedicatedServer"))
+        if (options.NadeoAPI.Accounts.Keys.Any(x => x is not ("ServiceAccount" or "DedicatedServer")) ||
+            options.NadeoAPI.DefaultAccount is not ("ServiceAccount" or "DedicatedServer"))
         {
-            errors.Add("Nadeo account names must be ServiceAccount or DedicatedServer.");
+            errors.Add("NadeoAPI account names must be ServiceAccount or DedicatedServer.");
         }
 
         return errors.Count == 0 ? ValidateOptionsResult.Success : ValidateOptionsResult.Fail(errors);

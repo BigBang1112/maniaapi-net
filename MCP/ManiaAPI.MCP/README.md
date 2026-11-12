@@ -30,7 +30,7 @@ Clients send the key in `X-Api-Key`. `/mcp` exposes every enabled toolset. The g
 
 Game endpoints include their mapped exchange sites when exchange is enabled. TMUF and TMNF bind to different master servers. ManiaPlanet includes MP3, MP4, Trackmania 2, and ShootMania. Turbo supports individual platforms and aggregated results, discovering its master servers lazily.
 
-`/healthz` is anonymous liveness. `/readyz` requires the API key and reads cached credential status without logging in. Fresh or expired credentials can authorize lazily on a real call. HTTP requests are limited to 120 per minute per API key; upstream calls are limited by Nadeo audience or other toolset.
+`/healthz` is anonymous liveness. `/readyz` requires the API key and reads cached credential status without logging in. Fresh or expired credentials can authorize lazily on a real call. HTTP requests are limited to 120 per minute per API key; upstream calls are limited by NadeoAPI audience or other toolset.
 
 ## Configuration
 
@@ -49,7 +49,7 @@ The host loads normal .NET configuration, optional user secrets with ID `ManiaAP
       "MaxCharsLimit": 100000,
       "MaxResourceBytes": 5242880
     },
-    "Nadeo": {
+    "NadeoAPI": {
       "UserAgent": "my-assistant (contact: you@example.com)",
       "DefaultAccount": "ServiceAccount",
       "Accounts": {}
@@ -70,7 +70,7 @@ The host loads normal .NET configuration, optional user secrets with ID `ManiaAP
 }
 ```
 
-Nadeo accounts use `Nadeo:Accounts:ServiceAccount:Login` and `Password`, with an optional `DedicatedServer` account. `TrackmaniaApi` and `ManiaPlanet` accept `ClientId` and `ClientSecret`. `TrackmaniaWS` accepts `ApiUsername` and `ApiPassword`. An environment variable such as `ManiaApiMcp__Nadeo__Accounts__ServiceAccount__Login` maps to the corresponding configuration key.
+NadeoAPI accounts use `NadeoAPI:Accounts:ServiceAccount:Login` and `Password`, with an optional `DedicatedServer` account. `TrackmaniaApi` and `ManiaPlanet` accept `ClientId` and `ClientSecret`. `TrackmaniaWS` accepts `ApiUsername` and `ApiPassword`. An environment variable such as `ManiaApiMcp__NadeoAPI__Accounts__ServiceAccount__Login` maps to the corresponding configuration key.
 
 Missing credentials hide only the affected operations. ManiaPlanet application-level reads remain available anonymously; configured application credentials are optional for those reads. Player routes always require linked player tokens. Supplying player scopes with client credentials does not enable those routes.
 
@@ -112,7 +112,7 @@ TMX/MX Gbx operations return header summaries, including map UID/name/author, me
 
 ## Writes
 
-`AllowWrites` defaults to false. Enabling it exposes the write catalog, including Nadeo club/member/activity changes, favorites, votes, matchmaking, and map upload/update. HTTP hosting fails startup unless every actual listening address is loopback; stdio permits local writes. API-key authentication remains mandatory for HTTP, including loopback.
+`AllowWrites` defaults to false. Enabling it exposes the write catalog, including NadeoAPI club/member/activity changes, favorites, votes, matchmaking, and map upload/update. HTTP hosting fails startup unless every actual listening address is loopback; stdio permits local writes. API-key authentication remains mandatory for HTTP, including loopback.
 
 For clients supporting MRTR, a write prompts for approval and retries with a protected confirmation bound to the operation, arguments, account, endpoint scope, caller, and tool. Confirmation expires after five minutes. `confirm: true` is the fallback for clients without MRTR and does not bypass an MRTR prompt.
 
@@ -126,7 +126,7 @@ Map uploads and updates accept exactly one source:
 }
 ```
 
-Local paths are stdio-only. `source.url` accepts an HTTP(S) URL without embedded credentials; `source.resource` accepts a returned resource URI. Downloads and local files are bounded by `MaxResourceBytes`. Updates optionally accept `mapId`; otherwise the library resolves the map from the Gbx UID. Uploads require a Nadeo service account. Password-returning library operations stay excluded.
+Local paths are stdio-only. `source.url` accepts an HTTP(S) URL without embedded credentials; `source.resource` accepts a returned resource URI. Downloads and local files are bounded by `MaxResourceBytes`. Updates optionally accept `mapId`; otherwise the library resolves the map from the Gbx UID. Uploads require a NadeoAPI service account. Password-returning library operations stay excluded.
 
 ## Link player accounts
 

@@ -34,8 +34,8 @@ public class CatalogTests
         collection.AddManiaApiMcp(new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(
             new Dictionary<string, string?>
             {
-                ["ManiaApiMcp:Nadeo:Accounts:ServiceAccount:Login"] = "test-login",
-                ["ManiaApiMcp:Nadeo:Accounts:ServiceAccount:Password"] = "test-password",
+                ["ManiaApiMcp:NadeoAPI:Accounts:ServiceAccount:Login"] = "test-login",
+                ["ManiaApiMcp:NadeoAPI:Accounts:ServiceAccount:Password"] = "test-password",
                 ["ManiaApiMcp:TrackmaniaApi:ClientId"] = "test-client",
                 ["ManiaApiMcp:TrackmaniaApi:ClientSecret"] = "test-secret"
             }).Build());

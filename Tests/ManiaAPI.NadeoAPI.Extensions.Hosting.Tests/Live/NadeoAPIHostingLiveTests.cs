@@ -6,7 +6,7 @@ namespace ManiaAPI.NadeoAPI.Extensions.Hosting.Tests.Live;
 /// The clients as an application gets them from dependency injection, authorizing on their first request.
 /// </summary>
 [LiveTest]
-[NotInParallel("Nadeo")]
+[NotInParallel("NadeoAPI")]
 public class NadeoAPIHostingLiveTests
 {
     [Test]

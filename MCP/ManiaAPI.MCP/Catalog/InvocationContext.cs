@@ -185,9 +185,9 @@ public sealed class NadeoAccounts : INadeoAccounts, IHostedService, IDisposable
 
     public NadeoAccounts(McpOptions options)
     {
-        defaultAccount = options.Nadeo.DefaultAccount;
+        defaultAccount = options.NadeoAPI.DefaultAccount;
 
-        foreach (var (name, account) in options.Nadeo.Accounts.Where(x => x.Value.Configured))
+        foreach (var (name, account) in options.NadeoAPI.Accounts.Where(x => x.Value.Configured))
         {
             var services = new ServiceCollection();
             services.AddLogging();
@@ -195,7 +195,7 @@ public sealed class NadeoAccounts : INadeoAccounts, IHostedService, IDisposable
             services.AddNadeoAPI(o =>
             {
                 o.Credentials = new NadeoAPICredentials(account.Login!, account.Password!);
-                o.UserAgent = options.Nadeo.UserAgent;
+                o.UserAgent = options.NadeoAPI.UserAgent;
             });
 
             providers.Add(name, services.BuildServiceProvider());
@@ -206,7 +206,7 @@ public sealed class NadeoAccounts : INadeoAccounts, IHostedService, IDisposable
     {
         return providers.TryGetValue(account ?? defaultAccount, out var provider)
             ? provider
-            : throw new ArgumentException("The selected Nadeo account is not configured.");
+            : throw new ArgumentException("The selected NadeoAPI account is not configured.");
     }
 
     public IEnumerable<DateTimeOffset> Expirations(string account)

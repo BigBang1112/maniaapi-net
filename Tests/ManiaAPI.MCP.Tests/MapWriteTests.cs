@@ -27,8 +27,8 @@ public class MapWriteTests
         collection.AddManiaApiMcp(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["ManiaApiMcp:AllowWrites"] = "true",
-            ["ManiaApiMcp:Nadeo:Accounts:ServiceAccount:Login"] = "service-login",
-            ["ManiaApiMcp:Nadeo:Accounts:ServiceAccount:Password"] = "service-password"
+            ["ManiaApiMcp:NadeoAPI:Accounts:ServiceAccount:Login"] = "service-login",
+            ["ManiaApiMcp:NadeoAPI:Accounts:ServiceAccount:Password"] = "service-password"
         }).Build());
 
         collection.AddSingleton(_ => new NadeoServices(fake.CreateClient(), new NadeoAPIHandler(), automaticallyAuthorize: false));

@@ -35,7 +35,7 @@ public sealed class OperationEngine
         this.health = health ?? new UpstreamHealth(options);
         this.operations = operations.ToDictionary(x => x.Id, StringComparer.Ordinal);
 
-        sensitiveValues = options.Nadeo.Accounts.Values
+        sensitiveValues = options.NadeoAPI.Accounts.Values
             .SelectMany(account => new[] { account.Login, account.Password })
             .Concat([options.TrackmaniaApi.ClientId, options.TrackmaniaApi.ClientSecret,
                 options.ManiaPlanet.ClientId, options.ManiaPlanet.ClientSecret,
@@ -218,18 +218,18 @@ public sealed class OperationEngine
         {
             if (requested is not null)
             {
-                throw new ArgumentException("account is only supported for Nadeo operations.");
+                throw new ArgumentException("account is only supported for NadeoAPI operations.");
             }
 
             return null;
         }
 
-        var selected = requested ?? (operation.ServiceAccountOnly ? "ServiceAccount" : options.Nadeo.DefaultAccount);
+        var selected = requested ?? (operation.ServiceAccountOnly ? "ServiceAccount" : options.NadeoAPI.DefaultAccount);
 
         if (requested is null && !operation.ServiceAccountOnly &&
-            (!options.Nadeo.Accounts.TryGetValue(selected, out var preferred) || !preferred.Configured))
+            (!options.NadeoAPI.Accounts.TryGetValue(selected, out var preferred) || !preferred.Configured))
         {
-            selected = options.Nadeo.Accounts.First(x => x.Value.Configured).Key;
+            selected = options.NadeoAPI.Accounts.First(x => x.Value.Configured).Key;
         }
 
         if (operation.ServiceAccountOnly && selected != "ServiceAccount")
@@ -237,9 +237,9 @@ public sealed class OperationEngine
             throw new ArgumentException("This operation needs a service account: pass account: ServiceAccount.");
         }
 
-        if (!options.Nadeo.Accounts.TryGetValue(selected, out var credentials) || !credentials.Configured)
+        if (!options.NadeoAPI.Accounts.TryGetValue(selected, out var credentials) || !credentials.Configured)
         {
-            throw new ArgumentException("The selected Nadeo account is not configured.");
+            throw new ArgumentException("The selected NadeoAPI account is not configured.");
         }
 
         return selected;
@@ -256,8 +256,8 @@ public sealed class OperationEngine
         return operation.Requires switch
         {
             "nadeo" => operation.ServiceAccountOnly
-                ? options.Nadeo.Accounts.TryGetValue("ServiceAccount", out var account) && account.Configured
-                : options.Nadeo.Accounts.Values.Any(x => x.Configured),
+                ? options.NadeoAPI.Accounts.TryGetValue("ServiceAccount", out var account) && account.Configured
+                : options.NadeoAPI.Accounts.Values.Any(x => x.Configured),
             "oauth" => options.TrackmaniaApi.Configured,
             "tmws" => options.TrackmaniaWS.Configured,
             _ when operation.Id.StartsWith("masterserver.", StringComparison.Ordinal) => options.MasterServer.Games.Contains(

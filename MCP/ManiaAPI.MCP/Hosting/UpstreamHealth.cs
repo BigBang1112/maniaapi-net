@@ -11,7 +11,7 @@ public sealed class UpstreamHealth
 
     public UpstreamHealth(McpOptions options)
     {
-        foreach (var account in options.Nadeo.Accounts.Where(x => x.Value.Configured))
+        foreach (var account in options.NadeoAPI.Accounts.Where(x => x.Value.Configured))
         {
             states["nadeo:" + account.Key] = "notYetAuthorized";
         }
