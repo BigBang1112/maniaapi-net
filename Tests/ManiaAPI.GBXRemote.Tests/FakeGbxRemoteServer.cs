@@ -157,12 +157,25 @@ internal sealed class FakeGbxRemoteConnection : IDisposable
     }
 
     /// <summary>
-    /// Completes once the client closes its end of the connection.
+    /// Completes once the client closes its end of the connection, either normally or with a reset.
     /// </summary>
+    /// <remarks>
+    /// On Linux, a socket disposed while a cancelled read is still being cleaned up is closed abortively, so the server sees
+    /// a reset instead of the end of the stream. It depends on timing, and it still means the client closed the connection.
+    /// </remarks>
     public async Task WaitForCloseAsync()
     {
         var buffer = new byte[1];
-        var read = await stream.ReadAsync(buffer).AsTask().WaitAsync(FakeGbxRemoteServer.Timeout);
+        int read;
+
+        try
+        {
+            read = await stream.ReadAsync(buffer).AsTask().WaitAsync(FakeGbxRemoteServer.Timeout);
+        }
+        catch (IOException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.ConnectionReset })
+        {
+            return;
+        }
 
         if (read != 0)
         {
