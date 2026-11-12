@@ -49,6 +49,10 @@ Anything you can imagine!
 
 See the [Samples](Samples) folder for more.
 
+### MCP server
+
+[ManiaAPI.MCP](MCP/ManiaAPI.MCP) provides a .NET 11 MCP gateway over stdio or stateless Streamable HTTP, with game-scoped discovery, featured tools, binary resources, optional local writes, and linked player OAuth accounts. See its [setup and configuration guide](MCP/ManiaAPI.MCP/README.md).
+
 ## ManiaAPI.NadeoAPI
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.NadeoAPI?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.NadeoAPI/)

@@ -1,0 +1,367 @@
+maniaplanet.ingame.download_title [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string
+maniaplanet.ingame.title_by_uid [none, serviceOnly=False, readOnly=True, playerOnly=False] uid: string
+maniaplanet.web.dedicated_accounts [oauth, serviceOnly=False, readOnly=True, playerOnly=True]
+maniaplanet.web.email [oauth, serviceOnly=False, readOnly=True, playerOnly=True]
+maniaplanet.web.maps [oauth, serviceOnly=False, readOnly=True, playerOnly=True]
+maniaplanet.web.player [oauth, serviceOnly=False, readOnly=True, playerOnly=True]
+maniaplanet.web.search_online_servers [none, serviceOnly=False, readOnly=True, playerOnly=False] orderBy?: string = "playerCount", titleUids?: string[]? = null, environments?: string[]? = null, scriptName?: string? = null, search?: string? = null, zone?: string? = null, onlyPublic?: bool = false, onlyPrivate?: bool = false, onlyLobby?: bool = false, excludeLobby?: bool = true, offset?: int = 0, length?: int = 10
+maniaplanet.web.search_titles [none, serviceOnly=False, readOnly=True, playerOnly=False] filters?: string[]? = null, orderBy?: string? = "onlinePlayers", offset?: int = 0, length?: int = 10
+maniaplanet.web.title_by_uid [none, serviceOnly=False, readOnly=True, playerOnly=False] uid: string
+maniaplanet.web.title_scripts [none, serviceOnly=False, readOnly=True, playerOnly=False] uid: string
+maniaplanet.web.titles [oauth, serviceOnly=False, readOnly=True, playerOnly=True]
+maniaplanet.web.zones [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.mp3.account_from_steam_user [none, serviceOnly=False, readOnly=True, playerOnly=False] steamId: ulong
+masterserver.mp3.account_from_steam_user_response [none, serviceOnly=False, readOnly=True, playerOnly=False] steamId: ulong
+masterserver.mp3.check_login [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp3.check_login_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp3.leagues [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.mp3.leagues_response [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.mp3.maniaplanet_login_from_web_identity [none, serviceOnly=False, readOnly=True, playerOnly=False] platform: string, userId: System.Guid || webIdentity: ManiaAPI.MasterServer.WebIdentity || webIdentities: System.Collections.Generic.IEnumerable<ManiaAPI.MasterServer.WebIdentity>
+masterserver.mp3.maniaplanet_login_from_web_identity_response [none, serviceOnly=False, readOnly=True, playerOnly=False] webIdentities: System.Collections.Generic.IEnumerable<ManiaAPI.MasterServer.WebIdentity>
+masterserver.mp3.multiplayer_leader_board_summaries [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, zones: System.Collections.Generic.IEnumerable<string>
+masterserver.mp3.multiplayer_leader_board_summaries_response [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, zones: System.Collections.Generic.IEnumerable<string>
+masterserver.mp3.player_infos [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp3.player_infos_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp3.test [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.mp3.waiting_params [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp3.waiting_params_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp3.web_identity_from_maniaplanet_login [none, serviceOnly=False, readOnly=True, playerOnly=False] logins: System.Collections.Generic.IEnumerable<string> || login: string
+masterserver.mp3.web_identity_from_maniaplanet_login_response [none, serviceOnly=False, readOnly=True, playerOnly=False] logins: System.Collections.Generic.IEnumerable<string>
+masterserver.mp4.account_from_steam_user [none, serviceOnly=False, readOnly=True, playerOnly=False] steamId: ulong
+masterserver.mp4.account_from_steam_user_response [none, serviceOnly=False, readOnly=True, playerOnly=False] steamId: ulong
+masterserver.mp4.account_from_uplay_user [none, serviceOnly=False, readOnly=True, playerOnly=False] id: System.Guid
+masterserver.mp4.account_from_uplay_user_response [none, serviceOnly=False, readOnly=True, playerOnly=False] id: System.Guid
+masterserver.mp4.campaign_leader_board [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, campaignId?: string? = null, count?: int = 10, offset?: int = 0, zone?: string = "World", type?: ManiaAPI.MasterServer.MP4.CampaignLeaderboardType = 0
+masterserver.mp4.campaign_leader_board_response [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, campaignId?: string? = null, count?: int = 10, offset?: int = 0, zone?: string = "World", type?: ManiaAPI.MasterServer.MP4.CampaignLeaderboardType = 0
+masterserver.mp4.campaign_leader_board_summaries [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, campaignId?: string? = null, zone?: string = "World", type?: ManiaAPI.MasterServer.MP4.CampaignLeaderboardType = 0 || titleId: string, summaries: System.Collections.Generic.IEnumerable<ManiaAPI.MasterServer.MP4.CampaignSummaryRequest>
+masterserver.mp4.campaign_leader_board_summaries_response [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, campaignId?: string? = null, zone?: string = "World", type?: ManiaAPI.MasterServer.MP4.CampaignLeaderboardType = 0 || titleId: string, summaries: System.Collections.Generic.IEnumerable<ManiaAPI.MasterServer.MP4.CampaignSummaryRequest>
+masterserver.mp4.check_login [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp4.check_login_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp4.leagues [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.mp4.leagues_response [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.mp4.maniaplanet_login_from_web_identity [none, serviceOnly=False, readOnly=True, playerOnly=False] platform: string, userId: System.Guid || webIdentity: ManiaAPI.MasterServer.WebIdentity || webIdentities: System.Collections.Generic.IEnumerable<ManiaAPI.MasterServer.WebIdentity>
+masterserver.mp4.maniaplanet_login_from_web_identity_response [none, serviceOnly=False, readOnly=True, playerOnly=False] webIdentities: System.Collections.Generic.IEnumerable<ManiaAPI.MasterServer.WebIdentity>
+masterserver.mp4.map_leader_board [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, mapUid: string, count?: int = 10, offset?: int = 0, zone?: string = "World", context?: string = ""
+masterserver.mp4.map_leader_board_response [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, mapUid: string, count?: int = 10, offset?: int = 0, zone?: string = "World", context?: string = ""
+masterserver.mp4.map_leader_board_summaries [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, mapUid: string, zone?: string = "World", context?: string = "", type?: ManiaAPI.MasterServer.MP4.MapLeaderboardType = 0, isBinary?: bool = true || titleId: string, summaries: System.Collections.Generic.IEnumerable<ManiaAPI.MasterServer.MP4.MapSummaryRequest>, isBinary?: bool = true
+masterserver.mp4.map_leader_board_summaries_response [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, mapUid: string, zone?: string = "World", context?: string = "", type?: ManiaAPI.MasterServer.MP4.MapLeaderboardType = 0, isBinary?: bool = true || titleId: string, summaries: System.Collections.Generic.IEnumerable<ManiaAPI.MasterServer.MP4.MapSummaryRequest>, isBinary?: bool = true
+masterserver.mp4.multiplayer_leader_board_summaries [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, zones: System.Collections.Generic.IEnumerable<string>
+masterserver.mp4.multiplayer_leader_board_summaries_response [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string, zones: System.Collections.Generic.IEnumerable<string>
+masterserver.mp4.player_infos [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp4.player_infos_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp4.test [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.mp4.waiting_params [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp4.waiting_params_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.mp4.web_identity_from_maniaplanet_login [none, serviceOnly=False, readOnly=True, playerOnly=False] logins: System.Collections.Generic.IEnumerable<string> || login: string
+masterserver.mp4.web_identity_from_maniaplanet_login_response [none, serviceOnly=False, readOnly=True, playerOnly=False] logins: System.Collections.Generic.IEnumerable<string>
+masterserver.tmnf.campaign_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, league?: string = "World" || campaignName: string, leagues: System.Collections.Generic.IEnumerable<string>
+masterserver.tmnf.campaign_scores_response [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, league?: string = "World" || campaignName: string, leagues: System.Collections.Generic.IEnumerable<string>
+masterserver.tmnf.check_login [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmnf.check_login_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmnf.download_campaign_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int || campaignName: string, num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string
+masterserver.tmnf.download_general_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int || num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string
+masterserver.tmnf.download_ladder_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int || num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string
+masterserver.tmnf.download_latest_campaign_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, leagueId: int || campaignName: string, league: string
+masterserver.tmnf.download_latest_general_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] leagueId: int || league: string
+masterserver.tmnf.download_latest_ladder_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] leagueId: int || league: string
+masterserver.tmnf.download_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ManiaAPI.MasterServer.TMUF.ScoresNumber, scoresName: string, leagueId: int
+masterserver.tmnf.fetch_campaign_scores_date_time [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int, lastModified?: System.DateTimeOffset? = null || campaignName: string, num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string, lastModified?: System.DateTimeOffset? = null
+masterserver.tmnf.fetch_general_scores_date_time [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int, lastModified?: System.DateTimeOffset? = null || num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string, lastModified?: System.DateTimeOffset? = null
+masterserver.tmnf.fetch_ladder_scores_date_time [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int, lastModified?: System.DateTimeOffset? = null || num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string, lastModified?: System.DateTimeOffset? = null
+masterserver.tmnf.fetch_latest_campaign_scores_info [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, leagueId: int || campaignName: string, league: string
+masterserver.tmnf.fetch_latest_general_scores_info [none, serviceOnly=False, readOnly=True, playerOnly=False] leagueId: int || league: string
+masterserver.tmnf.fetch_latest_ladder_scores_info [none, serviceOnly=False, readOnly=True, playerOnly=False] leagueId: int || league: string
+masterserver.tmnf.fetch_scores_date_time [none, serviceOnly=False, readOnly=True, playerOnly=False] scoresName: string, num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int, lastModified?: System.DateTimeOffset? = null
+masterserver.tmnf.general_scores_url [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ScoresNumber, leagueId: int
+masterserver.tmnf.ladder_league_rankings [none, serviceOnly=False, readOnly=True, playerOnly=False] league?: string = "World", page?: int = 0, count?: int = 10
+masterserver.tmnf.ladder_league_rankings_response [none, serviceOnly=False, readOnly=True, playerOnly=False] league?: string = "World", page?: int = 0, count?: int = 10
+masterserver.tmnf.ladder_player_rankings [none, serviceOnly=False, readOnly=True, playerOnly=False] league?: string = "World", page?: int = 0, count?: int = 10
+masterserver.tmnf.ladder_player_rankings_response [none, serviceOnly=False, readOnly=True, playerOnly=False] league?: string = "World", page?: int = 0, count?: int = 10
+masterserver.tmnf.ladder_scores_url [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ScoresNumber, leagueId: int
+masterserver.tmnf.leagues [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.tmnf.leagues_response [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.tmnf.player_achievements [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string, page?: int = 0, count?: int = 10
+masterserver.tmnf.player_achievements_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string, page?: int = 0, count?: int = 10
+masterserver.tmnf.player_infos [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmnf.player_infos_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmnf.scores_url [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ScoresNumber, leagueId: int, scoresName: string
+masterserver.tmnf.test [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.tmt.account_from_steam_user [none, serviceOnly=False, readOnly=True, playerOnly=False] steamId: ulong
+masterserver.tmt.account_from_steam_user_response [none, serviceOnly=False, readOnly=True, playerOnly=False] steamId: ulong
+masterserver.tmt.campaign_leader_board_summaries [none, serviceOnly=False, readOnly=True, playerOnly=False] zone?: string = "World" || zones: System.Collections.Generic.IEnumerable<string>
+masterserver.tmt.campaign_leader_board_summaries_response [none, serviceOnly=False, readOnly=True, playerOnly=False] zone?: string = "World" || zones: System.Collections.Generic.IEnumerable<string>
+masterserver.tmt.campaign_leader_board_summary [none, serviceOnly=False, readOnly=True, playerOnly=False] zone?: string = "World"
+masterserver.tmt.campaign_leader_board_summary_response [none, serviceOnly=False, readOnly=True, playerOnly=False] zone?: string = "World"
+masterserver.tmt.check_login [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmt.check_login_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmt.leagues [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.tmt.leagues_response [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.tmt.maniaplanet_login_from_web_identity [none, serviceOnly=False, readOnly=True, playerOnly=False] platform: string, userId: System.Guid || webIdentity: ManiaAPI.MasterServer.WebIdentity || webIdentities: System.Collections.Generic.IEnumerable<ManiaAPI.MasterServer.WebIdentity>
+masterserver.tmt.maniaplanet_login_from_web_identity_response [none, serviceOnly=False, readOnly=True, playerOnly=False] webIdentities: System.Collections.Generic.IEnumerable<ManiaAPI.MasterServer.WebIdentity>
+masterserver.tmt.map_leader_board_summaries [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, zone?: string = "World" || mapUid: string, zones: System.Collections.Generic.IEnumerable<string>
+masterserver.tmt.map_leader_board_summaries_response [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, zone?: string = "World" || mapUid: string, zones: System.Collections.Generic.IEnumerable<string>
+masterserver.tmt.map_leader_board_summary [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, zone?: string = "World"
+masterserver.tmt.map_leader_board_summary_response [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, zone?: string = "World"
+masterserver.tmt.player_infos [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmt.player_infos_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmt.test [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.tmt.web_identity_from_maniaplanet_login [none, serviceOnly=False, readOnly=True, playerOnly=False] logins: System.Collections.Generic.IEnumerable<string> || login: string
+masterserver.tmt.web_identity_from_maniaplanet_login_response [none, serviceOnly=False, readOnly=True, playerOnly=False] logins: System.Collections.Generic.IEnumerable<string>
+masterserver.tmt_aggregated.campaign_leader_board_summaries [none, serviceOnly=False, readOnly=True, playerOnly=False] zone?: string = "World" || zones: System.Collections.Generic.IEnumerable<string>
+masterserver.tmt_aggregated.campaign_leader_board_summaries_response [none, serviceOnly=False, readOnly=True, playerOnly=False] zone?: string = "World" || zones: System.Collections.Generic.IEnumerable<string>
+masterserver.tmt_aggregated.campaign_leader_board_summary [none, serviceOnly=False, readOnly=True, playerOnly=False] zone?: string = "World"
+masterserver.tmt_aggregated.campaign_leader_board_summary_response [none, serviceOnly=False, readOnly=True, playerOnly=False] zone?: string = "World"
+masterserver.tmt_aggregated.map_leader_board_summaries [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, zone?: string = "World" || mapUid: string, zones: System.Collections.Generic.IEnumerable<string>
+masterserver.tmt_aggregated.map_leader_board_summaries_response [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, zone?: string = "World" || mapUid: string, zones: System.Collections.Generic.IEnumerable<string>
+masterserver.tmt_aggregated.map_leader_board_summary [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, zone?: string = "World"
+masterserver.tmt_aggregated.map_leader_board_summary_response [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, zone?: string = "World"
+masterserver.tmuf.campaign_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, league?: string = "World" || campaignName: string, leagues: System.Collections.Generic.IEnumerable<string>
+masterserver.tmuf.campaign_scores_response [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, league?: string = "World" || campaignName: string, leagues: System.Collections.Generic.IEnumerable<string>
+masterserver.tmuf.check_login [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmuf.check_login_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmuf.download_campaign_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int || campaignName: string, num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string
+masterserver.tmuf.download_general_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int || num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string
+masterserver.tmuf.download_ladder_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int || num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string
+masterserver.tmuf.download_latest_campaign_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, leagueId: int || campaignName: string, league: string
+masterserver.tmuf.download_latest_general_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] leagueId: int || league: string
+masterserver.tmuf.download_latest_ladder_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] leagueId: int || league: string
+masterserver.tmuf.download_scores [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ManiaAPI.MasterServer.TMUF.ScoresNumber, scoresName: string, leagueId: int
+masterserver.tmuf.fetch_campaign_scores_date_time [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int, lastModified?: System.DateTimeOffset? = null || campaignName: string, num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string, lastModified?: System.DateTimeOffset? = null
+masterserver.tmuf.fetch_general_scores_date_time [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int, lastModified?: System.DateTimeOffset? = null || num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string, lastModified?: System.DateTimeOffset? = null
+masterserver.tmuf.fetch_ladder_scores_date_time [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int, lastModified?: System.DateTimeOffset? = null || num: ManiaAPI.MasterServer.TMUF.ScoresNumber, league: string, lastModified?: System.DateTimeOffset? = null
+masterserver.tmuf.fetch_latest_campaign_scores_info [none, serviceOnly=False, readOnly=True, playerOnly=False] campaignName: string, leagueId: int || campaignName: string, league: string
+masterserver.tmuf.fetch_latest_general_scores_info [none, serviceOnly=False, readOnly=True, playerOnly=False] leagueId: int || league: string
+masterserver.tmuf.fetch_latest_ladder_scores_info [none, serviceOnly=False, readOnly=True, playerOnly=False] leagueId: int || league: string
+masterserver.tmuf.fetch_scores_date_time [none, serviceOnly=False, readOnly=True, playerOnly=False] scoresName: string, num: ManiaAPI.MasterServer.TMUF.ScoresNumber, leagueId: int, lastModified?: System.DateTimeOffset? = null
+masterserver.tmuf.general_scores_url [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ScoresNumber, leagueId: int
+masterserver.tmuf.ladder_league_rankings [none, serviceOnly=False, readOnly=True, playerOnly=False] league?: string = "World", page?: int = 0, count?: int = 10
+masterserver.tmuf.ladder_league_rankings_response [none, serviceOnly=False, readOnly=True, playerOnly=False] league?: string = "World", page?: int = 0, count?: int = 10
+masterserver.tmuf.ladder_player_rankings [none, serviceOnly=False, readOnly=True, playerOnly=False] league?: string = "World", page?: int = 0, count?: int = 10
+masterserver.tmuf.ladder_player_rankings_response [none, serviceOnly=False, readOnly=True, playerOnly=False] league?: string = "World", page?: int = 0, count?: int = 10
+masterserver.tmuf.ladder_scores_url [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ScoresNumber, leagueId: int
+masterserver.tmuf.leagues [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.tmuf.leagues_response [none, serviceOnly=False, readOnly=True, playerOnly=False]
+masterserver.tmuf.player_achievements [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string, page?: int = 0, count?: int = 10
+masterserver.tmuf.player_achievements_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string, page?: int = 0, count?: int = 10
+masterserver.tmuf.player_infos [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmuf.player_infos_response [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+masterserver.tmuf.scores_url [none, serviceOnly=False, readOnly=True, playerOnly=False] num: ScoresNumber, leagueId: int, scoresName: string
+masterserver.tmuf.test [none, serviceOnly=False, readOnly=True, playerOnly=False]
+mx.map_gbx [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long
+mx.map_gbx_header [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long
+mx.map_gbx_header_node [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long
+mx.map_gbx_node [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long
+mx.map_gbx_response [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long
+mx.map_gbx_url [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long
+mx.map_image_response [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long, imageIndex?: int? = null
+mx.map_image_url [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long, position?: int? = null
+mx.map_random_url [none, serviceOnly=False, readOnly=True, playerOnly=False]
+mx.map_screen_response [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long, imageIndex?: int? = null
+mx.map_screen_url [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long, position?: int? = null
+mx.map_search_orders [none, serviceOnly=False, readOnly=True, playerOnly=False]
+mx.map_thumbnail_response [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long
+mx.map_thumbnail_url [none, serviceOnly=False, readOnly=True, playerOnly=False] mapId: long
+mx.mappack_random_url [none, serviceOnly=False, readOnly=True, playerOnly=False]
+mx.mappack_search_orders [none, serviceOnly=False, readOnly=True, playerOnly=False]
+mx.mappack_thumbnail_response [none, serviceOnly=False, readOnly=True, playerOnly=False] mappackId: long
+mx.mappack_thumbnail_url [none, serviceOnly=False, readOnly=True, playerOnly=False] mappackId: long
+mx.maptypes [none, serviceOnly=False, readOnly=True, playerOnly=False]
+mx.random_map [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.MX.SearchMapsParameters
+mx.random_map_id [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.MX.SearchMapsParameters
+mx.random_mappack [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.MX.SearchMappacksParameters
+mx.random_mappack_id [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.MX.SearchMappacksParameters
+mx.replay_gbx [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+mx.replay_gbx_header [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+mx.replay_gbx_header_node [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+mx.replay_gbx_node [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+mx.replay_gbx_response [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+mx.replay_gbx_url [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+mx.search_mappacks [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.MX.SearchMappacksParameters
+mx.search_maps [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.MX.SearchMapsParameters
+mx.search_replays [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.MX.SearchReplaysParameters
+mx.search_users [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.MX.SearchUsersParameters
+mx.search_videos [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.MX.SearchVideosParameters
+mx.tags [none, serviceOnly=False, readOnly=True, playerOnly=False]
+mx.titlepacks [none, serviceOnly=False, readOnly=True, playerOnly=False]
+mx.user_search_orders [none, serviceOnly=False, readOnly=True, playerOnly=False]
+mx.vehicles [none, serviceOnly=False, readOnly=True, playerOnly=False]
+nadeo.core.account_records [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] accountId: System.Guid, gamemode?: string? = null
+nadeo.core.account_records_by_map_ids [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] accountId: System.Guid, mapIds: System.Collections.Generic.IEnumerable<System.Guid>, gamemode?: string? = null || accountId: System.Guid, mapIds: System.Collections.Generic.IEnumerable<System.Guid>, gamemode: string?, offset: int
+nadeo.core.account_records_by_season_ids [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] accountId: System.Guid, seasonIds: System.Collections.Generic.IEnumerable<System.Guid>, gamemode?: string? = null || accountId: System.Guid, seasonIds: System.Collections.Generic.IEnumerable<System.Guid>, gamemode: string?, offset: int
+nadeo.core.add_favorite_map [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] mapUid: string
+nadeo.core.api_routes [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] usage: ManiaAPI.NadeoAPI.ApiUsage
+nadeo.core.favorite_maps [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] length: int, offset?: int = 0, sort?: string = "date", order?: string = "desc", mapTypeList?: string? = null, playable?: bool? = null, onlyMine?: bool? = null
+nadeo.core.favorite_maps_by_uids [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] mapUids: System.Collections.Generic.IEnumerable<string>
+nadeo.core.favorite_skins [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] accountId: System.Guid
+nadeo.core.map_info [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapId: System.Guid || mapUid: string
+nadeo.core.map_infos [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapIds: System.Collections.Generic.IEnumerable<System.Guid> || mapUids: System.Collections.Generic.IEnumerable<string>
+nadeo.core.map_record_by_id [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapRecordId: System.Guid
+nadeo.core.map_records [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] accountIds: System.Collections.Generic.IEnumerable<System.Guid>, mapIds: System.Collections.Generic.IEnumerable<System.Guid>, seasonId?: string? = null, gamemode?: string? = null || accountIds: System.Collections.Generic.IEnumerable<System.Guid>, mapId: System.Guid, seasonId?: string? = null, gamemode?: string? = null
+nadeo.core.map_records_by_ids [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapRecordIds: System.Collections.Generic.IEnumerable<System.Guid>
+nadeo.core.map_vote [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] mapUid: string
+nadeo.core.maps_by_author [nadeo, serviceOnly=True, readOnly=True, playerOnly=False]
+nadeo.core.player_club_tags [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] accountIds: System.Collections.Generic.IEnumerable<System.Guid>
+nadeo.core.player_trophy_history [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] accountId: System.Guid, count?: int = 100, offset?: int = 0, trophyType?: int? = null
+nadeo.core.player_trophy_summary [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] accountId: System.Guid
+nadeo.core.player_web_identities [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] accountIds: System.Collections.Generic.IEnumerable<System.Guid>
+nadeo.core.player_web_identity [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] accountId: System.Guid
+nadeo.core.player_zone [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] accountId: System.Guid
+nadeo.core.player_zones [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] accountIds: System.Collections.Generic.IEnumerable<System.Guid>
+nadeo.core.remove_favorite_map [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] mapUid: string
+nadeo.core.set_map_vote [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] mapUid: string, vote: int
+nadeo.core.skin_by_account_id [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] accountId: System.Guid
+nadeo.core.skin_info [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] skinId: System.Guid
+nadeo.core.skins_by_account_ids [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] accountIds: System.Collections.Generic.IEnumerable<System.Guid>
+nadeo.core.submitted_maps [nadeo, serviceOnly=True, readOnly=True, playerOnly=False]
+nadeo.core.update_map [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] source: {path|url|resource}, fileName?: string, mapId?: guid
+nadeo.core.upload_map [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] source: {path|url|resource}, fileName?: string
+nadeo.core.zones [nadeo, serviceOnly=False, readOnly=True, playerOnly=False]
+nadeo.live.active_maniapubs [nadeo, serviceOnly=False, readOnly=True, playerOnly=False]
+nadeo.live.add_favorite_map [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] mapUid: string
+nadeo.live.add_to_club_upload_activity [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, activityId: int, itemIds: System.Collections.Generic.IEnumerable<string>
+nadeo.live.campaign_leaderboard [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] groupUid: string, length?: int = 5, offset?: int = 0, onlyWorld?: bool? = null
+nadeo.live.club [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int
+nadeo.live.club_activities [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int, length: int, offset?: int = 0, active?: bool = true, folderId?: int = 0
+nadeo.live.club_bucket [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int, bucketId: int, length?: int = 1, offset?: int = 0
+nadeo.live.club_buckets [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] type: ManiaAPI.NadeoAPI.ClubBucketType, length: int, offset?: int = 0 || type: string, length: int, offset?: int = 0
+nadeo.live.club_campaign [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int, campaignId: int
+nadeo.live.club_campaign_leaderboard [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] groupUid: string, clubId: int, length?: int = 5, offset?: int = 0
+nadeo.live.club_campaigns [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0, name?: string? = null
+nadeo.live.club_campaigns_by_club [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int, length: int, offset?: int = 0
+nadeo.live.club_competitions [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0, name?: string? = null
+nadeo.live.club_map_review_activity [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int, activityId: int
+nadeo.live.club_map_review_rooms [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0, name?: string? = null
+nadeo.live.club_map_review_submissions [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int, activityId: int, length: int, offset?: int = 0
+nadeo.live.club_member [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int, accountId: System.Guid || clubId: int, displayName: string
+nadeo.live.club_member_requests [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int, length: int, offset?: int = 0
+nadeo.live.club_members [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int, length: int, offset?: int = 0
+nadeo.live.club_news [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int, activityId: int
+nadeo.live.club_player_info [nadeo, serviceOnly=False, readOnly=True, playerOnly=False]
+nadeo.live.club_room [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubId: int, roomId: int
+nadeo.live.club_rooms [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0, name?: string? = null
+nadeo.live.club_submitted_map_review_maps [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] clubId: int, activityId: int, length: int, offset?: int = 0, withFeedback?: bool? = null, withMapInfo?: bool? = null
+nadeo.live.club_top_leaderboard [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] groupUid: string, mapUid: string, clubId: int, length?: int = 5, offset?: int = 0 || mapUid: string, clubId: int, length?: int = 5, offset?: int = 0
+nadeo.live.clubs [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0, name?: string? = null
+nadeo.live.create_club [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] creation: ManiaAPI.NadeoAPI.ClubCreation
+nadeo.live.create_club_campaign [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, creation: ManiaAPI.NadeoAPI.ClubCampaignCreation
+nadeo.live.create_club_folder [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, folderName: string
+nadeo.live.create_club_map_review_activity [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, creation: ManiaAPI.NadeoAPI.ClubMapReviewCreation
+nadeo.live.create_club_news [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, creation: ManiaAPI.NadeoAPI.ClubNewsCreation
+nadeo.live.create_club_ranking [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, creation: ManiaAPI.NadeoAPI.ClubRankingCreation
+nadeo.live.create_club_room [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, creation: ManiaAPI.NadeoAPI.ClubRoomCreation
+nadeo.live.create_club_room_from_server [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, creation: ManiaAPI.NadeoAPI.ClubRoomFromServerCreation
+nadeo.live.create_club_upload_activity [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, creation: ManiaAPI.NadeoAPI.ClubBucketCreation
+nadeo.live.cup_of_the_week_campaigns [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0
+nadeo.live.dedicated_server_accounts [nadeo, serviceOnly=True, readOnly=True, playerOnly=False]
+nadeo.live.delete_club [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int
+nadeo.live.delete_club_activity [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, activityId: int
+nadeo.live.delete_club_member [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, accountId: System.Guid
+nadeo.live.edit_club [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, edition: ManiaAPI.NadeoAPI.ClubEdition
+nadeo.live.edit_club_activity [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, activityId: int, edition: ManiaAPI.NadeoAPI.ClubActivityEdition
+nadeo.live.edit_club_campaign [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, campaignId: int, edition: ManiaAPI.NadeoAPI.ClubCampaignEdition
+nadeo.live.edit_club_map_review_activity [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, activityId: int, edition: ManiaAPI.NadeoAPI.ClubMapReviewEdition
+nadeo.live.edit_club_member [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, accountId: System.Guid, edition: ManiaAPI.NadeoAPI.ClubMemberEdition
+nadeo.live.edit_club_news [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, activityId: int, edition: ManiaAPI.NadeoAPI.ClubNewsEdition
+nadeo.live.edit_club_room [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, activityId: int, edition: ManiaAPI.NadeoAPI.ClubRoomEdition
+nadeo.live.edit_club_room_from_server [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, activityId: int, edition: ManiaAPI.NadeoAPI.ClubRoomFromServerEdition
+nadeo.live.favorite_maps [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0, sort?: string = "date", order?: string = "desc", mapTypeList?: string? = null, playable?: bool? = null, onlyMine?: bool? = null
+nadeo.live.join_club [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int
+nadeo.live.join_club_room [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, activityId: int
+nadeo.live.join_daily_channel [nadeo, serviceOnly=True, readOnly=False, playerOnly=False]
+nadeo.live.leaderboard_position_by_time [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, groupUid: string, score: int || mapUid: string, score: int
+nadeo.live.leaderboard_positions_by_time [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapUids: System.Collections.Generic.IEnumerable<string>, groupUids: System.Collections.Generic.IEnumerable<string>, scores: System.Collections.Generic.IEnumerable<int> || mapUids: System.Collections.Generic.IEnumerable<string>, scores: System.Collections.Generic.IEnumerable<int>
+nadeo.live.map_info [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string
+nadeo.live.map_infos [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapUids: System.Collections.Generic.IEnumerable<string>
+nadeo.live.map_medal_records [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, groupUid: string
+nadeo.live.map_review_connection [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] reviewType: string
+nadeo.live.map_review_waiting_time [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] reviewType: string
+nadeo.live.my_clubs [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0
+nadeo.live.own_trophy_ranking [nadeo, serviceOnly=True, readOnly=True, playerOnly=False]
+nadeo.live.pin_club [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int
+nadeo.live.player_club_campaign_ranking [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] groupUid: string, clubId: int
+nadeo.live.player_club_map_record [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] groupUid: string, mapUid: string, clubId: int || mapUid: string, clubId: int
+nadeo.live.player_records [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapUids: System.Collections.Generic.IEnumerable<string>, groupUids: System.Collections.Generic.IEnumerable<string> || mapUids: System.Collections.Generic.IEnumerable<string>
+nadeo.live.player_season_rankings [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] accountId: System.Guid, groupUid: string
+nadeo.live.player_trophy_rankings [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] accountIds: System.Collections.Generic.IEnumerable<System.Guid>
+nadeo.live.remove_favorite_map [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] mapUid: string
+nadeo.live.remove_from_club_upload_activity [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, activityId: int, itemIds: System.Collections.Generic.IEnumerable<string>
+nadeo.live.seasonal_campaigns [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0
+nadeo.live.set_club_member_vip [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, accountId: System.Guid
+nadeo.live.set_club_tag [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int
+nadeo.live.submitted_map_review_maps [nadeo, serviceOnly=True, readOnly=True, playerOnly=False] reviewType: string, length: int, offset?: int = 0
+nadeo.live.surrounding_records [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] groupUid: string, mapUid: string, lower: int, upper: int, score?: int? = null, onlyWorld?: bool? = null, zoneId?: string? = null
+nadeo.live.top_leaderboard [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, groupUid: string, length?: int = 10, offset?: int = 0, onlyWorld?: bool = true || mapUid: string, length?: int = 10, offset?: int = 0, onlyWorld?: bool = true || mapUid: string, groupUid: string, zoneId: System.Guid
+nadeo.live.track_of_the_day_info [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string
+nadeo.live.track_of_the_days [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0, royal?: bool = false
+nadeo.live.unset_club_member_vip [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] clubId: int, accountId: System.Guid
+nadeo.live.uploaded_maps [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0
+nadeo.live.weekly_campaigns [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0
+nadeo.live.weekly_grand_campaigns [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0
+nadeo.live.weekly_short_campaigns [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length: int, offset?: int = 0
+nadeo.meet.cancel_matchmaking [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] matchmakingType: int
+nadeo.meet.challenge [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] challengeId: string
+nadeo.meet.challenge_leaderboard [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] challengeId: string, length?: int = 10, offset?: int = 0
+nadeo.meet.challenge_map_records [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] challengeId: string, mapUid: string, length?: int = 10, offset?: int = 0
+nadeo.meet.challenges [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length?: int = 10, offset?: int = 0
+nadeo.meet.club_competition [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] clubCompetitionId: int
+nadeo.meet.competition [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] competitionId: string
+nadeo.meet.competition_leaderboard [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] competitionId: string, length?: int = 10, offset?: int = 0
+nadeo.meet.competition_match_results [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] compMatchId: string, length?: int = 10, offset?: int = 0
+nadeo.meet.competition_participants [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] competitionId: string, length?: int = 10, offset?: int = 0
+nadeo.meet.competition_player_matches [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] competitionId: string, accountId: System.Guid
+nadeo.meet.competition_round_matches [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] roundId: string, length?: int = 10, offset?: int = 0
+nadeo.meet.competition_rounds [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] competitionId: string
+nadeo.meet.competition_teams [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] competitionId: string
+nadeo.meet.competitions [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length?: int = 10, offset?: int = 0
+nadeo.meet.cups_of_the_day [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] type: ManiaAPI.NadeoAPI.CupOfTheDayType, length?: int = 10, offset?: int = 0
+nadeo.meet.current_cup_of_the_day [nadeo, serviceOnly=False, readOnly=True, playerOnly=False]
+nadeo.meet.match [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] matchId: string
+nadeo.meet.match_participants [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] matchId: string
+nadeo.meet.match_teams [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] matchId: string
+nadeo.meet.matchmaking_divisions [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] matchmakingType: int
+nadeo.meet.matchmaking_player_progressions [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] matchmakingType: int, accountIds: System.Collections.Generic.IEnumerable<System.Guid>
+nadeo.meet.matchmaking_player_ranks [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] matchmakingType: int, accountIds: System.Collections.Generic.IEnumerable<System.Guid>
+nadeo.meet.matchmaking_player_status [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] matchmakingType: int
+nadeo.meet.matchmaking_rankings [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] matchmakingType: int, length?: int = 10, offset?: int = 0
+nadeo.meet.matchmaking_summary [nadeo, serviceOnly=False, readOnly=True, playerOnly=False]
+nadeo.meet.my_club_competitions [nadeo, serviceOnly=False, readOnly=True, playerOnly=False] length?: int = 10, offset?: int = 0
+nadeo.meet.send_matchmaking_heartbeat [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] matchmakingType: int, code: string, playWith: System.Collections.Generic.IEnumerable<System.Guid>
+nadeo.meet.super_royal_statistics [nadeo, serviceOnly=False, readOnly=True, playerOnly=False]
+nadeo.meet.super_royal_status [nadeo, serviceOnly=False, readOnly=True, playerOnly=False]
+tmx.random_track [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.TMX.SearchTracksParameters
+tmx.random_track_id [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.TMX.SearchTracksParameters
+tmx.random_trackpack [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.TMX.SearchTrackpacksParameters
+tmx.random_trackpack_id [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.TMX.SearchTrackpacksParameters
+tmx.replay_gbx [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+tmx.replay_gbx_header [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+tmx.replay_gbx_header_node [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+tmx.replay_gbx_node [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+tmx.replay_gbx_response [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+tmx.replay_gbx_url [none, serviceOnly=False, readOnly=True, playerOnly=False] replayId: long
+tmx.replays [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.TMX.GetReplaysParameters
+tmx.search_leaderboards [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.TMX.SearchLeaderboardsParameters
+tmx.search_trackpacks [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.TMX.SearchTrackpacksParameters
+tmx.search_tracks [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.TMX.SearchTracksParameters
+tmx.search_users [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: ManiaAPI.TMX.TMX.SearchUsersParameters
+tmx.track_gbx [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
+tmx.track_gbx_header [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
+tmx.track_gbx_header_node [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
+tmx.track_gbx_node [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
+tmx.track_gbx_response [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
+tmx.track_gbx_url [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
+tmx.track_image_response [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long, imageIndex: int
+tmx.track_image_url [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long, imageIndex: int
+tmx.track_random_url [none, serviceOnly=False, readOnly=True, playerOnly=False]
+tmx.track_thumbnail_response [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
+tmx.track_thumbnail_url [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
+tmx.trackpack_random_url [none, serviceOnly=False, readOnly=True, playerOnly=False]
+trackmania.api.account_ids [oauth, serviceOnly=False, readOnly=True, playerOnly=False] displayNames: System.Collections.Generic.IEnumerable<string>
+trackmania.api.add_user_favorite_map [oauth, serviceOnly=False, readOnly=False, playerOnly=True] mapUid: string
+trackmania.api.display_names [oauth, serviceOnly=False, readOnly=True, playerOnly=False] accountIds: System.Collections.Generic.IEnumerable<System.Guid>
+trackmania.api.remove_user_favorite_map [oauth, serviceOnly=False, readOnly=False, playerOnly=True] mapUid: string
+trackmania.api.user [oauth, serviceOnly=False, readOnly=True, playerOnly=True]
+trackmania.api.user_admin_clubs [oauth, serviceOnly=False, readOnly=True, playerOnly=True]
+trackmania.api.user_favorite_maps [oauth, serviceOnly=False, readOnly=True, playerOnly=True] length?: int = 10, offset?: int = 0
+trackmania.api.user_map_records [oauth, serviceOnly=False, readOnly=True, playerOnly=True] mapIds: System.Collections.Generic.IEnumerable<System.Guid>
+trackmania.ws.player [tmws, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+united.ladder.player [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string

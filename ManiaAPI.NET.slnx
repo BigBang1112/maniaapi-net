@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Generators/">
+    <Project Path="Generators/ManiaAPI.MCP.Generators/ManiaAPI.MCP.Generators.csproj" />
     <Project Path="Generators/ManiaAPI.TMX.Generators/ManiaAPI.TMX.Generators.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
@@ -9,6 +10,9 @@
     <File Path=".gitmodules" />
     <File Path="LICENSE" />
     <File Path="README.md" />
+  </Folder>
+  <Folder Name="/MCP/">
+    <Project Path="MCP/ManiaAPI.MCP/ManiaAPI.MCP.csproj" />
   </Folder>
   <Folder Name="/Samples/">
     <Project Path="Samples/CallbackListenerGBXRemoteSample/CallbackListenerGBXRemoteSample.csproj" Id="21b593b7-e1eb-45f4-a279-90dd873c4cb8" />
@@ -49,6 +53,7 @@
     <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Tests/ManiaAPI.ManiaPlanetAPI.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.MasterServer.Tests/ManiaAPI.MasterServer.Tests.csproj" />
+    <Project Path="Tests/ManiaAPI.MCP.Tests/ManiaAPI.MCP.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.NadeoAPI.Extensions.Gbx.Tests/ManiaAPI.NadeoAPI.Extensions.Gbx.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.NadeoAPI.Extensions.Hosting.Tests/ManiaAPI.NadeoAPI.Extensions.Hosting.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.NadeoAPI.Tests/ManiaAPI.NadeoAPI.Tests.csproj" />

@@ -1,0 +1,18 @@
+# Account permissions observed in Tests/ManiaAPI.NadeoAPI.Tests/Live/NadeoLiveTests.cs.
+# service means DedicatedServer is denied or silently returns unusable data.
+# Account record routes accept either account, but only for that account's own records.
+nadeo.core.account_records_by_map_ids|either
+nadeo.core.account_records_by_season_ids|either
+nadeo.core.maps_by_author|service
+nadeo.core.submitted_maps|service
+nadeo.core.favorite_maps_by_uids|service
+nadeo.core.favorite_skins|service
+nadeo.core.map_vote|service
+nadeo.core.skins_by_account_ids|service
+nadeo.core.skin_by_account_id|service
+nadeo.core.player_club_tags|service
+nadeo.core.player_trophy_summary|service
+nadeo.core.player_trophy_history|service
+nadeo.live.dedicated_server_accounts|service
+nadeo.live.own_trophy_ranking|service
+nadeo.live.player_club_campaign_ranking|service
