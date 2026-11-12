@@ -47,6 +47,7 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="ManiaAPI.NadeoAPI.Extensions.Gbx" />
 		<InternalsVisibleTo Include="ManiaAPI.NadeoAPI.Extensions.Gbx.Tests" />
+		<InternalsVisibleTo Include="ManiaAPI.NadeoAPI.Tests" />
 	</ItemGroup>
 
 </Project>

@@ -8,15 +8,20 @@ public class TrackmaniaIOLiveTests
     // so a request can be turned away more often than the default allows.
     private static TrackmaniaIO CreateClient() => new("ManiaAPI.TrackmaniaIO live tests (Discord=bigbang1112)") { MaxRateLimitRetries = 10 };
 
+    // The current seasonal campaign, fetched once because several tests start from it.
+    private static readonly Lazy<Task<Campaign>> seasonalCampaign = new(async () =>
+    {
+        using var tmio = CreateClient();
+        var campaigns = await tmio.GetSeasonalCampaignsAsync();
+        return await tmio.GetSeasonalCampaignAsync(campaigns.Campaigns[0].Id);
+    });
+
     [Test]
     public async Task SeasonalCampaign_ResolvesMapsAndLeaderboards()
     {
         using var tmio = CreateClient();
 
-        var campaigns = await tmio.GetSeasonalCampaignsAsync();
-        await Assert.That(campaigns.Campaigns).IsNotEmpty();
-
-        var campaign = await tmio.GetSeasonalCampaignAsync(campaigns.Campaigns[0].Id);
+        var campaign = await seasonalCampaign.Value;
         await Assert.That(campaign.Playlist).IsNotEmpty();
 
         var mapUid = campaign.Playlist[0].MapUid;
@@ -24,7 +29,11 @@ public class TrackmaniaIOLiveTests
         var leaderboard = await tmio.GetLeaderboardAsync(campaign.LeaderboardUid, mapUid);
 
         await Assert.That(map.MapUid).IsEqualTo(mapUid);
+        await Assert.That(map.Name).IsNotEmpty();
+        await Assert.That(map.AuthorScore.TotalMilliseconds).IsGreaterThan(0);
         await Assert.That(leaderboard.Tops).IsNotEmpty();
+        await Assert.That(leaderboard.Tops[0].Position).IsEqualTo(1);
+        await Assert.That(leaderboard.Tops[0].Time.TotalMilliseconds).IsGreaterThan(0);
     }
 
     [Test]
@@ -40,6 +49,7 @@ public class TrackmaniaIOLiveTests
 
         await Assert.That(club.Id).IsEqualTo(clubs.Clubs[0].Id);
         await Assert.That(members.Members).IsNotEmpty();
+        await Assert.That(members.Members).DoesNotContain(x => x.Player.Id == Guid.Empty || string.IsNullOrEmpty(x.Player.Name));
     }
 
     [Test]
@@ -50,6 +60,8 @@ public class TrackmaniaIOLiveTests
         var totds = await tmio.GetTrackOfTheDaysAsync();
 
         await Assert.That(totds.Days).IsNotEmpty();
+        await Assert.That(totds.Year).IsGreaterThanOrEqualTo(2020);
+        await Assert.That(totds.Days).DoesNotContain(x => string.IsNullOrEmpty(x.Map.MapUid));
     }
 
     [Test]
@@ -63,6 +75,7 @@ public class TrackmaniaIOLiveTests
         var competition = await tmio.GetCompetitionAsync(competitions.Competitions[0].CompetitionId);
 
         await Assert.That(competition.Id).IsEqualTo(competitions.Competitions[0].CompetitionId);
+        await Assert.That(competition.LiveId).IsNotEmpty();
     }
 
     [Test]
@@ -109,15 +122,16 @@ public class TrackmaniaIOLiveTests
     {
         using var tmio = CreateClient();
 
-        var campaigns = await tmio.GetSeasonalCampaignsAsync();
-        var campaign = await tmio.GetSeasonalCampaignAsync(campaigns.Campaigns[0].Id);
+        var campaign = await seasonalCampaign.Value;
         var mapUid = campaign.Playlist[0].MapUid;
 
         var leaderboard = await tmio.GetLeaderboardAsync(mapUid, offset: 0, length: 5);
         var worldRecords = await tmio.GetRecentWorldRecordsAsync(campaign.LeaderboardUid);
 
         await Assert.That(leaderboard.Tops).IsNotEmpty();
-        await Assert.That(worldRecords).IsNotNull();
+        await Assert.That(leaderboard.Tops.Count).IsLessThanOrEqualTo(5);
+        // A new campaign has world records within days, but the list is empty for an older one.
+        await Assert.That(worldRecords).DoesNotContain(x => x.Player.Id == Guid.Empty || x.Time.TotalMilliseconds <= 0);
     }
 
     [Test]
@@ -156,6 +170,7 @@ public class TrackmaniaIOLiveTests
 
         var ads = await tmio.GetAdsAsync();
 
-        await Assert.That(ads.Ads).IsNotNull();
+        // There may be no ad running, but the ones that are must be readable.
+        await Assert.That(ads.Ads).DoesNotContain(x => x.Uid == Guid.Empty || string.IsNullOrEmpty(x.Name));
     }
 }

@@ -35,11 +35,11 @@ A live test whose credentials are missing is skipped.
 | `LiveTests:Enabled` | `MANIAAPI_LIVETESTS__ENABLED` | every live test |
 | `NadeoAPI:DedicatedServer:Login` | `MANIAAPI_NADEOAPI__DEDICATEDSERVER__LOGIN` | `ManiaAPI.NadeoAPI.Tests` |
 | `NadeoAPI:DedicatedServer:Password` | `MANIAAPI_NADEOAPI__DEDICATEDSERVER__PASSWORD` | |
-| `NadeoAPI:ServiceAccount:Login` | `MANIAAPI_NADEOAPI__SERVICEACCOUNT__LOGIN` | `ManiaAPI.NadeoAPI.Tests` |
+| `NadeoAPI:ServiceAccount:Login` | `MANIAAPI_NADEOAPI__SERVICEACCOUNT__LOGIN` | `ManiaAPI.NadeoAPI.Tests`, `ManiaAPI.NadeoAPI.Extensions.Hosting.Tests` |
 | `NadeoAPI:ServiceAccount:Password` | `MANIAAPI_NADEOAPI__SERVICEACCOUNT__PASSWORD` | |
-| `Trackmania:ClientId` | `MANIAAPI_TRACKMANIA__CLIENTID` | `ManiaAPI.TrackmaniaAPI.Tests` |
+| `Trackmania:ClientId` | `MANIAAPI_TRACKMANIA__CLIENTID` | `ManiaAPI.TrackmaniaAPI.Tests`, `ManiaAPI.TrackmaniaAPI.Extensions.Hosting.Tests` |
 | `Trackmania:ClientSecret` | `MANIAAPI_TRACKMANIA__CLIENTSECRET` | |
-| `ManiaPlanet:ClientId` | `MANIAAPI_MANIAPLANET__CLIENTID` | `ManiaAPI.ManiaPlanetAPI.Tests` |
+| `ManiaPlanet:ClientId` | `MANIAAPI_MANIAPLANET__CLIENTID` | `ManiaAPI.ManiaPlanetAPI.Tests`, `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests` |
 | `ManiaPlanet:ClientSecret` | `MANIAAPI_MANIAPLANET__CLIENTSECRET` | |
 
 ```sh
@@ -49,6 +49,14 @@ dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests set "NadeoAPI:ServiceAccoun
 The Nadeo API has two kinds of accounts, and some endpoints work with only one of them, so they have separate settings. Every test in `NadeoLiveTests` runs once with each, so the tests show which endpoints are for a service account only: with a dedicated server account, those tests check that the request is denied (`401`).
 
 Either kind can be left out. Its tests are then skipped.
+
+A service account acts as the player account that created it, so the tests don't expect it to have no maps, clubs or records.
+
+The TrackmaniaWS API has no setting: its live test only checks that wrong credentials are rejected.
+
+## Reports
+
+In CI, every project writes a TRX and an HTML report into `TestResults`, which the workflow uploads as the `live-test-results` artifact. Locally, add `--report-trx` to get the same.
 
 ## Layout
 

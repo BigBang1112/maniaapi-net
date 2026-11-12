@@ -10,12 +10,18 @@ namespace ManiaAPI.NadeoAPI.Tests.Live;
 [Arguments(NadeoAccount.ServiceAccount)]
 public class NadeoLiveTests(NadeoAccount account)
 {
+    /// <summary>
+    /// Two long-standing player accounts, picked because they have records on <see cref="MapIds"/>, club tags and trophy history.
+    /// </summary>
     private static readonly Guid[] AccountIds =
     [
         Guid.Parse("4a983dc3-a938-4564-8a1c-8be20779f069"),
         Guid.Parse("5dda004f-add9-43ad-b9cd-7a90101aa8f2")
     ];
 
+    /// <summary>
+    /// Two maps of an official campaign, so they won't be deleted and both <see cref="AccountIds"/> have records on them.
+    /// </summary>
     private static readonly Guid[] MapIds =
     [
         Guid.Parse("ed53486f-a80d-419b-b073-54bb8944d502"),
@@ -28,14 +34,23 @@ public class NadeoLiveTests(NadeoAccount account)
         var ns = await LiveNadeo.GetServicesAsync(account);
 
         var mapInfos = await ns.GetMapInfosAsync(MapIds);
+        var mapInfosByUid = await ns.GetMapInfosAsync(mapInfos.Select(x => x.MapUid));
+        var mapInfoById = await ns.GetMapInfoAsync(MapIds[0]);
         var mapInfoByUid = await ns.GetMapInfoAsync(mapInfos[0].MapUid);
         var records = await ns.GetMapRecordsAsync(AccountIds, MapIds);
         var recordsById = await ns.GetMapRecordsByIdsAsync(records.Select(x => x.MapRecordId));
+        var recordById = await ns.GetMapRecordByIdAsync(records[0].MapRecordId);
 
         await Assert.That(mapInfos.Select(x => x.MapId)).IsEquivalentTo(MapIds);
+        await Assert.That(mapInfos).DoesNotContain(x => string.IsNullOrEmpty(x.MapUid) || x.AuthorScore.TotalMilliseconds <= 0);
+        await Assert.That(mapInfosByUid.Select(x => x.MapId)).IsEquivalentTo(MapIds);
+        await Assert.That(mapInfoById?.MapId).IsEqualTo(MapIds[0]);
         await Assert.That(mapInfoByUid?.MapId).IsEqualTo(mapInfos[0].MapId);
         await Assert.That(records).IsNotEmpty();
+        await Assert.That(records).DoesNotContain(x => !AccountIds.Contains(x.AccountId) || !MapIds.Contains(x.MapId));
         await Assert.That(recordsById.Select(x => x.MapRecordId)).IsEquivalentTo(records.Select(x => x.MapRecordId));
+        await Assert.That(recordById.MapRecordId).IsEqualTo(records[0].MapRecordId);
+        await Assert.That(recordById.RecordScore.Time.TotalMilliseconds).IsGreaterThan(0);
     }
 
     [Test]
@@ -45,66 +60,14 @@ public class NadeoLiveTests(NadeoAccount account)
 
         var zones = await ns.GetZonesAsync();
         var webIdentities = await ns.GetPlayerWebIdentitiesAsync(AccountIds);
+        var webIdentity = await ns.GetPlayerWebIdentityAsync(AccountIds[0]);
         var routes = await ns.GetApiRoutesAsync(ApiUsage.Server);
 
-        await Assert.That(zones).IsNotEmpty();
-        await Assert.That(webIdentities).IsNotEmpty();
-        await Assert.That(routes).IsNotEmpty();
-    }
-
-    [Test]
-    public async Task NadeoLiveServices_CampaignsAndLeaderboards()
-    {
-        var nls = await LiveNadeo.GetLiveServicesAsync(account);
-
-        var campaigns = await nls.GetSeasonalCampaignsAsync(1);
-        var campaign = campaigns.CampaignList[0];
-        var mapUid = campaign.Playlist[0].MapUid;
-
-        var mapInfo = await nls.GetMapInfoAsync(mapUid);
-        var top = await nls.GetTopLeaderboardAsync(mapUid, campaign.SeasonUid, length: 5);
-        var totds = await nls.GetTrackOfTheDaysAsync(1);
-
-        await Assert.That(mapInfo?.Uid).IsEqualTo(mapUid);
-        await Assert.That(top.Top.Top).IsNotEmpty();
-        await Assert.That(totds.MonthList).IsNotEmpty();
-    }
-
-    [Test]
-    public async Task NadeoLiveServices_Clubs()
-    {
-        var nls = await LiveNadeo.GetLiveServicesAsync(account);
-
-        var clubs = await nls.GetClubsAsync(1);
-        var club = await nls.GetClubAsync(clubs.ClubList[0].Id);
-        var members = await nls.GetClubMembersAsync(club.Id, 5);
-
-        await Assert.That(club.Id).IsEqualTo(clubs.ClubList[0].Id);
-        await Assert.That(members.ClubMemberList).IsNotEmpty();
-    }
-
-    [Test]
-    public async Task NadeoMeetServices_CompetitionsAndMatchmaking()
-    {
-        var nms = await LiveNadeo.GetMeetServicesAsync(account);
-
-        var competitions = await nms.GetCompetitionsAsync(1);
-        var competition = await nms.GetCompetitionAsync(competitions[0].LiveId);
-        var summary = await nms.GetMatchmakingSummaryAsync();
-        var rankings = await nms.GetMatchmakingRankingsAsync(summary.Ranked3v3Id, 5);
-
-        await Assert.That(competition.LiveId).IsEqualTo(competitions[0].LiveId);
-        await Assert.That(rankings.Results).IsNotEmpty();
-    }
-
-    [Test]
-    public async Task NadeoServices_PlayerWebIdentity()
-    {
-        var ns = await LiveNadeo.GetServicesAsync(account);
-
-        var webIdentity = await ns.GetPlayerWebIdentityAsync(AccountIds[0]);
-
+        await Assert.That(zones).Contains(x => x.Name == "World" && x.ParentId is null);
+        await Assert.That(webIdentities.Select(x => x.AccountId)).DoesNotContain(x => !AccountIds.Contains(x));
+        await Assert.That(webIdentities).DoesNotContain(x => string.IsNullOrEmpty(x.Provider));
         await Assert.That(webIdentity?.AccountId).IsEqualTo(AccountIds[0]);
+        await Assert.That(routes.Values).DoesNotContain(x => string.IsNullOrEmpty(x.Method) || string.IsNullOrEmpty(x.Path));
     }
 
     [Test]
@@ -117,6 +80,7 @@ public class NadeoLiveTests(NadeoAccount account)
         var playerZone = await ns.GetPlayerZoneAsync(AccountIds[0]);
 
         await Assert.That(playerZones.Select(x => x.AccountId)).IsEquivalentTo(AccountIds);
+        await Assert.That(playerZones).DoesNotContain(x => x.ZoneId == Guid.Empty);
         await Assert.That(playerZone?.AccountId).IsEqualTo(AccountIds[0]);
     }
 
@@ -125,9 +89,8 @@ public class NadeoLiveTests(NadeoAccount account)
     {
         // A dedicated server account can send these requests, but it has no records of its own, so it gets none.
         var ns = await LiveNadeo.GetServicesAsync(account);
-        var nls = await LiveNadeo.GetLiveServicesAsync(account);
-        var accountId = ns.Handler.JWT?.Subject ?? throw new InvalidOperationException("The token has no account ID.");
-        var seasonId = Guid.Parse((await nls.GetSeasonalCampaignsAsync(1)).CampaignList[0].SeasonUid);
+        var accountId = GetOwnAccountId(ns);
+        var seasonId = Guid.Parse((await LiveNadeo.GetSeasonalCampaignAsync(account)).SeasonUid);
 
 #pragma warning disable CS0618 // Obsolete but still public, so it still needs to work.
         var records = await ns.GetAccountRecordsAsync(accountId);
@@ -154,6 +117,63 @@ public class NadeoLiveTests(NadeoAccount account)
     }
 
     [Test]
+    public async Task NadeoServices_OwnAccountMaps()
+    {
+        var ns = await LiveNadeo.GetServicesAsync(account);
+        var accountId = GetOwnAccountId(ns);
+        var mapUids = (await LiveNadeo.GetSeasonalCampaignAsync(account)).Playlist.Select(x => x.MapUid).ToList();
+
+        if (account is NadeoAccount.DedicatedServer)
+        {
+            await AssertDeniedAsync(() => ns.GetMapsByAuthorAsync());
+            await AssertDeniedAsync(() => ns.GetSubmittedMapsAsync());
+            await AssertDeniedAsync(() => ns.GetFavoriteMapsByUidsAsync(mapUids));
+            await AssertDeniedAsync(() => ns.GetFavoriteSkinsAsync(accountId));
+            await AssertDeniedAsync(() => ns.GetMapVoteAsync(mapUids[0]));
+            return;
+        }
+
+        var byAuthor = await ns.GetMapsByAuthorAsync();
+        // The server redirects maps/by-submitter to maps/by-submitter/, and a redirect drops the Authorization header.
+        var submitted = await ns.GetSubmittedMapsAsync();
+        var favorites = await ns.GetFavoriteMapsByUidsAsync(mapUids);
+        var favoriteSkins = await ns.GetFavoriteSkinsAsync(accountId);
+        var vote = await ns.GetMapVoteAsync(mapUids[0]);
+
+        await Assert.That(byAuthor.MapList).DoesNotContain(x => x.Author != accountId);
+        await Assert.That(submitted.MapList).DoesNotContain(x => x.Submitter != accountId);
+        await Assert.That(favorites.MapFavoriteList.Count).IsLessThanOrEqualTo(mapUids.Count);
+        await Assert.That(favoriteSkins).DoesNotContain(x => x.AccountId != accountId || x.SkinId == Guid.Empty);
+        await Assert.That(vote.MapUid).IsEqualTo(mapUids[0]);
+        await Assert.That(vote.AccountId).IsEqualTo(accountId);
+    }
+
+    [Test]
+    public async Task NadeoServices_Skins()
+    {
+        var ns = await LiveNadeo.GetServicesAsync(account);
+
+        if (account is NadeoAccount.DedicatedServer)
+        {
+            await AssertDeniedAsync(() => ns.GetSkinsByAccountIdsAsync(AccountIds));
+            await AssertDeniedAsync(() => ns.GetSkinByAccountIdAsync(AccountIds[0]));
+            return;
+        }
+
+        var skins = await ns.GetSkinsByAccountIdsAsync(AccountIds);
+        await Assert.That(skins).IsNotEmpty();
+        await Assert.That(skins.Select(x => x.AccountId)).DoesNotContain(x => !AccountIds.Contains(x));
+
+        var skin = skins[0];
+        var skinInfo = await ns.GetSkinInfoAsync(skin.SkinId);
+        var skinByAccount = await ns.GetSkinByAccountIdAsync(skin.AccountId);
+
+        await Assert.That(skinInfo?.SkinId).IsEqualTo(skin.SkinId);
+        await Assert.That(skinInfo?.FileUrl).IsNotNull().And.IsNotEmpty();
+        await Assert.That(skinByAccount?.AccountId).IsEqualTo(skin.AccountId);
+    }
+
+    [Test]
     public async Task NadeoServices_PlayerClubTags()
     {
         var ns = await LiveNadeo.GetServicesAsync(account);
@@ -166,9 +186,10 @@ public class NadeoLiveTests(NadeoAccount account)
 
         var clubTags = await ns.GetPlayerClubTagsAsync(AccountIds);
 
-        // Accounts without a club tag are left out of the response.
+        // Accounts without a club tag are left out of the response, but both AccountIds have one.
         await Assert.That(clubTags).IsNotEmpty();
         await Assert.That(clubTags.Select(x => x.AccountId)).DoesNotContain(x => !AccountIds.Contains(x));
+        await Assert.That(clubTags).DoesNotContain(x => string.IsNullOrEmpty(x.ClubTag));
     }
 
     [Test]
@@ -187,20 +208,8 @@ public class NadeoLiveTests(NadeoAccount account)
         var history = await ns.GetPlayerTrophyHistoryAsync(AccountIds[0], count: 5);
 
         await Assert.That(summary.AccountId).IsEqualTo(AccountIds[0]);
+        await Assert.That(summary.Points).IsGreaterThan(0);
         await Assert.That(history.Data).IsNotEmpty();
-    }
-
-    [Test]
-    public async Task NadeoServices_MapInfosByUid()
-    {
-        var ns = await LiveNadeo.GetServicesAsync(account);
-
-        var mapInfos = await ns.GetMapInfosAsync(MapIds);
-        var mapInfosByUid = await ns.GetMapInfosAsync(mapInfos.Select(x => x.MapUid));
-        var mapInfoById = await ns.GetMapInfoAsync(MapIds[0]);
-
-        await Assert.That(mapInfosByUid.Select(x => x.MapId)).IsEquivalentTo(MapIds);
-        await Assert.That(mapInfoById?.MapId).IsEqualTo(MapIds[0]);
     }
 
     [Test]
@@ -215,12 +224,17 @@ public class NadeoLiveTests(NadeoAccount account)
         var weeklyGrand = await nls.GetWeeklyGrandCampaignsAsync(1);
         var cupOfTheWeek = await nls.GetCupOfTheWeekCampaignsAsync(1);
         var maniapubs = await nls.GetActiveManiapubsAsync();
+        var seasonal = await LiveNadeo.GetSeasonalCampaignAsync(account);
 
         await Assert.That(weekly.CampaignList).IsNotEmpty();
         await Assert.That(weeklyShort.CampaignList).IsNotEmpty();
         await Assert.That(weeklyGrand.CampaignList).IsNotEmpty();
         await Assert.That(cupOfTheWeek.CampaignList).IsNotEmpty();
-        await Assert.That(maniapubs).IsNotNull();
+        await Assert.That(weeklyShort.CampaignList[0].Playlist).IsNotEmpty();
+        // There may be no maniapub running, but the ones that are must be readable.
+        await Assert.That(maniapubs).DoesNotContain(x => x.CampaignUid == Guid.Empty || string.IsNullOrEmpty(x.Name));
+        await Assert.That(seasonal.Name).IsNotEmpty();
+        await Assert.That(seasonal.Playlist).IsNotEmpty();
     }
 
     [Test]
@@ -233,6 +247,7 @@ public class NadeoLiveTests(NadeoAccount account)
 
         var info = await nls.GetTrackOfTheDayInfoAsync(mapUid);
 
+        await Assert.That(totds.MonthList[0].Year).IsGreaterThanOrEqualTo(2020);
         await Assert.That(info.TotdMaps).Contains(mapUid);
     }
 
@@ -241,30 +256,69 @@ public class NadeoLiveTests(NadeoAccount account)
     {
         var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
-        var campaign = (await nls.GetSeasonalCampaignsAsync(1)).CampaignList[0];
-        var mapUid = campaign.Playlist[0].MapUid;
+        var campaign = await LiveNadeo.GetSeasonalCampaignAsync(account);
+        var mapUids = campaign.Playlist.Select(x => x.MapUid).ToList();
+        var mapUid = mapUids[0];
         var groupUid = campaign.SeasonUid;
 
-        var mapInfos = await nls.GetMapInfosAsync(campaign.Playlist.Select(x => x.MapUid));
+        var mapInfo = await nls.GetMapInfoAsync(mapUid);
+        var mapInfos = await nls.GetMapInfosAsync(mapUids);
         var medals = await nls.GetMapMedalRecordsAsync(mapUid, groupUid);
         var top = await nls.GetTopLeaderboardAsync(mapUid, groupUid, length: 5);
         var best = top.Top.Top[0];
         var zoneTop = await nls.GetTopLeaderboardAsync(mapUid, groupUid, best.ZoneId);
         var positions = await nls.GetLeaderboardPositionByTimeAsync(mapUid, groupUid, best.Score.TotalMilliseconds);
+        var batchPositions = await nls.GetLeaderboardPositionsByTimeAsync([mapUid, mapUids[1]], [groupUid, groupUid], [best.Score.TotalMilliseconds, best.Score.TotalMilliseconds]);
         var surrounding = await nls.GetSurroundingRecordsAsync(groupUid, mapUid, 1, 1, score: best.Score.TotalMilliseconds, onlyWorld: true);
         var campaignLeaderboard = await nls.GetCampaignLeaderboardAsync(groupUid);
         var seasonRankings = await nls.GetPlayerSeasonRankingsAsync(best.AccountId, groupUid);
         var trophyRankings = await nls.GetPlayerTrophyRankingsAsync(AccountIds);
 
-        await Assert.That(mapInfos.Select(x => x.Uid)).IsEquivalentTo(campaign.Playlist.Select(x => x.MapUid));
+        await Assert.That(mapInfo?.Uid).IsEqualTo(mapUid);
+        await Assert.That(mapInfo?.Name).IsNotNull().And.IsNotEmpty();
+        await Assert.That(mapInfos.Select(x => x.Uid)).IsEquivalentTo(mapUids);
         await Assert.That(medals.MapUid).IsEqualTo(mapUid);
+        await Assert.That(best.AccountId).IsNotEqualTo(Guid.Empty);
+        await Assert.That(best.Score.TotalMilliseconds).IsGreaterThan(0);
         await Assert.That(zoneTop.Tops.SelectMany(x => x.Top)).IsNotEmpty();
-        // Not IsNotEmpty: the position endpoint is documented to return [] now and then, even for valid requests.
-        await Assert.That(positions).IsNotNull();
+        // Not IsNotEmpty: the position endpoints are documented to return [] now and then, even for valid requests.
+        await Assert.That(positions).DoesNotContain(x => x.MapUid != mapUid);
+        await Assert.That(batchPositions.Select(x => x.MapUid)).DoesNotContain(x => x != mapUid && x != mapUids[1]);
         await Assert.That(surrounding.Tops.SelectMany(x => x.Top)).IsNotEmpty();
         await Assert.That(campaignLeaderboard.Tops).IsNotEmpty();
         await Assert.That(seasonRankings.Zones).IsNotEmpty();
         await Assert.That(trophyRankings.Rankings.Select(x => x.AccountId)).IsEquivalentTo(AccountIds);
+    }
+
+    [Test]
+    public async Task NadeoLiveServices_Clubs()
+    {
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
+
+        var clubs = await nls.GetClubsAsync(1);
+        var club = await nls.GetClubAsync(clubs.ClubList[0].Id);
+        var members = await nls.GetClubMembersAsync(club.Id, 5);
+        var member = members.ClubMemberList[0];
+        var memberById = await nls.GetClubMemberAsync(club.Id, member.AccountId);
+
+        await Assert.That(club.Id).IsEqualTo(clubs.ClubList[0].Id);
+        await Assert.That(club.Name).IsNotEmpty();
+        await Assert.That(members.ClubMemberList).DoesNotContain(x => x.ClubId != club.Id || x.AccountId == Guid.Empty);
+        await Assert.That(memberById.AccountId).IsEqualTo(member.AccountId);
+    }
+
+    [Test]
+    public async Task NadeoLiveServices_ClubMemberRequestsAndRoomPassword()
+    {
+        // The test accounts aren't members of the first public club with a room.
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
+
+        var room = (await nls.GetClubRoomsAsync(1)).ClubRoomList[0];
+        var memberRequests = await nls.GetClubMemberRequestsAsync(room.ClubId, 5);
+
+        // Readable without a club role, though a non-member sees no requests.
+        await Assert.That(memberRequests.ClubMemberList.Count).IsLessThanOrEqualTo(memberRequests.ItemCount);
+        await AssertDeniedAsync(() => nls.GetClubRoomPasswordAsync(room.ClubId, room.Id), HttpStatusCode.Forbidden);
     }
 
     [Test]
@@ -279,14 +333,54 @@ public class NadeoLiveTests(NadeoAccount account)
         var activities = await nls.GetClubActivitiesAsync(clubId, 5);
 
         await Assert.That(campaign.CampaignId).IsEqualTo(clubCampaign.CampaignId);
+        await Assert.That(campaign.Campaign.Playlist).IsNotEmpty();
         await Assert.That(activities.ActivityList).IsNotEmpty();
 
         var groupUid = campaign.Campaign.LeaderboardGroupUid ?? campaign.Campaign.SeasonUid;
+        var mapUid = campaign.Campaign.Playlist[0].MapUid;
         var clubCampaignLeaderboard = await nls.GetClubCampaignLeaderboardAsync(groupUid, clubId);
-        var clubTop = await nls.GetClubTopLeaderboardAsync(groupUid, campaign.Campaign.Playlist[0].MapUid, clubId);
+        var clubTop = await nls.GetClubTopLeaderboardAsync(groupUid, mapUid, clubId);
+        var ownClubRanking = await nls.GetPlayerClubCampaignRankingAsync(groupUid, clubId);
 
         await Assert.That(clubCampaignLeaderboard.ClubId).IsEqualTo(clubId);
+        await Assert.That(clubCampaignLeaderboard.Top).IsNotEmpty();
         await Assert.That(clubTop.ClubId).IsEqualTo(clubId);
+        await Assert.That(clubTop.Top).IsNotEmpty();
+        // The account isn't a member, so it has no ranking in the club, which the API answers with zeros, not with an error.
+        await Assert.That(ownClubRanking.Position).IsEqualTo(0);
+
+        // These are only for members of the club.
+        await AssertDeniedAsync(() => nls.GetClubCampaignsByClubAsync(clubId, 5), HttpStatusCode.Forbidden);
+        await AssertDeniedAsync(() => nls.GetPlayerClubMapRecordAsync(groupUid, mapUid, clubId), HttpStatusCode.Forbidden);
+    }
+
+    [Test]
+    public async Task NadeoLiveServices_OwnClubs()
+    {
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
+
+        var myClubs = await nls.GetMyClubsAsync(5);
+        var clubPlayerInfo = await nls.GetClubPlayerInfoAsync();
+
+        // A club tag always comes from a club.
+        await Assert.That(clubPlayerInfo.TagClubId == 0).IsEqualTo(string.IsNullOrEmpty(clubPlayerInfo.Tag));
+
+        if (account is NadeoAccount.DedicatedServer)
+        {
+            // A dedicated server account can't join clubs.
+            await Assert.That(myClubs.ClubList).IsEmpty();
+            return;
+        }
+
+        // The service account is in several clubs, some with campaigns.
+        await Assert.That(myClubs.ClubList).IsNotEmpty();
+
+        foreach (var club in myClubs.ClubList)
+        {
+            var campaigns = await nls.GetClubCampaignsByClubAsync(club.Id, 5);
+
+            await Assert.That(campaigns.ClubCampaignList).DoesNotContain(x => x.ClubId != club.Id);
+        }
     }
 
     [Test]
@@ -295,58 +389,107 @@ public class NadeoLiveTests(NadeoAccount account)
         var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
         var room = (await nls.GetClubRoomsAsync(1)).ClubRoomList[0];
-        var roomById = await nls.GetClubRoomAsync(room.ClubId, room.ActivityId);
+        var roomById = await nls.GetClubRoomAsync(room.ClubId, room.Id);
 
         var bucket = (await nls.GetClubBucketsAsync(ClubBucketType.MapUpload, 1)).ClubBucketList[0];
         var bucketById = await nls.GetClubBucketAsync(bucket.ClubId, bucket.Id);
 
-        var mapReviews = await nls.GetClubMapReviewRoomsAsync(1);
-
-        var clubCompetitions = await nls.GetClubCompetitionsAsync(1);
-
-        await Assert.That(roomById.ActivityId).IsEqualTo(room.ActivityId);
+        await Assert.That(roomById.Id).IsEqualTo(room.Id);
+        await Assert.That(roomById.ClubId).IsEqualTo(room.ClubId);
         await Assert.That(bucketById.Id).IsEqualTo(bucket.Id);
-        await Assert.That(mapReviews.ClubMapReviewList).IsNotEmpty();
-        await Assert.That(clubCompetitions.ClubCompetitionList).IsNotEmpty();
     }
 
     [Test]
-    public async Task NadeoLiveServices_ClubMember()
+    public async Task NadeoLiveServices_ClubNews()
     {
         var nls = await LiveNadeo.GetLiveServicesAsync(account);
 
-        var club = (await nls.GetClubsAsync(1)).ClubList[0];
-        var member = (await nls.GetClubMembersAsync(club.Id, 1)).ClubMemberList[0];
+        // Some of the most popular clubs post news.
+        ClubActivity? news = null;
+        Club? club = null;
 
-        var memberById = await nls.GetClubMemberAsync(club.Id, member.AccountId);
+        foreach (var popularClub in (await nls.GetClubsAsync(10)).ClubList)
+        {
+            news = (await nls.GetClubActivitiesAsync(popularClub.Id, 100)).ActivityList.FirstOrDefault(x => x.ActivityType == "news");
 
-        await Assert.That(memberById.AccountId).IsEqualTo(member.AccountId);
+            if (news is not null)
+            {
+                club = popularClub;
+                break;
+            }
+        }
+
+        if (news is null || club is null)
+        {
+            throw new InvalidOperationException("None of the most popular clubs has news.");
+        }
+
+        var newsById = await nls.GetClubNewsAsync(club.Id, news.ActivityId);
+
+        await Assert.That(newsById.ClubId).IsEqualTo(club.Id);
+        await Assert.That(newsById.Headline).IsNotEmpty();
+    }
+
+    [Test]
+    public async Task NadeoLiveServices_MapReview()
+    {
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
+
+        var mapReview = (await nls.GetClubMapReviewRoomsAsync(1)).ClubMapReviewList[0];
+        var ownTotdSubmissions = await nls.GetSubmittedMapReviewMapsAsync("totd", 5);
+        var waitingTime = await nls.GetMapReviewWaitingTimeAsync("totd");
+
+        await Assert.That(mapReview.ClubId).IsGreaterThan(0);
+        await Assert.That(ownTotdSubmissions.SubmittedMaps.Count).IsLessThanOrEqualTo(ownTotdSubmissions.ItemCount);
+        await Assert.That(ownTotdSubmissions.SubmittedMaps).DoesNotContain(x => string.IsNullOrEmpty(x.MapUid));
+        await Assert.That(waitingTime).IsGreaterThanOrEqualTo(0);
+
+        // A club's map review is only for its members, even when it's listed as public.
+        await AssertDeniedAsync(() => nls.GetClubMapReviewActivityAsync(mapReview.ClubId, mapReview.ActivityId), HttpStatusCode.Forbidden);
+        await AssertDeniedAsync(() => nls.GetClubMapReviewSubmissionsAsync(mapReview.ClubId, mapReview.ActivityId, 5), HttpStatusCode.Forbidden);
+        await AssertDeniedAsync(() => nls.GetClubSubmittedMapReviewMapsAsync(mapReview.ClubId, mapReview.ActivityId, 5), HttpStatusCode.Forbidden);
     }
 
     [Test]
     public async Task NadeoLiveServices_OwnAccount()
     {
         var nls = await LiveNadeo.GetLiveServicesAsync(account);
+        var accountId = GetOwnAccountId(await LiveNadeo.GetServicesAsync(account));
 
-        var campaign = (await nls.GetSeasonalCampaignsAsync(1)).CampaignList[0];
+        var campaign = await LiveNadeo.GetSeasonalCampaignAsync(account);
 
-        var clubPlayerInfo = await nls.GetClubPlayerInfoAsync();
-        var myClubs = await nls.GetMyClubsAsync(5);
         var serverAccounts = await nls.GetDedicatedServerAccountsAsync();
         var uploadedMaps = await nls.GetUploadedMapsAsync(5);
         var favoriteMaps = await nls.GetFavoriteMapsAsync(5);
         var ownTrophyRanking = await nls.GetOwnTrophyRankingAsync();
         var playerRecords = await nls.GetPlayerRecordsAsync(campaign.Playlist.Select(x => x.MapUid));
-        var mapReviewWaitingTime = await nls.GetMapReviewWaitingTimeAsync("totd");
 
-        await Assert.That(clubPlayerInfo).IsNotNull();
-        await Assert.That(myClubs.ClubList).IsNotNull();
-        await Assert.That(serverAccounts.PlayerServerAccount).IsNotNull();
-        await Assert.That(uploadedMaps.MapList).IsNotNull();
-        await Assert.That(favoriteMaps.MapList).IsNotNull();
-        await Assert.That(ownTrophyRanking).IsNotNull();
-        await Assert.That(playerRecords).IsNotNull();
-        await Assert.That(mapReviewWaitingTime).IsGreaterThanOrEqualTo(0);
+        await Assert.That(serverAccounts.PlayerServerAccount.Count).IsLessThanOrEqualTo(serverAccounts.ItemCount);
+        await Assert.That(uploadedMaps.MapList).DoesNotContain(x => x.Author != accountId && x.Submitter != accountId);
+        await Assert.That(favoriteMaps.MapList.Count).IsLessThanOrEqualTo(5);
+        await Assert.That(ownTrophyRanking.AccountId).IsEqualTo(accountId);
+        await Assert.That(playerRecords).DoesNotContain(x => string.IsNullOrEmpty(x.MapUid));
+    }
+
+    [Test]
+    public async Task NadeoMeetServices_Competitions()
+    {
+        var nms = await LiveNadeo.GetMeetServicesAsync(account);
+        var nls = await LiveNadeo.GetLiveServicesAsync(account);
+
+        var competitions = await nms.GetCompetitionsAsync(1);
+        var competition = await nms.GetCompetitionAsync(competitions[0].LiveId);
+
+        var clubCompetition = (await nls.GetClubCompetitionsAsync(1)).ClubCompetitionList[0];
+        // Takes the ID of the club activity, not of the competition.
+        var clubCompetitionById = await nms.GetClubCompetitionAsync(clubCompetition.Id);
+        var myClubCompetitions = await nms.GetMyClubCompetitionsAsync(5);
+
+        await Assert.That(competition.LiveId).IsEqualTo(competitions[0].LiveId);
+        await Assert.That(competition.Name).IsNotEmpty();
+        await Assert.That(clubCompetitionById.ClubCompetition.ActivityId).IsEqualTo(clubCompetition.Id);
+        await Assert.That(clubCompetitionById.ClubCompetition.Competition.Id).IsEqualTo(clubCompetition.CompetitionId);
+        await Assert.That(myClubCompetitions.ClubCompetitions.Count).IsLessThanOrEqualTo(myClubCompetitions.ClubCompetitionsCount);
     }
 
     [Test]
@@ -354,7 +497,8 @@ public class NadeoLiveTests(NadeoAccount account)
     {
         var nms = await LiveNadeo.GetMeetServicesAsync(account);
 
-        var current = await nms.GetCurrentCupOfTheDayAsync();
+        // null between cups, so only that it can be read is checked.
+        _ = await nms.GetCurrentCupOfTheDayAsync();
         var cotd = await GetFinishedCupOfTheDayAsync(nms);
         var competitionId = cotd.Competition.LiveId;
 
@@ -364,11 +508,11 @@ public class NadeoLiveTests(NadeoAccount account)
         var teams = await nms.GetCompetitionTeamsAsync(competitionId);
         var playerMatches = await nms.GetCompetitionPlayerMatchesAsync(competitionId, leaderboard[0].Participant);
 
-        await Assert.That(current).IsNotNull();
         await Assert.That(leaderboard).IsNotEmpty();
         await Assert.That(participants).IsNotEmpty();
         await Assert.That(rounds).IsNotEmpty();
-        await Assert.That(teams).IsNotNull();
+        // A cup of the day is played solo, so it has no teams.
+        await Assert.That(teams).IsEmpty();
         await Assert.That(playerMatches).IsNotEmpty();
 
         var match = (await nms.GetCompetitionRoundMatchesAsync(rounds[0].Id.ToString(), 1)).Matches[0];
@@ -380,7 +524,7 @@ public class NadeoLiveTests(NadeoAccount account)
         await Assert.That(matchResults.MatchLiveId).IsEqualTo(match.ClubMatchLiveId);
         await Assert.That(matchInfo.LiveId).IsEqualTo(match.ClubMatchLiveId);
         await Assert.That(matchParticipants).IsNotEmpty();
-        await Assert.That(matchTeams).IsNotNull();
+        await Assert.That(matchTeams).IsEmpty();
     }
 
     [Test]
@@ -421,13 +565,17 @@ public class NadeoLiveTests(NadeoAccount account)
         var status = await nms.GetMatchmakingPlayerStatusAsync(summary.Ranked3v3Id);
         var superRoyalStatus = await nms.GetSuperRoyalStatusAsync();
         var superRoyalStatistics = await nms.GetSuperRoyalStatisticsAsync();
-        var myClubCompetitions = await nms.GetMyClubCompetitionsAsync(5);
 
+        await Assert.That(players).Count().IsEqualTo(2);
         await Assert.That(ranks.Results.Select(x => x.Player)).IsEquivalentTo(players);
         await Assert.That(progressions.Progressions).IsNotEmpty();
         await Assert.That(divisions.Divisions).IsNotEmpty();
-        await Assert.That(status).IsNotNull();
-        await Assert.That(myClubCompetitions).IsNotNull();
+        await Assert.That(status.MatchmakingStatus).IsNotEmpty();
+        // null when no Super Royal is scheduled.
+        await Assert.That(superRoyalStatus?.Status).IsNotEqualTo(string.Empty);
+        // The test accounts don't play Super Royal, so they have no statistics or only zeros.
+        await Assert.That(superRoyalStatistics is null
+            || superRoyalStatistics.MasterWon + superRoyalStatistics.GoldWon + superRoyalStatistics.SilverWon + superRoyalStatistics.BronzeWon == 0).IsTrue();
     }
 
     /// <summary>
@@ -439,6 +587,11 @@ public class NadeoLiveTests(NadeoAccount account)
         var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(request);
 
         await Assert.That(ex!.StatusCode).IsEqualTo(statusCode);
+    }
+
+    private static Guid GetOwnAccountId(NadeoServices ns)
+    {
+        return ns.Handler.JWT?.Subject ?? throw new InvalidOperationException("The token has no account ID.");
     }
 
     private static async Task<CupOfTheDay> GetFinishedCupOfTheDayAsync(NadeoMeetServices nms)

@@ -8,6 +8,9 @@ namespace ManiaAPI.TrackmaniaAPI.Tests.Live;
 [NotInParallel(nameof(TrackmaniaAPI))]
 public class TrackmaniaAPILiveTests
 {
+    /// <summary>
+    /// Any existing map works: the favorite requests are rejected before the map is looked at.
+    /// </summary>
     private const string FavoriteMapUid = "JlxlB7KbrCfhjAf5ld89ByXR987";
 
     /// <summary>
@@ -17,12 +20,18 @@ public class TrackmaniaAPILiveTests
 
     private static readonly string[] Scopes = ["clubs", "read_favorite", "write_favorite"];
 
+    /// <summary>
+    /// Two player accounts that exist and have display names, one of them the library author's.
+    /// </summary>
     private static readonly Guid[] AccountIds =
     [
         Guid.Parse("6a43df20-cd1a-4b3b-87b9-a6835a9b416d"),
         Guid.Parse("faedcf21-d61a-4305-9ffe-680b2ee5d65e")
     ];
 
+    /// <summary>
+    /// A map of an official campaign, so it won't be deleted.
+    /// </summary>
     private static readonly Guid MapId = Guid.Parse("ed53486f-a80d-419b-b073-54bb8944d502");
 
     // One token for every test, so the live tests don't request a new one each time.
@@ -42,6 +51,18 @@ public class TrackmaniaAPILiveTests
 
         await Assert.That(tm.Handler.Payload!.Scopes).IsEquivalentTo(Scopes);
         await Assert.That(tm.ExpirationTime!.Value).IsGreaterThan(DateTimeOffset.UtcNow);
+    }
+
+    [Test]
+    public async Task AuthorizeAsync_UnknownClient_IsUnauthorized()
+    {
+        using var tm = new TrackmaniaAPI();
+
+        var ex = await Assert.ThrowsAsync<TrackmaniaAPIResponseException>(
+            () => tm.AuthorizeAsync($"no-such-client-{Guid.NewGuid():N}", Guid.NewGuid().ToString("N")));
+
+        await Assert.That(ex!.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+        await Assert.That(tm.Handler.Credentials).IsNull();
     }
 
     [Test]

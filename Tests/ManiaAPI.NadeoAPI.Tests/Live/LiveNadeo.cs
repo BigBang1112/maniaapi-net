@@ -21,16 +21,31 @@ internal static class LiveNadeo
     private static readonly Dictionary<NadeoAccount, Lazy<Task<NadeoMeetServices>>> meetServices = ForEachAccount(
         account => AuthorizeAsync(new NadeoMeetServices(CreateClient()), account));
 
+    private static readonly Dictionary<NadeoAccount, Lazy<Task<Campaign>>> seasonalCampaigns = ForEachAccount(
+        async account => (await (await GetLiveServicesAsync(account)).GetSeasonalCampaignsAsync(1)).CampaignList[0]);
+
     public static Task<NadeoServices> GetServicesAsync(NadeoAccount account) => services[account].Value;
     public static Task<NadeoLiveServices> GetLiveServicesAsync(NadeoAccount account) => liveServices[account].Value;
     public static Task<NadeoMeetServices> GetMeetServicesAsync(NadeoAccount account) => meetServices[account].Value;
+
+    /// <summary>
+    /// The current seasonal campaign, fetched once per account and test session because many tests start from it.
+    /// </summary>
+    public static Task<Campaign> GetSeasonalCampaignAsync(NadeoAccount account) => seasonalCampaigns[account].Value;
+
+    public static (string Login, string Password) GetCredentials(NadeoAccount account) => account switch
+    {
+        NadeoAccount.DedicatedServer => (LiveSettings.NadeoAPI.DedicatedServer.Login, LiveSettings.NadeoAPI.DedicatedServer.Password),
+        NadeoAccount.ServiceAccount => (LiveSettings.NadeoAPI.ServiceAccount.Login, LiveSettings.NadeoAPI.ServiceAccount.Password),
+        _ => throw new ArgumentOutOfRangeException(nameof(account))
+    };
 
     private static Dictionary<NadeoAccount, Lazy<Task<T>>> ForEachAccount<T>(Func<NadeoAccount, Task<T>> authorize)
     {
         return Enum.GetValues<NadeoAccount>().ToDictionary(account => account, account => new Lazy<Task<T>>(() => authorize(account)));
     }
 
-    private static HttpClient CreateClient()
+    public static HttpClient CreateClient()
     {
         var http = new HttpClient(new HttpClientHandler
         {
@@ -44,12 +59,7 @@ internal static class LiveNadeo
 
     private static async Task<T> AuthorizeAsync<T>(T api, NadeoAccount account) where T : NadeoAPI
     {
-        var (login, password) = account switch
-        {
-            NadeoAccount.DedicatedServer => (LiveSettings.NadeoAPI.DedicatedServer.Login, LiveSettings.NadeoAPI.DedicatedServer.Password),
-            NadeoAccount.ServiceAccount => (LiveSettings.NadeoAPI.ServiceAccount.Login, LiveSettings.NadeoAPI.ServiceAccount.Password),
-            _ => throw new ArgumentOutOfRangeException(nameof(account))
-        };
+        var (login, password) = GetCredentials(account);
 
         await api.AuthorizeAsync(login, password);
 

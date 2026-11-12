@@ -51,6 +51,15 @@ jobs:
         run: |
           status=0
           for project in Tests/*/*.csproj; do
-            dotnet test --project "$project" -c Release -f net10.0 --treenode-filter "/*/*/*/*[Category=Live]" --ignore-exit-code 8 || status=1
+            dotnet test --project "$project" -c Release -f net10.0 --treenode-filter "/*/*/*/*[Category=Live]" --ignore-exit-code 8 \
+              --report-trx --results-directory "$GITHUB_WORKSPACE/TestResults" || status=1
           done
           exit $status
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-test-results
+          path: TestResults/*
+          if-no-files-found: ignore

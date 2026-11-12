@@ -10,7 +10,25 @@ namespace ManiaAPI.MasterServer.Tests.Live;
 [NotInParallel("MasterServer")]
 public class MasterServerLiveTests
 {
+    /// <summary>
+    /// The library author's login, which exists in every game.
+    /// </summary>
+    private const string Login = "bigbang1112";
+
+    /// <summary>
+    /// A map of the official TMT campaign, which has leaderboards on every platform.
+    /// </summary>
     private const string TmtMapUid = "XUuBzeBgKAx0m6MMstYeTuWZGdb";
+
+    /// <summary>
+    /// A map of the official TMValley campaign.
+    /// </summary>
+    private const string ValleyMapUid = "JNDnboltOprJ19O2d2OQCJrC1Sk";
+
+    /// <summary>
+    /// A random login, so no one has it. Short like a real one: an overly long login is answered with error 7 (invalid login) instead.
+    /// </summary>
+    private static string UnknownLogin() => $"nsl{Guid.NewGuid():N}"[..12];
 
     [Test]
     public async Task MP4_InitServer_ReturnsMasterServers()
@@ -29,13 +47,16 @@ public class MasterServerLiveTests
         // Player infos are only available on the second relay.
         using var relay02 = new MasterServerMP4(MasterServerMP4.DefaultUrlRelay02);
 
-        var player = await relay02.GetPlayerInfosAsync("bigbang1112");
-        var login = await server.CheckLoginAsync("bigbang1112");
-        var leagues = await server.GetLeaguesAsync();
+        var player = await relay02.GetPlayerInfosAsync(Login);
+        var login = await server.CheckLoginAsync(Login);
+        var unknownLogin = await server.CheckLoginAsync(UnknownLogin());
+        var leagues = await server.GetLeaguesResponseAsync();
 
-        await Assert.That(player.Login).IsEqualTo("bigbang1112");
+        await Assert.That(player.Login).IsEqualTo(Login);
         await Assert.That(login.Exists).IsTrue();
-        await Assert.That(leagues).IsNotEmpty();
+        await Assert.That(unknownLogin.Exists).IsFalse();
+        await Assert.That(leagues.Result).IsNotEmpty();
+        await Assert.That(leagues.Details.RequestTime).IsGreaterThan(TimeSpan.Zero);
     }
 
     [Test]
@@ -44,7 +65,7 @@ public class MasterServerLiveTests
         using var server = new MasterServerMP4();
 
         var campaign = await server.GetCampaignLeaderBoardSummariesAsync("TMValley@nadeo", [new(), new(Zone: "World|Europe")]);
-        var maps = await server.GetMapLeaderBoardSummariesAsync("TMValley@nadeo", [new("JNDnboltOprJ19O2d2OQCJrC1Sk")]);
+        var maps = await server.GetMapLeaderBoardSummariesAsync("TMValley@nadeo", [new(ValleyMapUid)]);
 
         await Assert.That(campaign[0].HighScores).IsNotEmpty();
         await Assert.That(maps[0].HighScores).IsNotEmpty();
@@ -55,12 +76,14 @@ public class MasterServerLiveTests
     {
         using var server = new MasterServerTMUF();
 
-        var player = await server.GetPlayerInfosAsync("bigbang1112");
-        var login = await server.CheckLoginAsync("bigbang1112");
+        var player = await server.GetPlayerInfosAsync(Login);
+        var login = await server.CheckLoginAsync(Login);
+        var unknownLogin = await server.CheckLoginAsync(UnknownLogin());
         var leagues = await server.GetLeaguesAsync();
 
-        await Assert.That(player.Login).IsEqualTo("bigbang1112");
+        await Assert.That(player.Login).IsEqualTo(Login);
         await Assert.That(login.Exists).IsTrue();
+        await Assert.That(unknownLogin.Exists).IsFalse();
         await Assert.That(leagues).IsNotEmpty();
     }
 
@@ -70,7 +93,7 @@ public class MasterServerLiveTests
         using var server = new MasterServerTMUF();
 
         var players = await server.GetLadderPlayerRankingsAsync();
-        var achievements = await server.GetPlayerAchievementsAsync("bigbang1112");
+        var achievements = await server.GetPlayerAchievementsAsync(Login);
 
         await Assert.That(players.Players).IsNotEmpty();
         await Assert.That(achievements.Maps).IsNotEmpty();
@@ -109,9 +132,10 @@ public class MasterServerLiveTests
     {
         using var server = new MasterServerMP4();
 
-        _ = await server.TestAsync();
-        var waitingParams = await server.GetWaitingParamsAsync("bigbang1112");
+        var test = await server.TestAsync();
+        var waitingParams = await server.GetWaitingParamsAsync(Login);
 
+        await Assert.That(test.Details.RequestTime).IsGreaterThan(TimeSpan.Zero);
         await Assert.That(waitingParams.MasterServers).IsNotEmpty();
     }
 
@@ -121,7 +145,7 @@ public class MasterServerLiveTests
         using var server = new MasterServerMP4();
 
         var campaign = await server.GetCampaignLeaderBoardAsync("TMValley@nadeo", count: 5);
-        var map = await server.GetMapLeaderBoardAsync("TMValley@nadeo", "JNDnboltOprJ19O2d2OQCJrC1Sk", count: 5);
+        var map = await server.GetMapLeaderBoardAsync("TMValley@nadeo", ValleyMapUid, count: 5);
         var multiplayer = await server.GetMultiplayerLeaderBoardSummariesAsync("TMStadium@nadeo", "World");
 
         await Assert.That(campaign).IsNotEmpty();
@@ -134,11 +158,11 @@ public class MasterServerLiveTests
     {
         using var server = new MasterServerMP4();
 
-        var webIdentity = await server.GetWebIdentityFromManiaplanetLoginAsync("bigbang1112");
+        var webIdentity = await server.GetWebIdentityFromManiaplanetLoginAsync(Login);
         var unknownWebIdentityLogin = await server.GetManiaplanetLoginFromWebIdentityAsync("uplay", Guid.Empty);
         var unknownSteamAccount = await server.GetAccountFromSteamUserAsync(0);
 
-        await Assert.That(webIdentity?.Login).IsEqualTo("bigbang1112");
+        await Assert.That(webIdentity?.Login).IsEqualTo(Login);
         await Assert.That(unknownWebIdentityLogin).IsNull();
         // The master server answers an unlinked Uplay profile with an error instead of an empty result.
         await Assert.ThrowsAsync<XmlRequestException>(() => server.GetAccountFromUplayUserAsync(Guid.Empty));
@@ -233,8 +257,14 @@ public class MasterServerLiveTests
         await Assert.That(ladderModified).IsEqualTo(ladderInfo.Value.LastModified);
         await Assert.That(campaignModified).IsEqualTo(campaignInfo.Value.LastModified);
 
+        // With If-Modified-Since, the server answers 304 Not Modified, which must give the same time.
+        var generalNotModified = await server.FetchGeneralScoresDateTimeAsync(generalInfo.Value.Number, league, lastModified: generalModified);
+
+        await Assert.That(generalNotModified).IsEqualTo(generalModified);
+
         var general = await server.DownloadLatestGeneralScoresAsync(league);
-        var ladder = await server.DownloadLatestLadderScoresAsync(league);
+        // A specific scores file, rather than the latest.
+        var ladder = await server.DownloadLadderScoresAsync(ladderInfo.Value.Number, league);
         var campaign = await server.DownloadLatestCampaignScoresAsync("Nations", league);
 
         await Assert.That(general).IsNotNull();

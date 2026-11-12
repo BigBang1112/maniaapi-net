@@ -12,4 +12,14 @@ public class UnitedLadderLiveTests
 
         await Assert.That(player.Login).IsEqualTo("bigbang1112");
     }
+
+    [Test]
+    public async Task GetPlayerAsync_UnknownLogin_IsNotFound()
+    {
+        using var ul = new UnitedLadder();
+
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(() => ul.GetPlayerAsync($"nsl{Guid.NewGuid():N}"[..12]));
+
+        await Assert.That(ex!.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
+    }
 }
