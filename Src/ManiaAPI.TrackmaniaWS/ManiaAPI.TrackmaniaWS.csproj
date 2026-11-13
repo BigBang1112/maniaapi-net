@@ -48,8 +48,5 @@
         <PackageReference Include="TmEssentials" Version="2.6.0" />
     </ItemGroup>
 
-    <ItemGroup>
-        <InternalsVisibleTo Include="ManiaAPI.MCP" />
-    </ItemGroup>
 
 </Project>

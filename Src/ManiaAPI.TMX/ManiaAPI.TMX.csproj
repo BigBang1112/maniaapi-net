@@ -58,9 +58,5 @@
 		<ProjectReference Include="..\..\Generators\ManiaAPI.TMX.Generators\ManiaAPI.TMX.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
-    <ItemGroup>
-        <!-- The MCP source-generated JSON context needs the converters attached to public models. -->
-        <InternalsVisibleTo Include="ManiaAPI.MCP" />
-    </ItemGroup>
 
 </Project>

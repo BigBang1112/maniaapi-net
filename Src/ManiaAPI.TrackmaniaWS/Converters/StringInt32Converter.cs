@@ -4,7 +4,10 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TrackmaniaWS.Converters;
 
-internal sealed class StringInt32Converter : JsonConverter<int>
+/// <summary>
+/// Converts a 32-bit integer to and from a JSON string.
+/// </summary>
+public sealed class StringInt32Converter : JsonConverter<int>
 {
     public override int Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

@@ -14,6 +14,8 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <UserSecretsId>ManiaAPI.MCP</UserSecretsId>
+    <!-- An inaccessible [JsonConverter] on a library model is otherwise skipped silently, changing the serialized result. -->
+    <WarningsAsErrors>$(WarningsAsErrors);SYSLIB1220</WarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" Version="2.2.0" />

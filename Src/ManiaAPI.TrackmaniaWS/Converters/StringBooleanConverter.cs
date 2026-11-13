@@ -4,7 +4,10 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TrackmaniaWS.Converters;
 
-internal sealed class StringBooleanConverter : JsonConverter<bool>
+/// <summary>
+/// Converts a boolean to and from a JSON string of <c>"1"</c> or <c>"0"</c>.
+/// </summary>
+public sealed class StringBooleanConverter : JsonConverter<bool>
 {
     public override bool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

@@ -4,7 +4,10 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.ManiaPlanetAPI.Converters;
 
-internal sealed class DateTimeOffsetUnixConverter : JsonConverter<DateTimeOffset>
+/// <summary>
+/// Converts a <see cref="DateTimeOffset"/> to and from Unix time in seconds.
+/// </summary>
+public sealed class DateTimeOffsetUnixConverter : JsonConverter<DateTimeOffset>
 {
     public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

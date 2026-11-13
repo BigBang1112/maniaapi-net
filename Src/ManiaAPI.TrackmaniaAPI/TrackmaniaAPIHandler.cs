@@ -4,7 +4,11 @@ namespace ManiaAPI.TrackmaniaAPI;
 
 public sealed class TrackmaniaAPIHandler
 {
-    internal AuthenticationHeaderValue? Authorization { get; set; }
+    /// <summary>
+    /// The authorization sent with each request. It is set by authorizing, or can be set to a bearer access token obtained
+    /// elsewhere, such as through the authorization code flow, such a client can't re-authorize when the token expires.
+    /// </summary>
+    public AuthenticationHeaderValue? Authorization { get; set; }
 
     /// <summary>
     /// Held while authorizing. It lives here, not in the client, because every client sharing this handler
