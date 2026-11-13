@@ -26,9 +26,15 @@ public sealed class LegacyClients(IServiceProvider services) : IDisposable
             return new AggregatedMasterServerTMT(turbo.ToImmutableDictionary());
         }
 
-        if (!Enum.TryParse<Platform>(platform, out var selected) || !turbo.TryGetValue(selected, out var result))
+        if (!Enum.TryParse<Platform>(platform, out var selected) || !Enum.IsDefined(selected))
         {
-            throw new ArgumentException("platform must be PC, XB1, or PS4.");
+            throw new ArgumentException("platform must be one of: " + string.Join(", ", Enum.GetNames<Platform>()) + ".");
+        }
+
+        if (!turbo.TryGetValue(selected, out var result))
+        {
+            throw new ArgumentException($"The {selected} master server isn't available right now; available: " +
+                (turbo.Count == 0 ? "none" : string.Join(", ", turbo.Keys.Order())) + ".");
         }
 
         return result;

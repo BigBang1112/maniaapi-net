@@ -313,9 +313,12 @@ public sealed class OperationEngine
     {
         if (result.Errors is not null)
         {
-            foreach (var error in result.Errors.Keys)
+            var location = result.InstanceLocation.ToString();
+
+            // The message names the problem, such as which required fields are missing; the keyword alone doesn't.
+            foreach (var (keyword, message) in result.Errors)
             {
-                yield return $"{result.InstanceLocation}: {error} validation failed";
+                yield return $"{(location.Length == 0 ? "arguments" : location)}: {(string.IsNullOrEmpty(message) ? keyword + " validation failed" : message)}";
             }
         }
 

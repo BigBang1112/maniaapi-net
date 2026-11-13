@@ -36,6 +36,35 @@ public class DiscoveryTests
     }
 
     [Test]
+    public async Task TurboSignaturesShowThePlatformArgument()
+    {
+        using var services = CreateServices();
+        var result = await Call(services, "maniaapi_search", """{"query":"player infos","toolset":"trackmaniaturbo","limit":5}""");
+        var line = result["operations"]!.AsArray().Select(x => x!.GetValue<string>())
+            .First(x => x.StartsWith("masterserver.tmt.player_infos(", StringComparison.Ordinal));
+
+        await Assert.That(line).StartsWith("masterserver.tmt.player_infos(platform: PC|XB1|PS4; login: string)");
+    }
+
+    [Test]
+    public async Task MissingRequiredArgumentsAreNamed()
+    {
+        using var services = CreateServices();
+        var result = await services.GetRequiredService<GatewayTools>().CallAsync(new CallToolRequestParams
+        {
+            Name = "maniaapi_invoke",
+            Arguments = JsonDocument.Parse("""{"operation":"masterserver.tmt.player_infos","arguments":{"login":"bigbang1112"}}""")
+                .RootElement.EnumerateObject().ToDictionary(x => x.Name, x => x.Value.Clone())
+        }, services, CancellationToken.None);
+
+        var message = result.StructuredContent!.Value.GetProperty("message").GetString();
+
+        await Assert.That(result.IsError).IsEqualTo(true);
+        await Assert.That(message).Contains("platform");
+        await Assert.That(message).DoesNotContain("validation failed");
+    }
+
+    [Test]
     public async Task ParametersCarryDescriptionsAndDefaults()
     {
         var operation = GeneratedCatalog.Create().Single(x => x.Id == "nadeo.live.top_leaderboard");

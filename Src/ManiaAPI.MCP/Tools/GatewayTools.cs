@@ -313,9 +313,10 @@ public sealed class GatewayTools(
         foreach (var operation in search.Search(engine.Available(scope).Where(Matches), query, limit))
         {
             var site = operation.ExchangeClient is null ? "" : "site: " + string.Join("|", scope.Sites(operation)) + "; ";
+            var platform = operation.PlatformClient is null ? "" : "platform: " + string.Join("|", Enum.GetNames<MasterServer.TMT.Platform>()) + "; ";
             var signature = operation.Overloads[0].Signature;
 
-            matches.Add($"{operation.Id}({site}{signature}) — {operation.Summary} [{(operation.ReadOnly ? "read" : "write")}{(operation.Obsolete ? ", obsolete" : "")}]");
+            matches.Add($"{operation.Id}({site}{platform}{signature}) — {operation.Summary} [{(operation.ReadOnly ? "read" : "write")}{(operation.Obsolete ? ", obsolete" : "")}]");
         }
 
         var result = new JsonObject
