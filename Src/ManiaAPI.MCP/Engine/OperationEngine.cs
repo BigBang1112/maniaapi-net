@@ -192,6 +192,8 @@ public sealed class OperationEngine
                 RemoveSecrets(raw);
             }
 
+            FormattedText.AddPlain(raw);
+
             var result = ResultShaper.Shape(raw, shape, options.Shaping);
             activity?.SetTag("http.response.status_code", 200);
             ResultSize.Record(raw?.ToJsonString().Length ?? 0,

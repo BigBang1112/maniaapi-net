@@ -91,6 +91,12 @@ public static class ResultShaper
             if (obj.TryGetPropertyValue(name, out var child))
             {
                 result[name] = Project(child, group.Select(p => p.Skip(1).ToArray()).ToArray());
+
+                // Selecting a formatted name also keeps its deformatted sibling.
+                if (obj.TryGetPropertyValue(name + FormattedText.PlainSuffix, out var plain) && !result.ContainsKey(name + FormattedText.PlainSuffix))
+                {
+                    result[name + FormattedText.PlainSuffix] = plain?.DeepClone();
+                }
             }
         }
 
