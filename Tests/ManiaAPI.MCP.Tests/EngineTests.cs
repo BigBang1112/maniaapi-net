@@ -3,6 +3,7 @@ using ManiaAPI.MCP.Catalog;
 using ManiaAPI.MCP.Configuration;
 using ManiaAPI.MCP.Engine;
 using ManiaAPI.MCP.Hosting;
+using ManiaAPI.MCP.Tools;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ManiaAPI.MCP.Tests;
@@ -40,6 +41,48 @@ public class EngineTests
         await Assert.That(operations.Length).IsGreaterThan(20);
         await Assert.That(operations.All(x => x.Requires == "none")).IsTrue();
         await Assert.That(operations.All(x => x.Toolset != "trackmania2020")).IsTrue();
+    }
+
+    [Test]
+    public async Task SearchReportsOperationsHiddenByMissingCredentials()
+    {
+        using var services = CreateServices();
+        var gateway = services.GetRequiredService<GatewayTools>();
+
+        var result = await gateway.CallAsync(new ModelContextProtocol.Protocol.CallToolRequestParams
+        {
+            Name = "maniaapi_search",
+            Arguments = new Dictionary<string, JsonElement>
+            {
+                ["query"] = Json("\"campaign leaderboard records\""),
+                ["toolset"] = Json("\"trackmania2020\"")
+            }
+        }, services, CancellationToken.None);
+
+        var json = result.StructuredContent!.Value;
+        var unavailable = json.GetProperty("missingCredentials").EnumerateArray().Select(x => x.GetString()!).ToArray();
+        var description = gateway.List().Tools.Single(x => x.Name == "maniaapi_search").Description;
+
+        await Assert.That(json.GetProperty("operations").GetArrayLength()).IsEqualTo(0);
+        await Assert.That(unavailable.Length).IsGreaterThan(0);
+        await Assert.That(unavailable.Any(x => x.StartsWith("nadeo.", StringComparison.Ordinal) && x.Contains("ManiaAPI:NadeoAPI:Login"))).IsTrue();
+        await Assert.That(description).Contains("trackmania2020 (needs");
+        await Assert.That(description).DoesNotContain("exchange (needs");
+    }
+
+    [Test]
+    public async Task DisabledOperationsAreNotReportedAsMissingCredentials()
+    {
+        using var services = CreateServices();
+        var engine = services.GetRequiredService<OperationEngine>();
+
+        var allToolsets = engine.MissingCredentials(GameScope.Create(new McpOptions())).Select(x => x.Operation).ToArray();
+        var exchangeOnly = engine.MissingCredentials(GameScope.Create(new McpOptions { Toolsets = ["exchange"] }));
+
+        // Writes and account linking are off, so their operations stay hidden rather than missing credentials.
+        await Assert.That(allToolsets.Length).IsGreaterThan(0);
+        await Assert.That(allToolsets.All(x => x.ReadOnly && !x.PlayerOnly)).IsTrue();
+        await Assert.That(exchangeOnly.Any(x => x.Operation.Toolset != "exchange")).IsFalse();
     }
 
     [Test]

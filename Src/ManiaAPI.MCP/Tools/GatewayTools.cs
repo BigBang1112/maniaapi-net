@@ -147,7 +147,8 @@ public sealed class GatewayTools(
             CreateTool("maniaapi_search",
                 "Find ManiaAPI operations by keywords. Game accepts TM2/Trackmania 2/TrackMania² and ShootMania/SM. " +
                 "Trackmania 2 uses ManiaPlanet APIs and MX Maniaplanet; ShootMania uses MX Shootmania. " +
-                "Explicit titles/environments remain in the query. Available exchange sites: " + sites + ".",
+                "Explicit titles/environments remain in the query. Available exchange sites: " + sites + "." +
+                MissingCredentialsNote(scope),
                 SearchSchema, true),
             CreateTool("maniaapi_describe", "Describe up to 10 operation IDs, their schemas, overloads, authentication and pagination.",
                 DescribeSchema, true),
@@ -301,19 +302,15 @@ public sealed class GatewayTools(
             throw new ArgumentException("requires must be none, nadeo, or oauth.");
         }
 
-        var candidates = engine.Available(scope).Where(operation =>
+        bool Matches(Operation operation) =>
             (toolset is null || operation.Toolset == toolset) &&
-            (requires is null || operation.Requires == requires));
-
-        if (args.TryGetValue("readOnly", out var readOnly))
-        {
-            candidates = candidates.Where(operation => operation.ReadOnly == readOnly.GetBoolean());
-        }
+            (requires is null || operation.Requires == requires) &&
+            (!args.TryGetValue("readOnly", out var readOnly) || operation.ReadOnly == readOnly.GetBoolean());
 
         var limit = args.TryGetValue("limit", out var limitValue) ? limitValue.GetInt32() : 8;
         var matches = new JsonArray();
 
-        foreach (var operation in search.Search(candidates, query, limit))
+        foreach (var operation in search.Search(engine.Available(scope).Where(Matches), query, limit))
         {
             var site = operation.ExchangeClient is null ? "" : "site: " + string.Join("|", scope.Sites(operation)) + "; ";
             var signature = operation.Overloads[0].Signature;
@@ -321,12 +318,46 @@ public sealed class GatewayTools(
             matches.Add($"{operation.Id}({site}{signature}) — {operation.Summary} [{(operation.ReadOnly ? "read" : "write")}{(operation.Obsolete ? ", obsolete" : "")}]");
         }
 
-        return new JsonObject
+        var result = new JsonObject
         {
             ["query"] = query,
             ["game"] = game,
             ["operations"] = matches
         };
+
+        // Enabled operations that lack only credentials are still reported, so the assistant can tell the user
+        // what to configure instead of concluding the API doesn't exist.
+        var missing = engine.MissingCredentials(scope).Where(x => Matches(x.Operation)).ToDictionary(x => x.Operation, x => x.Credentials);
+        var unavailable = new JsonArray();
+
+        foreach (var operation in search.Search(missing.Keys, query, Math.Min(limit, 5)))
+        {
+            unavailable.Add($"{operation.Id} — {operation.Summary} [needs {missing[operation]}]");
+        }
+
+        if (unavailable.Count > 0)
+        {
+            result["missingCredentials"] = unavailable;
+            result["missingCredentialsNote"] = "These operations exist but this server has no credentials for them. " +
+                "Tell the user which settings to add rather than assuming the data can't be fetched.";
+        }
+
+        return result;
+    }
+
+    private string MissingCredentialsNote(GameScope scope)
+    {
+        var available = engine.Available(scope).Select(x => x.Toolset).ToHashSet(StringComparer.Ordinal);
+        var unconfigured = engine.MissingCredentials(scope)
+            .Where(x => !available.Contains(x.Operation.Toolset))
+            .GroupBy(x => x.Operation.Toolset, StringComparer.Ordinal)
+            .OrderBy(x => x.Key, StringComparer.Ordinal)
+            .Select(x => $"{x.Key} (needs {string.Join(" or ", x.Select(y => y.Credentials).Distinct().Order(StringComparer.Ordinal))})")
+            .ToArray();
+
+        return unconfigured.Length == 0
+            ? ""
+            : " Toolsets enabled without credentials on this server: " + string.Join("; ", unconfigured) + ".";
     }
 
     private JsonObject Describe(IDictionary<string, JsonElement> args, GameScope scope)

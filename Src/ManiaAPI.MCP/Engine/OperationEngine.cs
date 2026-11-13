@@ -49,25 +49,34 @@ public sealed class OperationEngine
 
     public IEnumerable<Operation> Available(GameScope scope)
     {
-        return operations.Values.Where(operation => scope.Contains(operation) && IsConfigured(operation) &&
-            (operation.ReadOnly || options.AllowWrites));
+        return operations.Values.Where(operation => IsEnabled(operation, scope) && MissingCredentials(operation) is null);
+    }
+
+    /// <summary>
+    /// Enabled operations in scope that are hidden only because their credentials aren't configured.
+    /// Operations that are switched off (toolsets, master server games, writes, account linking) aren't listed.
+    /// </summary>
+    public IEnumerable<(Operation Operation, string Credentials)> MissingCredentials(GameScope scope)
+    {
+        foreach (var operation in operations.Values)
+        {
+            if (IsEnabled(operation, scope) && MissingCredentials(operation) is { } credentials)
+            {
+                yield return (operation, credentials);
+            }
+        }
     }
 
     public Operation Describe(string id, GameScope scope)
     {
-        if (!operations.TryGetValue(id, out var operation) || !scope.Contains(operation))
+        if (!operations.TryGetValue(id, out var operation) || !IsEnabled(operation, scope))
         {
             throw new ArgumentException("Unknown operation in this endpoint's scope. Use maniaapi_search.");
         }
 
-        if (!IsConfigured(operation))
+        if (MissingCredentials(operation) is { } credentials)
         {
-            throw new ArgumentException($"This operation needs {operation.Requires} credentials, which this server doesn't have.");
-        }
-
-        if (!operation.ReadOnly && !options.AllowWrites)
-        {
-            throw new ArgumentException("Writes are disabled on this server.");
+            throw new ArgumentException($"This operation needs {credentials}, which this server doesn't have.");
         }
 
         return operation;
@@ -222,29 +231,57 @@ public sealed class OperationEngine
         }
     }
 
-    private bool IsConfigured(Operation operation)
+    /// <summary>
+    /// Whether this server offers the operation at all: its toolset, master server game, writes, and
+    /// account linking are switched on. Disabled operations behave as if they don't exist.
+    /// </summary>
+    private bool IsEnabled(Operation operation, GameScope scope)
     {
-        if (operation.PlayerOnly)
+        if (!scope.Contains(operation) || (!operation.ReadOnly && !options.AllowWrites))
         {
-            return options.AccountLinking.Enabled &&
-                (operation.OAuthProvider == "trackmania" ? options.TrackmaniaAPI.Configured : options.ManiaPlanet.Configured);
+            return false;
         }
 
-        return operation.Requires switch
+        if (operation.PlayerOnly)
         {
-            "nadeo" => options.NadeoAPI.Configured,
-            "oauth" => options.TrackmaniaAPI.Configured,
-            "tmws" => options.TrackmaniaWS.Configured,
-            _ when operation.Id.StartsWith("masterserver.", StringComparison.Ordinal) => options.MasterServer.Games.Contains(
-                operation.Id.Split('.')[1] switch
-                {
-                    "tmuf" => "TMUF",
-                    "tmnf" => "TMNF",
-                    "mp3" => "MP3",
-                    "mp4" => "MP4",
-                    _ => "TMT"
-                }),
-            _ => true
+            return options.AccountLinking.Enabled;
+        }
+
+        if (operation.Id.StartsWith("masterserver.", StringComparison.Ordinal))
+        {
+            return options.MasterServer.Games.Contains(operation.Id.Split('.')[1] switch
+            {
+                "tmuf" => "TMUF",
+                "tmnf" => "TMNF",
+                "mp3" => "MP3",
+                "mp4" => "MP4",
+                _ => "TMT"
+            });
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Null when the server has the credentials the operation needs; otherwise which ones, naming the settings.
+    /// </summary>
+    private string? MissingCredentials(Operation operation)
+    {
+        var requires = operation.PlayerOnly
+            ? operation.OAuthProvider == "trackmania" ? "trackmania" : "maniaplanet"
+            : operation.Requires;
+
+        return requires switch
+        {
+            "nadeo" when !options.NadeoAPI.Configured =>
+                "NadeoAPI credentials (ManiaAPI:NadeoAPI:Login and Password)",
+            "oauth" or "trackmania" when !options.TrackmaniaAPI.Configured =>
+                "Trackmania web API credentials (ManiaAPI:TrackmaniaAPI:ClientId and ClientSecret)",
+            "maniaplanet" when !options.ManiaPlanet.Configured =>
+                "ManiaPlanet web API credentials (ManiaAPI:ManiaPlanet:ClientId and ClientSecret)",
+            "tmws" when !options.TrackmaniaWS.Configured =>
+                "Trackmania Web Services credentials (ManiaAPI:TrackmaniaWS:Username and Password)",
+            _ => null
         };
     }
 
