@@ -14,7 +14,7 @@ public partial class MX
 
         public SearchVideosParameters()
         {
-            Fields = global::ManiaAPI.TMX.VideoItemFields.All;
+            Fields = global::ManiaAPI.TMX.VideoItemFields.All with { UpdatedAt = default };
         }
 
         internal bool AppendQueryString(StringBuilder sb, bool appendFields = true)

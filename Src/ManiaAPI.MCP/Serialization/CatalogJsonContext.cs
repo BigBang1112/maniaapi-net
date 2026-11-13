@@ -91,6 +91,8 @@ namespace ManiaAPI.MCP.Serialization;
 [JsonSerializable(typeof(global::ManiaAPI.TMX.TMX.SearchTrackpacksParameters))]
 [JsonSerializable(typeof(global::ManiaAPI.TMX.TMX.SearchTracksParameters))]
 [JsonSerializable(typeof(global::ManiaAPI.TMX.TMX.SearchUsersParameters), TypeInfoPropertyName = "TmxSearchUsersParameters")]
+[JsonSerializable(typeof(global::ManiaAPI.TMX.TMX.SearchVideosParameters), TypeInfoPropertyName = "TmxSearchVideosParameters")]
+[JsonSerializable(typeof(global::ManiaAPI.TMX.TagDescription[]))]
 [JsonSerializable(typeof(global::ManiaAPI.TMX.TagInfo[]))]
 [JsonSerializable(typeof(global::ManiaAPI.TMX.TrackItem))]
 [JsonSerializable(typeof(global::ManiaAPI.TMX.TrackpackItem))]

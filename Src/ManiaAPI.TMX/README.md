@@ -145,6 +145,33 @@ foreach (var item in userCollection.Results)
 }
 ```
 
+### Search Videos
+
+```cs
+var videoCollection = await tmx.SearchVideosAsync(new()
+{
+    TrackId = [4808334],
+    Count = 10
+});
+
+foreach (var item in videoCollection.Results)
+{
+    Console.WriteLine($"{item.Title}: {item.Link}");
+}
+```
+
+### Get site metadata
+
+Search orders, tags, track types and vehicles of the site, for the values used in search parameters:
+
+```cs
+var trackOrders = await tmx.GetTrackSearchOrdersAsync(); // also trackpack, user, video and leaderboard orders
+var tags = await tmx.GetTagsAsync();
+var tagDescriptions = await tmx.GetTagDescriptionsAsync();
+var trackTypes = await tmx.GetTrackTypesAsync();
+var vehicles = await tmx.GetVehiclesAsync();
+```
+
 ### Get Replay Gbx
 
 Just the URL:

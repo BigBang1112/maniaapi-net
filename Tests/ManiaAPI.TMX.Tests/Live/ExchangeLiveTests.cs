@@ -73,6 +73,59 @@ public class ExchangeLiveTests
     }
 
     [Test]
+    [Arguments(TmxSite.TMUF)]
+    [Arguments(TmxSite.TMNF)]
+    [Arguments(TmxSite.Nations)]
+    [Arguments(TmxSite.Sunrise)]
+    [Arguments(TmxSite.Original)]
+    public async Task TMX_Metadata_IsAvailable(TmxSite site)
+    {
+        using var tmx = new TMX(site);
+
+        var trackOrders = await tmx.GetTrackSearchOrdersAsync();
+        var trackpackOrders = await tmx.GetTrackpackSearchOrdersAsync();
+        var userOrders = await tmx.GetUserSearchOrdersAsync();
+        var videoOrders = await tmx.GetVideoSearchOrdersAsync();
+        var leaderboardOrders = await tmx.GetLeaderboardSearchOrdersAsync();
+        var tags = await tmx.GetTagsAsync();
+        var tagDescriptions = await tmx.GetTagDescriptionsAsync();
+        var trackTypes = await tmx.GetTrackTypesAsync();
+        var vehicles = await tmx.GetVehiclesAsync();
+
+        // Key 0 has no name on these sites, so only the named orders are checked.
+        await Assert.That(trackOrders).Contains(x => !string.IsNullOrEmpty(x.Name));
+        await Assert.That(trackpackOrders).Contains(x => !string.IsNullOrEmpty(x.Name));
+        await Assert.That(userOrders).Contains(x => !string.IsNullOrEmpty(x.Name));
+        await Assert.That(videoOrders).Contains(x => !string.IsNullOrEmpty(x.Name));
+        await Assert.That(leaderboardOrders).IsNotEmpty();
+        await Assert.That(tags).IsNotEmpty();
+        await Assert.That(tags).DoesNotContain(x => string.IsNullOrEmpty(x.Name));
+        await Assert.That(tagDescriptions).IsNotEmpty();
+        await Assert.That(tagDescriptions).DoesNotContain(x => string.IsNullOrEmpty(x.Description));
+        await Assert.That(trackTypes).IsNotEmpty();
+        await Assert.That(vehicles).IsNotEmpty();
+    }
+
+    [Test]
+    [Arguments(TmxSite.TMUF)]
+    [Arguments(TmxSite.TMNF)]
+    public async Task TMX_SearchVideos_ReturnsVideos(TmxSite site)
+    {
+        using var tmx = new TMX(site);
+
+        var videos = await tmx.SearchVideosAsync(new TMX.SearchVideosParameters { Count = 5 });
+
+        await Assert.That(videos.Results).IsNotEmpty();
+        await Assert.That(videos.Results).DoesNotContain(x => x.VideoId <= 0 || string.IsNullOrEmpty(x.Title) || string.IsNullOrEmpty(x.LinkId));
+
+        // Filtering by the first video's ID finds only that video, so the generated query parameters reach the API.
+        var first = videos.Results[0];
+        var filtered = await tmx.SearchVideosAsync(new TMX.SearchVideosParameters { Id = [first.VideoId] });
+
+        await Assert.That(filtered.Results.Select(x => x.VideoId)).IsEquivalentTo([first.VideoId]);
+    }
+
+    [Test]
     public async Task TMX_Random_ResolvesTrackAndTrackpack()
     {
         using var tmx = new TMX(TmxSite.TMNF);

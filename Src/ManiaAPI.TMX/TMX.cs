@@ -14,6 +14,17 @@ public interface ITMX : IClient
     Task<ItemCollection<TrackpackItem>> SearchTrackpacksAsync(TMX.SearchTrackpacksParameters parameters, CancellationToken cancellationToken = default);
     Task<ItemCollection<TrackItem>> SearchTracksAsync(TMX.SearchTracksParameters parameters, CancellationToken cancellationToken = default);
     Task<ItemCollection<UserItem>> SearchUsersAsync(TMX.SearchUsersParameters parameters, CancellationToken cancellationToken = default);
+    Task<ItemCollection<VideoItem>> SearchVideosAsync(TMX.SearchVideosParameters parameters, CancellationToken cancellationToken = default);
+
+    Task<SearchOrderItem[]> GetTrackSearchOrdersAsync(CancellationToken cancellationToken = default);
+    Task<SearchOrderItem[]> GetTrackpackSearchOrdersAsync(CancellationToken cancellationToken = default);
+    Task<SearchOrderItem[]> GetUserSearchOrdersAsync(CancellationToken cancellationToken = default);
+    Task<SearchOrderItem[]> GetVideoSearchOrdersAsync(CancellationToken cancellationToken = default);
+    Task<SearchOrderItem[]> GetLeaderboardSearchOrdersAsync(CancellationToken cancellationToken = default);
+    Task<TagInfo[]> GetTagsAsync(CancellationToken cancellationToken = default);
+    Task<TagDescription[]> GetTagDescriptionsAsync(CancellationToken cancellationToken = default);
+    Task<string[]> GetTrackTypesAsync(CancellationToken cancellationToken = default);
+    Task<string[]> GetVehiclesAsync(CancellationToken cancellationToken = default);
 
     string GetReplayGbxUrl(long replayId);
     string GetReplayGbxUrl(ReplayItem replay);
@@ -275,6 +286,105 @@ public partial class TMX : ITMX
 
     [GetMethod("api/users")]
     public virtual partial Task<ItemCollection<UserItem>> SearchUsersAsync(SearchUsersParameters parameters, CancellationToken cancellationToken = default);
+
+    [Parameters<VideoItem>]
+    public readonly partial record struct SearchVideosParameters
+    {
+        /// <summary>
+        /// Search order, for order modes refer to <see cref="GetVideoSearchOrdersAsync(CancellationToken)"/>.
+        /// </summary>
+        public int? Order1 { get; init; }
+
+        /// <summary>
+        /// Amount of results (default: 40).
+        /// </summary>
+        public int? Count { get; init; }
+
+        /// <summary>
+        /// After a certain video ID.
+        /// </summary>
+        public long? After { get; init; }
+
+        /// <summary>
+        /// Before a certain video ID.
+        /// </summary>
+        public long? Before { get; init; }
+
+        /// <summary>
+        /// Like <see cref="After"/>, but includes the specified video ID as well.
+        /// </summary>
+        public long? From { get; init; }
+
+        /// <summary>
+        /// Filter by video IDs.
+        /// </summary>
+        public long[]? Id { get; init; }
+
+        /// <summary>
+        /// Filter out video IDs.
+        /// </summary>
+        public long[]? NId { get; init; }
+
+        /// <summary>
+        /// Filter by IDs of tracks featured in the video.
+        /// </summary>
+        public long[]? TrackId { get; init; }
+
+        /// <summary>
+        /// Filter by video title.
+        /// </summary>
+        public string? Title { get; init; }
+
+        /// <summary>
+        /// Filter by video author (YouTube channel name).
+        /// </summary>
+        public string? Author { get; init; }
+
+        /// <summary>
+        /// Filter by the site username of the posting user.
+        /// </summary>
+        public string? Poster { get; init; }
+
+        /// <summary>
+        /// Filter by the site username of the creating user.
+        /// </summary>
+        public string? Creator { get; init; }
+
+        public IEnumerable<KeyValuePair<string, string>>? AdditionalParameters { get; init; }
+    }
+
+    [GetMethod("api/videos")]
+    public virtual partial Task<ItemCollection<VideoItem>> SearchVideosAsync(SearchVideosParameters parameters, CancellationToken cancellationToken = default);
+
+    [GetMethod("api/meta/trackorders")]
+    public virtual partial Task<SearchOrderItem[]> GetTrackSearchOrdersAsync(CancellationToken cancellationToken = default);
+
+    [GetMethod("api/meta/trackpackorders")]
+    public virtual partial Task<SearchOrderItem[]> GetTrackpackSearchOrdersAsync(CancellationToken cancellationToken = default);
+
+    [GetMethod("api/meta/userorders")]
+    public virtual partial Task<SearchOrderItem[]> GetUserSearchOrdersAsync(CancellationToken cancellationToken = default);
+
+    [GetMethod("api/meta/videoorders")]
+    public virtual partial Task<SearchOrderItem[]> GetVideoSearchOrdersAsync(CancellationToken cancellationToken = default);
+
+    [GetMethod("api/meta/leaderboardorders")]
+    public virtual partial Task<SearchOrderItem[]> GetLeaderboardSearchOrdersAsync(CancellationToken cancellationToken = default);
+
+    [GetMethod("api/meta/tags")]
+    public virtual partial Task<TagInfo[]> GetTagsAsync(CancellationToken cancellationToken = default);
+
+    [GetMethod("api/meta/tagdescriptions")]
+    public virtual partial Task<TagDescription[]> GetTagDescriptionsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the track types; the index of each is the value used in search filters.
+    /// </summary>
+    [GetMethod("api/meta/tracktypes")]
+    public virtual partial Task<string[]> GetTrackTypesAsync(CancellationToken cancellationToken = default);
+
+    [GetMethod("api/meta/vehicles")]
+    public virtual partial Task<string[]> GetVehiclesAsync(CancellationToken cancellationToken = default);
 
     public string GetTrackRandomUrl() => $"{Client.BaseAddress}trackrandom";
 

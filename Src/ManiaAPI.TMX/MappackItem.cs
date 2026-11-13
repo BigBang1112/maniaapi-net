@@ -11,7 +11,10 @@ public sealed partial record MappackItem : IItem
     public string? Description { get; set; }
     public int Type { get; set; }
     public bool IsRequest { get; set; }
-    public int SubmitLimit { get; set; }
+    /// <summary>
+    /// Maximum number of map submissions per user, or null when the mappack has no limit.
+    /// </summary>
+    public int? SubmitLimit { get; set; }
     public double MappackValue { get; set; }
     public int MapCount { get; set; }
     public bool IsPublic { get; set; }

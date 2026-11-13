@@ -2,11 +2,13 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TMX;
 
+[JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true)] // TMX sites return "Id" where MX sites return "ID"
 [JsonSerializable(typeof(ItemCollection<ReplayItem>))]
 [JsonSerializable(typeof(ItemCollection<TrackItem>))]
 [JsonSerializable(typeof(ItemCollection<TrackpackItem>))]
 [JsonSerializable(typeof(ItemCollection<UserItem>))]
 [JsonSerializable(typeof(ItemCollection<LeaderboardItem>))]
+[JsonSerializable(typeof(TagDescription[]))]
 [JsonSerializable(typeof(ItemCollection<MapItem>))]
 [JsonSerializable(typeof(ItemCollection<ReplayItemMX>))]
 [JsonSerializable(typeof(ItemCollection<UserItemMX>))]

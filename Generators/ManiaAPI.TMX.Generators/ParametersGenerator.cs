@@ -33,9 +33,21 @@ public class ParametersGenerator : IIncrementalGenerator
     private void GeneratePartialParameters(SourceProductionContext context, INamedTypeSymbol parametersSymbol)
     {
         var clientSymbol = parametersSymbol.ContainingType;
-        var resultSymbol = parametersSymbol.GetAttributes()
-            .FirstOrDefault(x => x.AttributeClass?.Name == "ParametersAttribute")?.AttributeClass?.TypeArguments[0] as INamedTypeSymbol
+        var parametersAttribute = parametersSymbol.GetAttributes()
+            .FirstOrDefault(x => x.AttributeClass?.Name == "ParametersAttribute")
+            ?? throw new Exception("Parameters attribute is missing");
+        var resultSymbol = parametersAttribute.AttributeClass?.TypeArguments[0] as INamedTypeSymbol
             ?? throw new Exception("Result is null");
+
+        // Fields only the other kind of site has are left out of the default selection,
+        // because requesting a field the site doesn't have fails the whole request
+        var isTmx = clientSymbol.AllInterfaces.Any(x => x.Name == "ITMX");
+        var otherSiteOnly = isTmx ? "MxOnlyAttribute" : "TmxOnlyAttribute";
+        var excludedFields = resultSymbol.GetMembers()
+            .OfType<IPropertySymbol>()
+            .Where(property => property.GetAttributes().Any(x => x.AttributeClass?.Name == otherSiteOnly))
+            .Select(property => property.Name)
+            .ToArray();
 
         var sb = new StringBuilder();
 
@@ -66,7 +78,16 @@ public class ParametersGenerator : IIncrementalGenerator
         sb.AppendLine("        {");
         sb.Append("            Fields = ");
         sb.Append(resultSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
-        sb.AppendLine("Fields.All;");
+        sb.Append("Fields.All");
+
+        if (excludedFields.Length > 0)
+        {
+            sb.Append(" with { ");
+            sb.Append(string.Join(", ", excludedFields.Select(field => field + " = default")));
+            sb.Append(" }");
+        }
+
+        sb.AppendLine(";");
         sb.AppendLine("        }");
 
         sb.AppendLine();

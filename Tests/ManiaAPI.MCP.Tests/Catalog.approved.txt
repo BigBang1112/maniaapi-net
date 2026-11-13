@@ -279,6 +279,7 @@ nadeo.meet.my_club_competitions [nadeo, serviceOnly=False, readOnly=True, player
 nadeo.meet.send_matchmaking_heartbeat [nadeo, serviceOnly=True, readOnly=False, playerOnly=False] matchmakingType: int, code: string, playWith: guid[]
 nadeo.meet.super_royal_statistics [nadeo, serviceOnly=False, readOnly=True, playerOnly=False]
 nadeo.meet.super_royal_status [nadeo, serviceOnly=False, readOnly=True, playerOnly=False]
+tmx.leaderboard_search_orders [none, serviceOnly=False, readOnly=True, playerOnly=False]
 tmx.random_track [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: SearchTracksParameters
 tmx.random_track_id [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: SearchTracksParameters
 tmx.random_trackpack [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: SearchTrackpacksParameters
@@ -294,6 +295,9 @@ tmx.search_leaderboards [none, serviceOnly=False, readOnly=True, playerOnly=Fals
 tmx.search_trackpacks [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: SearchTrackpacksParameters
 tmx.search_tracks [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: SearchTracksParameters
 tmx.search_users [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: SearchUsersParameters
+tmx.search_videos [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: SearchVideosParameters
+tmx.tag_descriptions [none, serviceOnly=False, readOnly=True, playerOnly=False]
+tmx.tags [none, serviceOnly=False, readOnly=True, playerOnly=False]
 tmx.track_gbx [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
 tmx.track_gbx_header [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
 tmx.track_gbx_header_node [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
@@ -303,9 +307,15 @@ tmx.track_gbx_url [none, serviceOnly=False, readOnly=True, playerOnly=False] tra
 tmx.track_image_response [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long, imageIndex: int
 tmx.track_image_url [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long, imageIndex: int
 tmx.track_random_url [none, serviceOnly=False, readOnly=True, playerOnly=False]
+tmx.track_search_orders [none, serviceOnly=False, readOnly=True, playerOnly=False]
 tmx.track_thumbnail_response [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
 tmx.track_thumbnail_url [none, serviceOnly=False, readOnly=True, playerOnly=False] trackId: long
+tmx.track_types [none, serviceOnly=False, readOnly=True, playerOnly=False]
 tmx.trackpack_random_url [none, serviceOnly=False, readOnly=True, playerOnly=False]
+tmx.trackpack_search_orders [none, serviceOnly=False, readOnly=True, playerOnly=False]
+tmx.user_search_orders [none, serviceOnly=False, readOnly=True, playerOnly=False]
+tmx.vehicles [none, serviceOnly=False, readOnly=True, playerOnly=False]
+tmx.video_search_orders [none, serviceOnly=False, readOnly=True, playerOnly=False]
 trackmania.api.account_ids [oauth, serviceOnly=False, readOnly=True, playerOnly=False] displayNames: string[]
 trackmania.api.add_user_favorite_map [oauth, serviceOnly=False, readOnly=False, playerOnly=True] mapUid: string
 trackmania.api.display_names [oauth, serviceOnly=False, readOnly=True, playerOnly=False] accountIds: guid[]
