@@ -36,7 +36,7 @@
     <AdditionalFiles Include="../ManiaAPI.NadeoAPI/NadeoLiveServices.cs" />
     <AdditionalFiles Include="../ManiaAPI.NadeoAPI/NadeoMeetServices.cs" />
     <AdditionalFiles Include="../ManiaAPI.TrackmaniaAPI/TrackmaniaAPI.cs" />
-    <AdditionalFiles Include="../ManiaAPI.TMX/Tmx.cs" />
+    <AdditionalFiles Include="../ManiaAPI.TMX/TMX.cs" />
     <AdditionalFiles Include="../ManiaAPI.TMX/MX.cs" />
     <AdditionalFiles Include="Catalog/Overrides.accounts" />
     <AdditionalFiles Include="../ManiaAPI.MasterServer/**/*.cs" Exclude="../ManiaAPI.MasterServer/obj/**/*.cs;../ManiaAPI.MasterServer/bin/**/*.cs" />
