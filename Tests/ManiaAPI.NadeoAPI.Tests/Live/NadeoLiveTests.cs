@@ -5,7 +5,7 @@ namespace ManiaAPI.NadeoAPI.Tests.Live;
 /// A request that only a service account may send is checked to be denied with a dedicated server account, see <see cref="AssertDeniedAsync"/>.
 /// </summary>
 [LiveTest]
-[NotInParallel("Nadeo")]
+[NotInParallel("NadeoAPI")]
 [Arguments(NadeoAccount.DedicatedServer)]
 [Arguments(NadeoAccount.ServiceAccount)]
 public class NadeoLiveTests(NadeoAccount account)

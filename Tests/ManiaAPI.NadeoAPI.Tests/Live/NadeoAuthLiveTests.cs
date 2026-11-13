@@ -5,7 +5,7 @@ namespace ManiaAPI.NadeoAPI.Tests.Live;
 /// so changing its token can't affect the other tests.
 /// </summary>
 [LiveTest]
-[NotInParallel("Nadeo")]
+[NotInParallel("NadeoAPI")]
 [Arguments(NadeoAccount.DedicatedServer)]
 [Arguments(NadeoAccount.ServiceAccount)]
 public class NadeoAuthLiveTests(NadeoAccount account)
@@ -46,7 +46,7 @@ public class NadeoAuthLiveTests(NadeoAccount account)
 }
 
 [LiveTest]
-[NotInParallel("Nadeo")]
+[NotInParallel("NadeoAPI")]
 public class NadeoAuthFailureLiveTests
 {
     [Test]

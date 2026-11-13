@@ -49,6 +49,10 @@ Anything you can imagine!
 
 See the [Samples](Samples) folder for more.
 
+### MCP server
+
+[ManiaAPI.MCP](Src/ManiaAPI.MCP) lets AI assistants use ManiaAPI libraries effectively. Install it with `dotnet tool install -g ManiaAPI.MCP` and see [how to connect it](Src/ManiaAPI.MCP/README.md).
+
 ## ManiaAPI.NadeoAPI
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.NadeoAPI?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.NadeoAPI/)

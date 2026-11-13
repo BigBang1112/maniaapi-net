@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Generators/">
+    <Project Path="Generators/ManiaAPI.MCP.Generators/ManiaAPI.MCP.Generators.csproj" />
     <Project Path="Generators/ManiaAPI.TMX.Generators/ManiaAPI.TMX.Generators.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
@@ -40,6 +41,7 @@
     <Project Path="Src/ManiaAPI.UnitedLadder/ManiaAPI.UnitedLadder.csproj" Id="3d490138-d581-4889-9918-1e71be189cc5" />
     <Project Path="Src/ManiaAPI.MasterServer.Extensions.Hosting/ManiaAPI.MasterServer.Extensions.Hosting.csproj" />
     <Project Path="Src/ManiaAPI.MasterServer/ManiaAPI.MasterServer.csproj" />
+    <Project Path="Src/ManiaAPI.MCP/ManiaAPI.MCP.csproj" />
     <Project Path="Src/ManiaAPI.GBXRemote/ManiaAPI.GBXRemote.csproj" />
   </Folder>
   <Folder Name="/Tests/">
@@ -49,6 +51,7 @@
     <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Tests/ManiaAPI.ManiaPlanetAPI.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.MasterServer.Tests/ManiaAPI.MasterServer.Tests.csproj" />
+    <Project Path="Tests/ManiaAPI.MCP.Tests/ManiaAPI.MCP.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.NadeoAPI.Extensions.Gbx.Tests/ManiaAPI.NadeoAPI.Extensions.Gbx.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.NadeoAPI.Extensions.Hosting.Tests/ManiaAPI.NadeoAPI.Extensions.Hosting.Tests.csproj" />
     <Project Path="Tests/ManiaAPI.NadeoAPI.Tests/ManiaAPI.NadeoAPI.Tests.csproj" />
