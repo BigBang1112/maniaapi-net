@@ -39,6 +39,8 @@ public sealed class CatalogGenerator : IIncrementalGenerator
         ("ManiaAPI.MasterServer.TMT.IAggregatedMasterServerTMT", "masterserver.tmt_aggregated", "trackmaniaturbo", "none", null),
         ("ManiaAPI.ManiaPlanetAPI.IManiaPlanetAPI", "maniaplanet.web", "maniaplanet", "none", null),
         ("ManiaAPI.ManiaPlanetAPI.IManiaPlanetIngameAPI", "maniaplanet.ingame", "maniaplanet", "none", null),
+        ("ManiaAPI.ManiaPlanetAPI.IManiaPlanetChannelRecordAPI", "maniaplanet.channel_record", "maniaplanet", "none", null),
+        ("ManiaAPI.ManiaPlanetAPI.IManiaPlanetChannelFeedbackAPI", "maniaplanet.channel_feedback", "maniaplanet", "none", null),
         ("ManiaAPI.TrackmaniaWS.ITrackmaniaWS", "trackmania.ws", "tmuf", "tmws", null),
         ("ManiaAPI.UnitedLadder.IUnitedLadder", "united.ladder", "tmuf", "none", null)
     ];

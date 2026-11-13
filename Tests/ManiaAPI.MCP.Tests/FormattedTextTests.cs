@@ -53,6 +53,18 @@ public class FormattedTextTests
     }
 
     [Test]
+    public async Task ChannelRecordApiNicknamesGainPlainSiblings()
+    {
+        // Shape of maniaplanet.channel_record.records
+        var raw = new JsonArray(new JsonObject { ["userLogin"] = "tona.", ["userNickname"] = "$i$fe0NADEO$000 $fffTona", ["rank"] = 2 });
+
+        FormattedText.AddPlain(raw);
+
+        await Assert.That(raw[0]!["userNicknamePlain"]!.GetValue<string>()).IsEqualTo("NADEO Tona");
+        await Assert.That(raw[0]!.AsObject().ContainsKey("userLoginPlain")).IsFalse();
+    }
+
+    [Test]
     public async Task SelectingAFormattedFieldKeepsItsPlainSibling()
     {
         var raw = new JsonObject

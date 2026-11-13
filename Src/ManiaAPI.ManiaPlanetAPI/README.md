@@ -13,6 +13,11 @@ Wraps https://maniaplanet.com/swagger (ManiaPlanet web API). This API does not r
   - Get title pack info (contains more info than from WebServices)
   - Search online servers (if you have login and token, allows filtering by favorites)
   - Downloading a title pack
+- Channel map leaderboards from the [Channel Record API](https://records.prod.live.maniaplanet.com/):
+  - Top 10 records with the ranks of chosen players
+  - Pages of records, up to 101 at once
+  - A player's record and rank
+- Channel map feedback totals (yes/no votes and star ratings) from the [Channel Feedback API](https://feedback.prod.live.maniaplanet.com/)
 
 ## Setup
 
@@ -43,6 +48,35 @@ if (user.Login != "username")
 {
 	throw new Exception("Invalid token");
 }
+```
+
+For leaderboards of channel maps, use the `ManiaPlanetChannelRecordAPI`. It doesn't need authorization.
+
+```cs
+using ManiaAPI.ManiaPlanetAPI;
+
+var channel = new ManiaPlanetChannelRecordAPI();
+
+// Top 10, the number of records, and the ranks of the given players
+var leaderboard = await channel.GetLeaderboardAsync("9W_9qjV56i67CWpYDclFyOhz5g", ["lbt76240"]);
+
+// Records 101 to 200
+var page = await channel.GetRecordsAsync("9W_9qjV56i67CWpYDclFyOhz5g", offset: 100, length: 100);
+
+// A player's record, or null Record when they have none
+var player = await channel.GetPlayerRecordAsync("9W_9qjV56i67CWpYDclFyOhz5g", "lbt76240");
+```
+
+For feedback of channel maps, use the `ManiaPlanetChannelFeedbackAPI`. Only the totals are public; votes and ratings of single maps need the game servers' credentials.
+
+```cs
+using ManiaAPI.ManiaPlanetAPI;
+
+var feedback = new ManiaPlanetChannelFeedbackAPI();
+
+var status = await feedback.GetStatusAsync();
+
+Console.WriteLine($"{status.YesNo.VotesYes} yes, {status.YesNo.VotesNo} no, {status.Stars.Notes5Star} five-star ratings");
 ```
 
 For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package.

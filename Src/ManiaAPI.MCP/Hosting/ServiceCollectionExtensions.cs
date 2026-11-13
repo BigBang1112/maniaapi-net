@@ -96,6 +96,8 @@ public static class ServiceCollectionExtensions
         });
         services.AddMasterServerTMT();
         services.AddManiaPlanetIngameAPI();
+        services.AddManiaPlanetChannelRecordAPI();
+        services.AddManiaPlanetChannelFeedbackAPI();
         services.AddManiaPlanetAPI(o =>
         {
             if (options.ManiaPlanet.Configured)

@@ -160,6 +160,8 @@ public sealed class InvocationContext(
                 : services.GetRequiredService<MasterServerMP4>(),
             "maniaplanet.web" => services.GetRequiredService<ManiaPlanetAPI.ManiaPlanetAPI>(),
             "maniaplanet.ingame" => services.GetRequiredService<ManiaPlanetAPI.ManiaPlanetIngameAPI>(),
+            "maniaplanet.channel_record" => services.GetRequiredService<ManiaPlanetAPI.ManiaPlanetChannelRecordAPI>(),
+            "maniaplanet.channel_feedback" => services.GetRequiredService<ManiaPlanetAPI.ManiaPlanetChannelFeedbackAPI>(),
             "trackmania.ws" => services.GetRequiredService<TrackmaniaWS.TrackmaniaWS>(),
             "united.ladder" => services.GetRequiredService<UnitedLadder.UnitedLadder>(),
             _ => throw new InvalidOperationException("Unknown catalog client.")

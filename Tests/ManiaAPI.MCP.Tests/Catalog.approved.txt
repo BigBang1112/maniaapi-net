@@ -1,3 +1,7 @@
+maniaplanet.channel_feedback.status [none, serviceOnly=False, readOnly=True, playerOnly=False]
+maniaplanet.channel_record.leaderboard [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, logins?: string[] = null, type?: string = "channel"
+maniaplanet.channel_record.player_record [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, login: string, type?: string = "channel"
+maniaplanet.channel_record.records [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, offset?: int = 0, length?: int = 100, type?: string = "channel"
 maniaplanet.ingame.download_title [none, serviceOnly=False, readOnly=True, playerOnly=False] titleId: string
 maniaplanet.ingame.title_by_uid [none, serviceOnly=False, readOnly=True, playerOnly=False] uid: string
 maniaplanet.web.dedicated_accounts [oauth, serviceOnly=False, readOnly=True, playerOnly=True]

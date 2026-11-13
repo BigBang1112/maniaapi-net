@@ -15,6 +15,7 @@ public static class FormattedText
     private static readonly HashSet<string> Fields = new(StringComparer.OrdinalIgnoreCase)
     {
         "nickname",
+        "userNickname",
         "name",
         "displayName",
         "mapName",
