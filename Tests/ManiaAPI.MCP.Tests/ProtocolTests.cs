@@ -5,7 +5,6 @@ using ManiaAPI.MCP.Tools;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.AspNetCore;
 using ModelContextProtocol.Client;
@@ -19,7 +18,7 @@ public class ProtocolTests
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
-        builder.Services.AddManiaAPI(new ConfigurationBuilder().Build());
+        builder.Services.AddManiaAPI(TestConfiguration.Create());
 
         if (handler is not null)
         {
@@ -122,6 +121,7 @@ public class ProtocolTests
                 typeof(MCP.Program).Assembly.Location,
                 "--toolsets", "exchange"
             ],
+            EnvironmentVariables = new Dictionary<string, string?> { ["ManiaAPI__UserAgent"] = TestConfiguration.UserAgent },
             Name = "ManiaAPI test server"
         });
 

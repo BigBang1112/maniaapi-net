@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.AspNetCore;
 using ModelContextProtocol.Client;
@@ -40,7 +39,7 @@ public class AccountLinkingTests
         {
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.UseTestServer();
-            builder.Services.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+            builder.Services.AddManiaAPI(TestConfiguration.Create(new Dictionary<string, string?>
             {
                 ["ManiaAPI:AccountLinking:Enabled"] = "true",
                 ["ManiaAPI:AccountLinking:PublicOrigin"] = "https://localhost",
@@ -52,7 +51,7 @@ public class AccountLinkingTests
                 ["ManiaAPI:TrackmaniaAPI:ClientSecret"] = "client-secret",
                 ["ManiaAPI:ManiaPlanet:ClientId"] = "client-id",
                 ["ManiaAPI:ManiaPlanet:ClientSecret"] = "client-secret"
-            }).Build());
+            }));
 
             builder.Services.PostConfigure<ManiaAPI.TrackmaniaAPI.Extensions.Hosting.Authentication.TrackmaniaAuthenticationOptions>(
                 "LinkTrackmania", settings => settings.Backchannel = oauth.CreateClient());

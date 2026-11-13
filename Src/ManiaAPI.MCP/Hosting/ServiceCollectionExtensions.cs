@@ -72,6 +72,13 @@ public static class ServiceCollectionExtensions
 
         AccountLinking.Add(services, options);
 
+        // Every upstream client comes from IHttpClientFactory, except NadeoAPI's, which NadeoAccount configures.
+        if (!string.IsNullOrWhiteSpace(options.UserAgent))
+        {
+            services.ConfigureHttpClientDefaults(builder => builder.ConfigureHttpClient(client =>
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent)));
+        }
+
         services.AddTMX(exchange => exchange.ConfigureHttpClient = builder => builder.ConfigureHttpClient(client =>
             client.MaxResponseContentBufferSize = options.Shaping.MaxResourceBytes));
         services.AddMasterServerTMUF();

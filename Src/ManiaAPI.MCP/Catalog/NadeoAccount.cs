@@ -23,7 +23,7 @@ public sealed class NadeoAccount : INadeoAccount, IHostedService, IDisposable
         services.AddNadeoAPI(o =>
         {
             o.Credentials = new NadeoAPICredentials(options.NadeoAPI.Login!, options.NadeoAPI.Password!);
-            o.UserAgent = options.NadeoAPI.UserAgent;
+            o.UserAgent = string.IsNullOrWhiteSpace(options.UserAgent) ? null : options.UserAgent;
         });
 
         provider = services.BuildServiceProvider();

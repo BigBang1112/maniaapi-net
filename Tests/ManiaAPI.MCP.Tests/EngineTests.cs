@@ -3,7 +3,6 @@ using ManiaAPI.MCP.Catalog;
 using ManiaAPI.MCP.Configuration;
 using ManiaAPI.MCP.Engine;
 using ManiaAPI.MCP.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ManiaAPI.MCP.Tests;
@@ -14,7 +13,7 @@ public class EngineTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddManiaAPI(new ConfigurationBuilder().Build());
+        services.AddManiaAPI(TestConfiguration.Create());
 
         if (handler is not null)
         {

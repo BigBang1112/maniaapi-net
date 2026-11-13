@@ -2,7 +2,6 @@ using ManiaAPI.MCP.Catalog;
 using ManiaAPI.MCP.Configuration;
 using ManiaAPI.MCP.Engine;
 using ManiaAPI.MCP.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ManiaAPI.MCP.Tools;
 using ModelContextProtocol.Protocol;
@@ -34,11 +33,11 @@ public class LiveGatewayTests
     [Test]
     public async Task Trackmania2020Read()
     {
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        var configuration = TestConfiguration.Create(new Dictionary<string, string?>
         {
             ["ManiaAPI:NadeoAPI:Login"] = LiveSettings.NadeoAPI.ServiceAccount.Login,
             ["ManiaAPI:NadeoAPI:Password"] = LiveSettings.NadeoAPI.ServiceAccount.Password
-        }).Build();
+        });
 
         var collection = new ServiceCollection();
         collection.AddLogging();

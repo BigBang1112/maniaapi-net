@@ -4,7 +4,6 @@ using ManiaAPI.MCP.Configuration;
 using ManiaAPI.MCP.Engine;
 using ManiaAPI.MCP.Tools;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 using ManiaAPI.MCP.Hosting;
 
 namespace ManiaAPI.MCP.Tests;
@@ -41,14 +40,14 @@ public class CatalogTests
     {
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaAPI(new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(
+        collection.AddManiaAPI(TestConfiguration.Create(
             new Dictionary<string, string?>
             {
                 ["ManiaAPI:NadeoAPI:Login"] = "test-login",
                 ["ManiaAPI:NadeoAPI:Password"] = "test-password",
                 ["ManiaAPI:TrackmaniaAPI:ClientId"] = "test-client",
                 ["ManiaAPI:TrackmaniaAPI:ClientSecret"] = "test-secret"
-            }).Build());
+            }));
 
         using var services = collection.BuildServiceProvider();
         var list = services.GetRequiredService<GatewayTools>().List();
@@ -66,7 +65,7 @@ public class CatalogTests
         // Clients such as the Anthropic API reject anyOf/oneOf/allOf at the top level of an input schema.
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(
+        collection.AddManiaAPI(TestConfiguration.Create(
             new Dictionary<string, string?>
             {
                 ["ManiaAPI:ExposeOperationsAsTools"] = "true",
@@ -74,7 +73,7 @@ public class CatalogTests
                 ["ManiaAPI:NadeoAPI:Password"] = "test-password",
                 ["ManiaAPI:TrackmaniaAPI:ClientId"] = "test-client",
                 ["ManiaAPI:TrackmaniaAPI:ClientSecret"] = "test-secret"
-            }).Build());
+            }));
 
         using var services = collection.BuildServiceProvider();
         var tools = services.GetRequiredService<GatewayTools>().List().Tools;

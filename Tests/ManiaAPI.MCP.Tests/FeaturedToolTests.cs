@@ -3,7 +3,6 @@ using ManiaAPI.MCP.Configuration;
 using ManiaAPI.MCP.Hosting;
 using ManiaAPI.MCP.Tools;
 using ManiaAPI.NadeoAPI;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ManiaAPI.MCP.Tests;
@@ -58,11 +57,11 @@ public class FeaturedToolTests
     {
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        collection.AddManiaAPI(TestConfiguration.Create(new Dictionary<string, string?>
         {
             ["ManiaAPI:NadeoAPI:Login"] = "dedicated-login",
             ["ManiaAPI:NadeoAPI:Password"] = "dedicated-password"
-        }).Build());
+        }));
 
         collection.AddSingleton(_ => new NadeoServices(fake.CreateClient(), new NadeoAPIHandler(), automaticallyAuthorize: false));
         collection.AddSingleton<INadeoAccount>(provider => new FakeAccount(provider));

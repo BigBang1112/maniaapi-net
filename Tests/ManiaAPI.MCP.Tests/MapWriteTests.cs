@@ -5,7 +5,6 @@ using ManiaAPI.MCP.Engine;
 using ManiaAPI.MCP.Hosting;
 using ManiaAPI.NadeoAPI;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ManiaAPI.MCP.Tests;
@@ -24,12 +23,12 @@ public class MapWriteTests
 
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        collection.AddManiaAPI(TestConfiguration.Create(new Dictionary<string, string?>
         {
             ["ManiaAPI:AllowWrites"] = "true",
             ["ManiaAPI:NadeoAPI:Login"] = "service-login",
             ["ManiaAPI:NadeoAPI:Password"] = "service-password"
-        }).Build());
+        }));
 
         collection.AddSingleton(_ => new NadeoServices(fake.CreateClient(), new NadeoAPIHandler(), automaticallyAuthorize: false));
         collection.AddSingleton<INadeoAccount>(provider => new FakeAccount(provider));

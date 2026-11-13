@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.AspNetCore;
 using ModelContextProtocol.Client;
@@ -39,12 +38,12 @@ public class WriteTests
         var calls = 0;
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseUrls("http://127.0.0.1:0");
-        builder.Services.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        builder.Services.AddManiaAPI(TestConfiguration.Create(new Dictionary<string, string?>
         {
             ["ManiaAPI:AllowWrites"] = "true",
             ["ManiaAPI:Toolsets:0"] = "exchange",
             ["ManiaAPI:Http:ApiKeys:0"] = "write-test"
-        }).Build());
+        }));
 
         builder.Services.AddSingleton(new[] { WriteOperation(() => Interlocked.Increment(ref calls)) });
         builder.Services.AddMcpServer()

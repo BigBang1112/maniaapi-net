@@ -28,14 +28,16 @@ Then run it with `maniaapi-mcp`. Stdio is the default, and all games are enabled
 
 ## Setup
 
+`ManiaAPI:UserAgent` is required: set it to something that identifies you, like `my-assistant/1.0 (contact: you@example.com)`. It's sent to every upstream service, followed by the library's own User-Agent, so the people running those services can tell who's calling. The server won't start without it.
+
 ```
-claude mcp add maniaapi -- maniaapi-mcp
+claude mcp add maniaapi -e ManiaAPI__UserAgent="my-assistant/1.0 (contact: you@example.com)" -- maniaapi-mcp
 ```
 
 Only want some games? Pick toolsets from `trackmania2020`, `exchange`, `tmuf`, `tmnf`, `maniaplanet`, and `trackmaniaturbo`:
 
 ```
-claude mcp add maniaapi -- maniaapi-mcp --toolsets tmnf,exchange
+claude mcp add maniaapi -e ManiaAPI__UserAgent="my-assistant/1.0 (contact: you@example.com)" -- maniaapi-mcp --toolsets tmnf,exchange
 ```
 
 Most clients accept a JSON config like this:
@@ -46,6 +48,7 @@ Most clients accept a JSON config like this:
     "maniaapi": {
       "command": "maniaapi-mcp",
       "env": {
+        "ManiaAPI__UserAgent": "my-assistant/1.0 (contact: you@example.com)",
         "ManiaAPI__NadeoAPI__Login": "service_name",
         "ManiaAPI__NadeoAPI__Password": "ls>97jO>e3>>D/Ce"
       }
@@ -63,8 +66,6 @@ Exchange, master servers, and ManiaPlanet reads work without any credentials. Th
 - `ManiaAPI:TrackmaniaWS:Username` and `Password` for Trackmania Web Services
 
 Pass them as environment variables (`:` becomes `__`), user secrets, or `appsettings.json`. Missing credentials just hide the operations that need them.
-
-It's also nice to set `ManiaAPI:NadeoAPI:UserAgent` to something that identifies you.
 
 ## Run over HTTP
 
@@ -97,5 +98,6 @@ Some operations act as a player rather than an app (favorites, player clubs, Man
 ## Build from source
 
 ```
+dotnet user-secrets set ManiaAPI:UserAgent "my-assistant/1.0 (contact: you@example.com)" --project Src/ManiaAPI.MCP
 dotnet run --project Src/ManiaAPI.MCP
 ```

@@ -12,9 +12,34 @@ public class ConfigurationTests
     [Test]
     public async Task MissingUpstreamCredentialsAreValid()
     {
-        var result = new McpOptionsValidator().Validate(null, new McpOptions());
+        var result = new McpOptionsValidator().Validate(null, new McpOptions { UserAgent = TestConfiguration.UserAgent });
 
         await Assert.That(result.Succeeded).IsTrue();
+    }
+
+    [Test]
+    [Arguments(null)]
+    [Arguments("   ")]
+    public async Task MissingUserAgentFailsValidation(string? userAgent)
+    {
+        var result = new McpOptionsValidator().Validate(null, new McpOptions { UserAgent = userAgent });
+
+        await Assert.That(result.Failed).IsTrue();
+        await Assert.That(result.FailureMessage!).Contains("Set ManiaAPI:UserAgent");
+    }
+
+    [Test]
+    public async Task ServerWithoutUserAgentDoesNotStart()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddManiaAPI(new ConfigurationBuilder().Build());
+
+        using var provider = services.BuildServiceProvider();
+
+        await Assert.That(() => provider.GetRequiredService<McpOptions>())
+            .Throws<Microsoft.Extensions.Options.OptionsValidationException>()
+            .WithMessageContaining("ManiaAPI:UserAgent");
     }
 
     [Test]
@@ -68,7 +93,7 @@ public class ConfigurationTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddManiaAPI(new ConfigurationBuilder().Build());
+        services.AddManiaAPI(TestConfiguration.Create());
 
         using var provider = services.BuildServiceProvider();
 
@@ -78,11 +103,11 @@ public class ConfigurationTests
     [Test]
     public async Task ConfiguredArraysReplaceDefaults()
     {
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        var configuration = TestConfiguration.Create(new Dictionary<string, string?>
         {
             ["ManiaAPI:Toolsets:0"] = "exchange",
             ["ManiaAPI:Exchange:Sites:0"] = "TMNF"
-        }).Build();
+        });
 
         var services = new ServiceCollection();
         services.AddLogging();
@@ -99,11 +124,11 @@ public class ConfigurationTests
     [Test]
     public async Task CommandLineToolsetsReplaceConfiguredArray()
     {
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        var configuration = TestConfiguration.Create(new Dictionary<string, string?>
         {
             ["ManiaAPI:Toolsets:0"] = "trackmania2020",
             ["ManiaAPI:Toolsets:1"] = "exchange"
-        }).Build();
+        });
 
         var services = new ServiceCollection();
         services.AddLogging();
@@ -154,11 +179,11 @@ public class ConfigurationTests
 
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        collection.AddManiaAPI(TestConfiguration.Create(new Dictionary<string, string?>
         {
             ["ManiaAPI:TrackmaniaAPI:ClientId"] = "test-client",
             ["ManiaAPI:TrackmaniaAPI:ClientSecret"] = "test-secret"
-        }).Build());
+        }));
         collection.AddHttpClient("TrackmaniaAPI").ConfigurePrimaryHttpMessageHandler(() => fake);
 
         using var services = collection.BuildServiceProvider();
@@ -171,6 +196,50 @@ public class ConfigurationTests
 
         await Assert.That(fake.Requests.Count).IsEqualTo(credentialsWork ? 2 : 1);
         await Assert.That(health.Ready).IsEqualTo(credentialsWork);
+    }
+
+    [Test]
+    public async Task UserAgentIsSentToEveryUpstreamService()
+    {
+        const string userAgent = "maniaapi-tests/1.0 (contact: test)";
+        var fake = FakeHttpMessageHandler.Json("[\"Race\"]");
+
+        var collection = new ServiceCollection();
+        collection.AddLogging();
+        collection.AddManiaAPI(TestConfiguration.Create(new Dictionary<string, string?>
+        {
+            ["ManiaAPI:UserAgent"] = userAgent,
+            ["ManiaAPI:NadeoAPI:Login"] = "test-login",
+            ["ManiaAPI:NadeoAPI:Password"] = "test-password"
+        }));
+        collection.AddHttpClient("MX_Trackmania").ConfigurePrimaryHttpMessageHandler(() => fake);
+
+        using var services = collection.BuildServiceProvider();
+        using var request = services.CreateScope();
+
+        // A client from the shared IHttpClientFactory: the exchange.
+        await services.GetRequiredService<Engine.OperationEngine>().InvokeAsync("mx.maptypes", EngineTests.Json("{}"),
+            Catalog.GameScope.Create(services.GetRequiredService<McpOptions>(), "trackmania2020"), request.ServiceProvider);
+
+        var sent = fake.Request.Headers["User-Agent"];
+
+        await Assert.That(sent).StartsWith("maniaapi-tests/1.0");
+        await Assert.That(sent).Contains("(contact: test)");
+        await Assert.That(sent).Contains("(TMX; Discord=bigbang1112)");
+
+        // NadeoAPI's clients, which live in the NadeoAccount's own container.
+        var nadeo = services.GetRequiredService<Catalog.NadeoAccount>().Services.GetRequiredService<NadeoAPI.NadeoServices>();
+
+        await Assert.That(nadeo.Client.DefaultRequestHeaders.UserAgent.ToString()).StartsWith(userAgent);
+    }
+
+    [Test]
+    public async Task InvalidUserAgentFailsValidation()
+    {
+        var result = new McpOptionsValidator().Validate(null, new McpOptions { UserAgent = "agent\r\nX-Injected: yes" });
+
+        await Assert.That(result.Failed).IsTrue();
+        await Assert.That(result.FailureMessage!).Contains("UserAgent");
     }
 
     private static string Base64Url(string value)

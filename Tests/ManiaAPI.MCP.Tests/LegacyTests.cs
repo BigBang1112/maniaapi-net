@@ -3,7 +3,6 @@ using ManiaAPI.MCP.Configuration;
 using ManiaAPI.MCP.Engine;
 using ManiaAPI.MCP.Hosting;
 using ManiaAPI.MCP.Tools;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ManiaAPI.MCP.Tests;
@@ -22,7 +21,7 @@ public class LegacyTests
 
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaAPI(new ConfigurationBuilder().Build());
+        collection.AddManiaAPI(TestConfiguration.Create());
         collection.AddHttpClient(client).ConfigurePrimaryHttpMessageHandler(() => fake);
 
         using var services = collection.BuildServiceProvider();
@@ -54,7 +53,7 @@ public class LegacyTests
     {
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaAPI(new ConfigurationBuilder().Build());
+        collection.AddManiaAPI(TestConfiguration.Create());
         collection.Configure<McpOptions>(options => options.Featured["exchange"] = new FeaturedOptions { Tools = [] });
 
         using var services = collection.BuildServiceProvider();

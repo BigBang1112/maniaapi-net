@@ -9,6 +9,14 @@ public sealed class McpOptions
     public string[] Toolsets { get; set; } = [.. SupportedToolsets];
     public bool AllowWrites { get; set; }
     public bool ExposeOperationsAsTools { get; set; }
+
+    /// <summary>
+    /// Required. Identifies this deployment to every upstream service, like <c>my-assistant/1.0 (contact: you@example.com)</c>,
+    /// so their operators can tell deployments apart and reach whoever runs one. The libraries append their own
+    /// product and contact details after it.
+    /// </summary>
+    public string? UserAgent { get; set; }
+
     public HttpOptions Http { get; set; } = new();
     public ShapingOptions Shaping { get; set; } = new();
     public NadeoOptions NadeoAPI { get; set; } = new();

@@ -34,6 +34,15 @@ public sealed class McpOptionsValidator : IValidateOptions<McpOptions>
             errors.Add("AccountLinking requires StorePath, DataProtectionKeyPath, and an HTTPS PublicOrigin (HTTP is permitted on loopback).");
         }
 
+        if (string.IsNullOrWhiteSpace(options.UserAgent))
+        {
+            errors.Add("UserAgent is required. Set ManiaAPI:UserAgent to identify this deployment to the upstream services, like 'my-assistant/1.0 (contact: you@example.com)'.");
+        }
+        else if (!IsValidUserAgent(options.UserAgent))
+        {
+            errors.Add("UserAgent must be a valid User-Agent header value, like 'my-assistant/1.0 (contact: you@example.com)'.");
+        }
+
         if (options.Exchange.Sites.Any(x => !Enum.GetNames<TMX.TmxSite>().Contains(x)) ||
             options.Exchange.MxSites.Any(x => !Enum.GetNames<TMX.MxSite>().Contains(x)))
         {
@@ -48,5 +57,12 @@ public sealed class McpOptionsValidator : IValidateOptions<McpOptions>
         }
 
         return errors.Count == 0 ? ValidateOptionsResult.Success : ValidateOptionsResult.Fail(errors);
+    }
+
+    private static bool IsValidUserAgent(string value)
+    {
+        using var message = new HttpRequestMessage();
+
+        return message.Headers.UserAgent.TryParseAdd(value);
     }
 }

@@ -3,7 +3,6 @@ using System.Text.Json.Nodes;
 using ManiaAPI.MCP.Catalog;
 using ManiaAPI.MCP.Hosting;
 using ManiaAPI.MCP.Tools;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
 
@@ -128,7 +127,7 @@ public class DiscoveryTests
 
         var collection = new ServiceCollection();
         collection.AddLogging();
-        collection.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(settings).Build());
+        collection.AddManiaAPI(TestConfiguration.Create(settings));
 
         return collection.BuildServiceProvider();
     }
