@@ -8,6 +8,15 @@ namespace ManiaAPI.TrackmaniaWS.Tests.Live;
 public class TrackmaniaWSLiveTests
 {
     [Test]
+    public async Task PingAsync_ServiceIsUp()
+    {
+        // The test route needs no credentials, so any are fine
+        using var ws = new TrackmaniaWS("", "");
+
+        await Assert.That(await ws.PingAsync()).IsTrue();
+    }
+
+    [Test]
     public async Task GetPlayerAsync_WrongCredentials_IsUnauthorized()
     {
         using var ws = new TrackmaniaWS($"nosuchuser{Guid.NewGuid():N}"[..20], Guid.NewGuid().ToString("N"));

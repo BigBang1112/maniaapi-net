@@ -10,6 +10,46 @@ public class TrackmaniaWSTests
 
     private static readonly string ExpectedBasicCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{ApiUser}:{ApiPassword}"));
 
+    // As returned by the live test route
+    private const string FoobarJson = """
+        ["GET",{"anInt":1337,"aString":"quarante-deux","anObject":{"someBlabla":["Hello world",1337],"foo":"bar"},"anArray":["un","deux","trois",4]}]
+        """;
+
+    [Test]
+    public async Task PingAsync_RequestsTestRouteWithoutCredentials()
+    {
+        var fake = FakeHttpMessageHandler.Json(FoobarJson);
+        using var ws = CreateWs(fake);
+
+        var up = await ws.PingAsync();
+
+        await Assert.That(up).IsTrue();
+        await Assert.That(fake.Request.Url).IsEqualTo("http://ws.trackmania.com/foobar/index.json");
+        await Assert.That(fake.Request.Authorization).IsNull();
+    }
+
+    [Test]
+    [Arguments("""["GET",{"anInt":42}]""")]
+    [Arguments("""{"anInt":1337}""")]
+    [Arguments("""["POST",{"anInt":1337}]""")]
+    [Arguments("<html>Maintenance</html>")]
+    public async Task PingAsync_UnexpectedResponse_ReturnsFalse(string body)
+    {
+        var fake = FakeHttpMessageHandler.Text(body, "application/json");
+        using var ws = CreateWs(fake);
+
+        await Assert.That(await ws.PingAsync()).IsFalse();
+    }
+
+    [Test]
+    public async Task PingAsync_ServerError_ReturnsFalse()
+    {
+        var fake = new FakeHttpMessageHandler(_ => FakeResponse.Status(HttpStatusCode.ServiceUnavailable));
+        using var ws = CreateWs(fake);
+
+        await Assert.That(await ws.PingAsync()).IsFalse();
+    }
+
     [Test]
     public async Task GetPlayerAsync_RequestsPlayer()
     {

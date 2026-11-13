@@ -271,7 +271,7 @@ public sealed class CatalogGenerator : IIncrementalGenerator
 
     private static bool IsRead(string methodName)
     {
-        return new[] { "Get", "Search", "Check", "Download", "Fetch", "Test" }
+        return new[] { "Get", "Search", "Check", "Download", "Fetch", "Test", "Ping" }
             .Any(prefix => methodName.StartsWith(prefix, StringComparison.Ordinal));
     }
 

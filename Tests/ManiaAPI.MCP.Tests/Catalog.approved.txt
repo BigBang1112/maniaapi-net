@@ -347,5 +347,6 @@ trackmania.api.user [oauth, serviceOnly=False, readOnly=True, playerOnly=True]
 trackmania.api.user_admin_clubs [oauth, serviceOnly=False, readOnly=True, playerOnly=True]
 trackmania.api.user_favorite_maps [oauth, serviceOnly=False, readOnly=True, playerOnly=True] length?: int = 10, offset?: int = 0
 trackmania.api.user_map_records [oauth, serviceOnly=False, readOnly=True, playerOnly=True] mapIds: guid[]
+trackmania.ws.ping [tmws, serviceOnly=False, readOnly=True, playerOnly=False]
 trackmania.ws.player [tmws, serviceOnly=False, readOnly=True, playerOnly=False] login: string
 united.ladder.player [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string

@@ -18,6 +18,13 @@ public interface ITrackmaniaWS : IDisposable
     /// Gets a player by login.
     /// </summary>
     Task<Player> GetPlayerAsync(string login, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks that the web services are up, using their public test route, which needs no credentials.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True when the service answers with its expected test response, otherwise false.</returns>
+    Task<bool> PingAsync(CancellationToken cancellationToken = default);
 }
 
 public class TrackmaniaWS : ITrackmaniaWS
@@ -63,6 +70,34 @@ public class TrackmaniaWS : ITrackmaniaWS
     public virtual async Task<Player> GetPlayerAsync(string login, CancellationToken cancellationToken = default)
     {
         return await GetJsonAsync($"tmf/players/{Uri.EscapeDataString(login)}/", TrackmaniaWSJsonContext.Default.Player, cancellationToken);
+    }
+
+    public virtual async Task<bool> PingAsync(CancellationToken cancellationToken = default)
+    {
+        // The test route answers a fixed payload: ["GET", { "anInt": 1337, "aString": "quarante-deux", ... }]
+        using var response = await Client.GetAsync("foobar/index.json", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+            var root = document.RootElement;
+
+            return root.ValueKind == JsonValueKind.Array && root.GetArrayLength() == 2 &&
+                root[0].ValueKind == JsonValueKind.String && root[0].GetString() == "GET" &&
+                root[1].ValueKind == JsonValueKind.Object &&
+                root[1].TryGetProperty("anInt", out var anInt) && anInt.ValueKind == JsonValueKind.Number &&
+                anInt.TryGetInt32(out var value) && value == 1337;
+        }
+        catch (JsonException)
+        {
+            // Something else answered, like an error page
+            return false;
+        }
     }
 
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
