@@ -138,7 +138,8 @@ public sealed class OperationEngine
 
         if (overload is null)
         {
-            throw new ArgumentException("No overload accepts this argument combination. Use maniaapi_describe for valid signatures.");
+            throw new ArgumentException("No overload accepts this argument combination. Valid combinations: " +
+                string.Join("; ", operation.Overloads.Select(candidate => "(" + candidate.Signature + ")")) + ".");
         }
 
         using var activity = Activities.StartActivity(id);
@@ -197,9 +198,11 @@ public sealed class OperationEngine
             activity?.SetTag("http.response.status_code", status);
             activity?.SetStatus(ActivityStatusCode.Error);
 
-            if (!operation.PlayerOnly && (status == 401 || exception is HttpRequestException { StatusCode: null }))
+            // Only a credential that can't authorize is unhealthy. Permission denials on single operations
+            // and upstream outages (network errors, 5xx) are reported to the caller, not to readiness.
+            if (!operation.PlayerOnly && status == 401)
             {
-                health.Record(operation.Requires, authorized: false, operation.OAuthProvider);
+                health.RecordUnauthorized(operation.Requires, operation.OAuthProvider, services);
             }
 
             if (status == 401 && operation.ServiceAccountOnly)

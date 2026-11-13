@@ -31,7 +31,10 @@ public class LegacyTests
         var result = await services.GetRequiredService<OperationEngine>().InvokeAsync("masterserver." + game + ".player_infos",
             EngineTests.Json("{\"login\":\"player\"}"), GameScope.Create(options), request.ServiceProvider);
 
-        await Assert.That(result["data"]!["login"]!.GetValue<string>()).IsEqualTo("player");
+        // The operation calls GetPlayerInfosResponseAsync, so the master server timing comes along.
+        await Assert.That(result["data"]!["result"]!["login"]!.GetValue<string>()).IsEqualTo("player");
+        await Assert.That(result["data"]!["executionTime"]!.GetValue<string>()).IsEqualTo("00:00:00.0123000");
+        await Assert.That(result["data"]!["details"]!["requestTime"]).IsNotNull();
         await Assert.That(fake.Request.Uri.Host).IsEqualTo(host);
     }
 

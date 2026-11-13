@@ -36,19 +36,60 @@ public sealed class UpstreamHealth
 
     public void Record(string requires, bool authorized, string? provider = null)
     {
-        if (requires == "none" && provider != "maniaplanet")
-        {
-            return;
-        }
+        var key = Key(requires, provider);
 
-        var key = requires == "nadeo" ? "nadeo" : requires == "tmws" ? "tmws" : "oauth:" + (provider ?? "trackmania");
-
-        if (requires == "none" && !states.ContainsKey(key))
+        if (key is null || requires == "none" && !states.ContainsKey(key))
         {
             return;
         }
 
         states[key] = authorized ? "authorized" : "failed";
+    }
+
+    /// <summary>
+    /// Records an upstream 401 as a credential failure only when the credential holds no valid token.
+    /// A 401 while a token is valid means the account lacks permission for that one operation (for example
+    /// a dedicated server login calling a service-account-only route); it says nothing about whether the
+    /// credential works, so it must not take the instance out of rotation.
+    /// </summary>
+    public void RecordUnauthorized(string requires, string? provider, IServiceProvider services)
+    {
+        var key = Key(requires, provider);
+
+        if (key is null || !states.ContainsKey(key))
+        {
+            return;
+        }
+
+        if (key != "tmws" && Expirations(key, services).Any(expiration => expiration > DateTimeOffset.UtcNow))
+        {
+            return;
+        }
+
+        states[key] = "failed";
+    }
+
+    private static string? Key(string requires, string? provider)
+    {
+        return requires switch
+        {
+            "nadeo" => "nadeo",
+            "tmws" => "tmws",
+            "oauth" => "oauth:" + (provider ?? "trackmania"),
+            "none" when provider == "maniaplanet" => "oauth:maniaplanet",
+            _ => null
+        };
+    }
+
+    private static DateTimeOffset[] Expirations(string key, IServiceProvider services)
+    {
+        return key switch
+        {
+            "nadeo" => services.GetRequiredService<NadeoAccount>().Expirations().ToArray(),
+            "oauth:trackmania" when services.GetRequiredService<TrackmaniaAPI.TrackmaniaAPIHandler>().Payload?.ExpirationTime is { } trackmania => [trackmania],
+            "oauth:maniaplanet" when services.GetRequiredService<ManiaPlanetAPI.ManiaPlanetAPIHandler>().Payload?.ExpirationTime is { } planet => [planet],
+            _ => []
+        };
     }
 
     public JsonObject Snapshot(IServiceProvider? services = null)
@@ -64,15 +105,7 @@ public sealed class UpstreamHealth
                     continue;
                 }
 
-                var expirations = key == "nadeo"
-                    ? services.GetRequiredService<NadeoAccount>().Expirations().ToArray()
-                    : key == "oauth:trackmania" && services.GetRequiredService<TrackmaniaAPI.TrackmaniaAPIHandler>().Payload?.ExpirationTime is { } trackmania
-                        ? [trackmania]
-                        : key == "oauth:maniaplanet" && services.GetRequiredService<ManiaPlanetAPI.ManiaPlanetAPIHandler>().Payload?.ExpirationTime is { } planet
-                            ? [planet]
-                            : Array.Empty<DateTimeOffset>();
-
-                snapshot[key] = expirations.Any(expiration => expiration > DateTimeOffset.UtcNow)
+                snapshot[key] = Expirations(key, services).Any(expiration => expiration > DateTimeOffset.UtcNow)
                     ? "authorized"
                     : "notYetAuthorized";
             }

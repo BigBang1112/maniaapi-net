@@ -81,32 +81,36 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
             {
                 if (Routes.TryGetValue(alias.Name, out var routes))
                 {
-                    var variants = new JsonArray();
+                    var schemas = new List<JsonObject>();
                     var outputs = new JsonArray();
+                    var modes = new List<string>();
+                    var defaultMode = routes.First(route => route.Operation == alias.Operation).Mode;
 
                     foreach (var route in routes.Where(route => available.ContainsKey(route.Operation)))
                     {
                         var target = available[route.Operation];
                         var schema = target.Schema(scope.Sites(target), scope.InferSite && scope.Sites(target).Length == 1);
-                        var overloads = schema["anyOf"] is JsonArray nested ? nested.ToArray() : [schema];
+                        var required = schema["required"]!.AsArray().Select(x => x!.GetValue<string>()).ToHashSet(StringComparer.Ordinal);
+                        var fields = schema["properties"]!.AsObject().Select(x => x.Key + (required.Contains(x.Key) ? "" : "?"));
 
-                        foreach (var overload in overloads)
-                        {
-                            overload!["properties"]!["mode"] = new JsonObject { ["type"] = "string", ["const"] = route.Mode };
-
-                            if (route.Operation != alias.Operation)
-                            {
-                                overload["required"]!.AsArray().Add("mode");
-                            }
-                        }
-
-                        CatalogMetadata.PrefixReferences(schema, "#/anyOf/" + variants.Count);
-                        variants.Add(schema);
+                        modes.Add($"{route.Mode}{(route.Mode == defaultMode ? " (default)" : "")}: {string.Join(", ", fields)}");
+                        schemas.Add(schema);
                         outputs.Add(target.Overloads[0].OutputSchema.DeepClone());
                     }
 
-                    yield return Tool(alias.Name, alias.Description + " Choose mode to select a related view.",
-                        new JsonObject { ["type"] = "object", ["anyOf"] = variants }, new JsonObject { ["anyOf"] = outputs });
+                    // One flat schema: only fields every mode requires stay required at the top level, and the
+                    // engine validates the chosen mode's own schema before calling upstream.
+                    var input = CatalogMetadata.Merge(schemas);
+                    input["properties"]!["mode"] = new JsonObject
+                    {
+                        ["type"] = "string",
+                        ["enum"] = new JsonArray(routes.Where(route => available.ContainsKey(route.Operation))
+                            .Select(route => (JsonNode?)JsonValue.Create(route.Mode)).ToArray()),
+                        ["default"] = defaultMode
+                    };
+
+                    yield return Tool(alias.Name, alias.Description + " Modes and their fields (? = optional): " + string.Join("; ", modes) + ".",
+                        input, new JsonObject { ["anyOf"] = outputs });
                 }
                 else
                 {
@@ -118,7 +122,7 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
 
         if (Enabled("trackmania2020", "trackmania2020_player") && available.ContainsKey("nadeo.core.player_zone"))
         {
-            yield return Tool("trackmania2020_player", "Resolve an account ID or display name, then get the player's zone, trophies, and club tag when available.",
+            yield return Tool("trackmania2020_player", "Supply exactly one of accountId or displayName. Resolves the player, then gets their zone, plus trophies and club tag when the configured account may read them.",
                 Parse("""
                     {
                       "type": "object",
@@ -131,18 +135,6 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
                           "type": "string"
                         }
                       },
-                      "oneOf": [
-                        {
-                          "required": [
-                            "accountId"
-                          ]
-                        },
-                        {
-                          "required": [
-                            "displayName"
-                          ]
-                        }
-                      ],
                       "additionalProperties": false
                     }
                     """), Parse("""
@@ -355,14 +347,20 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
         }
 
         var data = new JsonObject();
-        var notes = new JsonArray();
+        var notes = new List<string>();
         var available = engine.Available(scope).Select(operation => operation.Id).ToHashSet(StringComparer.Ordinal);
 
         if (name == "trackmania2020_player")
         {
             string account;
+            var hasAccountId = arguments.TryGetProperty("accountId", out var supplied);
 
-            if (arguments.TryGetProperty("accountId", out var supplied))
+            if (hasAccountId == arguments.TryGetProperty("displayName", out _))
+            {
+                throw new ArgumentException("Supply exactly one of accountId or displayName.");
+            }
+
+            if (hasAccountId)
             {
                 account = supplied.GetString()!;
             }
@@ -381,14 +379,15 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
             data["accountId"] = account;
             await Add("zone", "nadeo.core.player_zone", new JsonObject { ["accountId"] = account });
 
+            // Dedicated server logins are denied these; the zone is still worth returning on its own.
             if (available.Contains("nadeo.core.player_trophy_summary"))
             {
-                await Add("trophies", "nadeo.core.player_trophy_summary", new JsonObject { ["accountId"] = account });
+                await Optional("trophies", "nadeo.core.player_trophy_summary", new JsonObject { ["accountId"] = account });
             }
 
             if (available.Contains("nadeo.core.player_club_tags"))
             {
-                await Add("clubTags", "nadeo.core.player_club_tags", new JsonObject { ["accountIds"] = new JsonArray(account) });
+                await Optional("clubTags", "nadeo.core.player_club_tags", new JsonObject { ["accountIds"] = new JsonArray(account) });
             }
         }
         else if (name == "trackmania2020_track_of_the_day")
@@ -401,7 +400,7 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
 
             if (available.Contains("nadeo.meet.current_cup_of_the_day"))
             {
-                await Add("cupOfTheDay", "nadeo.meet.current_cup_of_the_day", new JsonObject());
+                await Optional("cupOfTheDay", "nadeo.meet.current_cup_of_the_day", new JsonObject());
             }
         }
         else
@@ -409,28 +408,27 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
             throw new ArgumentException("Unknown featured tool.");
         }
 
-        var shaped = ResultShaper.Shape(data, null, options.Shaping);
-        foreach (var note in notes)
-        {
-            shaped["truncation"]!.AsArray().Add(note?.DeepClone());
-        }
-
-        if (shaped.ToJsonString().Length > options.Shaping.MaxChars)
-        {
-            shaped["data"] = null;
-            shaped["truncation"] = new JsonArray("The combined result exceeded MaxChars; use a narrower catalog operation.");
-        }
-
-        return shaped;
+        // Each part already fits MaxChars on its own; shaping the combination cuts it down the same way.
+        return ResultShaper.Shape(data, null, options.Shaping, notes);
 
         async Task Add(string field, string operation, JsonObject input)
         {
             var result = await Call(operation, input, scope, services, cancellationToken);
             data[field] = result["data"]?.DeepClone();
+            notes.AddRange(Notes(field, result));
+        }
 
-            foreach (var note in result["truncation"]!.AsArray())
+        // A part the configured account can't read, or that is missing upstream, leaves a note instead of
+        // failing the whole tool.
+        async Task Optional(string field, string operation, JsonObject input)
+        {
+            try
             {
-                notes.Add(note?.DeepClone());
+                await Add(field, operation, input);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
+            {
+                notes.Add($"{field} unavailable: {OperationEngine.Error(exception)["message"]}");
             }
         }
     }
@@ -455,6 +453,7 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
         }, scope, services, token);
 
         var data = new JsonObject { ["details"] = details["data"]?.DeepClone() };
+        var notes = Notes("details", details).ToList();
 
         if (kind != "mappack")
         {
@@ -472,10 +471,20 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
             {
                 var summary = await Call(prefix + "." + asset + "_gbx_header", input, scope, services, token);
                 data["header"] = summary["data"]?.DeepClone();
+                notes.AddRange(Notes("header", summary));
             }
         }
 
-        return ResultShaper.Shape(data, null, options.Shaping);
+        return ResultShaper.Shape(data, null, options.Shaping, notes);
+    }
+
+    /// <summary>
+    /// The truncation notes of one part of a combined result, with their paths moved under that part's field.
+    /// </summary>
+    private static IEnumerable<string> Notes(string field, JsonObject result)
+    {
+        return result["truncation"]!.AsArray().Select(note => note!.GetValue<string>()).Select(note =>
+            note.StartsWith('$') ? "$." + field + note[1..] : field + ": " + note);
     }
 
     private Task<JsonObject> Call(string operation, JsonObject input, GameScope scope, IServiceProvider services, CancellationToken token)

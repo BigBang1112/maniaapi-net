@@ -90,10 +90,18 @@ public sealed class CatalogGenerator : IIncrementalGenerator
                 .GroupBy(method => method.ToDisplayString(), StringComparer.Ordinal)
                 .Select(group => group.First())
                 .OrderBy(method => method.ToDisplayString(), StringComparer.Ordinal)
-                .GroupBy(method => method.Name);
+                .GroupBy(method => method.Name)
+                .ToArray();
+
+            var timed = TimedVariants(groups);
 
             foreach (var group in groups)
             {
+                if (timed.Skipped.Contains(group.Key))
+                {
+                    continue;
+                }
+
                 var overloads = SelectOverloads(group);
 
                 if (overloads.Length == 0)
@@ -102,9 +110,19 @@ public sealed class CatalogGenerator : IIncrementalGenerator
                 }
 
                 var id = client.Prefix + "." + Snake(group.Key);
-                documentation.TryGetValue(type.Name + "." + group.Key, out var doc);
+                var comments = Comments(documentation, type, overloads);
+                var summary = Summarize(comments.OrderByDescending(comment => comment.Length).FirstOrDefault() ?? "", group.Key);
+                var obsolete = overloads.All(method => method.GetAttributes()
+                    .Any(attribute => attribute.AttributeClass?.Name == "ObsoleteAttribute"));
 
-                var summary = Summarize(doc ?? overloads[0].GetDocumentationCommentXml() ?? "", group.Key);
+                if (timed.Variants.TryGetValue(group.Key, out var variants))
+                {
+                    // Call the timed variant wherever one takes the same parameters. The summary stays the plain
+                    // method's; the variant's documentation still helps describe the parameters.
+                    overloads = overloads.Select(method => variants.FirstOrDefault(variant => SameParameters(method, variant)) ?? method).ToArray();
+                    comments.AddRange(Comments(documentation, type, variants));
+                }
+
                 var readOnly = IsRead(methodName: group.Key);
                 var playerOnly = IsPlayerOperation(client.Prefix, group.Key);
                 var requires = playerOnly ? "oauth" : client.Requires;
@@ -115,9 +133,6 @@ public sealed class CatalogGenerator : IIncrementalGenerator
                     : summary.IndexOf("service account", StringComparison.OrdinalIgnoreCase) >= 0);
 
                 serviceOnly = client.Requires == "nadeo" && serviceOnly;
-
-                var obsolete = overloads.All(method => method.GetAttributes()
-                    .Any(attribute => attribute.AttributeClass?.Name == "ObsoleteAttribute"));
 
                 source.AppendLine("        new Operation(");
                 source.AppendLine($"            {Literal(id)},");
@@ -132,7 +147,7 @@ public sealed class CatalogGenerator : IIncrementalGenerator
 
                 foreach (var method in overloads)
                 {
-                    WriteOverload(source, roots, type, client.Prefix, method);
+                    WriteOverload(source, roots, type, client.Prefix, method, comments);
                 }
 
                 var binary = overloads.Any(method => IsBinary(ResultType(method)));
@@ -155,6 +170,48 @@ public sealed class CatalogGenerator : IIncrementalGenerator
 
         context.AddSource("OperationCatalog.g.cs", SourceText.From(source.ToString(), Encoding.UTF8));
         ValidateJsonRoots(context, compilation, roots);
+    }
+
+    /// <summary>
+    /// MasterServer clients pair <c>GetXAsync</c> with <c>GetXResponseAsync</c>, which returns the same result
+    /// with the execution, parse, and request times (<c>MasterServerResponse</c>), or, for aggregated Trackmania
+    /// Turbo, with those times and any error per platform. The operation keeps the plain ID but calls the
+    /// response variant, so that information comes along and the catalog has one entry.
+    /// </summary>
+    private static (HashSet<string> Skipped, Dictionary<string, IMethodSymbol[]> Variants) TimedVariants(IGrouping<string, IMethodSymbol>[] groups)
+    {
+        var names = new HashSet<string>(groups.Select(group => group.Key), StringComparer.Ordinal);
+        var skipped = new HashSet<string>(StringComparer.Ordinal);
+        var variants = new Dictionary<string, IMethodSymbol[]>(StringComparer.Ordinal);
+
+        foreach (var group in groups)
+        {
+            if (!group.Key.EndsWith("ResponseAsync", StringComparison.Ordinal) ||
+                !group.All(method => ResultType(method) is { } result && !IsBinary(result) &&
+                    result.ContainingNamespace?.ToDisplayString().StartsWith("ManiaAPI.MasterServer", StringComparison.Ordinal) == true))
+            {
+                continue;
+            }
+
+            var plain = group.Key.Substring(0, group.Key.Length - "ResponseAsync".Length) + "Async";
+
+            if (names.Contains(plain))
+            {
+                skipped.Add(group.Key);
+                variants[plain] = group.ToArray();
+            }
+        }
+
+        return (skipped, variants);
+    }
+
+    private static bool SameParameters(IMethodSymbol left, IMethodSymbol right)
+    {
+        var a = left.Parameters.Where(parameter => !IsInjected(parameter)).ToArray();
+        var b = right.Parameters.Where(parameter => !IsInjected(parameter)).ToArray();
+
+        return a.Length == b.Length && a.Zip(b, (x, y) => x.Name == y.Name &&
+            SymbolEqualityComparer.Default.Equals(x.Type.WithNullableAnnotation(NullableAnnotation.None), y.Type.WithNullableAnnotation(NullableAnnotation.None))).All(same => same);
     }
 
     private static bool IsCatalogOperation(IMethodSymbol method, string prefix)
@@ -246,7 +303,8 @@ public sealed class CatalogGenerator : IIncrementalGenerator
         HashSet<string> roots,
         INamedTypeSymbol clientType,
         string prefix,
-        IMethodSymbol method)
+        IMethodSymbol method,
+        IReadOnlyList<string> comments)
     {
         var parameters = method.Parameters.Where(parameter => !IsInjected(parameter)).ToArray();
         var isTask = method.ReturnType is INamedTypeSymbol task && task.Name == "Task";
@@ -263,8 +321,14 @@ public sealed class CatalogGenerator : IIncrementalGenerator
             var parameterType = TypeName(parameter.Type);
             roots.Add(parameterType);
 
+            var description = ParameterDescription(comments, parameter.Name);
+            var defaultValue = parameter.HasExplicitDefaultValue && parameter.ExplicitDefaultValue is not null
+                ? ", true, " + Default(parameter)
+                : "";
+
             source.AppendLine(i == 0 ? "" : ",");
-            source.Append($"                        ({Literal(parameter.Name)}, CatalogMetadata.Schema<{parameterType}>(), ");
+            source.Append($"                        ({Literal(parameter.Name)}, CatalogMetadata.Parameter<{parameterType}>(");
+            source.Append($"{Literal(parameter.Name)}, {(description is null ? "null" : Literal(description))}{defaultValue}), ");
             source.Append(parameter.IsOptional ? "false)" : "true)");
         }
 
@@ -326,36 +390,139 @@ public sealed class CatalogGenerator : IIncrementalGenerator
             parameter.Type is INamedTypeSymbol { Name: "IProgress", Arity: 1 };
     }
 
+    /// <summary>
+    /// A compact signature for search results, like <c>mapUid: string, zoneId?: guid, length?: int = 10</c>.
+    /// </summary>
     private static string ParameterSignature(IParameterSymbol parameter)
     {
         var optional = parameter.IsOptional ? "?" : "";
         var fallback = parameter.HasExplicitDefaultValue
-            ? " = " + (parameter.ExplicitDefaultValue is null ? "null" :
-                parameter.ExplicitDefaultValue is string text ? Literal(text) :
-                Convert.ToString(parameter.ExplicitDefaultValue, CultureInfo.InvariantCulture)?.ToLowerInvariant())
+            ? " = " + (parameter.ExplicitDefaultValue switch
+            {
+                null => "null",
+                string text => Literal(text),
+                var value when Underlying(parameter.Type).TypeKind == TypeKind.Enum => Underlying(parameter.Type).GetMembers()
+                    .OfType<IFieldSymbol>().FirstOrDefault(field => field.HasConstantValue && Equals(field.ConstantValue, value))?.Name
+                    ?? Convert.ToString(value, CultureInfo.InvariantCulture),
+                var value => Convert.ToString(value, CultureInfo.InvariantCulture)?.ToLowerInvariant()
+            })
             : "";
 
-        return parameter.Name + optional + ": " + parameter.Type.ToDisplayString() + fallback;
+        return parameter.Name + optional + ": " + CompactType(parameter.Type) + fallback;
     }
 
-    private static Dictionary<string, string> ReadDocumentation(ImmutableArray<(string Path, string Text)> files)
+    private static ITypeSymbol Underlying(ITypeSymbol type)
     {
-        var documentation = new Dictionary<string, string>(StringComparer.Ordinal);
+        return type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable
+            ? nullable.TypeArguments[0]
+            : type;
+    }
+
+    private static string CompactType(ITypeSymbol type)
+    {
+        type = Underlying(type);
+
+        if (type is IArrayTypeSymbol array)
+        {
+            return CompactType(array.ElementType) + "[]";
+        }
+
+        if (type.SpecialType == SpecialType.System_String)
+        {
+            return "string";
+        }
+
+        if (type is INamedTypeSymbol { IsGenericType: true, TypeArguments.Length: 1 } collection &&
+            collection.AllInterfaces.Append(collection).Any(item =>
+                item.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T))
+        {
+            return CompactType(collection.TypeArguments[0]) + "[]";
+        }
+
+        if (type.TypeKind == TypeKind.Enum)
+        {
+            var members = type.GetMembers().OfType<IFieldSymbol>().Where(field => field.HasConstantValue).Select(field => field.Name).ToArray();
+
+            return members.Length is > 0 and <= 6 ? string.Join("|", members) : type.Name;
+        }
+
+        return type.ToDisplayString() switch
+        {
+            "System.Guid" => "guid",
+            "System.DateTimeOffset" or "System.DateTime" => "datetime",
+            "System.TimeSpan" => "timespan",
+            "System.Uri" => "url",
+            _ when type.SpecialType != SpecialType.None => type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
+            _ => type.Name
+        };
+    }
+
+    /// <summary>
+    /// The documentation comments of an operation: from the client interface, the interface that declares
+    /// each overload, and the implementing class, so <c>&lt;param&gt;</c> text is found wherever it was written.
+    /// </summary>
+    private static List<string> Comments(Dictionary<string, List<string>> documentation, INamedTypeSymbol type, IMethodSymbol[] overloads)
+    {
+        var keys = overloads.Select(method => method.ContainingType.Name + "." + method.Name)
+            .Prepend(type.Name + "." + overloads[0].Name)
+            .Distinct(StringComparer.Ordinal);
+
+        return keys.SelectMany(key => documentation.TryGetValue(key, out var comments) ? comments : [])
+            .Concat(overloads.Select(method => method.GetDocumentationCommentXml() ?? ""))
+            .Where(comment => comment.Length > 0)
+            .ToList();
+    }
+
+    private static string? ParameterDescription(IReadOnlyList<string> comments, string name)
+    {
+        foreach (var comment in comments)
+        {
+            var match = Regex.Match(comment, "<param\\s+name=\"" + Regex.Escape(name) + "\"\\s*>(.*?)</param>", RegexOptions.Singleline);
+            var text = Regex.Replace(Regex.Replace(match.Groups[1].Value, "<[^>]+>", " ").Replace("///", " "), @"\s+", " ").Trim();
+
+            if (text.Length > 0)
+            {
+                return text;
+            }
+        }
+
+        return null;
+    }
+
+    private static Dictionary<string, List<string>> ReadDocumentation(ImmutableArray<(string Path, string Text)> files)
+    {
+        var documentation = new Dictionary<string, List<string>>(StringComparer.Ordinal);
 
         foreach (var file in files.Where(file => file.Path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)))
         {
             var tree = CSharpSyntaxTree.ParseText(file.Text);
 
-            foreach (var declaration in tree.GetRoot().DescendantNodes().OfType<InterfaceDeclarationSyntax>())
+            foreach (var declaration in tree.GetRoot().DescendantNodes().OfType<TypeDeclarationSyntax>())
             {
+                // A class's comments also count for its interface (MasterServerTMUF for IMasterServerTMUF).
+                var names = declaration is InterfaceDeclarationSyntax
+                    ? new[] { declaration.Identifier.ValueText }
+                    : new[] { declaration.Identifier.ValueText, "I" + declaration.Identifier.ValueText };
+
                 foreach (var method in declaration.Members.OfType<MethodDeclarationSyntax>())
                 {
-                    var key = declaration.Identifier.ValueText + "." + method.Identifier.ValueText;
                     var comment = method.GetLeadingTrivia().ToFullString();
 
-                    if (!documentation.ContainsKey(key) || comment.Length > documentation[key].Length)
+                    if (comment.IndexOf("///", StringComparison.Ordinal) < 0)
                     {
-                        documentation[key] = comment;
+                        continue;
+                    }
+
+                    foreach (var name in names)
+                    {
+                        var key = name + "." + method.Identifier.ValueText;
+
+                        if (!documentation.TryGetValue(key, out var comments))
+                        {
+                            documentation[key] = comments = [];
+                        }
+
+                        comments.Add(comment);
                     }
                 }
             }
@@ -434,7 +601,8 @@ public sealed class CatalogGenerator : IIncrementalGenerator
         {
             string value => Literal(value),
             bool value => value ? "true" : "false",
-            var value => "(" + TypeName(parameter.Type) + ")" + Convert.ToString(value, CultureInfo.InvariantCulture)
+            // The value is parenthesized: "(Enum)-1" would parse as a subtraction.
+            var value => "(" + TypeName(parameter.Type) + ")(" + Convert.ToString(value, CultureInfo.InvariantCulture) + ")"
         };
     }
 

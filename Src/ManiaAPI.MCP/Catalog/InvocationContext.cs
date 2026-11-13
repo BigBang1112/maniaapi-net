@@ -155,7 +155,7 @@ public sealed class InvocationContext(
             "masterserver.tmuf" => services.GetRequiredService<MasterServerTMUF>(),
             "masterserver.tmnf" => services.GetRequiredKeyedService<MasterServerTMUF>("tmnf"),
             "masterserver.mp3" => services.GetRequiredService<MasterServerMP3>(),
-            "masterserver.mp4" => operation?.Id is "masterserver.mp4.player_infos" or "masterserver.mp4.player_infos_response"
+            "masterserver.mp4" => operation?.Id is "masterserver.mp4.player_infos"
                 ? services.GetRequiredKeyedService<MasterServerMP4>("player")
                 : services.GetRequiredService<MasterServerMP4>(),
             "maniaplanet.web" => services.GetRequiredService<ManiaPlanetAPI.ManiaPlanetAPI>(),

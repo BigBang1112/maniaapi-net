@@ -139,7 +139,8 @@ public class EngineTests
 
         await Assert.That(async () => await engine.InvokeAsync("nadeo.live.top_leaderboard", Json("""
             {"mapUid":"map","groupUid":"Personal_Best","zoneId":"00000000-0000-0000-0000-000000000001","length":5}
-            """), GameScope.Create(options), services)).Throws<ArgumentException>();
+            """), GameScope.Create(options), services)).Throws<ArgumentException>()
+            .WithMessageContaining("Valid combinations: (");
     }
 
     [Test]

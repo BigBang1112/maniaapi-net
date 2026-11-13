@@ -133,4 +133,48 @@ public class ConfigurationTests
         health.Record("oauth", authorized: true);
         await Assert.That(health.Ready).IsTrue();
     }
+
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task OnlyCredentialsThatCannotAuthorizeFailReadiness(bool credentialsWork)
+    {
+        // With working credentials, the 401 comes from the operation itself (a permission denial for this
+        // account) and must not take the instance out of rotation. Without them, authorization fails.
+        var payload = $$"""
+            {"jti":"j","aud":"a","iat":0,"nbf":0,"exp":{{DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds()}},"sub":"s","scopes":[]}
+            """;
+        var token = "header." + Base64Url(payload) + ".signature";
+
+        var fake = new FakeHttpMessageHandler(request => request.RequestUri!.AbsolutePath.EndsWith("/access_token", StringComparison.Ordinal)
+            ? credentialsWork
+                ? FakeResponse.Json($$"""{"token_type":"Bearer","expires_in":3600,"access_token":"{{token}}"}""")
+                : FakeResponse.Json("""{"error":"invalid_client"}""", HttpStatusCode.Unauthorized)
+            : FakeResponse.Json("""{"error":"denied"}""", HttpStatusCode.Unauthorized));
+
+        var collection = new ServiceCollection();
+        collection.AddLogging();
+        collection.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ManiaAPI:TrackmaniaAPI:ClientId"] = "test-client",
+            ["ManiaAPI:TrackmaniaAPI:ClientSecret"] = "test-secret"
+        }).Build());
+        collection.AddHttpClient("TrackmaniaAPI").ConfigurePrimaryHttpMessageHandler(() => fake);
+
+        using var services = collection.BuildServiceProvider();
+        using var request = services.CreateScope();
+        var health = services.GetRequiredService<UpstreamHealth>();
+
+        await Assert.That(async () => await services.GetRequiredService<Engine.OperationEngine>().InvokeAsync(
+            "trackmania.api.display_names", EngineTests.Json("""{"accountIds":["00000000-0000-0000-0000-000000000001"]}"""),
+            Catalog.GameScope.Create(services.GetRequiredService<McpOptions>()), request.ServiceProvider)).ThrowsException();
+
+        await Assert.That(fake.Requests.Count).IsEqualTo(credentialsWork ? 2 : 1);
+        await Assert.That(health.Ready).IsEqualTo(credentialsWork);
+    }
+
+    private static string Base64Url(string value)
+    {
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(value)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+    }
 }

@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using ManiaAPI.MCP.Catalog;
 using ManiaAPI.MCP.Configuration;
 using ManiaAPI.MCP.Engine;
@@ -10,6 +11,10 @@ namespace ManiaAPI.MCP.Tests;
 
 public class CatalogTests
 {
+    /// <remarks>
+    /// After an intended catalog change, run the tests with MANIAAPI_APPROVE_CATALOG=1 to rewrite
+    /// Catalog.approved.txt, then review its diff.
+    /// </remarks>
     [Test]
     public async Task CatalogMatchesApprovedSurface()
     {
@@ -20,6 +25,11 @@ public class CatalogTests
                 string.Join(" || ", operation.Overloads.Select(overload => overload.Signature)))
             .Select(line => line.TrimEnd())
             .ToArray();
+
+        if (Environment.GetEnvironmentVariable("MANIAAPI_APPROVE_CATALOG") == "1")
+        {
+            await File.WriteAllLinesAsync(Path.Combine(SourceDirectory(), "Catalog.approved.txt"), actual);
+        }
 
         var expected = await File.ReadAllLinesAsync(Path.Combine(AppContext.BaseDirectory, "Catalog.approved.txt"));
 
@@ -48,6 +58,102 @@ public class CatalogTests
 
         await Assert.That(list.Tools.Count).IsLessThanOrEqualTo(20);
         await Assert.That(estimatedTokens).IsLessThan(8000);
+    }
+
+    [Test]
+    public async Task ToolSchemasAreFlatObjectsWithResolvableReferences()
+    {
+        // Clients such as the Anthropic API reject anyOf/oneOf/allOf at the top level of an input schema.
+        var collection = new ServiceCollection();
+        collection.AddLogging();
+        collection.AddManiaAPI(new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?>
+            {
+                ["ManiaAPI:ExposeOperationsAsTools"] = "true",
+                ["ManiaAPI:NadeoAPI:Login"] = "test-login",
+                ["ManiaAPI:NadeoAPI:Password"] = "test-password",
+                ["ManiaAPI:TrackmaniaAPI:ClientId"] = "test-client",
+                ["ManiaAPI:TrackmaniaAPI:ClientSecret"] = "test-secret"
+            }).Build());
+
+        using var services = collection.BuildServiceProvider();
+        var tools = services.GetRequiredService<GatewayTools>().List().Tools;
+
+        await Assert.That(tools.Count).IsGreaterThan(100);
+
+        foreach (var tool in tools)
+        {
+            var schema = JsonNode.Parse(tool.InputSchema.GetRawText())!.AsObject();
+
+            await Assert.That(schema["type"]!.GetValue<string>()).IsEqualTo("object");
+            await Assert.That(schema.Any(x => x.Key is "anyOf" or "oneOf" or "allOf")).IsFalse()
+                .Because($"{tool.Name} has a top-level combinator");
+
+            foreach (var reference in References(schema))
+            {
+                await Assert.That(Resolve(schema, reference)).IsNotNull()
+                    .Because($"{tool.Name} has an unresolved reference {reference}");
+            }
+        }
+
+        var leaderboard = JsonNode.Parse(tools.Single(x => x.Name == "trackmania2020_leaderboard").InputSchema.GetRawText())!;
+        var modes = leaderboard["properties"]!["mode"]!["enum"]!.AsArray().Select(x => x!.GetValue<string>());
+
+        await Assert.That(modes).IsEquivalentTo(["top", "around", "position"]);
+        await Assert.That(leaderboard["properties"]!["zoneId"]).IsNotNull();
+        await Assert.That(leaderboard["required"]!.AsArray().Select(x => x!.GetValue<string>())).DoesNotContain("mode");
+    }
+
+    private static string SourceDirectory([System.Runtime.CompilerServices.CallerFilePath] string path = "")
+    {
+        return Path.GetDirectoryName(path)!;
+    }
+
+    private static IEnumerable<string> References(JsonNode? node)
+    {
+        if (node is JsonObject obj)
+        {
+            if (obj["$ref"] is JsonValue value && value.TryGetValue<string>(out var reference))
+            {
+                yield return reference;
+            }
+
+            foreach (var child in obj.SelectMany(x => References(x.Value)))
+            {
+                yield return child;
+            }
+        }
+        else if (node is JsonArray array)
+        {
+            foreach (var child in array.SelectMany(References))
+            {
+                yield return child;
+            }
+        }
+    }
+
+    private static JsonNode? Resolve(JsonNode root, string reference)
+    {
+        if (!reference.StartsWith('#'))
+        {
+            return null;
+        }
+
+        var node = (JsonNode?)root;
+
+        foreach (var segment in reference[1..].Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var name = segment.Replace("~1", "/").Replace("~0", "~");
+
+            node = node switch
+            {
+                JsonObject obj => obj[name],
+                JsonArray array when int.TryParse(name, out var index) && index < array.Count => array[index],
+                _ => null
+            };
+        }
+
+        return node;
     }
 
     [Test]

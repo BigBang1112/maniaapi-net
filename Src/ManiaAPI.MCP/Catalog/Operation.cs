@@ -20,50 +20,42 @@ public sealed record Operation(
     public string? OAuthProvider { get; init; }
     public string[] OAuthScopes { get; init; } = [];
 
+    /// <summary>
+    /// The public input schema: every overload merged into one flat object schema. Argument combinations
+    /// that no single overload accepts are rejected by the engine, which lists the valid signatures.
+    /// </summary>
     public JsonObject Schema(IReadOnlyList<string> sites, bool inferSite)
     {
-        var variants = new JsonArray();
+        var schema = CatalogMetadata.Merge(Overloads.Select(overload => overload.Schema));
 
-        foreach (var overload in Overloads)
+        if (ExchangeClient is not null)
         {
-            var schema = (JsonObject)overload.Schema.DeepClone();
-
-            if (Overloads.Length > 1)
+            schema["properties"]!["site"] = new JsonObject
             {
-                CatalogMetadata.PrefixReferences(schema, "#/anyOf/" + variants.Count);
-            }
+                ["type"] = "string",
+                ["description"] = "Exchange site to query; only the sites this endpoint allows are listed.",
+                ["enum"] = new JsonArray(sites.Select(site => (JsonNode?)JsonValue.Create(site)).ToArray())
+            };
 
-            if (ExchangeClient is not null)
+            if (!inferSite)
             {
-                schema["properties"]!["site"] = new JsonObject
-                {
-                    ["type"] = "string",
-                    ["enum"] = new JsonArray(sites.Select(site => (JsonNode?)JsonValue.Create(site)).ToArray())
-                };
-
-                if (!inferSite)
-                {
-                    ((JsonArray)schema["required"]!).Add("site");
-                }
+                ((JsonArray)schema["required"]!).Add("site");
             }
-
-            if (PlatformClient is not null)
-            {
-                schema["properties"]!["platform"] = new JsonObject
-                {
-                    ["type"] = "string",
-                    ["enum"] = new JsonArray(Enum.GetNames<MasterServer.TMT.Platform>()
-                        .Select(platform => (JsonNode?)JsonValue.Create(platform)).ToArray())
-                };
-
-                ((JsonArray)schema["required"]!).Add("platform");
-            }
-
-            variants.Add(schema);
         }
 
-        return variants.Count == 1
-            ? (JsonObject)variants[0]!.DeepClone()
-            : new JsonObject { ["type"] = "object", ["anyOf"] = variants };
+        if (PlatformClient is not null)
+        {
+            schema["properties"]!["platform"] = new JsonObject
+            {
+                ["type"] = "string",
+                ["description"] = "Trackmania Turbo platform whose master server to query.",
+                ["enum"] = new JsonArray(Enum.GetNames<MasterServer.TMT.Platform>()
+                    .Select(platform => (JsonNode?)JsonValue.Create(platform)).ToArray())
+            };
+
+            ((JsonArray)schema["required"]!).Add("platform");
+        }
+
+        return schema;
     }
 }

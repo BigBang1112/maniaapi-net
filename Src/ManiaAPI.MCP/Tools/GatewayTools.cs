@@ -344,9 +344,7 @@ public sealed class GatewayTools(
         {
             var operation = engine.Describe(id, scope);
             var schema = operation.Schema(scope.Sites(operation), scope.InferSite && scope.Sites(operation).Length == 1);
-            var related = engine.Available(scope)
-                .Where(x => x.Id != id && x.Id.Split('.')[0] == id.Split('.')[0])
-                .Take(5)
+            var related = search.Related(operation, engine.Available(scope), 5)
                 .Select(x => (JsonNode?)JsonValue.Create(x.Id))
                 .ToArray();
 
@@ -382,7 +380,7 @@ public sealed class GatewayTools(
                 ["allowedSites"] = new JsonArray((operation.ExchangeClient is null ? [] : scope.Sites(operation))
                     .Select(x => (JsonNode?)JsonValue.Create(x)).ToArray()),
                 ["relatedOperations"] = new JsonArray(related),
-                ["whenToUse"] = operation.Summary,
+                ["whenToUse"] = OperationOverrides.WhenToUse(id),
                 ["example"] = new JsonObject
                 {
                     ["operation"] = id,
@@ -497,12 +495,7 @@ public sealed class GatewayTools(
     private static JsonElement OperationToolSchema(Operation operation, GameScope scope)
     {
         var schema = operation.Schema(scope.Sites(operation), scope.InferSite && scope.Sites(operation).Length == 1);
-        var variants = schema["anyOf"] is JsonArray array ? array.ToArray() : [schema];
-
-        foreach (var variant in variants)
-        {
-            variant!["properties"]!["confirm"] = new JsonObject { ["type"] = "boolean", ["default"] = false };
-        }
+        schema["properties"]!["confirm"] = new JsonObject { ["type"] = "boolean", ["default"] = false };
 
         return Parse(schema.ToJsonString());
     }

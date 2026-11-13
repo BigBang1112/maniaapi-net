@@ -22,7 +22,7 @@ public sealed class OperationSearch
                 _ => "Trackmania 2020 TM2020"
             };
 
-            return Tokens(operation.Id + " " + operation.Summary + " " + tags + " " +
+            return Tokens(operation.Id + " " + operation.Summary + " " + tags + " " + OperationOverrides.Tags(operation.Id) + " " +
                 string.Join(" ", operation.Overloads.Select(x => x.Signature)))
                 .GroupBy(x => x)
                 .ToDictionary(x => x.Key, x => x.Count());
@@ -53,6 +53,44 @@ public sealed class OperationSearch
             .ThenBy(x => x.Operation.Id, StringComparer.Ordinal)
             .Take(limit)
             .Select(x => x.Operation);
+    }
+
+    /// <summary>
+    /// Related operations: the hand-written ones first, then operations whose IDs and summaries share the
+    /// most terms with this one's name. Only <paramref name="candidates"/> (the current scope) are returned.
+    /// </summary>
+    public IEnumerable<Operation> Related(Operation operation, IEnumerable<Operation> candidates, int limit)
+    {
+        var available = candidates.Where(x => x.Id != operation.Id).ToDictionary(x => x.Id, StringComparer.Ordinal);
+        var related = new List<Operation>();
+
+        void Add(string id)
+        {
+            if (related.Count < limit && available.Remove(id, out var found))
+            {
+                related.Add(found);
+            }
+        }
+
+        if (operation.Id.EndsWith("_response", StringComparison.Ordinal))
+        {
+            Add(operation.Id[..^"_response".Length]);
+        }
+
+        foreach (var id in OperationOverrides.Related(operation.Id))
+        {
+            Add(id);
+        }
+
+        var name = operation.Id[(operation.Id.LastIndexOf('.') + 1)..].Replace('_', ' ');
+        var similar = Search(available.Values, name, limit).ToArray();
+
+        foreach (var match in similar)
+        {
+            Add(match.Id);
+        }
+
+        return related;
     }
 
     private double Score(string id, string[] terms)
