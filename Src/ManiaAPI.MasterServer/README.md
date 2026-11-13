@@ -179,3 +179,20 @@ var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDicti
 
 // You can now use aggregatedMasterServer to work with all master servers at once
 ```
+
+## Errors
+
+When the master server rejects a request, an `XmlRequestException` is thrown. `Value` holds the raw error code, `Error` holds it as `MasterServerError` (codes recovered from the game executables), and `ErrorMessage` holds the message sent by the server.
+
+```cs
+try
+{
+    var player = await masterServer.GetPlayerInfosAsync("bigbang1112");
+}
+catch (XmlRequestException ex) when (ex.Error is MasterServerError.PlayerUnknown or MasterServerError.LoginUnknown)
+{
+    // ...
+}
+```
+
+`AggregatedMasterServerTMT` doesn't throw for a failing platform. It sets `ErrorMessage` and `Error` in `AggregatedSummaryInfo` of that platform instead.

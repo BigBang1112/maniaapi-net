@@ -38,6 +38,41 @@ public class LegacyTests
     }
 
     [Test]
+    public async Task TurboOperationsCanBeInvokedRepeatedly()
+    {
+        var init = FakeHttpMessageHandler.Text("""
+            <?xml version="1.0" encoding="UTF-8"?><r><r><n>GetWaitingParams</n><c><wt>0</wt><ms><b>Turbo</b><c>turbo.example.com</c><d>game</d><e>443</e><f>80</f></ms></c></r><e>execution time : 0.0123 s</e></r>
+            """, "text/xml");
+        var master = FakeHttpMessageHandler.Text("""
+            <?xml version="1.0" encoding="UTF-8"?><r><r><n>GetPlayerInfos</n><c><a>player</a><b>Player</b><e>0</e></c></r><e>execution time : 0.0123 s</e></r>
+            """, "text/xml");
+
+        var collection = new ServiceCollection();
+        collection.AddLogging();
+        collection.AddManiaAPI(TestConfiguration.Create());
+
+        foreach (var platform in Enum.GetValues<MasterServer.TMT.Platform>())
+        {
+            collection.AddHttpClient($"InitServerTMT_{platform}").ConfigurePrimaryHttpMessageHandler(() => init);
+            collection.AddHttpClient($"MasterServerTMT_{platform}").ConfigurePrimaryHttpMessageHandler(() => master);
+        }
+
+        using var services = collection.BuildServiceProvider();
+        var options = services.GetRequiredService<McpOptions>();
+        var engine = services.GetRequiredService<OperationEngine>();
+
+        // Each invocation runs in its own scope, so the waiting params are requested again every time.
+        foreach (var platform in new[] { "PC", "XB1", "PS4" })
+        {
+            using var request = services.CreateScope();
+            var result = await engine.InvokeAsync("masterserver.tmt.player_infos",
+                EngineTests.Json($$"""{"platform":"{{platform}}","login":"player"}"""), GameScope.Create(options), request.ServiceProvider);
+
+            await Assert.That(result["data"]!["result"]!["login"]!.GetValue<string>()).IsEqualTo("player");
+        }
+    }
+
+    [Test]
     public async Task DisablingAMasterServerGameHidesItsOperations()
     {
         var options = new McpOptions { MasterServer = new MasterServerOptions { Games = ["MP4"] } };

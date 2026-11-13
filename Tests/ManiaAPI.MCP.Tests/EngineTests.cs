@@ -193,4 +193,12 @@ public class EngineTests
         await Assert.That(error.ToJsonString()).DoesNotContain("secret");
         await Assert.That(error["retryable"]!.GetValue<bool>()).IsTrue();
     }
+
+    [Test]
+    public async Task MasterServerErrorsIncludeErrorCodeName()
+    {
+        var error = OperationEngine.Error(new MasterServer.XmlRequestException(14, "player unknown", default, new MasterServer.XmlResponseDetails(default)));
+
+        await Assert.That(error["message"]!.GetValue<string>()).Contains("Master server error 14 (PlayerUnknown)");
+    }
 }

@@ -68,6 +68,32 @@ public class MasterServerTests
     }
 
     [Test]
+    [Arguments(14, MasterServerError.PlayerUnknown)]
+    [Arguments(129, MasterServerError.NoScoresAvailable)]
+    [Arguments(215, MasterServerError.AlreadyUploaded)]
+    public async Task GetPlayerInfosAsync_ErrorResponse_MapsErrorCode(int value, MasterServerError expected)
+    {
+        var fake = MasterServerXml.Handler(MasterServerXml.Error("GetPlayerInfos", value, "error"));
+        using var server = new MasterServerMP4(fake.CreateClient(Url));
+
+        var ex = await Assert.ThrowsAsync<XmlRequestException>(() => server.GetPlayerInfosAsync("nobody"));
+
+        await Assert.That(ex!.Error).IsEqualTo(expected);
+    }
+
+    [Test]
+    public async Task GetPlayerInfosAsync_UnknownErrorCode_KeepsRawValue()
+    {
+        var fake = MasterServerXml.Handler(MasterServerXml.Error("GetPlayerInfos", 9999, "error"));
+        using var server = new MasterServerMP4(fake.CreateClient(Url));
+
+        var ex = await Assert.ThrowsAsync<XmlRequestException>(() => server.GetPlayerInfosAsync("nobody"));
+
+        await Assert.That(ex!.Value).IsEqualTo(9999);
+        await Assert.That(Enum.IsDefined(ex.Error)).IsFalse();
+    }
+
+    [Test]
     public async Task GetPlayerInfosResponseAsync_ReturnsExecutionTime()
     {
         var fake = MasterServerXml.Handler(MasterServerXml.Success("GetPlayerInfos", $"<a>{Login}</a>", "execution time : 0.5 s"));

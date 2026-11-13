@@ -60,7 +60,7 @@ internal sealed class MasterServerTMTFactory : IMasterServerTMTFactory
 
         await foreach (var (platform, task) in tasks.WhenEachRemove())
         {
-            WaitingParams = WaitingParams.Add(platform, await task);
+            WaitingParams = WaitingParams.SetItem(platform, await task);
         }
     }
 
