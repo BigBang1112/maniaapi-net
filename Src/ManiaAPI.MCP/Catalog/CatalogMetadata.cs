@@ -192,8 +192,15 @@ public static class CatalogMetadata
     {
         var metadata = Serialization.CatalogJsonContext.Default.Options.GetTypeInfo<T>();
 
-        return JsonSchemaExporter.GetJsonSchemaAsNode(metadata,
-            new JsonSchemaExporterOptions { TreatNullObliviousAsNonNullable = true });
+        return JsonSchemaExporter.GetJsonSchemaAsNode(metadata, new JsonSchemaExporterOptions
+        {
+            TreatNullObliviousAsNonNullable = true,
+            TransformSchemaNode = (context, schema) => context.TypeInfo.Type == typeof(TmEssentials.TimeInt32)
+                ? new JsonObject { ["type"] = "integer", ["description"] = "Time in milliseconds." }
+                : context.TypeInfo.Type == typeof(TmEssentials.TimeInt32?)
+                    ? new JsonObject { ["type"] = new JsonArray("integer", "null"), ["description"] = "Time in milliseconds." }
+                    : schema
+        });
     }
 
     internal static void PrefixReferences(JsonNode? node, string prefix)

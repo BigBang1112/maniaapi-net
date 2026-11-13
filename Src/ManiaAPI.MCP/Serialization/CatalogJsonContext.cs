@@ -234,5 +234,7 @@ namespace ManiaAPI.MCP.Serialization;
 [JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.TrackmaniaAPI.FavoriteMap>), TypeInfoPropertyName = "PlayerRoot4")]
 [JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.TrackmaniaAPI.MapRecord>), TypeInfoPropertyName = "PlayerRoot5")]
 [JsonSerializable(typeof(global::ManiaAPI.TrackmaniaAPI.MapRecord), TypeInfoPropertyName = "PlayerMapRecord")]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, UseStringEnumConverter = true)]
+// TimeInt32 is written as integer milliseconds; without the converter every TimeSpan-like property is serialized.
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, UseStringEnumConverter = true,
+    Converters = [typeof(global::TmEssentials.Converters.JsonTimeInt32Converter)])]
 internal sealed partial class CatalogJsonContext : JsonSerializerContext;
