@@ -125,6 +125,63 @@ public class ExchangeLiveTests
         await Assert.That(filtered.Results.Select(x => x.VideoId)).IsEquivalentTo([first.VideoId]);
     }
 
+    /// <summary>
+    /// V_Rock4 in the Valley Rocks set and a TM2020 block, both by long-standing uploaders.
+    /// </summary>
+    [Test]
+    public async Task IX_ItemsSetsAndBasket_AreAvailable()
+    {
+        using var ix = new IX();
+
+        var items = await ix.GetItemsAsync([256, 40503]);
+        var sets = await ix.GetItemSetsAsync([41]);
+        var basket = await ix.GetBasketAsync(1814);
+        var missing = await ix.GetBasketAsync(999999999);
+
+        await Assert.That(items.Select(x => x.Id)).IsEquivalentTo([256L, 40503L]);
+        await Assert.That(items.First(x => x.Id == 256).SetId).IsEqualTo(41);
+        await Assert.That(items.First(x => x.Id == 40503).Type).IsEqualTo(IXItemType.Block);
+        await Assert.That(sets.Single().Items!.Select(x => x.Id)).Contains(256L);
+        await Assert.That(basket!.Items).IsNotEmpty();
+        await Assert.That(missing).IsNull();
+    }
+
+    [Test]
+    public async Task IX_Searches_ReturnResults()
+    {
+        using var ix = new IX();
+
+        var items = await ix.SearchItemsAsync(new IX.SearchItemsParameters { ItemName = ["rock"], Collections = [IXEnvironment.Valley], Limit = 10 });
+        var tagged = await ix.SearchItemsAsync(new IX.SearchItemsParameters { Tags = [45, 30], AllTags = true, Limit = 10 });
+        var sets = await ix.SearchItemSetsAsync(new IX.SearchItemSetsParameters { Limit = 10 });
+        var randomItem = await ix.GetRandomItemAsync(new IX.SearchItemsParameters());
+        var randomSet = await ix.GetRandomItemSetAsync(new IX.SearchItemSetsParameters());
+
+        await Assert.That(items.Results).IsNotEmpty();
+        await Assert.That(items.Results).DoesNotContain(x => x.Collection != IXEnvironment.Valley || !x.Name.Contains("rock", StringComparison.OrdinalIgnoreCase));
+        await Assert.That(items.TotalItemCount).IsGreaterThanOrEqualTo(items.Results.Count);
+        await Assert.That(tagged.Results).DoesNotContain(x => !x.Tags!.Split(',').Contains("45") || !x.Tags.Split(',').Contains("30"));
+        await Assert.That(sets.Results).Count().IsEqualTo(10);
+        await Assert.That(randomItem?.Id ?? 0).IsGreaterThan(0);
+        await Assert.That(randomSet?.Id ?? 0).IsGreaterThan(0);
+    }
+
+    [Test]
+    public async Task IX_DownloadsAndImages_AreServed()
+    {
+        using var ix = new IX();
+
+        using var gbx = await ix.GetItemDownloadResponseAsync(40503);
+        using var zip = await ix.GetItemSetDownloadResponseAsync(41);
+        using var icon = await ix.GetItemIconResponseAsync(256);
+        using var setImage = await ix.GetItemSetImageResponseAsync(41, 1);
+
+        await Assert.That(gbx.Content.Headers.ContentType?.MediaType).IsEqualTo("application/x-gbx");
+        await Assert.That(zip.Content.Headers.ContentType?.MediaType).IsEqualTo("application/zip");
+        await AssertImageAsync(icon);
+        await AssertImageAsync(setImage);
+    }
+
     [Test]
     public async Task TMX_Random_ResolvesTrackAndTrackpack()
     {

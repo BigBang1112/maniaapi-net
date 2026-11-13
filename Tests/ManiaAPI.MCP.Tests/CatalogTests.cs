@@ -190,12 +190,34 @@ public class CatalogTests
     }
 
     [Test]
+    public async Task ItemExchangeIsScopedToItsGamesAndOption()
+    {
+        static bool HasItemExchange(McpOptions options, string? endpoint = null) =>
+            new OperationEngine(options, GeneratedCatalog.Create()).Available(GameScope.Create(options, endpoint)).Any(x => x.Id.StartsWith("ix.", StringComparison.Ordinal));
+
+        var all = new McpOptions();
+
+        await Assert.That(HasItemExchange(all)).IsTrue();
+        await Assert.That(HasItemExchange(all, "trackmania2020")).IsTrue();
+        await Assert.That(HasItemExchange(all, "maniaplanet")).IsTrue();
+        await Assert.That(HasItemExchange(all, "tmnf")).IsFalse();
+        await Assert.That(HasItemExchange(new McpOptions { Exchange = new ExchangeOptions { ItemExchange = false } })).IsFalse();
+        await Assert.That(HasItemExchange(new McpOptions { Toolsets = ["tmuf"] })).IsFalse();
+
+        // The game filter of search keeps Item Exchange only for its games, within the endpoint's games
+        await Assert.That(GameScope.Create(all).ForGame("tmnf").ItemExchange).IsFalse();
+        await Assert.That(GameScope.Create(all).ForGame("TM2").ItemExchange).IsTrue();
+        await Assert.That(GameScope.Create(all, "trackmania2020").ItemExchangeSites).IsEquivalentTo(["Trackmania"]);
+    }
+
+    [Test]
     public async Task DisabledSiteIsAbsentFromEveryDiscoverySchema()
     {
         var options = new McpOptions
         {
             Toolsets = ["exchange"],
-            Exchange = new ExchangeOptions { Sites = [], MxSites = ["Trackmania"] }
+            // Item Exchange isn't an MX site and has items for every MX game, so it's turned off to check MX sites alone
+            Exchange = new ExchangeOptions { Sites = [], MxSites = ["Trackmania"], ItemExchange = false }
         };
 
         var scope = GameScope.Create(options);

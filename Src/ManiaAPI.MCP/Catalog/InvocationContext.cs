@@ -152,6 +152,7 @@ public sealed class InvocationContext(
             "trackmania.api" => services.GetRequiredService<TrackmaniaAPI.TrackmaniaAPI>(),
             "tmx" => services.GetRequiredKeyedService<TMX.TMX>(Enum.Parse<TmxSite>(site!)),
             "mx" => services.GetRequiredKeyedService<MX>(Enum.Parse<MxSite>(site!)),
+            "ix" => services.GetRequiredService<TMX.IX>(),
             "masterserver.tmuf" => services.GetRequiredService<MasterServerTMUF>(),
             "masterserver.tmnf" => services.GetRequiredKeyedService<MasterServerTMUF>("tmnf"),
             "masterserver.mp3" => services.GetRequiredService<MasterServerMP3>(),

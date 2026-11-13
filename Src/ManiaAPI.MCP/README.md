@@ -4,7 +4,7 @@
 
 An MCP server that lets AI assistants talk to Trackmania and ManiaPlanet APIs through ManiaAPI.NET. Ask your assistant about leaderboards, maps, clubs, or players, and it figures out which API to call.
 
-Covers NadeoAPI, Trackmania web API, ManiaPlanet web, Channel Record, and Channel Feedback APIs, Trackmania Web Services, Trackmania Exchange, UnitedLadder, and master servers of TMUF, TMNF, ManiaPlanet, and TMTurbo.
+Covers NadeoAPI, Trackmania web API, ManiaPlanet web, Channel Record, and Channel Feedback APIs, Trackmania Web Services, Trackmania Exchange and Item Exchange, UnitedLadder, and master servers of TMUF, TMNF, ManiaPlanet, and TMTurbo.
 
 ### Features
 
@@ -39,6 +39,8 @@ Only want some games? Pick toolsets from `trackmania2020`, `exchange`, `tmuf`, `
 ```
 claude mcp add maniaapi -e ManiaAPI__UserAgent="my-assistant/1.0 (contact: you@example.com)" -- maniaapi-mcp --toolsets tmnf,exchange
 ```
+
+The `exchange` toolset includes Item Exchange for TM2020 and ManiaPlanet. Set `ManiaAPI:Exchange:ItemExchange` to `false` to leave it out.
 
 Most clients accept a JSON config like this:
 

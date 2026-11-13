@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TMX;
@@ -17,4 +18,9 @@ namespace ManiaAPI.TMX;
 [JsonSerializable(typeof(SearchOrderItem[]))]
 [JsonSerializable(typeof(TagInfo[]))]
 [JsonSerializable(typeof(string[]))]
+[JsonSerializable(typeof(ImmutableList<IXItem>))]
+[JsonSerializable(typeof(ImmutableList<IXItemSet>))]
+[JsonSerializable(typeof(IXBasket))]
+[JsonSerializable(typeof(IXSearchResult<IXItem>))]
+[JsonSerializable(typeof(IXSearchResult<IXItemSet>))]
 internal sealed partial class TMXJsonContext : JsonSerializerContext { }

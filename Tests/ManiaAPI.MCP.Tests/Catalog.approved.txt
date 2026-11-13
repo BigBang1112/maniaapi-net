@@ -1,3 +1,22 @@
+ix.basket [none, serviceOnly=False, readOnly=True, playerOnly=False] userId: long
+ix.basket_download_response [none, serviceOnly=False, readOnly=True, playerOnly=False] userId: long, ignoreDirectories?: bool = false
+ix.basket_download_url [none, serviceOnly=False, readOnly=True, playerOnly=False] userId: long, ignoreDirectories?: bool = false
+ix.item_download_response [none, serviceOnly=False, readOnly=True, playerOnly=False] itemId: long
+ix.item_download_url [none, serviceOnly=False, readOnly=True, playerOnly=False] itemId: long
+ix.item_icon_response [none, serviceOnly=False, readOnly=True, playerOnly=False] itemId: long
+ix.item_icon_url [none, serviceOnly=False, readOnly=True, playerOnly=False] itemId: long
+ix.item_set_download_response [none, serviceOnly=False, readOnly=True, playerOnly=False] setId: long
+ix.item_set_download_url [none, serviceOnly=False, readOnly=True, playerOnly=False] setId: long
+ix.item_set_image_response [none, serviceOnly=False, readOnly=True, playerOnly=False] setId: long, position?: int = 1
+ix.item_set_image_url [none, serviceOnly=False, readOnly=True, playerOnly=False] setId: long, position?: int = 1
+ix.item_sets [none, serviceOnly=False, readOnly=True, playerOnly=False] setIds: long[]
+ix.item_thumbnail_response [none, serviceOnly=False, readOnly=True, playerOnly=False] itemId: long
+ix.item_thumbnail_url [none, serviceOnly=False, readOnly=True, playerOnly=False] itemId: long
+ix.items [none, serviceOnly=False, readOnly=True, playerOnly=False] itemIds: long[]
+ix.random_item [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: SearchItemsParameters
+ix.random_item_set [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: SearchItemSetsParameters
+ix.search_item_sets [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: SearchItemSetsParameters
+ix.search_items [none, serviceOnly=False, readOnly=True, playerOnly=False] parameters: SearchItemsParameters
 maniaplanet.channel_feedback.status [none, serviceOnly=False, readOnly=True, playerOnly=False]
 maniaplanet.channel_record.leaderboard [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, logins?: string[] = null, type?: string = "channel"
 maniaplanet.channel_record.player_record [none, serviceOnly=False, readOnly=True, playerOnly=False] mapUid: string, login: string, type?: string = "channel"

@@ -31,6 +31,7 @@ public sealed class CatalogGenerator : IIncrementalGenerator
         ("ManiaAPI.TrackmaniaAPI.ITrackmaniaAPI", "trackmania.api", "trackmania2020", "oauth", null),
         ("ManiaAPI.TMX.ITMX", "tmx", "exchange", "none", "tmx"),
         ("ManiaAPI.TMX.IMX", "mx", "exchange", "none", "mx"),
+        ("ManiaAPI.TMX.IIX", "ix", "exchange", "none", null),
         ("ManiaAPI.MasterServer.TMUF.IMasterServerTMUF", "masterserver.tmuf", "tmuf", "none", null),
         ("ManiaAPI.MasterServer.TMUF.IMasterServerTMUF", "masterserver.tmnf", "tmnf", "none", null),
         ("ManiaAPI.MasterServer.MP3.IMasterServerMP3", "masterserver.mp3", "maniaplanet", "none", null),

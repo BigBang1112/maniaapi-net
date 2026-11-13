@@ -42,6 +42,17 @@ public static class TmxServiceExtensions
             services.AddScoped(provider => provider.GetRequiredKeyedService<MX>(site));
         }
 
+        var ixBuilder = services.AddHttpClient(nameof(IX));
+        if (!string.IsNullOrEmpty(options.UserAgent))
+        {
+            ixBuilder.ConfigureHttpClient(client => {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
+            });
+        }
+        options.ConfigureHttpClient?.Invoke(ixBuilder);
+
+        services.AddScoped(provider => new IX(provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(IX))));
+
         services.AddScoped(provider => Enum.GetValues<TmxSite>()
             .ToImmutableDictionary(site => site, site => provider.GetRequiredKeyedService<TMX>(site)));
         services.AddScoped(provider => Enum.GetValues<MxSite>()

@@ -14,7 +14,7 @@ A wrapper for these web APIs:
 - [ManiaPlanet Channel Feedback API](https://feedback.prod.live.maniaplanet.com/) (channel map feedback totals)
 - [Trackmania.io](https://openplanet.dev/tmio/api)
 - [Trackmania Web Services](http://developers.trackmania.com/webservices/) (old TMF web API)
-- [Trackmania Exchange](https://api2.mania.exchange/)
+- [Trackmania Exchange](https://api2.mania.exchange/), including Item Exchange
 - [UnitedLadder](https://ul.unitedascenders.xyz/)
 - Master server APIs using XML (for TMF, TMT, and ManiaPlanet)
 - GBXRemote protocol using XML-RPC (for TMF, ManiaPlanet, and TM2020)
@@ -629,6 +629,7 @@ Wraps:
 - https://original.tm-exchange.com
 - https://sunrise.tm-exchange.com
 - https://nations.tm-exchange.com
+- https://item.exchange (as `IX`)
 
 ### Features
 
@@ -639,6 +640,7 @@ Wraps:
 - Search users
 - Get Gbx URLs and HTTP responses
 - Get image URLs and HTTP responses
+- Item Exchange: search and get items and item sets, user baskets, downloads and images
 
 ### Setup
 
@@ -664,6 +666,16 @@ using ManiaAPI.TMX;
 builder.Services.AddHttpClient("TMX_TMNF");
 builder.Services.AddScoped<TMX>(provider => new TMX(
     provider.GetRequiredService<IHttpClientFactory>().CreateClient("TMX_TMNF"), TmxSite.TMNF));
+```
+
+For Item Exchange, use `IX`:
+
+```cs
+using ManiaAPI.TMX;
+
+var ix = new IX();
+
+var result = await ix.SearchItemsAsync(new() { ItemName = ["rock"], Limit = 20 });
 ```
 
 For advanced DI, consider using the `ManiaAPI.TMX.Extensions.Hosting` package.
