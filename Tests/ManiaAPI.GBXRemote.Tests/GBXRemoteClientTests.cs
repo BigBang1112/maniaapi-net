@@ -30,7 +30,7 @@ public class GBXRemoteClientTests
 
         using var connection = await server.AcceptAsync(UnknownHeader);
 
-        await Assert.ThrowsAsync<ClientException>(() => clientTask.WaitAsync(Timeout));
+        await Assert.ThrowsAsync<GBXRemoteClientException>(() => clientTask.WaitAsync(Timeout));
     }
 
     [Test]
@@ -40,7 +40,7 @@ public class GBXRemoteClientTests
         var clientTask = GBXRemoteClient.ConnectAsync(server.EndPoint).AsTask();
         using var connection = await server.AcceptAsync(UnknownHeader);
 
-        await Assert.ThrowsAsync<ClientException>(() => clientTask.WaitAsync(Timeout));
+        await Assert.ThrowsAsync<GBXRemoteClientException>(() => clientTask.WaitAsync(Timeout));
 
         await connection.WaitForCloseAsync();
     }
@@ -196,7 +196,7 @@ public class GBXRemoteClientTests
     }
 
     [Test]
-    public async Task CallAsync_Fault_ThrowsWithFaultString()
+    public async Task CallAsync_Fault_ThrowsWithFaultCodeAndString()
     {
         await using var session = await FakeGbxRemoteServer.ConnectAsync();
         var call = session.Client.CallAsync("Kick", "nobody");
@@ -204,8 +204,29 @@ public class GBXRemoteClientTests
 
         await session.Connection.FaultAsync(handle, -1000, "Login unknown.");
 
-        var ex = await Assert.ThrowsAsync<FaultException>(() => call.WaitAsync(Timeout));
+        var ex = await Assert.ThrowsAsync<GBXRemoteFaultException>(() => call.WaitAsync(Timeout));
         await Assert.That(ex!.Message).IsEqualTo("Login unknown.");
+        await Assert.That(ex.FaultCode).IsEqualTo(-1000);
+        await Assert.That(ex.FaultString).IsEqualTo("Login unknown.");
+    }
+
+    [Test]
+    public async Task CallAsync_FaultWithoutFaultString_ThrowsWithFaultCode()
+    {
+        await using var session = await FakeGbxRemoteServer.ConnectAsync();
+        var call = session.Client.CallAsync("Kick", "nobody");
+        var (handle, _) = await session.Connection.ReadAsync();
+
+        await session.Connection.SendAsync(handle, """
+            <?xml version="1.0" encoding="UTF-8"?><methodResponse><fault><value><struct>
+            <member><name>faultCode</name><value><int>-1000</int></value></member>
+            </struct></value></fault></methodResponse>
+            """);
+
+        var ex = await Assert.ThrowsAsync<GBXRemoteFaultException>(() => call.WaitAsync(Timeout));
+        await Assert.That(ex!.FaultCode).IsEqualTo(-1000);
+        await Assert.That(ex.FaultString).IsNull();
+        await Assert.That(ex.Message).IsEqualTo("Fault -1000");
     }
 
     [Test]
@@ -217,7 +238,7 @@ public class GBXRemoteClientTests
 
         session.Connection.Dispose();
 
-        await Assert.ThrowsAsync<ClientException>(() => call.WaitAsync(Timeout));
+        await Assert.ThrowsAsync<GBXRemoteClientException>(() => call.WaitAsync(Timeout));
     }
 
     [Test]
@@ -227,7 +248,7 @@ public class GBXRemoteClientTests
         session.Connection.Dispose();
         await session.Client.WaitForCloseAsync().WaitAsync(Timeout);
 
-        await Assert.ThrowsAsync<ClientException>(() => session.Client.CallAsync("GetVersion").WaitAsync(Timeout));
+        await Assert.ThrowsAsync<GBXRemoteClientException>(() => session.Client.CallAsync("GetVersion").WaitAsync(Timeout));
     }
 
     [Test]
@@ -241,7 +262,7 @@ public class GBXRemoteClientTests
 
         await session.Connection.SendHeaderAsync(payloadSize, handle);
 
-        await Assert.ThrowsAsync<ClientException>(() => call.WaitAsync(Timeout));
+        await Assert.ThrowsAsync<GBXRemoteClientException>(() => call.WaitAsync(Timeout));
     }
 
     [Test]
@@ -310,13 +331,13 @@ public class GBXRemoteClientTests
     }
 
     [Test]
-    public async Task CallAsync_AfterDispose_ThrowsClientException()
+    public async Task CallAsync_AfterDispose_ThrowsGBXRemoteClientException()
     {
         await using var session = await FakeGbxRemoteServer.ConnectAsync();
 
         session.Client.Dispose();
 
-        await Assert.ThrowsAsync<ClientException>(() => session.Client.CallAsync("GetVersion").WaitAsync(Timeout));
+        await Assert.ThrowsAsync<GBXRemoteClientException>(() => session.Client.CallAsync("GetVersion").WaitAsync(Timeout));
     }
 
     [Test]

@@ -132,7 +132,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     /// Connects to the XML-RPC port of a game server.
     /// </summary>
     /// <exception cref="SocketException">The connection couldn't be established.</exception>
-    /// <exception cref="ClientException">Header is invalid.</exception>
+    /// <exception cref="GBXRemoteClientException">Header is invalid.</exception>
     public static async ValueTask<GBXRemoteClient> ConnectAsync(
         string ip,
         int port = 5000,
@@ -146,7 +146,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     /// Connects to the XML-RPC port of a game server.
     /// </summary>
     /// <exception cref="SocketException">The connection couldn't be established.</exception>
-    /// <exception cref="ClientException">Header is invalid.</exception>
+    /// <exception cref="GBXRemoteClientException">Header is invalid.</exception>
     public static async ValueTask<GBXRemoteClient> ConnectAsync(
         IPAddress ip,
         int port = 5000,
@@ -160,7 +160,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     /// Connects to the XML-RPC port of a game server.
     /// </summary>
     /// <exception cref="SocketException">The connection couldn't be established.</exception>
-    /// <exception cref="ClientException">Header is invalid.</exception>
+    /// <exception cref="GBXRemoteClientException">Header is invalid.</exception>
     public static async ValueTask<GBXRemoteClient> ConnectAsync(
         IPEndPoint endpoint,
         ILogger<GBXRemoteClient>? logger = null,
@@ -196,7 +196,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         
         if (lengthBuffer[1] != 0 || lengthBuffer[2] != 0 || lengthBuffer[3] != 0)
         {
-            throw new ClientException("GBXRemote header has invalid length");
+            throw new GBXRemoteClientException("GBXRemote header has invalid length");
         }
 
         var length = lengthBuffer[0];
@@ -209,7 +209,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         {
             HandshakeV1 => 1,
             HandshakeV2 => 2,
-            _ => throw new ClientException($"GBXRemote header is invalid: {header}"),
+            _ => throw new GBXRemoteClientException($"GBXRemote header is invalid: {header}"),
         };
     }
 
@@ -252,7 +252,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
             if (payloadSize < 0 || payloadSize > MaxPayloadSize)
             {
                 // The framing can't be trusted anymore, so the connection can't continue
-                throw new ClientException($"GBXRemote message has invalid size ({payloadSize} bytes, maximum is {MaxPayloadSize} bytes)");
+                throw new GBXRemoteClientException($"GBXRemote message has invalid size ({payloadSize} bytes, maximum is {MaxPayloadSize} bytes)");
             }
 
             var payloadBuffer = new byte[payloadSize];
@@ -369,6 +369,10 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Calls a method on the game server and returns the raw XML response, faults included.
+    /// </summary>
+    /// <exception cref="GBXRemoteClientException">The connection was closed before the response arrived.</exception>
     public async Task<string> CallXmlAsync(string methodName, object[] methodParams, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -389,6 +393,12 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         return await CallXmlAsync(methodName, [], cancellationToken);
     }
 
+    /// <summary>
+    /// Calls a method on the game server and reads its response.
+    /// </summary>
+    /// <returns>The single returned value, or an array when the method returns several.</returns>
+    /// <exception cref="GBXRemoteFaultException">The server answered with a fault, like wrong credentials or an unknown login.</exception>
+    /// <exception cref="GBXRemoteClientException">The connection was closed before the response arrived, or the response couldn't be read.</exception>
     public async Task<object> CallAsync(string methodName, object[] methodParams, CancellationToken cancellationToken = default)
     {
         var xmlResult = await CallXmlAsync(methodName, methodParams, cancellationToken);
@@ -470,11 +480,11 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         }
         catch (ChannelClosedException ex)
         {
-            throw new ClientException($"Connection was closed before a response to {methodName} arrived.", ex);
+            throw new GBXRemoteClientException($"Connection was closed before a response to {methodName} arrived.", ex);
         }
         catch (OperationCanceledException ex) when (cts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
-            throw new ClientException($"Connection was closed before a response to {methodName} arrived.", ex);
+            throw new GBXRemoteClientException($"Connection was closed before a response to {methodName} arrived.", ex);
         }
         finally
         {
@@ -567,20 +577,17 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         {
             if (!r.SkipStartElement("fault"))
             {
-                throw new ClientException(xml);
+                throw new GBXRemoteClientException(xml);
             }
 
             if (ReadXmlRpcValue(ref r) is not Dictionary<string, object> faultDict)
             {
-                throw new ClientException("Fault is not dictionary, cannot gather details");
+                throw new GBXRemoteClientException("Fault is not dictionary, cannot gather details");
             }
 
-            if (faultDict.TryGetValue("faultString", out var faultString))
-            {
-                throw new FaultException(faultString?.ToString() ?? "Unknown fault");
-            }
-
-            throw new ClientException("Cannot gather fault details (faultString not found)");
+            throw new GBXRemoteFaultException(
+                faultDict.TryGetValue("faultCode", out var faultCode) ? faultCode as int? : null,
+                faultDict.TryGetValue("faultString", out var faultString) ? faultString?.ToString() : null);
         }
 
         var parameters = new List<object>();
@@ -610,7 +617,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
             "struct" => ReadXmlRpcStruct(ref r),
             "array" => ReadXmlRpcArray(ref r),
             "base64" => Convert.FromBase64String(r.ReadContentAsString()),
-            _ => throw new ClientException($"Unsupported type: {type}"),
+            _ => throw new GBXRemoteClientException($"Unsupported type: {type}"),
         };
 
         _ = r.SkipEndElement();
@@ -780,18 +787,18 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
 
             if (bufferedXmlPayloadByteCount != xmlPayloadByteCount)
             {
-                throw new ClientException($"Invalid string buffering (expected {xmlPayloadByteCount} bytes, got {bufferedXmlPayloadByteCount} bytes)");
+                throw new GBXRemoteClientException($"Invalid string buffering (expected {xmlPayloadByteCount} bytes, got {bufferedXmlPayloadByteCount} bytes)");
             }
 
             if (!BitConverter.TryWriteBytes(buffer, xmlPayloadByteCount))
             {
-                throw new ClientException("Failed to write XML payload byte count to buffer");
+                throw new GBXRemoteClientException("Failed to write XML payload byte count to buffer");
             }
 
             // Write handle as uint32 at offset 4
             if (!BitConverter.TryWriteBytes(buffer.AsSpan().Slice(4), handle))
             {
-                throw new ClientException("Failed to write handle to buffer");
+                throw new GBXRemoteClientException("Failed to write handle to buffer");
             }
 
             await WriteAsync(buffer, cancellationToken);
@@ -809,12 +816,12 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
 
             if (bufferedXmlPayloadByteCount != xmlPayloadByteCount)
             {
-                throw new ClientException($"Invalid string buffering (expected {xmlPayloadByteCount} bytes, got {bufferedXmlPayloadByteCount} bytes)");
+                throw new GBXRemoteClientException($"Invalid string buffering (expected {xmlPayloadByteCount} bytes, got {bufferedXmlPayloadByteCount} bytes)");
             }
 
             if (!BitConverter.TryWriteBytes(buffer, xmlPayloadByteCount))
             {
-                throw new ClientException("Failed to write XML payload byte count to buffer");
+                throw new GBXRemoteClientException("Failed to write XML payload byte count to buffer");
             }
 
             await WriteAsync(buffer, cancellationToken);

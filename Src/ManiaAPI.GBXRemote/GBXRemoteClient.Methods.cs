@@ -53,6 +53,6 @@ public partial class GBXRemoteClient
                 FaultString: fault.TryGetValue("faultString", out var faultString) ? faultString as string : null);
         }
 
-        throw new ClientException("Invalid item in system.multicall response.");
+        throw new GBXRemoteClientException("Invalid item in system.multicall response.");
     }
 }

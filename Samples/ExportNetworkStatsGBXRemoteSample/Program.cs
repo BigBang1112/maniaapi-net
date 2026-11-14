@@ -14,12 +14,8 @@ var logger = LoggerFactory.Create(builder =>
 
 using var client = await GBXRemoteClient.ConnectAsync("127.0.0.1", logger: logger);
 
-object? authenticationResult = await client.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
-
-if (authenticationResult is not true)
-{
-    throw new Exception("Authentication failed.");
-}
+// Wrong credentials throw GBXRemoteFaultException
+await client.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
 
 var networkStats = await client.CallAsync("GetNetworkStats");
 

@@ -31,11 +31,14 @@ using ManiaAPI.GBXRemote;
 
 await using var client = await GBXRemoteClient.ConnectAsync("127.0.0.1");
 
-object authenticationResult = await client.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
-
-if (authenticationResult is not true)
+try
 {
-    throw new Exception("Authentication failed.");
+    await client.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
+}
+catch (GBXRemoteFaultException ex)
+{
+    Console.WriteLine($"Authentication failed: {ex.FaultString} ({ex.FaultCode})");
+    return;
 }
 
 string gameDataDirectory = await client.CallAsync<string>("GameDataDirectory");
