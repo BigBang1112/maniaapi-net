@@ -418,12 +418,9 @@ public class TrackmaniaWS : ITrackmaniaWS
         {
             message = (await response.Content.ReadFromJsonAsync(TrackmaniaWSJsonContext.Default.ErrorResponse, cancellationToken))?.Message;
         }
-        catch (JsonException)
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
         {
-        }
-        catch (NotSupportedException)
-        {
-            // Not JSON
+            // Not JSON, or a charset that can't be decoded, so only the status describes the error
         }
 
         if (string.IsNullOrEmpty(message))

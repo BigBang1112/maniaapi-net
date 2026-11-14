@@ -39,7 +39,7 @@ internal static class AnyServerMP
                 _ = xml.SkipEndElement();
             }
 
-            throw new InvalidOperationException("Unexpected response format: missing 'l' element.");
+            throw new MasterServerResponseException("Unexpected response format: missing 'l' element.");
         });
     }
 

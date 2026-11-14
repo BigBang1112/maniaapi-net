@@ -67,9 +67,18 @@ public sealed class WriteConfirmation(IDataProtectionProvider protection, TimePr
                 throw new ArgumentException("The write confirmation expired or its arguments changed. Request confirmation again.");
             }
 
-            var response = request.InputResponses?.TryGetValue("write_confirmation", out var input) == true
-                ? input.Deserialize(InputResponse.ElicitResultJsonTypeInfo)
-                : null;
+            ElicitResult? response;
+
+            try
+            {
+                response = request.InputResponses?.TryGetValue("write_confirmation", out var input) == true
+                    ? input.Deserialize(InputResponse.ElicitResultJsonTypeInfo)
+                    : null;
+            }
+            catch (JsonException)
+            {
+                throw new ArgumentException("The write confirmation response is invalid. Request confirmation again.");
+            }
 
             if (response?.Action == "accept" && response.Content?.TryGetValue("confirm", out var accepted) == true &&
                 accepted.ValueKind == JsonValueKind.True)

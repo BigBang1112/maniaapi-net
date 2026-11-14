@@ -235,7 +235,15 @@ public static class CatalogMetadata
 
         var metadata = Serialization.CatalogJsonContext.Default.Options.GetTypeInfo<T>();
 
-        return JsonSerializer.Deserialize(value, metadata)!;
+        try
+        {
+            return JsonSerializer.Deserialize(value, metadata)!;
+        }
+        catch (JsonException exception)
+        {
+            // Kept apart from JsonException, which OperationEngine.Error reports as an unreadable upstream response
+            throw new ArgumentException($"Invalid value for '{name}'. Use maniaapi_describe to check the schema.", exception);
+        }
     }
 
     public static JsonNode? Result<T>(T value)

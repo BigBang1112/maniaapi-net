@@ -97,6 +97,35 @@ public class TrackmaniaAPITests
     }
 
     [Test]
+    public async Task AuthorizeAsync_NetworkFailure_ThrowsResponseException()
+    {
+        var fake = new FakeHttpMessageHandler(_ => throw new HttpRequestException(HttpRequestError.ConnectionError, "Connection refused"));
+        using var api = CreateApi(fake);
+
+        var ex = await Assert.ThrowsAsync<TrackmaniaAPIResponseException>(() => api.AuthorizeAsync(ClientId, ClientSecret));
+
+        await Assert.That(ex!.StatusCode).IsNull();
+        await Assert.That(ex.HttpRequestError).IsEqualTo(HttpRequestError.ConnectionError);
+        await Assert.That(ex.InnerException).IsTypeOf<HttpRequestException>();
+    }
+
+    [Test]
+    public async Task GetUserAsync_ErrorWithoutJson_ThrowsWithReasonPhrase()
+    {
+        var fake = new FakeHttpMessageHandler(_ =>
+        {
+            var response = FakeResponse.Text("<html>Bad gateway</html>", "text/html", HttpStatusCode.BadGateway);
+            response.ReasonPhrase = "Bad Gateway";
+            return response;
+        });
+        using var api = CreateApi(fake);
+
+        var ex = await Assert.ThrowsAsync<TrackmaniaAPIResponseException>(() => api.GetUserAsync());
+
+        await Assert.That(ex!.Message).IsEqualTo("Bad Gateway");
+    }
+
+    [Test]
     public async Task AuthorizeAsync_InvalidClient_DoesNotSaveCredentials()
     {
         var fake = FakeHttpMessageHandler.Json(InvalidClientJson, HttpStatusCode.Unauthorized);

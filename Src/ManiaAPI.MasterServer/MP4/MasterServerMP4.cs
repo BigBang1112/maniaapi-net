@@ -638,6 +638,12 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
 
         var count = r.ReadInt32();
 
+        // Each record takes at least 24 bytes (rank, score, and four empty strings), so a larger count can't be real
+        if (count < 0 || count > (ms.Length - ms.Position) / 24)
+        {
+            throw new MasterServerResponseException($"Leaderboard record count {count} doesn't fit the record data.");
+        }
+
         var records = new LeaderboardItem<T>[count];
 
         for (int i = 0; i < count; i++)

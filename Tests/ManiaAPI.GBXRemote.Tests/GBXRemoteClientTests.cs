@@ -262,7 +262,34 @@ public class GBXRemoteClientTests
 
         await session.Connection.SendHeaderAsync(payloadSize, handle);
 
-        await Assert.ThrowsAsync<GBXRemoteClientException>(() => call.WaitAsync(Timeout));
+        var ex = await Assert.ThrowsAsync<GBXRemoteClientException>(() => call.WaitAsync(Timeout));
+
+        // The call names the error that lost the connection as its cause
+        await Assert.That(ex!.InnerException).IsTypeOf<GBXRemoteClientException>();
+        await Assert.That(ex.InnerException!.Message).Contains("invalid size");
+    }
+
+    [Test]
+    public async Task WaitForCloseAsync_ServerSendsInvalidMessageSize_ThrowsWithCause()
+    {
+        await using var session = await FakeGbxRemoteServer.ConnectAsync();
+
+        await session.Connection.SendHeaderAsync(-1, 0x80000000);
+
+        var ex = await Assert.ThrowsAsync<GBXRemoteClientException>(() => session.Client.WaitForCloseAsync().WaitAsync(Timeout));
+
+        await Assert.That(ex!.InnerException).IsTypeOf<GBXRemoteClientException>();
+        await Assert.That(ex.InnerException!.Message).Contains("invalid size");
+    }
+
+    [Test]
+    public async Task WaitForCloseAsync_ClientDisposed_Completes()
+    {
+        await using var session = await FakeGbxRemoteServer.ConnectAsync();
+
+        session.Client.Dispose();
+
+        await session.Client.WaitForCloseAsync().WaitAsync(Timeout);
     }
 
     [Test]

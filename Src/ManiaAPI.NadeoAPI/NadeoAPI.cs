@@ -130,8 +130,9 @@ public abstract class NadeoAPI : INadeoAPI
         {
             error = await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ErrorResponse, cancellationToken);
         }
-        catch (JsonException)
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
         {
+            // Not JSON, or a charset that can't be decoded, so only the status describes the error
             error = null;
         }
 
@@ -240,7 +241,8 @@ public abstract class NadeoAPI : INadeoAPI
 
             if (Handler.CredentialsRejection is { } rejection && rejection.Credentials == credentials)
             {
-                throw new NadeoAPIResponseException(rejection.Error.Response, rejection.Error.StatusCode, rejection.Error.ReasonPhrase);
+                // Only rejections with a 401 or 403 status are stored. The original is kept for its stack trace and correlation.
+                throw new NadeoAPIResponseException(rejection.Error.Response, rejection.Error.StatusCode!.Value, rejection.Error.ReasonPhrase, rejection.Error);
             }
 
             try
@@ -313,9 +315,10 @@ public abstract class NadeoAPI : INadeoAPI
 
         try
         {
-            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {response.StatusCode} {await response.Content.ReadAsStringAsync(cancellationToken)}");
-
             await ValidateResponseAsync(response, cancellationToken);
+
+            // After validation, so an error body that can't be read as a string still throws the response exception in Debug builds
+            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {response.StatusCode} {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
             return response;
         }

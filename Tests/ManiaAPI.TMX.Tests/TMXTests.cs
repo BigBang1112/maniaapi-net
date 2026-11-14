@@ -41,6 +41,12 @@ public class TMXTests
     }
 
     [Test]
+    public async Task Constructor_UnknownSite_ThrowsArgumentOutOfRange()
+    {
+        await Assert.That(() => new TMX(new HttpClient(), (TmxSite)999)).Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
     [Arguments(TmxSite.TMUF)]
     [Arguments(TmxSite.Original)]
     public async Task Constructor_Site_SetsSiteName(TmxSite site)

@@ -676,50 +676,63 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
 
     internal async Task<ScoresInfo> FetchLatestScoresInfoAsync(string scoresName, int leagueId, bool scores7 = true, CancellationToken cancellationToken = default)
     {
-        var responses = new Dictionary<ScoresNumber, Task<HttpResponseMessage>>();
+        var requests = new List<(ScoresNumber Num, Task<HttpResponseMessage> Response)>();
 
-        foreach (var num in Enum.GetValues<ScoresNumber>())
+        try
         {
-            if (!scores7 && num == ScoresNumber.Scores7)
+            foreach (var num in Enum.GetValues<ScoresNumber>())
             {
-                continue; // skip Scores7 if not needed
+                if (!scores7 && num == ScoresNumber.Scores7)
+                {
+                    continue; // skip Scores7 if not needed
+                }
+
+                requests.Add((num, Client.GetAsync(GetScoresUrl(num, scoresName, leagueId), cancellationToken)));
             }
 
-            var url = GetScoresUrl(num, scoresName, leagueId);
-            var task = Client.GetAsync(url, cancellationToken);
+            // Waits for every request, so one failing doesn't leave the others running unobserved with their responses undisposed
+            await Task.WhenAll(requests.Select(x => x.Response));
 
-            responses.Add(num, task);
-        }
+            var latestScoresNum = default(ScoresNumber?);
+            var latestTimestamp = default(DateTimeOffset?);
 
-        var latestScoresNum = default(ScoresNumber?);
-        var latestTimestamp = default(DateTimeOffset?);
-
-        foreach (var (num, responseTask) in responses)
-        {
-            var response = await responseTask;
-
-            if (!response.IsSuccessStatusCode)
+            foreach (var (num, responseTask) in requests)
             {
-                continue;
+                var response = responseTask.Result;
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    continue;
+                }
+
+                await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+
+                var timestamp = GetGzipTimestamp(stream) ?? response.Content.Headers.LastModified;
+
+                if (latestTimestamp is null || timestamp > latestTimestamp)
+                {
+                    latestScoresNum = num;
+                    latestTimestamp = timestamp;
+                }
             }
 
-            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-
-            var timestamp = GetGzipTimestamp(stream) ?? response.Content.Headers.LastModified;
-
-            if (latestTimestamp is null || timestamp > latestTimestamp)
+            if (requests.All(x => !x.Response.Result.IsSuccessStatusCode))
             {
-                latestScoresNum = num;
-                latestTimestamp = timestamp;
+                throw new HttpRequestException("None of the scores files could be downloaded.");
+            }
+
+            return new ScoresInfo(FixDateTime(latestTimestamp ?? throw new MasterServerResponseException("Last modified is null")), latestScoresNum ?? throw new MasterServerResponseException("Latest scores number is null"));
+        }
+        finally
+        {
+            foreach (var (_, responseTask) in requests)
+            {
+                if (responseTask.IsCompletedSuccessfully)
+                {
+                    responseTask.Result.Dispose();
+                }
             }
         }
-
-        if (responses.All(x => !x.Value.Result.IsSuccessStatusCode))
-        {
-            throw new HttpRequestException("None of the scores files could be downloaded.");
-        }
-
-        return new ScoresInfo(FixDateTime(latestTimestamp ?? throw new MasterServerResponseException("Last modified is null")), latestScoresNum ?? throw new MasterServerResponseException("Latest scores number is null"));
     }
 
     public static string GetScoresUrl(ScoresNumber num, string scoresName, int leagueId)
@@ -752,11 +765,15 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         }
 
         Span<byte> buffer = stackalloc byte[10];
-        stream.ReadExactly(buffer);
+
+        if (stream.ReadAtLeast(buffer, buffer.Length, throwOnEndOfStream: false) < buffer.Length)
+        {
+            throw new MasterServerResponseException("Scores file is too short for a GZip header.");
+        }
 
         if (buffer[0] != 0x1F || buffer[1] != 0x8B)
         {
-            throw new InvalidDataException("Invalid GZip header while reading timestamp.");
+            throw new MasterServerResponseException("Invalid GZip header while reading timestamp.");
         }
 
         var mtime = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Slice(4, 4));

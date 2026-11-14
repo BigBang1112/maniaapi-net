@@ -53,13 +53,15 @@ public class NadeoAPIErrorTests
     [Test]
     public async Task GetZonesAsync_NetworkFailure_ThrowsResponseException()
     {
-        var fake = new FakeHttpMessageHandler(_ => throw new HttpRequestException("Connection refused"));
+        var fake = new FakeHttpMessageHandler(_ => throw new HttpRequestException(HttpRequestError.ConnectionError, "Connection refused"));
         using var ns = new NadeoServices(fake.CreateClient());
 
         var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetZonesAsync());
 
         await Assert.That(ex!.Message).IsEqualTo("Connection refused");
         await Assert.That(ex.InnerException).IsTypeOf<HttpRequestException>();
+        await Assert.That(ex.StatusCode).IsNull();
+        await Assert.That(ex.HttpRequestError).IsEqualTo(HttpRequestError.ConnectionError);
     }
 
     [Test]
@@ -103,6 +105,23 @@ public class NadeoAPIErrorTests
             Disposed = true;
             base.Dispose(disposing);
         }
+    }
+
+    [Test]
+    public async Task GetZonesAsync_ErrorWithInvalidCharset_ThrowsResponseException()
+    {
+        var fake = new FakeHttpMessageHandler(_ =>
+        {
+            var content = new StringContent("Service unavailable");
+            content.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("text/plain; charset=bogus");
+            return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) { Content = content, ReasonPhrase = "Service Unavailable" };
+        });
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetZonesAsync());
+
+        await Assert.That(ex!.StatusCode).IsEqualTo(HttpStatusCode.ServiceUnavailable);
+        await Assert.That(ex.Message).IsEqualTo("Service Unavailable");
     }
 
     private static HttpResponseMessage BadGatewayHtml()

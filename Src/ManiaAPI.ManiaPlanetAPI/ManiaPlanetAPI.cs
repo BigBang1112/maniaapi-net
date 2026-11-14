@@ -163,7 +163,20 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             { "scope", string.Join(' ', scopes) }
         };
 
-        using var response = await Client.PostAsync("https://prod.live.maniaplanet.com/login/oauth2/access_token", new FormUrlEncodedContent(values), cancellationToken);
+        using var content = new FormUrlEncodedContent(values);
+
+        HttpResponseMessage response;
+
+        try
+        {
+            response = await Client.PostAsync("https://prod.live.maniaplanet.com/login/oauth2/access_token", content, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new ManiaPlanetAPIResponseException(ex.Message, ex);
+        }
+
+        using var _ = response;
 
 #if DEBUG
         var stringResult = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -218,8 +231,9 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         {
             error = await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.ErrorResponse, cancellationToken);
         }
-        catch (JsonException)
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
         {
+            // Not JSON, or a charset that can't be decoded, so only the status describes the error
             error = null;
         }
 
@@ -535,9 +549,10 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
         try
         {
-            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
-
             await ValidateResponseAsync(response, cancellationToken);
+
+            // After validation, so an error body that can't be read as a string still throws the response exception in Debug builds
+            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
             return response;
         }

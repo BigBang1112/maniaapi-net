@@ -179,6 +179,7 @@ public class NadeoAPIAuthorizationTests
         await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl]);
         await Assert.That(second!.StatusCode).IsEqualTo(status);
         await Assert.That(second.Message).IsEqualTo(first!.Message);
+        await Assert.That(second.InnerException).IsSameReferenceAs(first);
     }
 
     [Test]

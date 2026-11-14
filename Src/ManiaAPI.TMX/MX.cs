@@ -105,7 +105,7 @@ public partial class MX : IMX
             MxSite.Maniaplanet => "https://tm.mania.exchange/",
             MxSite.Trackmania => "https://trackmania.exchange/",
             MxSite.Shootmania => "https://sm.mania.exchange/",
-            _ => throw new NotImplementedException()
+            _ => throw new ArgumentOutOfRangeException(nameof(site), site, "Unknown site.")
         };
 
         Client.BaseAddress = new Uri(url);

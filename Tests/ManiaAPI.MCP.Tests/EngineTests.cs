@@ -195,6 +195,32 @@ public class EngineTests
     }
 
     [Test]
+    public async Task WrappedConnectionFailuresAreRetryable()
+    {
+        var error = OperationEngine.Error(new NadeoAPI.NadeoAPIResponseException("Connection refused", new HttpRequestException("Connection refused")));
+
+        await Assert.That(error["retryable"]!.GetValue<bool>()).IsTrue();
+        await Assert.That(error["upstreamStatus"]).IsNull();
+        await Assert.That(error["message"]!.GetValue<string>()).Contains("temporarily unavailable");
+    }
+
+    [Test]
+    public async Task UpstreamJsonErrorsAreNotBlamedOnArguments()
+    {
+        var error = OperationEngine.Error(new JsonException("The response body is null."));
+
+        await Assert.That(error["message"]!.GetValue<string>()).Contains("upstream service returned a response");
+    }
+
+    [Test]
+    public async Task UnreadableArgumentValueThrowsArgumentException()
+    {
+        await Assert.That(() => CatalogMetadata.Argument<Guid>(Json("""{"zoneId":"not-a-guid"}"""), "zoneId"))
+            .Throws<ArgumentException>()
+            .WithMessageContaining("Invalid value for 'zoneId'");
+    }
+
+    [Test]
     public async Task MasterServerErrorsIncludeErrorCodeName()
     {
         var error = OperationEngine.Error(new MasterServer.MasterServerResponseException(14, "player unknown", default, new MasterServer.MasterServerResponseDetails(default)));

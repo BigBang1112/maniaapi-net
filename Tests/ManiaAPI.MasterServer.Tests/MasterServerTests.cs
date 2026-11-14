@@ -83,6 +83,18 @@ public class MasterServerTests
     }
 
     [Test]
+    public async Task GetPlayerInfosAsync_UnreadableErrorCode_ThrowsResponseException()
+    {
+        var fake = MasterServerXml.Handler("""<?xml version="1.0" encoding="UTF-8"?><r><r><n>GetPlayerInfos</n><e><v>abc</v><m>error</m></e></r></r>""");
+        using var server = new MasterServerMP4(fake.CreateClient(Url));
+
+        var ex = await Assert.ThrowsAsync<MasterServerResponseException>(() => server.GetPlayerInfosAsync("nobody"));
+
+        await Assert.That(ex!.Value).IsNull();
+        await Assert.That(ex.InnerException).IsTypeOf<FormatException>();
+    }
+
+    [Test]
     public async Task GetPlayerInfosAsync_UnknownErrorCode_KeepsRawValue()
     {
         var fake = MasterServerXml.Handler(MasterServerXml.Error("GetPlayerInfos", 9999, "error"));

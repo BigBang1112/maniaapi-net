@@ -63,6 +63,16 @@ public partial class TMX : ITMX
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
 
+        var url = site switch
+        {
+            TmxSite.TMUF => "https://tmuf.exchange/",
+            TmxSite.TMNF => "https://tmnf.exchange/",
+            TmxSite.Original => "https://original.tm-exchange.com/",
+            TmxSite.Sunrise => "https://sunrise.tm-exchange.com/",
+            TmxSite.Nations => "https://nations.tm-exchange.com/",
+            _ => throw new ArgumentOutOfRangeException(nameof(site), site, "Unknown site.")
+        };
+
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
@@ -78,16 +88,6 @@ public partial class TMX : ITMX
 
         Site = site;
         SiteName = site.ToString();
-
-        var url = site switch
-        {
-            TmxSite.TMUF => "https://tmuf.exchange/",
-            TmxSite.TMNF => "https://tmnf.exchange/",
-            TmxSite.Original => "https://original.tm-exchange.com/",
-            TmxSite.Sunrise => "https://sunrise.tm-exchange.com/",
-            TmxSite.Nations => "https://nations.tm-exchange.com/",
-            _ => throw new NotImplementedException()
-        };
 
         Client.BaseAddress = new Uri(url);
     }

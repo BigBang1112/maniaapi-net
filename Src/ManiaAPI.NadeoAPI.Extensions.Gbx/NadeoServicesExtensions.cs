@@ -23,9 +23,9 @@ public static class NadeoServicesExtensions
         ArgumentNullException.ThrowIfNull(stream);
         ArgumentException.ThrowIfNullOrEmpty(fileName);
 
-        await using var bufferedStream = new BufferedStream(stream);
+        await using var mapStream = await CopyToMemoryAsync(stream, cancellationToken);
 
-        using var content = CreateContent(bufferedStream, fileName, out _);
+        using var content = CreateContent(mapStream, fileName, out _);
 
         return await UploadMapAsync(services, content, cancellationToken);
     }
@@ -86,7 +86,7 @@ public static class NadeoServicesExtensions
     public static async Task<MapInfo> UploadMapAsync(this INadeoServices services, CGameCtnChallenge map, string fileName, GbxWriteSettings settings = default, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(map);
-        ArgumentNullException.ThrowIfNull(fileName);
+        ArgumentException.ThrowIfNullOrEmpty(fileName);
 
         await using var stream = new MemoryStream();
         map.Save(stream, settings);
@@ -113,11 +113,11 @@ public static class NadeoServicesExtensions
     public static async Task<MapInfo> UpdateMapAsync(this INadeoServices services, Guid mapId, Stream stream, string fileName, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(stream);
-        ArgumentNullException.ThrowIfNull(fileName);
+        ArgumentException.ThrowIfNullOrEmpty(fileName);
 
-        await using var bufferedStream = new BufferedStream(stream);
+        await using var mapStream = await CopyToMemoryAsync(stream, cancellationToken);
 
-        using var content = CreateContent(bufferedStream, fileName, out _);
+        using var content = CreateContent(mapStream, fileName, out _);
 
         return await UpdateMapAsync(services, mapId, content, cancellationToken);
     }
@@ -132,11 +132,11 @@ public static class NadeoServicesExtensions
     public static async Task<MapInfo> UpdateMapAsync(this INadeoServices services, Stream stream, string fileName, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(stream);
-        ArgumentNullException.ThrowIfNull(fileName);
+        ArgumentException.ThrowIfNullOrEmpty(fileName);
 
-        await using var bufferedStream = new BufferedStream(stream);
+        await using var mapStream = await CopyToMemoryAsync(stream, cancellationToken);
 
-        using var content = CreateContent(bufferedStream, fileName, out var mapUid);
+        using var content = CreateContent(mapStream, fileName, out var mapUid);
 
         var mapInfo = await services.GetMapInfoAsync(mapUid, cancellationToken) ?? throw new MapNotFoundException("Map with the specified UID does not exist.");
 
@@ -244,7 +244,7 @@ public static class NadeoServicesExtensions
     public static async Task<MapInfo> UpdateMapAsync(this INadeoServices services, Guid mapId, CGameCtnChallenge map, string fileName, GbxWriteSettings settings = default, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(map);
-        ArgumentNullException.ThrowIfNull(fileName);
+        ArgumentException.ThrowIfNullOrEmpty(fileName);
 
         await using var stream = new MemoryStream();
         map.Save(stream, settings);
@@ -265,7 +265,7 @@ public static class NadeoServicesExtensions
     public static async Task<MapInfo> UpdateMapAsync(this INadeoServices services, CGameCtnChallenge map, string fileName, GbxWriteSettings settings = default, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(map);
-        ArgumentNullException.ThrowIfNull(fileName);
+        ArgumentException.ThrowIfNullOrEmpty(fileName);
 
         var mapInfo = await services.GetMapInfoAsync(map.MapUid, cancellationToken) ?? throw new MapNotFoundException("Map with the specified UID does not exist.");
 
@@ -279,14 +279,26 @@ public static class NadeoServicesExtensions
     }
 
 
-    private static MultipartFormDataContent CreateContent(BufferedStream bufferedStream, string fileName, out string mapUid)
+    /// <summary>
+    /// Copies the rest of the caller's stream, so it stays open when the request content is disposed
+    /// and doesn't have to be seekable to read the header and then send the whole map.
+    /// </summary>
+    private static async Task<MemoryStream> CopyToMemoryAsync(Stream stream, CancellationToken cancellationToken)
     {
-        var map = GBX.NET.Gbx.ParseHeaderNode<CGameCtnChallenge>(bufferedStream);
+        var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream, cancellationToken);
+        memoryStream.Position = 0;
+        return memoryStream;
+    }
+
+    private static MultipartFormDataContent CreateContent(MemoryStream mapStream, string fileName, out string mapUid)
+    {
+        var map = GBX.NET.Gbx.ParseHeaderNode<CGameCtnChallenge>(mapStream);
         mapUid = map.MapUid;
 
-        bufferedStream.Position = 0;
+        mapStream.Position = 0;
 
-        return CreateContent(bufferedStream, fileName, map);
+        return CreateContent(mapStream, fileName, map);
     }
 
     private static MultipartFormDataContent CreateContent(Stream stream, string fileName, CGameCtnChallenge map)

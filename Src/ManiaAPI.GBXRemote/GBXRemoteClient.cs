@@ -53,6 +53,11 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
 
     private readonly CancellationTokenSource cts = new();
 
+    /// <summary>
+    /// The error that ended the listen loop, or <see langword="null"/> while connected or after a clean close.
+    /// </summary>
+    private volatile Exception? closeException;
+
     public bool IsWaitingForMessages { get; private set; }
 
     private Task ListenTask { get; }
@@ -86,6 +91,12 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     [LoggerMessage(EventId = 8, Level = LogLevel.Error, Message = "Failed to read XML callback (0x{Handle:x8}), skipping...")]
     private static partial void LogInvalidCallback(ILogger logger, Exception exception, uint handle);
 
+    [LoggerMessage(EventId = 9, Level = LogLevel.Information, Message = "Connection was closed by the server.")]
+    private static partial void LogClosedByServer(ILogger logger);
+
+    [LoggerMessage(EventId = 10, Level = LogLevel.Error, Message = "Connection was lost.")]
+    private static partial void LogConnectionLost(ILogger logger, Exception exception);
+
     private GBXRemoteClient(TcpClient tcp, int version, ILogger<GBXRemoteClient> logger)
     {
         this.tcp = tcp ?? throw new ArgumentNullException(nameof(tcp));
@@ -102,10 +113,19 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
             {
                 await ListenAsync(cts.Token);
             }
-            catch (OperationCanceledException) {}
+            catch (Exception) when (cts.IsCancellationRequested)
+            {
+                // Disposed, which can surface as cancellation or as the disposed socket failing the read
+            }
+            catch (EndOfStreamException)
+            {
+                // The server closed the connection between messages or in the middle of one
+                LogClosedByServer(logger);
+            }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Listen loop terminated unexpectedly.");
+                closeException = ex;
+                LogConnectionLost(logger, ex);
             }
             finally
             {
@@ -478,13 +498,15 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
 
             return xml;
         }
+        // Either can end a call when the connection closes, depending on whether the closed channel or the canceled token is seen first.
+        // The error that lost the connection, if any, is the cause.
         catch (ChannelClosedException ex)
         {
-            throw new GBXRemoteClientException($"Connection was closed before a response to {methodName} arrived.", ex);
+            throw new GBXRemoteClientException($"Connection was closed before a response to {methodName} arrived.", closeException ?? ex);
         }
         catch (OperationCanceledException ex) when (cts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
-            throw new GBXRemoteClientException($"Connection was closed before a response to {methodName} arrived.", ex);
+            throw new GBXRemoteClientException($"Connection was closed before a response to {methodName} arrived.", closeException ?? ex);
         }
         finally
         {
@@ -856,19 +878,19 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
-    /// Waits until the connection is closed, whether because the client was disposed,
-    /// the remote host closed it, or an error occurred while listening for messages.
+    /// Waits until the connection is closed. Completes normally when the client was disposed or the server closed the connection,
+    /// and throws when the connection was lost because of an error.
     /// </summary>
     /// <param name="cancellationToken">A token that, when canceled, stops waiting without closing the connection.</param>
+    /// <exception cref="GBXRemoteClientException">The connection was lost because of an error, like a reset connection or an invalid message. The error is the inner exception.</exception>
     public async Task WaitForCloseAsync(CancellationToken cancellationToken = default)
     {
-        try
+        // The listen loop catches everything, so this only throws when cancellationToken is canceled
+        await ListenTask.WaitAsync(cancellationToken);
+
+        if (closeException is { } exception)
         {
-            await ListenTask.WaitAsync(cancellationToken);
-        }
-        catch (OperationCanceledException ex) when (ex.CancellationToken != cancellationToken)
-        {
-            // The listen loop stopped because the client was disposed - this is a normal closure.
+            throw new GBXRemoteClientException("Connection was lost.", exception);
         }
     }
 

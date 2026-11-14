@@ -67,6 +67,31 @@ public partial class NadeoServicesExtensionsTests
     }
 
     [Test]
+    public async Task UploadMapAsync_LeavesCallerStreamOpen()
+    {
+        var map = ReadMapHeader();
+        var fake = FakeHttpMessageHandler.Json(MapInfoJson(map.MapUid));
+        using var ns = new NadeoServices(fake.CreateClient());
+        await using var stream = File.OpenRead(MapPath);
+
+        await ns.UploadMapAsync(stream, MapFileName);
+
+        await Assert.That(stream.CanRead).IsTrue();
+    }
+
+    [Test]
+    public async Task UpdateMapAsync_EmptyFileName_ThrowsWithoutRequest()
+    {
+        var fake = FakeHttpMessageHandler.Json("{}");
+        using var ns = new NadeoServices(fake.CreateClient());
+        await using var stream = File.OpenRead(MapPath);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => ns.UpdateMapAsync(MapId, stream, ""));
+
+        await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
     public async Task UploadMapAsync_SendsMapFieldsFromHeader()
     {
         var map = ReadMapHeader();

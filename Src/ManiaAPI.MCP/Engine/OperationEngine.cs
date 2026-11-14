@@ -8,8 +8,6 @@ using ManiaAPI.MCP.Catalog;
 using ManiaAPI.MCP.Configuration;
 using ManiaAPI.MCP.Hosting;
 using ManiaAPI.MCP.Resources;
-using ManiaAPI.NadeoAPI;
-using ManiaAPI.TrackmaniaAPI;
 
 namespace ManiaAPI.MCP.Engine;
 
@@ -381,6 +379,7 @@ public sealed class OperationEngine
     {
         var status = UpstreamStatus(exception);
 
+        // Every client's response exception is an HttpRequestException, without a status code when the connection failed
         var retryable = exception is HttpRequestException && status is null ||
             exception is OperationCanceledException || status is >= 500 or 429;
 
@@ -390,7 +389,8 @@ public sealed class OperationEngine
             MasterServer.MasterServerResponseException { Value: { } value, Error: { } error } => Enum.IsDefined(error)
                 ? $"Master server error {value} ({error}). Check the login, title, league, and game context."
                 : $"Master server error {value}. Check the login, title, league, and game context.",
-            JsonException => "Invalid argument value. Use maniaapi_describe to check the schema.",
+            // Invalid arguments are rejected as ArgumentException before this, so this comes from an upstream response
+            JsonException => "The upstream service returned a response that couldn't be read.",
             _ when status == 401 => "Upstream authorization was denied. Check the configured account and its permissions.",
             _ when status == 403 => "The configured account cannot access this upstream resource; club membership may be required.",
             _ when status == 404 => "The upstream resource was not found.",
@@ -411,9 +411,6 @@ public sealed class OperationEngine
     {
         return exception switch
         {
-            NadeoAPIResponseException nadeo => (int)nadeo.StatusCode,
-            TrackmaniaAPIResponseException oauth => (int)oauth.StatusCode,
-            ManiaPlanetAPI.ManiaPlanetAPIResponseException planet => (int)planet.StatusCode,
             HttpRequestException http => (int?)http.StatusCode,
             _ => null
         };

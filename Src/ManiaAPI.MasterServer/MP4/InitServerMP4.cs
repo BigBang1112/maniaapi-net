@@ -44,7 +44,7 @@ public class InitServerMP4 : InitServerMP, IInitServerMP4
                 _ = xml.SkipEndElement();
             }
 
-            throw new InvalidOperationException("Unexpected response format: missing 'l' element.");
+            throw new MasterServerResponseException("Unexpected response format: missing 'l' element.");
         });
     }
 }

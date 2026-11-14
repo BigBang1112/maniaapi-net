@@ -27,6 +27,18 @@ public class ManiaPlanetAPITests
         """;
 
     [Test]
+    public async Task AuthorizeAsync_NetworkFailure_ThrowsResponseException()
+    {
+        var fake = new FakeHttpMessageHandler(_ => throw new HttpRequestException(HttpRequestError.ConnectionError, "Connection refused"));
+        using var api = CreateApi(fake);
+
+        var ex = await Assert.ThrowsAsync<ManiaPlanetAPIResponseException>(() => api.AuthorizeAsync(ClientId, ClientSecret));
+
+        await Assert.That(ex!.StatusCode).IsNull();
+        await Assert.That(ex.HttpRequestError).IsEqualTo(HttpRequestError.ConnectionError);
+    }
+
+    [Test]
     public async Task AuthorizeAsync_PostsClientCredentialsToManiaPlanetLogin()
     {
         var fake = FakeHttpMessageHandler.Sequence(() => TokenResponse(ExpiresAt));

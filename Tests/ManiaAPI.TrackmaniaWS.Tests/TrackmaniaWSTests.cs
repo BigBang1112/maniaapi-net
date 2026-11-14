@@ -226,6 +226,22 @@ public class TrackmaniaWSTests
     }
 
     [Test]
+    public async Task GetPlayerAsync_ErrorWithInvalidCharset_ThrowsResponseException()
+    {
+        var fake = new FakeHttpMessageHandler(_ =>
+        {
+            var content = new StringContent("Service unavailable");
+            content.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("text/plain; charset=bogus");
+            return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) { Content = content };
+        });
+        using var ws = CreateWs(fake);
+
+        var ex = await Assert.ThrowsAsync<TrackmaniaWSResponseException>(() => ws.GetPlayerAsync("nobody"));
+
+        await Assert.That(ex!.StatusCode).IsEqualTo(HttpStatusCode.ServiceUnavailable);
+    }
+
+    [Test]
     public async Task GetZonesAsync_EmptyErrorMessage_FallsBackToStatus()
     {
         var fake = FakeHttpMessageHandler.Json("""{"message":""}""", HttpStatusCode.BadRequest);

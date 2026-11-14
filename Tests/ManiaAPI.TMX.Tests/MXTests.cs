@@ -20,6 +20,12 @@ public class MXTests
     }
 
     [Test]
+    public async Task Constructor_UnknownSite_ThrowsArgumentOutOfRange()
+    {
+        await Assert.That(() => new MX(new HttpClient(), (MxSite)999)).Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
     public async Task GetMapGbxUrl_ReturnsSiteUrl()
     {
         using var mx = CreateMx();

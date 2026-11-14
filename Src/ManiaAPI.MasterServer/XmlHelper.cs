@@ -34,9 +34,46 @@ internal static partial class XmlHelper
         return new XmlResponse(await response.Content.ReadAsStringAsync(cancellationToken), new MasterServerResponseDetails(requestTime));
     }
 
+    /// <summary>
+    /// Reads the response and its content.
+    /// </summary>
+    /// <exception cref="MasterServerResponseException">The master server returned an error, or the response couldn't be read.</exception>
     public static MasterServerResponse<T> ProcessResponseResult<T>(
         string requestName,
-        XmlResponse response, 
+        XmlResponse response,
+        XmlProcessContent<T> processContent) where T : notnull
+    {
+        try
+        {
+            return ReadResponseResult(requestName, response, processContent);
+        }
+        catch (Exception exception) when (exception is not MasterServerResponseException)
+        {
+            // Parsing only touches the response already in memory, so anything thrown here means it couldn't be read,
+            // whether a number that doesn't parse, malformed XML, or a binary payload that ends early
+            throw new MasterServerResponseException("The master server response couldn't be read.", exception);
+        }
+    }
+
+    /// <summary>
+    /// Reads the response without content.
+    /// </summary>
+    /// <exception cref="MasterServerResponseException">The response couldn't be read.</exception>
+    public static MasterServerResponse ProcessResponseResult(XmlResponse response)
+    {
+        try
+        {
+            return ReadResponseResult(response);
+        }
+        catch (Exception exception) when (exception is not MasterServerResponseException)
+        {
+            throw new MasterServerResponseException("The master server response couldn't be read.", exception);
+        }
+    }
+
+    private static MasterServerResponse<T> ReadResponseResult<T>(
+        string requestName,
+        XmlResponse response,
         XmlProcessContent<T> processContent) where T : notnull
     {
         Debug.WriteLine(response.Content);
@@ -81,7 +118,7 @@ internal static partial class XmlHelper
         return new MasterServerResponse<T>(content ?? throw new MasterServerResponseException("No response content"), executionTimeSpan, xmlParseTime, response.Details);
     }
 
-    public static MasterServerResponse ProcessResponseResult(XmlResponse response)
+    private static MasterServerResponse ReadResponseResult(XmlResponse response)
     {
         Debug.WriteLine(response.Content);
 
