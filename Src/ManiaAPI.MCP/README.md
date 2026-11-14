@@ -31,13 +31,21 @@ Then run it with `maniaapi-mcp`. Stdio is the default, and all games are enabled
 `ManiaAPI:UserAgent` is required: set it to something that identifies you, like `my-assistant/1.0 (contact: you@example.com)`. It's sent to every upstream service, followed by the library's own User-Agent, so the people running those services can tell who's calling. The server won't start without it.
 
 ```
+# Claude Code
 claude mcp add maniaapi -e ManiaAPI__UserAgent="my-assistant/1.0 (contact: you@example.com)" -- maniaapi-mcp
+
+# Codex
+codex mcp add maniaapi --env ManiaAPI__UserAgent="my-assistant/1.0 (contact: you@example.com)" -- maniaapi-mcp
 ```
 
 Only want some games? Pick toolsets from `trackmania2020`, `exchange`, `tmuf`, `tmnf`, `maniaplanet`, and `trackmaniaturbo`:
 
 ```
+# Claude Code
 claude mcp add maniaapi -e ManiaAPI__UserAgent="my-assistant/1.0 (contact: you@example.com)" -- maniaapi-mcp --toolsets tmnf,exchange
+
+# Codex
+codex mcp add maniaapi --env ManiaAPI__UserAgent="my-assistant/1.0 (contact: you@example.com)" -- maniaapi-mcp --toolsets tmnf,exchange
 ```
 
 The `exchange` toolset includes Item Exchange for TM2020 and ManiaPlanet. Set `ManiaAPI:Exchange:ItemExchange` to `false` to leave it out.
@@ -57,6 +65,18 @@ Most clients accept a JSON config like this:
     }
   }
 }
+```
+
+Codex uses TOML instead, in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.maniaapi]
+command = "maniaapi-mcp"
+
+[mcp_servers.maniaapi.env]
+ManiaAPI__UserAgent = "my-assistant/1.0 (contact: you@example.com)"
+ManiaAPI__NadeoAPI__Login = "service_name"
+ManiaAPI__NadeoAPI__Password = "ls>97jO>e3>>D/Ce"
 ```
 
 ## Credentials
@@ -86,6 +106,34 @@ Clients send the key in the `X-Api-Key` header. Connect to `/mcp` for everything
   }
 }
 ```
+
+## Run with Docker
+
+Build the Alpine image from the repository root:
+
+```
+docker build -f Src/ManiaAPI.MCP/Dockerfile -t maniaapi-mcp .
+```
+
+It runs over HTTP on port 8080 by default, as a non-root user:
+
+```
+docker run -d -p 8080:8080 -e ManiaAPI__UserAgent="my-assistant/1.0 (contact: you@example.com)" -e ManiaAPI__Http__ApiKeys__0="some-long-random-key" maniaapi-mcp
+```
+
+`/healthz` needs no API key and is used by the image's health check. Credentials go in environment variables as above, or in [Docker secrets](https://docs.docker.com/engine/swarm/secrets/) mounted in `/run/secrets`, one file per setting named like `ManiaAPI__NadeoAPI__Password`.
+
+For stdio, run it interactively and pass any arguments without `--http`, like `--toolsets tmnf,exchange`, or `""` for none:
+
+```
+# Claude Code
+claude mcp add maniaapi -- docker run -i --rm -e ManiaAPI__UserAgent="my-assistant/1.0 (contact: you@example.com)" maniaapi-mcp ""
+
+# Codex
+codex mcp add maniaapi -- docker run -i --rm -e ManiaAPI__UserAgent="my-assistant/1.0 (contact: you@example.com)" maniaapi-mcp ""
+```
+
+Writes stay off in the container over HTTP, as it listens on all interfaces rather than loopback.
 
 ## Writes
 

@@ -1,0 +1,126 @@
+name: Docker Image Publish
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+    paths:
+      - ".github/workflows/docker-publish.yml"
+      - ".dockerignore"
+      - "Generators/**"
+      - "Src/**"
+  pull_request:
+    branches: [ "main", "dev" ]
+    paths:
+      - ".github/workflows/docker-publish.yml"
+      - ".dockerignore"
+      - "Generators/**"
+      - "Src/**"
+  schedule:
+    - cron: "0 5 */7 * *" # Every 7 days at 05:00 UTC, to pick up base image updates
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-publish-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  IMAGE_NAME: maniaapi-mcp
+  DOCKERFILE: Src/ManiaAPI.MCP/Dockerfile
+  DOCKER_README: Src/ManiaAPI.MCP/DOCKER_README.md
+  # Only main publishes. Other branches and pull requests just check that the image builds.
+  PUBLISH: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+
+jobs:
+  build-and-push:
+    name: Build & Push
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Read MCP version
+        id: version
+        run: |
+          version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Src/ManiaAPI.MCP/ManiaAPI.MCP.csproj | head -n 1)
+          if [ -z "$version" ]; then
+            echo "No <Version> found in Src/ManiaAPI.MCP/ManiaAPI.MCP.csproj" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ${{ vars.DOCKERHUB_USERNAME || 'bigbang1112' }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=alpine
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=${{ steps.version.outputs.version }}-alpine
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to Docker Hub
+        if: env.PUBLISH == 'true'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE }}
+          platforms: linux/amd64,linux/arm64
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          push: ${{ env.PUBLISH == 'true' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  update-dockerhub-description:
+    name: Update Docker Hub Description
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Update Docker Hub description
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          login_payload=$(jq -n \
+            --arg username "$DOCKERHUB_USERNAME" \
+            --arg password "$DOCKERHUB_TOKEN" \
+            '{ username: $username, password: $password }')
+          jwt=$(curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Content-Type: application/json" \
+            --data "$login_payload" \
+            https://hub.docker.com/v2/users/login/ | jq --exit-status --raw-output '.token')
+
+          jq -n --rawfile description "$DOCKER_README" \
+            '{ full_description: $description, description: "MCP server for Trackmania and ManiaPlanet APIs, from ManiaAPI.NET" }' \
+            > /tmp/dockerhub-description.json
+
+          curl --fail-with-body --silent --show-error \
+            --request PATCH \
+            --header "Authorization: JWT $jwt" \
+            --header "Content-Type: application/json" \
+            --data-binary @/tmp/dockerhub-description.json \
+            "https://hub.docker.com/v2/repositories/$DOCKERHUB_USERNAME/$IMAGE_NAME/"
