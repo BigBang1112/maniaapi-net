@@ -98,9 +98,29 @@ public class WriteTests
     }
 
     [Test]
-    public async Task ExplicitConfirmationFallbackRejectsUnconfirmedWrites()
+    public async Task ClientWithoutMrtrCannotWriteByDefault()
     {
         using var services = EngineTests.CreateServices();
+        var confirmation = services.GetRequiredService<WriteConfirmation>();
+        var operation = WriteOperation(() => { });
+        var request = new CallToolRequestParams { Name = "maniaapi_invoke" };
+
+        // The model can set confirm itself, so it alone must not approve the write
+        await Assert.That(() => confirmation.Authorize(operation, EngineTests.Json("{}"),
+            "exchange", "stdio", true, request, null)).Throws<ArgumentException>();
+    }
+
+    [Test]
+    public async Task ExplicitConfirmationFallbackRejectsUnconfirmedWrites()
+    {
+        var collection = new ServiceCollection();
+        collection.AddLogging();
+        collection.AddManiaAPI(TestConfiguration.Create(new Dictionary<string, string?>
+        {
+            ["ManiaAPI:TrustClientApproval"] = "true"
+        }));
+
+        using var services = collection.BuildServiceProvider();
         var confirmation = services.GetRequiredService<WriteConfirmation>();
         var operation = WriteOperation(() => { });
         var request = new CallToolRequestParams { Name = "maniaapi_invoke" };

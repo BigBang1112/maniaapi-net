@@ -2,13 +2,14 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using ManiaAPI.MCP.Catalog;
+using ManiaAPI.MCP.Configuration;
 using Microsoft.AspNetCore.DataProtection;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
 namespace ManiaAPI.MCP.Engine;
 
-public sealed class WriteConfirmation(IDataProtectionProvider protection, TimeProvider clock)
+public sealed class WriteConfirmation(IDataProtectionProvider protection, TimeProvider clock, McpOptions options)
 {
     private readonly IDataProtector protector = protection.CreateProtector("ManiaAPI.MCP.WriteConfirmation.v1");
 
@@ -28,6 +29,13 @@ public sealed class WriteConfirmation(IDataProtectionProvider protection, TimePr
 
         if (server?.IsMrtrSupported != true)
         {
+            // The model sets confirm itself, so without the approval prompt nobody but the client approves the write
+            if (!options.TrustClientApproval)
+            {
+                throw new ArgumentException("This client can't show the write approval prompt, so the write was refused. " +
+                    "Use a client that supports MRTR, or set ManiaAPI:TrustClientApproval to true to rely on the client's own tool approval.");
+            }
+
             if (!confirm)
             {
                 throw new ArgumentException("This write requires confirm: true when the client cannot handle MRTR confirmation.");

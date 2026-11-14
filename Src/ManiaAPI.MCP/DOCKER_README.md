@@ -55,7 +55,7 @@ Pass them as environment variables, or as [Docker secrets](https://docs.docker.c
 
 ## Writes
 
-Writes (club management, favorites, map upload, ...) are off by default and always ask for confirmation. Over HTTP they only work when the server listens on loopback, so this image refuses to start with them over HTTP. To use them, set `ManiaAPI__AllowWrites=true` and run over stdio.
+Writes (club management, favorites, map upload, ...) are off by default and always ask for confirmation. Over HTTP they only work when the server listens on loopback, so this image refuses to start with them over HTTP. To use them, set `ManiaAPI__AllowWrites=true` and run over stdio. Clients that can't show the approval prompt (MRTR) are refused unless `ManiaAPI__TrustClientApproval=true` is set, see the [full documentation](https://github.com/BigBang1112/maniaapi-net/tree/main/Src/ManiaAPI.MCP#writes).
 
 ## More
 

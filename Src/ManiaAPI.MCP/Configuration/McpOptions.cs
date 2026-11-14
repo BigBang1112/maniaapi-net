@@ -8,6 +8,13 @@ public sealed class McpOptions
 
     public string[] Toolsets { get; set; } = [.. SupportedToolsets];
     public bool AllowWrites { get; set; }
+
+    /// <summary>
+    /// Whether a write may go ahead on <c>confirm: true</c> when the client can't show the server's approval prompt (MRTR).
+    /// The model sets that argument itself, so this relies only on the client's own tool approval. Off by default,
+    /// which refuses writes from such clients.
+    /// </summary>
+    public bool TrustClientApproval { get; set; }
     public bool ExposeOperationsAsTools { get; set; }
 
     /// <summary>

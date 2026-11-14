@@ -144,6 +144,8 @@ Disabled by default. Set `ManiaAPI:AllowWrites` to `true` to allow things like e
 
 Every write asks for your approval first. Writes only work locally (stdio, or HTTP on loopback).
 
+The server asks for approval with a prompt in your MCP client, which needs a client that supports MRTR. Other clients can't show it, so their writes are refused. To allow writes from them anyway, set `ManiaAPI:TrustClientApproval` to `true`. The assistant then approves a write by passing `confirm: true`, so the only check left is your client's own tool approval: make sure it asks you before each call.
+
 The approval comes back in a second request, which has to reach the same server instance within 5 minutes. Running several instances on the same machine behind a proxy, or restarting in between, can make the approval fail, so run a single instance when writes are on.
 
 ## Link player accounts
