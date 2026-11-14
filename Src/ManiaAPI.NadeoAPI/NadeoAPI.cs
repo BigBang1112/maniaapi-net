@@ -35,12 +35,12 @@ public abstract class NadeoAPI : INadeoAPI
     public DateTimeOffset? ExpirationTime => Handler.JWT?.ExpirationTime;
 
     /// <summary>
-    /// 
+    /// Creates a client that sends requests through <paramref name="client"/>, authorized with the tokens kept in <paramref name="handler"/>.
     /// </summary>
-    /// <param name="client"></param>
-    /// <param name="handler"></param>
-    /// <param name="automaticallyAuthorize"></param>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <param name="client">HTTP client to send requests with. The library's User-Agent is added to it.</param>
+    /// <param name="handler">Holds the tokens. Clients that share it share the authorization.</param>
+    /// <param name="automaticallyAuthorize">Whether requests refresh the token once its refresh time has passed.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="client"/> or <paramref name="handler"/> is null.</exception>
     protected NadeoAPI(HttpClient client, NadeoAPIHandler handler, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
@@ -62,15 +62,10 @@ public abstract class NadeoAPI : INadeoAPI
     }
 
     /// <summary>
-    /// 
+    /// Signs in with a service account. <paramref name="method"/> is ignored, as Ubisoft account authentication no longer works.
     /// </summary>
-    /// <param name="login"></param>
-    /// <param name="password"></param>
-    /// <param name="method"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <exception cref="ArgumentException"><paramref name="login"/> or <paramref name="password"/> is null or empty.</exception>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
     [Obsolete("Use AuthorizeAsync(string login, string password, CancellationToken cancellationToken) instead. The Ubisoft account authentication method is no longer working (create a service account instead: https://www.trackmania.com/player/service-account)")]
     public virtual async Task AuthorizeAsync(string login, string password, AuthorizationMethod method, CancellationToken cancellationToken = default)
     {
@@ -78,13 +73,15 @@ public abstract class NadeoAPI : INadeoAPI
     }
 
     /// <summary>
-    /// 
+    /// Signs in with a service account and stores the tokens in <see cref="Handler"/>.
+    /// The credentials are also kept for signing in again later when <see cref="NadeoAPIHandler.SaveCredentials"/> is true.
     /// </summary>
-    /// <param name="login"></param>
-    /// <param name="password"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <param name="login">Login of the service account.</param>
+    /// <param name="password">Password of the service account.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <exception cref="ArgumentException"><paramref name="login"/> or <paramref name="password"/> is null or empty.</exception>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
+    /// <exception cref="JsonException">The response has no usable tokens.</exception>
     public virtual async Task AuthorizeAsync(string login, string password, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(login);
@@ -117,12 +114,9 @@ public abstract class NadeoAPI : INadeoAPI
     }
 
     /// <summary>
-    /// 
+    /// Throws for an unsuccessful response, with the error from its body when it has one.
     /// </summary>
-    /// <param name="response"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="NadeoAPIResponseException">The response is an error.</exception>
     private static async ValueTask ValidateResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         if (response.IsSuccessStatusCode)
@@ -275,14 +269,14 @@ public abstract class NadeoAPI : INadeoAPI
     }
 
     /// <summary>
-    /// 
+    /// Sends an authorized request to an endpoint of this service, signing in with pending credentials or refreshing the token first when needed.
     /// </summary>
-    /// <param name="method"></param>
-    /// <param name="endpoint"></param>
-    /// <param name="content"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <param name="method">HTTP method of the request.</param>
+    /// <param name="endpoint">Path relative to <see cref="BaseAddress"/>, including any query.</param>
+    /// <param name="content">Body of the request, disposed with it.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The successful response, which the caller disposes.</returns>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
     public async Task<HttpResponseMessage> SendAsync(HttpMethod method, string? endpoint, HttpContent? content = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(method);
@@ -334,14 +328,10 @@ public abstract class NadeoAPI : INadeoAPI
     }
 
     /// <summary>
-    /// 
+    /// Sends a GET request and reads the JSON response.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="endpoint"></param>
-    /// <param name="jsonTypeInfo"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
+    /// <exception cref="JsonException">The response body is null or isn't valid JSON for <typeparamref name="T"/>.</exception>
     protected async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
@@ -349,14 +339,10 @@ public abstract class NadeoAPI : INadeoAPI
     }
 
     /// <summary>
-    /// 
+    /// Sends a GET request and reads the JSON response, or returns the default value when the response has no content (HTTP 204).
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="endpoint"></param>
-    /// <param name="jsonTypeInfo"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
+    /// <exception cref="JsonException">The response body isn't valid JSON for <typeparamref name="T"/>.</exception>
     protected async Task<T?> GetNullableJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
@@ -370,15 +356,10 @@ public abstract class NadeoAPI : INadeoAPI
     }
 
     /// <summary>
-    /// 
+    /// Sends a POST request with a JSON body and reads the JSON response.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="endpoint"></param>
-    /// <param name="content"></param>
-    /// <param name="jsonTypeInfo"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
+    /// <exception cref="JsonException">The response body is null or isn't valid JSON for <typeparamref name="T"/>.</exception>
     protected async Task<T> PostJsonAsync<T>(string? endpoint, JsonContent content, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, endpoint, content, cancellationToken: cancellationToken);

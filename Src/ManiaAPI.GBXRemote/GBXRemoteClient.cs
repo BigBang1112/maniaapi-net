@@ -129,14 +129,9 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
-    /// 
+    /// Connects to the XML-RPC port of a game server.
     /// </summary>
-    /// <param name="ip"></param>
-    /// <param name="port"></param>
-    /// <param name="logger"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="SocketException"></exception>
+    /// <exception cref="SocketException">The connection couldn't be established.</exception>
     /// <exception cref="ClientException">Header is invalid.</exception>
     public static async ValueTask<GBXRemoteClient> ConnectAsync(
         string ip,
@@ -148,14 +143,9 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
-    /// 
+    /// Connects to the XML-RPC port of a game server.
     /// </summary>
-    /// <param name="ip"></param>
-    /// <param name="port"></param>
-    /// <param name="logger"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="SocketException"></exception>
+    /// <exception cref="SocketException">The connection couldn't be established.</exception>
     /// <exception cref="ClientException">Header is invalid.</exception>
     public static async ValueTask<GBXRemoteClient> ConnectAsync(
         IPAddress ip,
@@ -167,13 +157,9 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
-    /// 
+    /// Connects to the XML-RPC port of a game server.
     /// </summary>
-    /// <param name="endpoint"></param>
-    /// <param name="logger"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="SocketException"></exception>
+    /// <exception cref="SocketException">The connection couldn't be established.</exception>
     /// <exception cref="ClientException">Header is invalid.</exception>
     public static async ValueTask<GBXRemoteClient> ConnectAsync(
         IPEndPoint endpoint,

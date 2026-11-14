@@ -274,14 +274,13 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     }
 
     /// <summary>
-    /// 
+    /// Searches titles, ordered by online players by default.
     /// </summary>
     /// <param name="filters">Possible values: shootmania, trackmania, solo, multiplayer, matchmaking, environments</param>
     /// <param name="orderBy">Possible values: onlinePlayers, lastUpdate, registrations, playersLast24h</param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="offset">Number of entries to skip.</param>
+    /// <param name="length">Number of entries to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public virtual async Task<ImmutableList<Title>> SearchTitlesAsync(
         string[]? filters = null, 
         string? orderBy = "onlinePlayers", 
@@ -354,22 +353,21 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     }
 
     /// <summary>
-    /// 
+    /// Searches online servers, ordered by player count by default.
     /// </summary>
     /// <param name="orderBy">Possible values: playerCount, levelClass1</param>
-    /// <param name="titleUids"></param>
-    /// <param name="environments"></param>
-    /// <param name="scriptName"></param>
-    /// <param name="search"></param>
-    /// <param name="zone"></param>
-    /// <param name="onlyPublic"></param>
-    /// <param name="onlyPrivate"></param>
-    /// <param name="onlyLobby"></param>
-    /// <param name="excludeLobby"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="titleUids">UIDs of the titles to filter by.</param>
+    /// <param name="environments">Environments to filter by.</param>
+    /// <param name="scriptName">Game mode script to filter by.</param>
+    /// <param name="search">Text to search for.</param>
+    /// <param name="zone">Zone path to filter by, as returned by <see cref="ManiaPlanetAPI.GetZonesAsync"/>.</param>
+    /// <param name="onlyPublic">Whether to only include public servers.</param>
+    /// <param name="onlyPrivate">Whether to only include private servers.</param>
+    /// <param name="onlyLobby">Whether to only include lobby servers.</param>
+    /// <param name="excludeLobby">Whether to leave out lobby servers.</param>
+    /// <param name="offset">Number of entries to skip.</param>
+    /// <param name="length">Number of entries to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public virtual async Task<ImmutableList<OnlineServer>> SearchOnlineServersAsync(
         string orderBy = "playerCount",
         string[]? titleUids = null,

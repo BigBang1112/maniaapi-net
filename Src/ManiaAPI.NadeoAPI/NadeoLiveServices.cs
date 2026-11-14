@@ -20,8 +20,7 @@ public interface INadeoLiveServices : INadeoAPI
     /// <param name="mapUid">The UID of the map.</param>
     /// <param name="groupUid">The ID of the group/season, "Personal_Best" for all-time records.</param>
     /// <param name="zoneId">The ID of the zone to get records for.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, string groupUid, Guid zoneId, CancellationToken cancellationToken = default);
     Task<ImmutableList<Position>> GetLeaderboardPositionByTimeAsync(string mapUid, string groupUid, int score, CancellationToken cancellationToken = default);
     Task<ImmutableList<Position>> GetLeaderboardPositionsByTimeAsync(IEnumerable<string> mapUids, IEnumerable<string> groupUids, IEnumerable<int> scores, CancellationToken cancellationToken = default);
@@ -47,8 +46,7 @@ public interface INadeoLiveServices : INadeoAPI
     /// <param name="clubId">The club's ID.</param>
     /// <param name="length">The number of campaigns to retrieve (max 250).</param>
     /// <param name="offset">The number of campaigns to skip.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<ClubCampaignCollection> GetClubCampaignsByClubAsync(int clubId, int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubCompetitionCollection> GetClubCompetitionsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
     Task<ClubMapReviewRoomCollection> GetClubMapReviewRoomsAsync(int length, int offset = 0, string? name = null, CancellationToken cancellationToken = default);
@@ -62,12 +60,11 @@ public interface INadeoLiveServices : INadeoAPI
     Task<ClubPlayerInfo> GetClubPlayerInfoAsync(CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// 
+    /// Gets the clubs of the authenticated account.
     /// </summary>
     /// <param name="length">Number of clubs to request. Max allowed is 250, but response provides <see cref="ClubCollection.ItemCount"/> to allow pagination.</param>
-    /// <param name="offset"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="offset">Number of clubs to skip.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<ClubCollection> GetMyClubsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubActivity> EditClubActivityAsync(int clubId, int activityId, ClubActivityEdition edition, CancellationToken cancellationToken = default);
     Task<ClubCampaign> EditClubCampaignAsync(int clubId, int campaignId, ClubCampaignEdition edition, CancellationToken cancellationToken = default);
@@ -84,69 +81,41 @@ public interface INadeoLiveServices : INadeoAPI
     /// <summary>
     /// This request returns empty list if authenticated through dedicated server.
     /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<PlayerServerAccountCollection> GetDedicatedServerAccountsAsync(CancellationToken cancellationToken = default);
     Task<CampaignCollection> GetCupOfTheWeekCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
     /// <summary>
     /// The <paramref name="groupUid"/> "Personal_Best" cannot be used for this endpoint because it requires a group that refers to a campaign or season.
     /// </summary>
-    /// <param name="groupUid"></param>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
-    /// <param name="onlyWorld"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<CampaignRankingCollection> GetCampaignLeaderboardAsync(string groupUid, int length = 5, int offset = 0, bool? onlyWorld = null, CancellationToken cancellationToken = default);
     /// <summary>
     /// The <paramref name="groupUid"/> "Personal_Best" cannot be used for this endpoint because it requires a group that refers to a campaign or season.
     /// </summary>
-    /// <param name="groupUid"></param>
-    /// <param name="clubId"></param>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubCampaignTopCollection> GetClubCampaignLeaderboardAsync(string groupUid, int clubId, int length = 5, int offset = 0, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request returns empty model if authenticated through dedicated server. The <paramref name="groupUid"/> "Personal_Best" cannot be used for this endpoint because it requires a group that refers to a campaign or season.
     /// </summary>
-    /// <param name="groupUid"></param>
-    /// <param name="clubId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubCampaignRanking> GetPlayerClubCampaignRankingAsync(string groupUid, int clubId, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="groupUid"></param>
-    /// <param name="mapUid"></param>
-    /// <param name="clubId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubMapRecord> GetPlayerClubMapRecordAsync(string groupUid, string mapUid, int clubId, CancellationToken cancellationToken = default);
     Task<ClubMapRecord> GetPlayerClubMapRecordAsync(string mapUid, int clubId, CancellationToken cancellationToken = default);
     /// <summary>
     /// Gets the currently authenticated user's records on multiple maps. A maximum of 50 records may be requested.
     /// </summary>
-    /// <param name="mapUids"></param>
-    /// <param name="groupUids"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ImmutableList<Position>> GetPlayerRecordsAsync(IEnumerable<string> mapUids, IEnumerable<string> groupUids, CancellationToken cancellationToken = default);
     Task<ImmutableList<Position>> GetPlayerRecordsAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default);
     /// <summary>
     /// The <paramref name="groupUid"/> "Personal_Best" can be used to get the global leaderboard.
     /// </summary>
-    /// <param name="groupUid"></param>
-    /// <param name="mapUid"></param>
+    /// <param name="groupUid">The ID of the group/season, "Personal_Best" for all-time records.</param>
+    /// <param name="mapUid">The UID of the map.</param>
     /// <param name="lower">The amount of records to return that are lower than the requested score. Max 1.</param>
     /// <param name="upper">The amount of records to return that are higher than the requested score. Max 1.</param>
-    /// <param name="score"></param>
-    /// <param name="onlyWorld"></param>
-    /// <param name="zoneId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="score">The score to get the surrounding records of. Left out of the request when null.</param>
+    /// <param name="onlyWorld">Sent as the <c>onlyWorld</c> query parameter. Left out of the request when null.</param>
+    /// <param name="zoneId">The ID of the zone to get records in. Left out of the request when null.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<TopLeaderboardCollection> GetSurroundingRecordsAsync(string groupUid, string mapUid, int lower, int upper, int? score = null, bool? onlyWorld = null, string? zoneId = null, CancellationToken cancellationToken = default);
     Task<ClubTopLeaderboard> GetClubTopLeaderboardAsync(string groupUid, string mapUid, int clubId, int length = 5, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubTopLeaderboard> GetClubTopLeaderboardAsync(string mapUid, int clubId, int length = 5, int offset = 0, CancellationToken cancellationToken = default);
@@ -155,107 +124,67 @@ public interface INadeoLiveServices : INadeoAPI
     /// <summary>
     /// This request returns empty model if authenticated through dedicated server.
     /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<TrophyPlayerRanking> GetOwnTrophyRankingAsync(CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account, but does not error out on dedicated servers (silently fails).
     /// </summary>
-    /// <param name="mapUid"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task AddFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account, but does not error out on dedicated servers (silently fails).
     /// </summary>
-    /// <param name="mapUid"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task RemoveFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request returns empty list if authenticated through dedicated server.
     /// </summary>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
+    /// <param name="length">Number of maps to retrieve.</param>
+    /// <param name="offset">Number of maps to skip.</param>
     /// <param name="sort">Either "date" or "name".</param>
     /// <param name="order">Either "asc" or "desc".</param>
-    /// <param name="mapTypeList"></param>
-    /// <param name="playable"></param>
-    /// <param name="onlyMine"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="mapTypeList">Sent as the <c>mapTypeList</c> filter. Left out of the request when null.</param>
+    /// <param name="playable">Sent as the <c>playable</c> filter. Left out of the request when null.</param>
+    /// <param name="onlyMine">Sent as the <c>onlyMine</c> filter. Left out of the request when null.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<MapInfoLiveCollection> GetFavoriteMapsAsync(int length, int offset = 0, string sort = "date", string order = "desc", string? mapTypeList = null, bool? playable = null, bool? onlyMine = null, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request returns empty list if authenticated through dedicated server.
     /// </summary>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<MapInfoLiveCollection> GetUploadedMapsAsync(int length, int offset = 0, CancellationToken cancellationToken = default);
 
     Task<ClubMapReviewRoom> GetClubMapReviewActivityAsync(int clubId, int activityId, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account. If the currently authenticated account has already joined the club, this returns the existing membership.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubMember> JoinClubAsync(int clubId, CancellationToken cancellationToken = default);
     Task<ClubNews> GetClubNewsAsync(int clubId, int activityId, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account. If the club is already pinned, calling this again unpins it.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubTagInfo> PinClubAsync(int clubId, CancellationToken cancellationToken = default);
     /// <summary>
     /// If the requested room is inactive, calling this starts it. <see cref="ClubRoomJoinLink.JoinLink"/> will be empty while the room isn't ready yet, which is also reflected by <see cref="ClubRoomJoinLink.Starting"/>.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="activityId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubRoomJoinLink> JoinClubRoomAsync(int clubId, int activityId, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="activityId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<string> GetClubRoomPasswordAsync(int clubId, int activityId, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account. If the authenticated account is already using the club's tag, calling this again removes it.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubTagInfo> SetClubTagAsync(int clubId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="creation"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<Club> CreateClubAsync(ClubCreation creation, CancellationToken cancellationToken = default);
     Task<Club> EditClubAsync(int clubId, ClubEdition edition, CancellationToken cancellationToken = default);
     /// <summary>
     /// Deletes all of the club's content, which cannot be recovered afterwards. Only the club creator can delete a club.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task DeleteClubAsync(int clubId, CancellationToken cancellationToken = default);
     /// <summary>
     /// Campaigns created using this endpoint are deactivated by default. Use <see cref="EditClubActivityAsync"/> to activate them.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="creation"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubCampaign> CreateClubCampaignAsync(int clubId, ClubCampaignCreation creation, CancellationToken cancellationToken = default);
     Task<ClubRoom> CreateClubRoomAsync(int clubId, ClubRoomCreation creation, CancellationToken cancellationToken = default);
     Task<ClubRoom> EditClubRoomAsync(int clubId, int activityId, ClubRoomEdition edition, CancellationToken cancellationToken = default);
@@ -264,8 +193,7 @@ public interface INadeoLiveServices : INadeoAPI
     /// </summary>
     /// <param name="clubId">The club's ID.</param>
     /// <param name="creation">The room name, the dedicated server login and optionally the folder.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<ClubRoom> CreateClubRoomFromServerAsync(int clubId, ClubRoomFromServerCreation creation, CancellationToken cancellationToken = default);
     /// <summary>
     /// Edits a club room that points to a dedicated server.
@@ -273,98 +201,59 @@ public interface INadeoLiveServices : INadeoAPI
     /// <param name="clubId">The club's ID.</param>
     /// <param name="activityId">The room's activity ID.</param>
     /// <param name="edition">The room name, the dedicated server login and the folder.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<ClubRoom> EditClubRoomFromServerAsync(int clubId, int activityId, ClubRoomFromServerEdition edition, CancellationToken cancellationToken = default);
     Task<ClubNews> CreateClubNewsAsync(int clubId, ClubNewsCreation creation, CancellationToken cancellationToken = default);
     Task<ClubNews> EditClubNewsAsync(int clubId, int activityId, ClubNewsEdition edition, CancellationToken cancellationToken = default);
     /// <summary>
     /// The <see cref="ClubRankingCreation.UseCase"/> supports "ranking-official" (current quarterly campaign), "ranking-daily" (Daily Track / TOTD), and "ranking-club" (club campaign, requires <see cref="ClubRankingCreation.CampaignId"/> to be set to a campaign from the club).
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="creation"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubRanking> CreateClubRankingAsync(int clubId, ClubRankingCreation creation, CancellationToken cancellationToken = default);
     Task<ClubMapReviewRoom> CreateClubMapReviewActivityAsync(int clubId, ClubMapReviewCreation creation, CancellationToken cancellationToken = default);
     Task<ClubMapReviewRoom> EditClubMapReviewActivityAsync(int clubId, int activityId, ClubMapReviewEdition edition, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request is only useful for clubs with their privacy level set to "private-open". For other privacy settings, this returns an empty list.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubMemberCollection> GetClubMemberRequestsAsync(int clubId, int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubMember> SetClubMemberVipAsync(int clubId, Guid accountId, CancellationToken cancellationToken = default);
     Task<ClubMember> UnsetClubMemberVipAsync(int clubId, Guid accountId, CancellationToken cancellationToken = default);
     /// <summary>
     /// The role supports "Member", "Content Creator", and "Admin".
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="accountId"></param>
-    /// <param name="edition"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubMember> EditClubMemberAsync(int clubId, Guid accountId, ClubMemberEdition edition, CancellationToken cancellationToken = default);
     /// <summary>
     /// Can also be used for the currently authenticated account to leave a club they don't own.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="accountId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task DeleteClubMemberAsync(int clubId, Guid accountId, CancellationToken cancellationToken = default);
     Task<ClubBucket> CreateClubUploadActivityAsync(int clubId, ClubBucketCreation creation, CancellationToken cancellationToken = default);
     /// <summary>
     /// Assets used for this endpoint must be uploaded to Nadeo's servers beforehand. Depending on the upload activity type, <paramref name="itemIds"/> should contain `mapUid`s, `skinId`s, or `itemId`s.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="activityId"></param>
-    /// <param name="itemIds"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task AddToClubUploadActivityAsync(int clubId, int activityId, IEnumerable<string> itemIds, CancellationToken cancellationToken = default);
     Task RemoveFromClubUploadActivityAsync(int clubId, int activityId, IEnumerable<string> itemIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="activityId"></param>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
+    /// <param name="clubId">The club's ID.</param>
+    /// <param name="activityId">The map review's activity ID.</param>
+    /// <param name="length">Number of maps to retrieve.</param>
+    /// <param name="offset">Number of maps to skip.</param>
     /// <param name="withFeedback">Whether to include detailed statistics for votes.</param>
     /// <param name="withMapInfo">Whether to include detailed info about each map.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<SubmittedMapCollection> GetClubSubmittedMapReviewMapsAsync(int clubId, int activityId, int length, int offset = 0, bool? withFeedback = null, bool? withMapInfo = null, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="reviewType"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<MapReviewConnectInfo> GetMapReviewConnectionAsync(string reviewType, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request is only useful with tokens authenticated through a Ubisoft user account with enough permissions to manage map review activities in the club.
     /// </summary>
-    /// <param name="clubId"></param>
-    /// <param name="activityId"></param>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<SubmittedMapCollection> GetClubMapReviewSubmissionsAsync(int clubId, int activityId, int length, int offset = 0, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="reviewType"></param>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<SubmittedMapCollection> GetSubmittedMapReviewMapsAsync(string reviewType, int length, int offset = 0, CancellationToken cancellationToken = default);
     Task<int> GetMapReviewWaitingTimeAsync(string reviewType, CancellationToken cancellationToken = default);
 }

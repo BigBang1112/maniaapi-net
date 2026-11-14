@@ -54,7 +54,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// <param name="client">HTTP client.</param>
     /// <param name="handler">Handler to use for the Trackmania API.</param>
     /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.</param>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="client"/> or <paramref name="handler"/> is null.</exception>
     public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
@@ -84,8 +84,8 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// <param name="clientSecret">Client secret.</param>
     /// <param name="scopes">Scopes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentException"><paramref name="clientId"/> or <paramref name="clientSecret"/> is null or empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="scopes"/> is null.</exception>
     public virtual async Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(clientId);
@@ -156,7 +156,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// <param name="accountIds">Account IDs.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Dictionary of nicknames.</returns>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="accountIds"/> is null.</exception>
     public virtual async Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(accountIds);

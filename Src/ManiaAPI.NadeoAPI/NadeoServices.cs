@@ -18,40 +18,28 @@ public interface INadeoServices : INadeoAPI
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="accountId"></param>
-    /// <param name="mapIds"></param>
-    /// <param name="gamemode"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ImmutableList<MapRecord>> GetAccountRecordsByMapIdsAsync(Guid accountId, IEnumerable<Guid> mapIds, string? gamemode = null, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="accountId"></param>
-    /// <param name="mapIds"></param>
-    /// <param name="gamemode"></param>
+    /// <param name="accountId">The ID of the account.</param>
+    /// <param name="mapIds">The IDs of the maps.</param>
+    /// <param name="gamemode">Sent as the <c>gameMode</c> query parameter. Left out of the request when null.</param>
     /// <param name="offset">The number of records to skip.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<ImmutableList<MapRecord>> GetAccountRecordsByMapIdsAsync(Guid accountId, IEnumerable<Guid> mapIds, string? gamemode, int offset, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="accountId"></param>
-    /// <param name="seasonIds"></param>
-    /// <param name="gamemode"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ImmutableList<MapRecord>> GetAccountRecordsBySeasonIdsAsync(Guid accountId, IEnumerable<Guid> seasonIds, string? gamemode = null, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="accountId"></param>
-    /// <param name="seasonIds"></param>
-    /// <param name="gamemode"></param>
+    /// <param name="accountId">The ID of the account.</param>
+    /// <param name="seasonIds">The IDs of the seasons.</param>
+    /// <param name="gamemode">Sent as the <c>gameMode</c> query parameter. Left out of the request when null.</param>
     /// <param name="offset">The number of records to skip.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<ImmutableList<MapRecord>> GetAccountRecordsBySeasonIdsAsync(Guid accountId, IEnumerable<Guid> seasonIds, string? gamemode, int offset, CancellationToken cancellationToken = default);
     Task<MapRecord> GetMapRecordByIdAsync(Guid mapRecordId, CancellationToken cancellationToken = default);
     Task<ImmutableList<PlayerZone>> GetPlayerZonesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
@@ -62,15 +50,10 @@ public interface INadeoServices : INadeoAPI
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="accountIds"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ImmutableList<PlayerClubTag>> GetPlayerClubTagsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="accountIds"></param>
-    /// <returns></returns>
     Task<ImmutableList<PlayerClubTag>> GetPlayerClubTagsAsync(params Guid[] accountIds);
     Task<MapInfo?> GetMapInfoAsync(Guid mapId, CancellationToken cancellationToken = default);
     Task<ImmutableList<MapInfo>> GetMapInfosAsync(IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default);
@@ -82,15 +65,10 @@ public interface INadeoServices : INadeoAPI
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<MapInfoCollection> GetMapsByAuthorAsync(CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="skinId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<SkinInfo?> GetSkinInfoAsync(Guid skinId, CancellationToken cancellationToken = default);
     Task<ImmutableList<SkinIdentifier>> GetSkinsByAccountIdsAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
     Task<ImmutableList<SkinIdentifier>> GetSkinsByAccountIdsAsync(params Guid[] accountIds);
@@ -98,82 +76,59 @@ public interface INadeoServices : INadeoAPI
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="accountId"></param>
+    /// <param name="accountId">The ID of the account.</param>
     /// <param name="count">The number of entries to retrieve. Max allowed is 1000.</param>
     /// <param name="offset">The number of entries to skip (looking back from the most recent).</param>
     /// <param name="trophyType">The level of trophy to filter for (between 1 and 9).</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<TrophyHistoryCollection> GetPlayerTrophyHistoryAsync(Guid accountId, int count = 100, int offset = 0, int? trophyType = null, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="accountId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<TrophySummary> GetPlayerTrophySummaryAsync(Guid accountId, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="mapUid"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task AddFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="mapUid"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task RemoveFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
+    /// <param name="length">Number of maps to retrieve.</param>
+    /// <param name="offset">Number of maps to skip.</param>
     /// <param name="sort">Either "date" or "name".</param>
     /// <param name="order">Either "asc" or "desc".</param>
-    /// <param name="mapTypeList"></param>
-    /// <param name="playable"></param>
-    /// <param name="onlyMine"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="mapTypeList">Sent as the <c>mapTypeList</c> filter. Left out of the request when null.</param>
+    /// <param name="playable">Sent as the <c>playable</c> filter. Left out of the request when null.</param>
+    /// <param name="onlyMine">Sent as the <c>onlyMine</c> filter. Left out of the request when null.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<MapFavoriteCollection> GetFavoriteMapsAsync(int length, int offset = 0, string sort = "date", string order = "desc", string? mapTypeList = null, bool? playable = null, bool? onlyMine = null, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="mapUids"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<MapFavoriteCollection> GetFavoriteMapsByUidsAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default);
     Task<MapFavoriteCollection> GetFavoriteMapsByUidsAsync(params string[] mapUids);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="mapUid"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<MapVote> GetMapVoteAsync(string mapUid, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="mapUid"></param>
+    /// <param name="mapUid">The UID of the map.</param>
     /// <param name="vote">-1 for a dislike, 1 for a like, 0 to unset the vote.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task SetMapVoteAsync(string mapUid, int vote, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<MapInfoCollection> GetSubmittedMapsAsync(CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="accountId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ImmutableList<SkinFavorite>> GetFavoriteSkinsAsync(Guid accountId, CancellationToken cancellationToken = default);
 }
 
