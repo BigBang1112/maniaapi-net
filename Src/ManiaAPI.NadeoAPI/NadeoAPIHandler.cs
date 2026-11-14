@@ -6,8 +6,15 @@ public sealed class NadeoAPIHandler
 {
     /// <summary>
     /// Credentials used for initial authentication. They are discarded after the first successful authentication.
+    /// If Nadeo rejects them, requests fail with that error without signing in again until new credentials are set here.
     /// </summary>
     public NadeoAPICredentials? PendingCredentials { get; set; }
+
+    /// <summary>
+    /// Credentials Nadeo rejected and its error. Signing in again with the same credentials can't succeed
+    /// and could get the account locked, so requests fail with this error instead while they're still pending.
+    /// </summary>
+    internal (NadeoAPICredentials Credentials, NadeoAPIResponseException Error)? CredentialsRejection { get; set; }
 
     /// <summary>
     /// Credentials used for maintaining authentication after refresh token expires. This is only used if <see cref="SaveCredentials"/> is set to true.

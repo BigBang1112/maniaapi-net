@@ -165,6 +165,72 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
+    [Arguments(HttpStatusCode.Unauthorized)]
+    [Arguments(HttpStatusCode.Forbidden)]
+    public async Task GetZonesAsync_PendingCredentialsRejected_FailsLaterRequestsWithoutSigningInAgain(HttpStatusCode status)
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            () => FakeResponse.Json("""{"message":"Invalid credentials."}""", status));
+        using var ns = new NadeoServices(fake.CreateClient(), PendingCredentialsHandler());
+
+        var first = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetZonesAsync());
+        var second = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetZonesAsync());
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl]);
+        await Assert.That(second!.StatusCode).IsEqualTo(status);
+        await Assert.That(second.Message).IsEqualTo(first!.Message);
+    }
+
+    [Test]
+    public async Task GetZonesAsync_PendingCredentialsFailTemporarily_SignsInAgainOnNextRequest()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            () => FakeResponse.Json("""{"message":"Service unavailable."}""", HttpStatusCode.ServiceUnavailable),
+            () => NadeoTokens.Valid(Audience, out _),
+            () => FakeResponse.Json("[]"));
+        using var ns = new NadeoServices(fake.CreateClient(), PendingCredentialsHandler());
+
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetZonesAsync());
+        await ns.GetZonesAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl, AuthenticationUrl, ZonesUrl]);
+    }
+
+    [Test]
+    public async Task GetZonesAsync_NewPendingCredentialsAfterRejection_SignsInWithThem()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            () => FakeResponse.Json("""{"message":"Invalid credentials."}""", HttpStatusCode.Unauthorized),
+            () => NadeoTokens.Valid(Audience, out _),
+            () => FakeResponse.Json("[]"));
+        var handler = PendingCredentialsHandler();
+        using var ns = new NadeoServices(fake.CreateClient(), handler);
+
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetZonesAsync());
+        handler.PendingCredentials = new NadeoAPICredentials(Login, "new-password");
+        await ns.GetZonesAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl, AuthenticationUrl, ZonesUrl]);
+        await Assert.That(fake.Requests[1].Authorization?.Parameter).IsEqualTo(Convert.ToBase64String(Encoding.UTF8.GetBytes($"{Login}:new-password")));
+    }
+
+    [Test]
+    public async Task AuthorizeAsync_AfterPendingCredentialsRejected_RequestsSucceed()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            () => FakeResponse.Json("""{"message":"Invalid credentials."}""", HttpStatusCode.Unauthorized),
+            () => NadeoTokens.Valid(Audience, out _),
+            () => FakeResponse.Json("[]"));
+        using var ns = new NadeoServices(fake.CreateClient(), PendingCredentialsHandler());
+
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetZonesAsync());
+        await ns.AuthorizeAsync(Login, "new-password");
+        await ns.GetZonesAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl, AuthenticationUrl, ZonesUrl]);
+    }
+
+    [Test]
     public async Task GetZonesAsync_TokenExpired_RefreshesWithRefreshToken()
     {
         var fake = FakeHttpMessageHandler.Sequence(

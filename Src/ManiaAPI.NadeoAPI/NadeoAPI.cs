@@ -182,6 +182,9 @@ public abstract class NadeoAPI : INadeoAPI
             Handler.RefreshToken = refreshToken;
 
             Handler.JWT = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);
+
+            // Already authorized, so the next request doesn't sign in with them again
+            Handler.PendingCredentials = null;
         }
     }
 
@@ -225,6 +228,44 @@ public abstract class NadeoAPI : INadeoAPI
         }
     }
 
+    /// <summary>
+    /// Signs in with the handler's pending credentials, unless Nadeo already rejected them.
+    /// </summary>
+    /// <exception cref="NadeoAPIResponseException">Signing in failed now or the credentials were rejected before.</exception>
+    private async Task AuthorizePendingAsync(CancellationToken cancellationToken)
+    {
+        await Handler.AuthorizationLock.WaitAsync(cancellationToken);
+
+        try
+        {
+            // Another client sharing the handler may have authorized while this one waited
+            if (Handler.PendingCredentials is not { } credentials)
+            {
+                return;
+            }
+
+            if (Handler.CredentialsRejection is { } rejection && rejection.Credentials == credentials)
+            {
+                throw new NadeoAPIResponseException(rejection.Error.Response, rejection.Error.StatusCode, rejection.Error.ReasonPhrase);
+            }
+
+            try
+            {
+                await AuthorizeAsync(credentials, cancellationToken);
+            }
+            catch (NadeoAPIResponseException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            {
+                // Wrong credentials stay wrong, so they aren't sent again until they're replaced
+                Handler.CredentialsRejection = (credentials, ex);
+                throw;
+            }
+        }
+        finally
+        {
+            Handler.AuthorizationLock.Release();
+        }
+    }
+
     private bool IsRefreshDue()
     {
         return Handler.RefreshToken is not null
@@ -248,21 +289,7 @@ public abstract class NadeoAPI : INadeoAPI
 
         if (Handler.PendingCredentials is not null)
         {
-            await Handler.AuthorizationLock.WaitAsync(cancellationToken);
-            try
-            {
-                // Another client sharing the handler may have authorized while this one waited
-                if (Handler.PendingCredentials is not null)
-                {
-                    await AuthorizeAsync(Handler.PendingCredentials, cancellationToken);
-
-                    Handler.PendingCredentials = null;
-                }
-            }
-            finally
-            {
-                Handler.AuthorizationLock.Release();
-            }
+            await AuthorizePendingAsync(cancellationToken);
         }
 
         // Refreshed from the refresh time rather than the expiration, so a request isn't sent with a token about to expire
