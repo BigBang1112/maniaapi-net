@@ -197,8 +197,16 @@ public class EngineTests
     [Test]
     public async Task MasterServerErrorsIncludeErrorCodeName()
     {
-        var error = OperationEngine.Error(new MasterServer.XmlRequestException(14, "player unknown", default, new MasterServer.XmlResponseDetails(default)));
+        var error = OperationEngine.Error(new MasterServer.MasterServerResponseException(14, "player unknown", default, new MasterServer.MasterServerResponseDetails(default)));
 
         await Assert.That(error["message"]!.GetValue<string>()).Contains("Master server error 14 (PlayerUnknown)");
+    }
+
+    [Test]
+    public async Task UnreadableMasterServerResponseGetsGenericMessage()
+    {
+        var error = OperationEngine.Error(new MasterServer.MasterServerResponseException("<r> (first one) not found"));
+
+        await Assert.That(error["message"]!.GetValue<string>()).DoesNotContain("Master server error");
     }
 }

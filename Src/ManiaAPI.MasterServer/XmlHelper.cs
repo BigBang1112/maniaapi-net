@@ -31,7 +31,7 @@ internal static partial class XmlHelper
 
         response.EnsureSuccessStatusCode();
 
-        return new XmlResponse(await response.Content.ReadAsStringAsync(cancellationToken), new XmlResponseDetails(requestTime));
+        return new XmlResponse(await response.Content.ReadAsStringAsync(cancellationToken), new MasterServerResponseDetails(requestTime));
     }
 
     public static MasterServerResponse<T> ProcessResponseResult<T>(
@@ -49,7 +49,7 @@ internal static partial class XmlHelper
 
         if (!MemoryExtensions.Equals(xml.ReadStartElement(), "r", StringComparison.OrdinalIgnoreCase))
         {
-            throw new Exception("<r> (first one) not found");
+            throw new MasterServerResponseException("<r> (first one) not found");
         }
 
         var content = default(T);
@@ -78,7 +78,7 @@ internal static partial class XmlHelper
             ? default(TimeSpan?)
             : TimeSpan.FromSeconds(double.Parse(executionTimeGroup, CultureInfo.InvariantCulture));
 
-        return new MasterServerResponse<T>(content ?? throw new Exception("No response content"), executionTimeSpan, xmlParseTime, response.Details);
+        return new MasterServerResponse<T>(content ?? throw new MasterServerResponseException("No response content"), executionTimeSpan, xmlParseTime, response.Details);
     }
 
     public static MasterServerResponse ProcessResponseResult(XmlResponse response)
@@ -93,7 +93,7 @@ internal static partial class XmlHelper
 
         if (!MemoryExtensions.Equals(xml.ReadStartElement(), "r", StringComparison.OrdinalIgnoreCase))
         {
-            throw new Exception("<r> (first one) not found");
+            throw new MasterServerResponseException("<r> (first one) not found");
         }
 
         var executionTime = string.Empty;
@@ -126,7 +126,7 @@ internal static partial class XmlHelper
         XmlProcessContent<T> processContent, 
         ref MiniXmlReader xml, 
         long startTime,
-        XmlResponseDetails details,
+        MasterServerResponseDetails details,
         out T? content) where T : notnull
     {
         content = default;
@@ -154,7 +154,7 @@ internal static partial class XmlHelper
         }
     }
 
-    private static void ProcessErrorAndThrowException(ref MiniXmlReader xml, long startTime, XmlResponseDetails details)
+    private static void ProcessErrorAndThrowException(ref MiniXmlReader xml, long startTime, MasterServerResponseDetails details)
     {
         var value = 0;
         var message = string.Empty;
@@ -177,7 +177,7 @@ internal static partial class XmlHelper
             _ = xml.SkipEndElement();
         }
 
-        throw new XmlRequestException(value, message, Stopwatch.GetElapsedTime(startTime), details);
+        throw new MasterServerResponseException(value, message, Stopwatch.GetElapsedTime(startTime), details);
     }
 
     public static RecordUnit<T> ReadRecordUnit<T>(ref MiniXmlReader xml) where T : struct

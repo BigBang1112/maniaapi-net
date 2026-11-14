@@ -49,7 +49,7 @@ internal static class AnyServerMP
         {
             return (await GetAccountFromSteamUserResponseAsync(client, gameXml, steamId, cancellationToken)).Result;
         }
-        catch (XmlRequestException ex)
+        catch (MasterServerResponseException ex)
         {
             if (ex.Value == 404)
             {

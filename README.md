@@ -951,14 +951,14 @@ var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDicti
 
 ### Errors
 
-When the master server rejects a request, an `XmlRequestException` is thrown. `Value` holds the raw error code, `Error` holds it as `MasterServerError` (codes recovered from the game executables), and `ErrorMessage` holds the message sent by the server.
+When the master server rejects a request, a `MasterServerResponseException` is thrown. `Value` holds the raw error code, `Error` holds it as `MasterServerError` (codes recovered from the game executables), and `ErrorMessage` holds the message sent by the server. The same exception is thrown when a response can't be read, with these three properties set to `null`.
 
 ```cs
 try
 {
     var player = await masterServer.GetPlayerInfosAsync("bigbang1112");
 }
-catch (XmlRequestException ex) when (ex.Error is MasterServerError.PlayerUnknown or MasterServerError.LoginUnknown)
+catch (MasterServerResponseException ex) when (ex.Error is MasterServerError.PlayerUnknown or MasterServerError.LoginUnknown)
 {
     // ...
 }

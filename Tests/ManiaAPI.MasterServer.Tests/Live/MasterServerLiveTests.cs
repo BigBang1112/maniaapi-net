@@ -165,7 +165,7 @@ public class MasterServerLiveTests
         await Assert.That(webIdentity?.Login).IsEqualTo(Login);
         await Assert.That(unknownWebIdentityLogin).IsNull();
         // The master server answers an unlinked Uplay profile with an error instead of an empty result.
-        await Assert.ThrowsAsync<XmlRequestException>(() => server.GetAccountFromUplayUserAsync(Guid.Empty));
+        await Assert.ThrowsAsync<MasterServerResponseException>(() => server.GetAccountFromUplayUserAsync(Guid.Empty));
         await Assert.That(unknownSteamAccount).IsNull();
     }
 

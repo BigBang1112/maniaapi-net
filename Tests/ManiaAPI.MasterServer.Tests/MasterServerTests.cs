@@ -61,7 +61,7 @@ public class MasterServerTests
         var fake = MasterServerXml.Handler(MasterServerXml.Error("GetPlayerInfos", 12, "Unknown player"));
         using var server = new MasterServerMP4(fake.CreateClient(Url));
 
-        var ex = await Assert.ThrowsAsync<XmlRequestException>(() => server.GetPlayerInfosAsync("nobody"));
+        var ex = await Assert.ThrowsAsync<MasterServerResponseException>(() => server.GetPlayerInfosAsync("nobody"));
 
         await Assert.That(ex!.Value).IsEqualTo(12);
         await Assert.That(ex.ErrorMessage).IsEqualTo("Unknown player");
@@ -77,7 +77,7 @@ public class MasterServerTests
         var fake = MasterServerXml.Handler(MasterServerXml.Error("GetPlayerInfos", value, "error"));
         using var server = new MasterServerMP4(fake.CreateClient(Url));
 
-        var ex = await Assert.ThrowsAsync<XmlRequestException>(() => server.GetPlayerInfosAsync("nobody"));
+        var ex = await Assert.ThrowsAsync<MasterServerResponseException>(() => server.GetPlayerInfosAsync("nobody"));
 
         await Assert.That(ex!.Error).IsEqualTo(expected);
     }
@@ -88,10 +88,10 @@ public class MasterServerTests
         var fake = MasterServerXml.Handler(MasterServerXml.Error("GetPlayerInfos", 9999, "error"));
         using var server = new MasterServerMP4(fake.CreateClient(Url));
 
-        var ex = await Assert.ThrowsAsync<XmlRequestException>(() => server.GetPlayerInfosAsync("nobody"));
+        var ex = await Assert.ThrowsAsync<MasterServerResponseException>(() => server.GetPlayerInfosAsync("nobody"));
 
         await Assert.That(ex!.Value).IsEqualTo(9999);
-        await Assert.That(Enum.IsDefined(ex.Error)).IsFalse();
+        await Assert.That(Enum.IsDefined(ex.Error!.Value)).IsFalse();
     }
 
     [Test]
@@ -200,7 +200,7 @@ public class MasterServerTests
 
         try
         {
-            var ex = await Assert.ThrowsAsync<XmlRequestException>(() => server.GetPlayerInfosAsync("nobody"));
+            var ex = await Assert.ThrowsAsync<MasterServerResponseException>(() => server.GetPlayerInfosAsync("nobody"));
 
             await Assert.That(ex!.Value).IsEqualTo(-5);
         }

@@ -154,9 +154,9 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
 
                 platforms[platform] = new AggregatedSummaryInfo(response.ExecutionTime, response.XmlParseTime, response.Details, ErrorMessage: null);
             }
-            catch (XmlRequestException ex)
+            catch (MasterServerResponseException ex)
             {
-                platforms[platform] = new AggregatedSummaryInfo(ExecutionTime: null, ex.XmlParseTime, ex.Details, ex.ErrorMessage, ex.Error);
+                platforms[platform] = new AggregatedSummaryInfo(ExecutionTime: null, ex.XmlParseTime, ex.Details, ex.ErrorMessage ?? ex.Message, ex.Error);
             }
             catch (Exception ex)
             {
@@ -197,9 +197,9 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
                 platforms[platform] = new AggregatedSummaryInfo(response.ExecutionTime, response.XmlParseTime, response.Details, ErrorMessage: null);
             }
 
-            catch (XmlRequestException ex)
+            catch (MasterServerResponseException ex)
             {
-                platforms[platform] = new AggregatedSummaryInfo(ExecutionTime: null, ex.XmlParseTime, ex.Details, ex.ErrorMessage, ex.Error);
+                platforms[platform] = new AggregatedSummaryInfo(ExecutionTime: null, ex.XmlParseTime, ex.Details, ex.ErrorMessage ?? ex.Message, ex.Error);
             }
             catch (Exception ex)
             {

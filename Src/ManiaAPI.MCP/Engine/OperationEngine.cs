@@ -387,9 +387,9 @@ public sealed class OperationEngine
         var message = exception switch
         {
             ArgumentException argument => argument.Message,
-            MasterServer.XmlRequestException xml => Enum.IsDefined(xml.Error)
-                ? $"Master server error {xml.Value} ({xml.Error}). Check the login, title, league, and game context."
-                : $"Master server error {xml.Value}. Check the login, title, league, and game context.",
+            MasterServer.MasterServerResponseException { Value: { } value, Error: { } error } => Enum.IsDefined(error)
+                ? $"Master server error {value} ({error}). Check the login, title, league, and game context."
+                : $"Master server error {value}. Check the login, title, league, and game context.",
             JsonException => "Invalid argument value. Use maniaapi_describe to check the schema.",
             _ when status == 401 => "Upstream authorization was denied. Check the configured account and its permissions.",
             _ when status == 403 => "The configured account cannot access this upstream resource; club membership may be required.",

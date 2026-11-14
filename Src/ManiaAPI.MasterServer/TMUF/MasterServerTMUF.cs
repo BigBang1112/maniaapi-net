@@ -302,7 +302,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                     case "t":
                         if (!MemoryExtensions.Equals(xml.ReadContent(), "Achievements", StringComparison.Ordinal))
                         {
-                            throw new Exception("Expected 'Achievements' in <t> element.");
+                            throw new MasterServerResponseException("Expected 'Achievements' in <t> element.");
                         }
                         break;
                     case "aa":
@@ -653,7 +653,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
 
         if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
         {
-            return response.Content.Headers.LastModified ?? lastModified ?? throw new Exception("Last modified is null");
+            return response.Content.Headers.LastModified ?? lastModified ?? throw new MasterServerResponseException("Last modified is null");
         }
 
         response.EnsureSuccessStatusCode();
@@ -661,7 +661,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         var timestamp = GetGzipTimestamp(stream) ?? response.Content.Headers.LastModified;
 
-        return FixDateTime(timestamp ?? response.Content.Headers.LastModified ?? throw new Exception("Last modified is null"));
+        return FixDateTime(timestamp ?? response.Content.Headers.LastModified ?? throw new MasterServerResponseException("Last modified is null"));
     }
 
     internal async Task<ScoresInfo?> FetchLatestScoresInfoAsync(string scoresName, string league, bool scores7 = true, CancellationToken cancellationToken = default)
@@ -716,10 +716,10 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
 
         if (responses.All(x => !x.Value.Result.IsSuccessStatusCode))
         {
-            throw new Exception("No successful responses");
+            throw new HttpRequestException("None of the scores files could be downloaded.");
         }
 
-        return new ScoresInfo(FixDateTime(latestTimestamp ?? throw new Exception("Last modified is null")), latestScoresNum ?? throw new Exception("Latest scores number is null"));
+        return new ScoresInfo(FixDateTime(latestTimestamp ?? throw new MasterServerResponseException("Last modified is null")), latestScoresNum ?? throw new MasterServerResponseException("Latest scores number is null"));
     }
 
     public static string GetScoresUrl(ScoresNumber num, string scoresName, int leagueId)
