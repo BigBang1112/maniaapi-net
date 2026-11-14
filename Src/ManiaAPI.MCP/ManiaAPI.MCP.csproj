@@ -22,7 +22,7 @@
         <!-- An inaccessible [JsonConverter] on a library model is otherwise skipped silently, changing the serialized result. -->
         <WarningsAsErrors>$(WarningsAsErrors);SYSLIB1220</WarningsAsErrors>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
         <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
@@ -39,7 +39,7 @@
         <ProjectReference Include="../../Generators/ManiaAPI.MCP.Generators/ManiaAPI.MCP.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <None Include="README.md" Pack="true" PackagePath="/" />
     </ItemGroup>
-    
+
     <ItemGroup>
         <AdditionalFiles Include="../ManiaAPI.NadeoAPI/NadeoServices.cs" />
         <AdditionalFiles Include="../ManiaAPI.NadeoAPI/NadeoLiveServices.cs" />

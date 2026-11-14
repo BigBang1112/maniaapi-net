@@ -1,17 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Src\ManiaAPI.NadeoAPI.Extensions.Hosting\ManiaAPI.NadeoAPI.Extensions.Hosting.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Src\ManiaAPI.NadeoAPI.Extensions.Hosting\ManiaAPI.NadeoAPI.Extensions.Hosting.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <!-- Builds Nadeo token responses, shared with the NadeoAPI tests. -->
-    <Compile Include="..\ManiaAPI.NadeoAPI.Tests\NadeoTokens.cs" Link="Shared\NadeoTokens.cs" />
-  </ItemGroup>
+    <ItemGroup>
+        <!-- Builds Nadeo token responses, shared with the NadeoAPI tests. -->
+        <Compile Include="..\ManiaAPI.NadeoAPI.Tests\NadeoTokens.cs" Link="Shared\NadeoTokens.cs" />
+    </ItemGroup>
 
 </Project>

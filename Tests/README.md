@@ -21,6 +21,10 @@ dotnet test --treenode-filter "/*/*/*/*[Category=Live]" --ignore-exit-code 8
 
 Some test projects have no live tests, so the filter matches nothing in them. Microsoft Testing Platform reports a run with zero tests as a failure with exit code 8. `--ignore-exit-code 8` stops those projects from failing the run.
 
+Live tests run only on the newest target framework of each project (the first in `TargetFrameworks`) and are skipped on the others, so a run of every framework sends each service one set of requests instead of four, which would hit their rate limits. [`Directory.Build.targets`](Directory.Build.targets) defines `LIVE_TEST_FRAMEWORK` for that framework.
+
+Even so, the trackmania.io tests send more requests than its rate limit allows in a minute (around 20 from one IP), so they wait for the next minute partway through and take one to two minutes.
+
 ## Settings
 
 Live test settings are read by [`LiveSettings`](Shared/LiveSettings.cs). Each setting has one key, which is read from:

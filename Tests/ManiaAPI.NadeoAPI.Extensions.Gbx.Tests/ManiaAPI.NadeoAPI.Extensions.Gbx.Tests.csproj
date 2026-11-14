@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Src\ManiaAPI.NadeoAPI.Extensions.Gbx\ManiaAPI.NadeoAPI.Extensions.Gbx.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Src\ManiaAPI.NadeoAPI.Extensions.Gbx\ManiaAPI.NadeoAPI.Extensions.Gbx.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Update="ManiaAPI-NET Test Map.Map.Gbx" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Update="ManiaAPI-NET Test Map.Map.Gbx" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
 
 </Project>

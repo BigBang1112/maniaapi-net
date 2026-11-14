@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Src\ManiaAPI.NadeoAPI\ManiaAPI.NadeoAPI.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Src\ManiaAPI.NadeoAPI\ManiaAPI.NadeoAPI.csproj" />
+    </ItemGroup>
 
 </Project>

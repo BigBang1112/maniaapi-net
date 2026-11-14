@@ -1,32 +1,32 @@
 <Project>
 
-  <!-- Shared settings for every test project in this folder. -->
+    <!-- Shared settings for every test project in this folder. -->
 
-  <PropertyGroup>
-    <TargetFrameworks>net11.0;net10.0;net9.0;net8.0</TargetFrameworks>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
-    <OutputType>Exe</OutputType>
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    
-    <!-- One user secrets store for every test project, so live test settings are set once. See LiveSettings. -->
-    <UserSecretsId>ManiaAPI.NET.Tests</UserSecretsId>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>net11.0;net10.0;net9.0;net8.0</TargetFrameworks>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>latest</LangVersion>
+        <OutputType>Exe</OutputType>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 
-  <ItemGroup>
-    <!-- The TUnit metapackage includes Microsoft.Testing.Extensions.CodeCoverage, which coverage collection with MTP needs. -->
-    <PackageReference Include="TUnit" Version="1.80.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.2" />
-  </ItemGroup>
+        <!-- One user secrets store for every test project, so live test settings are set once. See LiveSettings. -->
+        <UserSecretsId>ManiaAPI.NET.Tests</UserSecretsId>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
-    <Using Include="ManiaAPI.Testing" />
-    <Using Include="System.Net" />
-  </ItemGroup>
+    <ItemGroup>
+        <!-- The TUnit metapackage includes Microsoft.Testing.Extensions.CodeCoverage, which coverage collection with MTP needs. -->
+        <PackageReference Include="TUnit" Version="1.80.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="$(MSBuildThisFileDirectory)Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+        <Using Include="ManiaAPI.Testing" />
+        <Using Include="System.Net" />
+    </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Src\ManiaAPI.TMX.Extensions.Gbx\ManiaAPI.TMX.Extensions.Gbx.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Src\ManiaAPI.TMX.Extensions.Gbx\ManiaAPI.TMX.Extensions.Gbx.csproj" />
+    </ItemGroup>
 
 </Project>

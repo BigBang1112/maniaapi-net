@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Src\ManiaAPI.TrackmaniaWS\ManiaAPI.TrackmaniaWS.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Src\ManiaAPI.TrackmaniaWS\ManiaAPI.TrackmaniaWS.csproj" />
+    </ItemGroup>
 
 </Project>
