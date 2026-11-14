@@ -41,6 +41,10 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
     // so calls must be strictly sequential to avoid cross-talk between callers
     private readonly SemaphoreSlim? v1CallSemaphore;
 
+    // NetworkStream supports one writer at a time, so concurrent calls take turns sending their message.
+    // Only the write is guarded: GBXRemote 2 calls still wait for their responses concurrently.
+    private readonly SemaphoreSlim writeSemaphore = new(1, 1);
+
     private readonly TcpClient tcp;
     private readonly int version;
     private readonly ILogger<GBXRemoteClient> logger;
@@ -770,7 +774,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
                 throw new ClientException("Failed to write handle to buffer");
             }
 
-            await stream.WriteAsync(buffer, cancellationToken);
+            await WriteAsync(buffer, cancellationToken);
         }
         else
         {
@@ -793,7 +797,21 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
                 throw new ClientException("Failed to write XML payload byte count to buffer");
             }
 
+            await WriteAsync(buffer, cancellationToken);
+        }
+    }
+
+    private async Task WriteAsync(byte[] buffer, CancellationToken cancellationToken)
+    {
+        await writeSemaphore.WaitAsync(cancellationToken);
+
+        try
+        {
             await stream.WriteAsync(buffer, cancellationToken);
+        }
+        finally
+        {
+            writeSemaphore.Release();
         }
     }
 
@@ -833,6 +851,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         tcp.Dispose();
         cts.Dispose();
         v1CallSemaphore?.Dispose();
+        writeSemaphore.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -856,6 +875,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         tcp.Dispose();
         cts.Dispose();
         v1CallSemaphore?.Dispose();
+        writeSemaphore.Dispose();
 
         GC.SuppressFinalize(this);
     }

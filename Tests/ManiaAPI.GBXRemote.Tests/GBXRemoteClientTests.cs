@@ -136,6 +136,37 @@ public class GBXRemoteClientTests
     }
 
     [Test]
+    public async Task CallAsync_ConcurrentLargeCalls_SendsEachMessageWhole()
+    {
+        await using var session = await FakeGbxRemoteServer.ConnectAsync();
+        var (connection, client) = (session.Connection, session.Client);
+
+        // Large enough to need several socket writes each, so unsynchronized writes would interleave
+        const int callCount = 8;
+        const int length = 4 * 1024 * 1024;
+
+        var calls = Enumerable.Range(0, callCount)
+            .Select(i => Task.Run(() => client.CallAsync("Echo", [new string((char)('a' + i), length)])))
+            .ToArray();
+
+        var seen = new HashSet<char>();
+
+        for (var i = 0; i < callCount; i++)
+        {
+            var (handle, xml) = await connection.ReadAsync();
+
+            var value = xml[(xml.IndexOf("<value>", StringComparison.Ordinal) + "<value>".Length)..xml.IndexOf("</value>", StringComparison.Ordinal)];
+            await Assert.That(value.Length).IsEqualTo(length);
+            await Assert.That(value.All(c => c == value[0])).IsTrue();
+            await Assert.That(seen.Add(value[0])).IsTrue();
+
+            await connection.RespondAsync(handle, "<boolean>1</boolean>");
+        }
+
+        await Task.WhenAll(calls).WaitAsync(Timeout);
+    }
+
+    [Test]
     public async Task CallAsync_StructResponse_ParsesEveryValueType()
     {
         await using var session = await FakeGbxRemoteServer.ConnectAsync();
