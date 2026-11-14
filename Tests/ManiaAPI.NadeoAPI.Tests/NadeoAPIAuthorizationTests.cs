@@ -197,6 +197,37 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
+    public async Task GetZonesAsync_PastRefreshTimeBeforeExpiration_RefreshesFirst()
+    {
+        var refreshedToken = "";
+        var fake = FakeHttpMessageHandler.Sequence(
+            DueTokenResponse,
+            () => NadeoTokens.Valid(Audience, out refreshedToken),
+            () => FakeResponse.Json("[]"));
+        using var ns = new NadeoServices(fake.CreateClient());
+        await ns.AuthorizeAsync(Login, Password);
+
+        await ns.GetZonesAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl, RefreshUrl, ZonesUrl]);
+        await Assert.That(fake.Requests[2].Authorization?.Parameter).IsEqualTo($"t={refreshedToken}");
+    }
+
+    [Test]
+    public async Task GetZonesAsync_BeforeRefreshTime_DoesNotRefresh()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            () => NadeoTokens.Valid(Audience, out _),
+            () => FakeResponse.Json("[]"));
+        using var ns = new NadeoServices(fake.CreateClient());
+        await ns.AuthorizeAsync(Login, Password);
+
+        await ns.GetZonesAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl, ZonesUrl]);
+    }
+
+    [Test]
     public async Task GetZonesAsync_TokenExpiredWithoutAutomaticAuthorization_DoesNotRefresh()
     {
         var fake = FakeHttpMessageHandler.Sequence(
@@ -392,6 +423,15 @@ public class NadeoAPIAuthorizationTests
     {
         var expiredToken = NadeoTokens.AccessToken(Audience, DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddMinutes(-30));
         return FakeResponse.Json(NadeoTokens.Response(expiredToken, refreshToken: RefreshToken));
+    }
+
+    /// <summary>
+    /// A token response past its refresh time that hasn't expired yet, so the next request refreshes it with <see cref="RefreshToken"/>.
+    /// </summary>
+    private static HttpResponseMessage DueTokenResponse()
+    {
+        var dueToken = NadeoTokens.AccessToken(Audience, DateTimeOffset.UtcNow.AddMinutes(5), DateTimeOffset.UtcNow.AddMinutes(-1));
+        return FakeResponse.Json(NadeoTokens.Response(dueToken, refreshToken: RefreshToken));
     }
 
     /// <summary>

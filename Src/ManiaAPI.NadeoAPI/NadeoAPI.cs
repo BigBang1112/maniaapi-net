@@ -265,7 +265,8 @@ public abstract class NadeoAPI : INadeoAPI
             }
         }
 
-        if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime)
+        // Refreshed from the refresh time rather than the expiration, so a request isn't sent with a token about to expire
+        if (AutomaticallyAuthorize && RefreshAt.HasValue && DateTimeOffset.UtcNow >= RefreshAt)
         {
             await RefreshAsync(cancellationToken);
         }
