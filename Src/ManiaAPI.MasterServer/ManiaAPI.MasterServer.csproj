@@ -11,8 +11,8 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, masterserver, xml</PackageTags>
         <PackageReleaseNotes>
-- **Renamed `ManiaAPI.Xml` to `ManiaAPI.MasterServer`**. Update package references and namespaces
-  - **Renamed `XmlRequestException` to `MasterServerResponseException`** and `XmlResponseDetails` to `MasterServerResponseDetails`
+- **Renamed `ManiaAPI.Xml` to `ManiaAPI.MasterServer`**
+- **Renamed `XmlRequestException` to `MasterServerResponseException`** and `XmlResponseDetails` to `MasterServerResponseDetails`
 - Added `MasterServerError`, `MasterServerResponseException.Error`, and error codes in `AggregatedSummaryInfo` for typed master server error handling
 - Changed unreadable responses to throw `MasterServerResponseException` instead of `Exception`
 - Fixed XML escaping of logins, title IDs, map UIDs, campaigns, and zones

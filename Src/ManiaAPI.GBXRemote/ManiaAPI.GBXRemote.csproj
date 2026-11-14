@@ -11,7 +11,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, gbxremote, xml-rpc</PackageTags>
         <PackageReleaseNotes>
-- **Renamed `ManiaAPI.XmlRpc` to `ManiaAPI.GBXRemote`**. Update package references and namespaces, and replace `XmlRpcClient`, `XmlRpcCall`, `XmlRpcCallResult`, `XmlRpcCallback`, and `XmlRpcCallbackMessage` with their `GBXRemote` equivalents
+- **Renamed `ManiaAPI.XmlRpc` to `ManiaAPI.GBXRemote`**. Update package references and namespaces, and replace `XmlRpc..` with their `GBXRemote` equivalents
 - Fixed concurrent calls interleaving writes on the same connection
 - Fixed calls hanging after disconnection and sockets leaking when connection setup fails
 - Fixed GBXRemote 1 calls receiving the response to a cancelled call

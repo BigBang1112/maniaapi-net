@@ -11,7 +11,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
         <PackageReleaseNotes>
-- **Renamed `ManiaAPI.Xml.Extensions.Hosting` to `ManiaAPI.MasterServer.Extensions.Hosting`**. Update package references and namespaces
+- **Renamed `ManiaAPI.Xml.Extensions.Hosting` to `ManiaAPI.MasterServer.Extensions.Hosting`**
 - Updated the `ManiaAPI.MasterServer` dependency to 2.10.0
 - Added .NET 11 support
         </PackageReleaseNotes>

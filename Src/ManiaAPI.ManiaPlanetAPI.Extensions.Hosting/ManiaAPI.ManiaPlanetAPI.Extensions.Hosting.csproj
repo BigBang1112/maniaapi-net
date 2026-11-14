@@ -11,7 +11,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
         <PackageReleaseNotes>
-- Added `AddManiaPlanetChannelRecordAPI` and `AddManiaPlanetChannelFeedbackAPI` to register channel API clients
+- Added `AddManiaPlanetChannelRecordAPI` and `AddManiaPlanetChannelFeedbackAPI`
 - Fixed OAuth sign-in raising `CreatingTicket` twice and replacing the populated user payload with an empty one
 - Updated the `ManiaAPI.ManiaPlanetAPI` dependency to 2.10.0
 - Added .NET 11 support
