@@ -10,7 +10,14 @@
         <PackageIcon>logo_icon_outline.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, io</PackageTags>
-        <PackageReleaseNotes></PackageReleaseNotes>
+        <PackageReleaseNotes>
+- Added player tags, HTML nicknames, solo and multiplayer rankings, zone queries, and player, challenge, and zone leaderboards
+- Added registered player counts, Manialink details, ManiaHome notifications, and `PingAsync`
+- Added `TrackmaniaWSResponseException` for API error responses and converters for string-encoded numbers and integer lists
+- Made JSON converters public for external serialization
+- Updated the User-Agent to report the installed package version
+- Added .NET 11 support
+        </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 

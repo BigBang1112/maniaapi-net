@@ -10,7 +10,14 @@
         <PackageIcon>logo_icon_outline.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
-        <PackageReleaseNotes></PackageReleaseNotes>
+        <PackageReleaseNotes>
+- Added `GetUserAdminClubsAsync`, `GetUserFavoriteMapsAsync`, `AddUserFavoriteMapAsync`, and `RemoveUserFavoriteMapAsync` for player OAuth tokens
+- Added public JSON converters and access to `TrackmaniaAPIHandler.Authorization` for external serialization and player tokens
+- Fixed concurrent authorization for clients sharing a handler and encoding of multiple OAuth scopes
+- Fixed display name and account ID lookups handling empty results without hiding malformed JSON, and escaped display names in requests
+- Updated the User-Agent to report the installed package version
+- Added .NET 11 support
+        </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 

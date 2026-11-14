@@ -10,7 +10,16 @@
         <PackageIcon>logo_icon_outline.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, nadeo, nadeoapi</PackageTags>
-        <PackageReleaseNotes></PackageReleaseNotes>
+        <PackageReleaseNotes>
+- Added zone leaderboards, club-specific campaign lists, and creation and editing of club rooms from dedicated servers to `NadeoLiveServices`
+- Added paginated account record overloads to `NadeoServices`
+- Fixed saved credentials and concurrent token refresh for clients sharing a handler
+- Fixed club activity folder filtering, the submitted map review route, trophy and submitted map redirects, and URL escaping
+- **Changed `MatchParticipant.Leaver` from `string?` to `int?`** to match API responses. Update code that reads or constructs this record
+- Made JSON converters public for external serialization
+- Updated the User-Agent to report the installed package version
+- Added .NET 11 support
+        </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 

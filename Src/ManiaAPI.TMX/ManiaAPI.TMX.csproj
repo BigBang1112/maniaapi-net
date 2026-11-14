@@ -10,7 +10,14 @@
         <PackageIcon>logo_icon_outline.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, tmx, mx, exchange</PackageTags>
-        <PackageReleaseNotes></PackageReleaseNotes>
+        <PackageReleaseNotes>
+- **Added `IX` for Item Exchange**, including item and set searches, baskets, downloads, icons, and images
+- Added TMX video searches and metadata requests for search orders, tags, tag descriptions, track types, and vehicles
+- Fixed generated video field selections requesting fields unavailable on the selected TMX or MX site
+- Made JSON converters public so external serializers preserve Exchange integer and time formats
+- Updated the User-Agent to report the installed package version
+- Added .NET 11 support
+        </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 

@@ -9,6 +9,9 @@
         <ToolCommandName>maniaapi-mcp</ToolCommandName>
         <PackageId>ManiaAPI.MCP</PackageId>
         <Version>0.1.0</Version>
+        <PackageReleaseNotes>
+- Initial release
+        </PackageReleaseNotes>
         <Authors>BigBang1112</Authors>
         <Description>Stateless MCP gateway for ManiaAPI.NET.</Description>
         <Copyright>Copyright (c) 2026 Petr Pivoňka</Copyright>
@@ -37,6 +40,7 @@
         <ProjectReference Include="../ManiaAPI.NadeoAPI.Extensions.Gbx/ManiaAPI.NadeoAPI.Extensions.Gbx.csproj" />
         <ProjectReference Include="../ManiaAPI.TMX.Extensions.Gbx/ManiaAPI.TMX.Extensions.Gbx.csproj" />
         <ProjectReference Include="../../Generators/ManiaAPI.MCP.Generators/ManiaAPI.MCP.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <None Include="../../logo_icon_outline.png" Pack="true" PackagePath="/" />
         <None Include="README.md" Pack="true" PackagePath="/" />
     </ItemGroup>
 

@@ -10,7 +10,13 @@
         <PackageIcon>logo_icon_outline.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, masterserver, xml</PackageTags>
-        <PackageReleaseNotes></PackageReleaseNotes>
+        <PackageReleaseNotes>
+- **Renamed `ManiaAPI.Xml` to `ManiaAPI.MasterServer`**. Update package references and namespaces
+- Added `MasterServerError`, `XmlRequestException.Error`, and error codes in `AggregatedSummaryInfo` for typed master server error handling
+- Fixed XML escaping of logins, title IDs, map UIDs, campaigns, and zones
+- Updated the User-Agent to report the installed package version
+- Added .NET 11 support
+        </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 

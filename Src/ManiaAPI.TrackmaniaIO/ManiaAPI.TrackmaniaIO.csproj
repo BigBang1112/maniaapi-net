@@ -10,7 +10,13 @@
         <PackageIcon>logo_icon_outline.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, io</PackageTags>
-        <PackageReleaseNotes></PackageReleaseNotes>
+        <PackageReleaseNotes>
+- Added search filters to `GetClubCampaignsAsync`, `GetClubsAsync`, `GetClubRoomsAsync`, and `GetCompetitionsAsync`
+  - **Changed these method signatures** by inserting `search` before `cancellationToken`. Update positional cancellation arguments to use `cancellationToken:` and update overrides and interface implementations
+- Fixed rate limiting across concurrent requests and client instances, with automatic retries for HTTP 429 responses controlled by `MaxRateLimitRetries`
+- Updated the User-Agent to report the installed package version
+- Added .NET 11 support
+        </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 

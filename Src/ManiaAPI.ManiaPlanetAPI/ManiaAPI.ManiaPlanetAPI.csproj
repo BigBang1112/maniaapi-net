@@ -10,7 +10,13 @@
         <PackageIcon>logo_icon_outline.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, shootmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
-        <PackageReleaseNotes></PackageReleaseNotes>
+        <PackageReleaseNotes>
+- Added `ManiaPlanetChannelRecordAPI` for channel map leaderboards and player records, and `ManiaPlanetChannelFeedbackAPI` for vote and rating totals
+- Added public JSON converters and access to `ManiaPlanetAPIHandler.Authorization` and `Payload` for external serialization and player tokens
+- Fixed concurrent authorization for clients sharing a handler, OAuth scope encoding, and escaping of map and title IDs
+- Updated the User-Agent to report the installed package version
+- Added .NET 11 support
+        </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
