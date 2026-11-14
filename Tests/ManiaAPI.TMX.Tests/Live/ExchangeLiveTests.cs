@@ -213,22 +213,29 @@ public class ExchangeLiveTests
         await Assert.That(gbx.IsSuccessStatusCode).IsTrue();
     }
 
+    /// <summary>
+    /// Maps with a thumbnail and images on each site, picked from the most awarded maps, so they won't be deleted.
+    /// </summary>
     [Test]
-    [Arguments(MxSite.Trackmania)]
-    [Arguments(MxSite.Maniaplanet)]
-    public async Task MX_MapImages_CanBeDownloaded(MxSite site)
+    [Arguments(MxSite.Trackmania, 170211)] // Deep Dip 2
+    [Arguments(MxSite.Maniaplanet, 22)] // Tiger Blood
+    public async Task MX_MapImages_CanBeDownloaded(MxSite site, long mapId)
     {
         using var mx = new MX(site);
 
-        var maps = await mx.SearchMapsAsync(new MX.SearchMapsParameters { Count = 20 });
-        var withThumbnail = maps.Results.First(x => x.HasThumbnail);
-        var withImage = maps.Results.First(x => x.Images is { Count: > 0 });
-        var position = withImage.Images![0].Position;
+        var maps = await mx.SearchMapsAsync(new MX.SearchMapsParameters { Id = [mapId] });
+        await Assert.That(maps.Results).HasSingleItem();
 
-        using var thumbnail = await mx.GetMapThumbnailResponseAsync(withThumbnail);
-        using var image = await mx.GetMapImageResponseAsync(withImage, position);
+        var map = maps.Results[0];
+        await Assert.That(map.HasThumbnail).IsTrue();
+        await Assert.That(map.Images).IsNotNull().And.IsNotEmpty();
+
+        var position = map.Images![0].Position;
+
+        using var thumbnail = await mx.GetMapThumbnailResponseAsync(map);
+        using var image = await mx.GetMapImageResponseAsync(map, position);
         // The screen endpoint needs a position: without one, it answers 404.
-        using var screen = await mx.GetMapScreenResponseAsync(withImage, position);
+        using var screen = await mx.GetMapScreenResponseAsync(map, position);
 
         await AssertImageAsync(thumbnail);
         await AssertImageAsync(image);
