@@ -250,6 +250,15 @@ namespace ManiaAPI.MCP.Serialization;
 [JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.TrackmaniaAPI.FavoriteMap>), TypeInfoPropertyName = "PlayerRoot4")]
 [JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.TrackmaniaAPI.MapRecord>), TypeInfoPropertyName = "PlayerRoot5")]
 [JsonSerializable(typeof(global::ManiaAPI.TrackmaniaAPI.MapRecord), TypeInfoPropertyName = "PlayerMapRecord")]
+[JsonSerializable(typeof(global::ManiaAPI.TrackmaniaWS.ChallengeLeaderboard), TypeInfoPropertyName = "WsChallengeLeaderboard")]
+[JsonSerializable(typeof(global::ManiaAPI.TrackmaniaWS.Manialink), TypeInfoPropertyName = "WsManialink")]
+[JsonSerializable(typeof(global::ManiaAPI.TrackmaniaWS.PlayerLeaderboard), TypeInfoPropertyName = "WsPlayerLeaderboard")]
+[JsonSerializable(typeof(global::ManiaAPI.TrackmaniaWS.PlayerRanking), TypeInfoPropertyName = "WsPlayerRanking")]
+[JsonSerializable(typeof(global::ManiaAPI.TrackmaniaWS.Zone), TypeInfoPropertyName = "WsZone")]
+[JsonSerializable(typeof(global::ManiaAPI.TrackmaniaWS.ZoneLeaderboard), TypeInfoPropertyName = "WsZoneLeaderboard")]
+[JsonSerializable(typeof(global::ManiaAPI.TrackmaniaWS.ZoneSort?), TypeInfoPropertyName = "WsZoneSort")]
+[JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.TrackmaniaWS.PlayerTag>), TypeInfoPropertyName = "WsPlayerTags")]
+[JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.TrackmaniaWS.Zone>), TypeInfoPropertyName = "WsZones")]
 // TimeInt32 is written as integer milliseconds; without the converter every TimeSpan-like property is serialized.
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, UseStringEnumConverter = true,
     Converters = [typeof(global::TmEssentials.Converters.JsonTimeInt32Converter)])]

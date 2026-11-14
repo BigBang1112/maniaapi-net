@@ -347,6 +347,25 @@ trackmania.api.user [oauth, serviceOnly=False, readOnly=True, playerOnly=True]
 trackmania.api.user_admin_clubs [oauth, serviceOnly=False, readOnly=True, playerOnly=True]
 trackmania.api.user_favorite_maps [oauth, serviceOnly=False, readOnly=True, playerOnly=True] length?: int = 10, offset?: int = 0
 trackmania.api.user_map_records [oauth, serviceOnly=False, readOnly=True, playerOnly=True] mapIds: guid[]
+trackmania.ws.manialink [tmws, serviceOnly=False, readOnly=True, playerOnly=False] code: string
+trackmania.ws.multiplayer_leaderboard [tmws, serviceOnly=False, readOnly=True, playerOnly=False] path?: string = "World", environment?: string = "Merge", offset?: int = 0, length?: int = 10
+trackmania.ws.multiplayer_zone_leaderboard [tmws, serviceOnly=False, readOnly=True, playerOnly=False] path?: string = "World", offset?: int = 0, length?: int = 10
 trackmania.ws.ping [tmws, serviceOnly=False, readOnly=True, playerOnly=False]
 trackmania.ws.player [tmws, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+trackmania.ws.player_multiplayer_ranking [tmws, serviceOnly=False, readOnly=True, playerOnly=False] login: string, environment?: string = null
+trackmania.ws.player_nickname_html [tmws, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+trackmania.ws.player_solo_ranking [tmws, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+trackmania.ws.player_tags [tmws, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+trackmania.ws.registered_player_count [tmws, serviceOnly=False, readOnly=True, playerOnly=False]
+trackmania.ws.send_mania_home_notification [tmws, serviceOnly=False, readOnly=False, playerOnly=False] manialink: string, message: string, link?: string = null, iconStyle?: string = null, iconSubStyle?: string = null
+trackmania.ws.send_mania_home_private_notification [tmws, serviceOnly=False, readOnly=False, playerOnly=False] manialink: string, login: string, message: string, link?: string = null
+trackmania.ws.send_mania_home_public_notification [tmws, serviceOnly=False, readOnly=False, playerOnly=False] manialink: string, login: string, message: string, link?: string = null, iconStyle?: string = null, iconSubStyle?: string = null
+trackmania.ws.solo_challenge_leaderboard [tmws, serviceOnly=False, readOnly=True, playerOnly=False] challengeUid: string, path?: string = null, offset?: int = 0, length?: int = 10
+trackmania.ws.solo_leaderboard [tmws, serviceOnly=False, readOnly=True, playerOnly=False] path?: string = null, offset?: int = 0, length?: int = 10
+trackmania.ws.zone [tmws, serviceOnly=False, readOnly=True, playerOnly=False] id: int
+trackmania.ws.zone_by_path [tmws, serviceOnly=False, readOnly=True, playerOnly=False] path: string
+trackmania.ws.zone_children [tmws, serviceOnly=False, readOnly=True, playerOnly=False] id: int, offset?: int = 0, length?: int = 10, sort?: Id|Name = null, descending?: bool = false
+trackmania.ws.zone_children_by_path [tmws, serviceOnly=False, readOnly=True, playerOnly=False] path: string, offset?: int = 0, length?: int = 10, sort?: Id|Name = null, descending?: bool = false
+trackmania.ws.zone_id [tmws, serviceOnly=False, readOnly=True, playerOnly=False] path: string
+trackmania.ws.zones [tmws, serviceOnly=False, readOnly=True, playerOnly=False] offset?: int = 0, length?: int = 10, sort?: Id|Name = null, descending?: bool = false
 united.ladder.player [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string

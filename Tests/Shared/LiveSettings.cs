@@ -57,6 +57,15 @@ internal static class LiveSettings
     }
 
     /// <summary>
+    /// An API user of the old TMF web services, like <c>tmf_yourapp</c>.
+    /// </summary>
+    public static class TrackmaniaWS
+    {
+        public static string Username => Require("TrackmaniaWS:Username");
+        public static string Password => Require("TrackmaniaWS:Password");
+    }
+
+    /// <summary>
     /// The environment variable that sets <paramref name="key"/>, like <c>MANIAAPI_NADEOAPI__SERVICEACCOUNT__LOGIN</c> for <c>NadeoAPI:ServiceAccount:Login</c>.
     /// </summary>
     public static string ToEnvironmentVariable(string key)

@@ -41,6 +41,8 @@ A live test whose credentials are missing is skipped.
 | `Trackmania:ClientSecret` | `MANIAAPI_TRACKMANIA__CLIENTSECRET` | |
 | `ManiaPlanet:ClientId` | `MANIAAPI_MANIAPLANET__CLIENTID` | `ManiaAPI.ManiaPlanetAPI.Tests`, `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests` |
 | `ManiaPlanet:ClientSecret` | `MANIAAPI_MANIAPLANET__CLIENTSECRET` | |
+| `TrackmaniaWS:Username` | `MANIAAPI_TRACKMANIAWS__USERNAME` | `ManiaAPI.TrackmaniaWS.Tests` |
+| `TrackmaniaWS:Password` | `MANIAAPI_TRACKMANIAWS__PASSWORD` | |
 
 ```sh
 dotnet user-secrets -p Tests/ManiaAPI.NadeoAPI.Tests set "NadeoAPI:ServiceAccount:Login" "<login>"
