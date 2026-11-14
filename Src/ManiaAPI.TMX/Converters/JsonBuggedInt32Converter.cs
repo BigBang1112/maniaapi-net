@@ -4,7 +4,10 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.TMX.Converters;
 
-internal sealed class JsonBuggedInt32Converter : JsonConverter<int>
+/// <summary>
+/// Reads a 32-bit integer from Exchange values that may exceed the 32-bit range.
+/// </summary>
+public sealed class JsonBuggedInt32Converter : JsonConverter<int>
 {
     public override int Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

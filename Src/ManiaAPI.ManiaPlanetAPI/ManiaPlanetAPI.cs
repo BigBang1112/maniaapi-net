@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -117,8 +118,6 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     public bool AutomaticallyAuthorize { get; }
 
-    private readonly SemaphoreSlim semaphore = new(1, 1);
-
     /// <summary>
     /// Creates a new instance of the ManiaPlanet API client.
     /// </summary>
@@ -134,7 +133,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.8.5";
+        const string version = PackageInfo.Version;
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
@@ -161,10 +160,23 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             { "grant_type", "client_credentials" },
             { "client_id", clientId },
             { "client_secret", clientSecret },
-            { "scope", string.Join("%20", scopes) }
+            { "scope", string.Join(' ', scopes) }
         };
 
-        using var response = await Client.PostAsync("https://prod.live.maniaplanet.com/login/oauth2/access_token", new FormUrlEncodedContent(values), cancellationToken);
+        using var content = new FormUrlEncodedContent(values);
+
+        HttpResponseMessage response;
+
+        try
+        {
+            response = await Client.PostAsync("https://prod.live.maniaplanet.com/login/oauth2/access_token", content, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new ManiaPlanetAPIResponseException(ex.Message, ex);
+        }
+
+        using var _ = response;
 
 #if DEBUG
         var stringResult = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -172,7 +184,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
         await ValidateResponseAsync(response, cancellationToken);
 
-        var (_, _, accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        var (_, _, accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new JsonException("The response body is null.");
 
         Handler.Payload = JwtPayloadManiaPlanetAPI.DecodeFromAccessToken(accessToken);
 
@@ -219,8 +231,9 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         {
             error = await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.ErrorResponse, cancellationToken);
         }
-        catch (JsonException)
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
         {
+            // Not JSON, or a charset that can't be decoded, so only the status describes the error
             error = null;
         }
 
@@ -259,7 +272,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
         try
         {
-            return await GetJsonAsync($"maps/{uid}", ManiaPlanetAPIJsonContext.Default.Map, cancellationToken);
+            return await GetJsonAsync($"maps/{UrlHelper.EscapePathSegment(uid)}", ManiaPlanetAPIJsonContext.Default.Map, cancellationToken);
         }
         catch (ManiaPlanetAPIResponseException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
@@ -275,14 +288,13 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     }
 
     /// <summary>
-    /// 
+    /// Searches titles, ordered by online players by default.
     /// </summary>
     /// <param name="filters">Possible values: shootmania, trackmania, solo, multiplayer, matchmaking, environments</param>
     /// <param name="orderBy">Possible values: onlinePlayers, lastUpdate, registrations, playersLast24h</param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="offset">Number of entries to skip.</param>
+    /// <param name="length">Number of entries to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public virtual async Task<ImmutableList<Title>> SearchTitlesAsync(
         string[]? filters = null, 
         string? orderBy = "onlinePlayers", 
@@ -340,7 +352,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
         try
         {
-            return await GetJsonAsync($"titles/{uid}", ManiaPlanetAPIJsonContext.Default.Title, cancellationToken);
+            return await GetJsonAsync($"titles/{UrlHelper.EscapePathSegment(uid)}", ManiaPlanetAPIJsonContext.Default.Title, cancellationToken);
         }
         catch (ManiaPlanetAPIResponseException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
@@ -351,26 +363,25 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     public virtual async Task<ImmutableList<TitleScript>> GetTitleScriptsAsync(string uid, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(uid);
-        return await GetJsonAsync($"titles/{uid}/scripts", ManiaPlanetAPIJsonContext.Default.ImmutableListTitleScript, cancellationToken);
+        return await GetJsonAsync($"titles/{UrlHelper.EscapePathSegment(uid)}/scripts", ManiaPlanetAPIJsonContext.Default.ImmutableListTitleScript, cancellationToken);
     }
 
     /// <summary>
-    /// 
+    /// Searches online servers, ordered by player count by default.
     /// </summary>
     /// <param name="orderBy">Possible values: playerCount, levelClass1</param>
-    /// <param name="titleUids"></param>
-    /// <param name="environments"></param>
-    /// <param name="scriptName"></param>
-    /// <param name="search"></param>
-    /// <param name="zone"></param>
-    /// <param name="onlyPublic"></param>
-    /// <param name="onlyPrivate"></param>
-    /// <param name="onlyLobby"></param>
-    /// <param name="excludeLobby"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="titleUids">UIDs of the titles to filter by.</param>
+    /// <param name="environments">Environments to filter by.</param>
+    /// <param name="scriptName">Game mode script to filter by.</param>
+    /// <param name="search">Text to search for.</param>
+    /// <param name="zone">Zone path to filter by, as returned by <see cref="ManiaPlanetAPI.GetZonesAsync"/>.</param>
+    /// <param name="onlyPublic">Whether to only include public servers.</param>
+    /// <param name="onlyPrivate">Whether to only include private servers.</param>
+    /// <param name="onlyLobby">Whether to only include lobby servers.</param>
+    /// <param name="excludeLobby">Whether to leave out lobby servers.</param>
+    /// <param name="offset">Number of entries to skip.</param>
+    /// <param name="length">Number of entries to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public virtual async Task<ImmutableList<OnlineServer>> SearchOnlineServersAsync(
         string orderBy = "playerCount",
         string[]? titleUids = null,
@@ -504,44 +515,65 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     protected internal async Task<HttpResponseMessage> GetResponseAsync(string endpoint, CancellationToken cancellationToken = default)
     {
-        await semaphore.WaitAsync(cancellationToken);
+        if (AutomaticallyAuthorize && IsAuthorizationDue(out _))
+        {
+            await Handler.AuthorizationLock.WaitAsync(cancellationToken);
 
-        try
-        {
-            if (AutomaticallyAuthorize && Handler.Credentials is not null
-                && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime))
+            try
             {
-                await AuthorizeAsync(Handler.Credentials, cancellationToken);
+                // Another client sharing the handler may have authorized while this one waited
+                if (IsAuthorizationDue(out var credentials))
+                {
+                    await AuthorizeAsync(credentials, cancellationToken);
+                }
             }
-        }
-        finally
-        {
-            semaphore.Release();
+            finally
+            {
+                Handler.AuthorizationLock.Release();
+            }
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
         request.Headers.Authorization = Handler.Authorization;
 
+        HttpResponseMessage response;
+
         try
         {
-            var response = await Client.SendAsync(request, cancellationToken);
-
-            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
-
-            await ValidateResponseAsync(response, cancellationToken);
-
-            return response;
+            response = await Client.SendAsync(request, cancellationToken);
         }
         catch (HttpRequestException ex)
         {
-            throw new ManiaPlanetAPIResponseException(ex.Message, ex.InnerException);
+            throw new ManiaPlanetAPIResponseException(ex.Message, ex);
+        }
+
+        try
+        {
+            await ValidateResponseAsync(response, cancellationToken);
+
+            // After validation, so an error body that can't be read as a string still throws the response exception in Debug builds
+            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
+
+            return response;
+        }
+        catch
+        {
+            // The caller only disposes a response it gets back
+            response.Dispose();
+            throw;
         }
     }
 
     protected internal async Task<T> GetJsonAsync<T>(string endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await GetResponseAsync(endpoint, cancellationToken);
-        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
+    }
+
+    private bool IsAuthorizationDue([NotNullWhen(true)] out ManiaPlanetAPICredentials? credentials)
+    {
+        credentials = Handler.Credentials;
+        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime);
     }
 
     public virtual void Dispose()

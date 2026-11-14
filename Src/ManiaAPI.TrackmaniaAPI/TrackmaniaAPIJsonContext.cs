@@ -10,5 +10,8 @@ namespace ManiaAPI.TrackmaniaAPI;
 [JsonSerializable(typeof(ImmutableDictionary<string, Guid>))]
 [JsonSerializable(typeof(ImmutableList<MapRecord>))]
 [JsonSerializable(typeof(ErrorResponse))]
+[JsonSerializable(typeof(AdminClubCollection))]
+[JsonSerializable(typeof(FavoriteMapCollection))]
+[JsonSerializable(typeof(FavoriteMapRequest))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class TrackmaniaAPIJsonContext : JsonSerializerContext { }

@@ -1,3 +1,7 @@
+[*.{csproj,props,targets,slnx,xml,config,nuspec,resx,runsettings}]
+indent_style = space
+indent_size = 4
+
 [*.cs]
 csharp_style_prefer_range_operator = false
 csharp_style_namespace_declarations = file_scoped

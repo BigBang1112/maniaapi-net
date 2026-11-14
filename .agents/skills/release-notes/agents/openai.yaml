@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Notes"
+  short_description: "Prepare package versions, Markdown notes, and release PRs"
+  default_prompt: "Use $release-notes to prepare the affected package versions and concise Markdown release notes, verify formatting survives publishing, and update the release PR when requested."

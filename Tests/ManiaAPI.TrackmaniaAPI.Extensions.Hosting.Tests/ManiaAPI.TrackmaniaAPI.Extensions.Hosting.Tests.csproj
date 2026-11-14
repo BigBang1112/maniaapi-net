@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Src\ManiaAPI.TrackmaniaAPI.Extensions.Hosting\ManiaAPI.TrackmaniaAPI.Extensions.Hosting.csproj" />
+    </ItemGroup>
+
+</Project>

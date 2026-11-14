@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text;
 
 namespace ManiaAPI.ManiaPlanetAPI;
@@ -32,7 +33,7 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.8.5";
+        const string version = PackageInfo.Version;
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
@@ -61,7 +62,7 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
 
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync(ManiaPlanetIngameAPIJsonContext.Default.ManiaPlanetIngameAuthResponse, cancellationToken) ?? throw new Exception("This should never happen");
+        return await response.Content.ReadFromJsonAsync(ManiaPlanetIngameAPIJsonContext.Default.ManiaPlanetIngameAuthResponse, cancellationToken) ?? throw new JsonException("The access token payload is null.");
     }
 
     public async Task<HttpResponseMessage> DownloadTitleAsync(string titleId, CancellationToken cancellationToken = default)
@@ -75,7 +76,7 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
     {
         ArgumentException.ThrowIfNullOrEmpty(titleId);
 
-        using var request = new HttpRequestMessage(method, $"public/titles/download/{titleId}.Title.Pack.gbx");
+        using var request = new HttpRequestMessage(method, $"public/titles/download/{UrlHelper.EscapePathSegment(titleId)}.Title.Pack.gbx");
         return await Client.SendAsync(request, cancellationToken);
     }
 
@@ -83,7 +84,7 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
     {
         ArgumentException.ThrowIfNullOrEmpty(uid);
 
-        using var response = await Client.GetAsync($"public/titles/{uid}", cancellationToken);
+        using var response = await Client.GetAsync($"public/titles/{UrlHelper.EscapePathSegment(uid)}", cancellationToken);
 
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
@@ -96,14 +97,13 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
     }
 
     /// <summary>
-    /// 
+    /// Searches titles, ordered by online players by default.
     /// </summary>
     /// <param name="filters">Possible values: shootmania, trackmania, solo, multiplayer, matchmaking, environments</param>
     /// <param name="orderBy">Possible values: onlinePlayers, lastUpdate, registrations, playersLast24h</param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="offset">Number of entries to skip.</param>
+    /// <param name="length">Number of entries to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public virtual async Task<ImmutableList<IngameTitle>> SearchTitlesAsync(
         string[]? filters = null,
         string? orderBy = "onlinePlayers",
@@ -157,29 +157,28 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync(ManiaPlanetIngameAPIJsonContext.Default.ImmutableListIngameTitle, cancellationToken)
-            ?? throw new Exception("This shouldn't be null.");
+            ?? throw new JsonException("The response body is null.");
     }
 
     /// <summary>
-    /// 
+    /// Searches online servers, ordered by player count by default.
     /// </summary>
-    /// <param name="login"></param>
-    /// <param name="token"></param>
+    /// <param name="login">Player login.</param>
+    /// <param name="token">In-game authentication token of the player.</param>
     /// <param name="orderBy">Possible values: playerCount, levelClass1</param>
-    /// <param name="titleUids"></param>
-    /// <param name="environments"></param>
-    /// <param name="scriptName"></param>
-    /// <param name="search"></param>
-    /// <param name="zone"></param>
-    /// <param name="onlyPublic"></param>
-    /// <param name="onlyPrivate"></param>
-    /// <param name="onlyFavorite"></param>
-    /// <param name="onlyLobby"></param>
-    /// <param name="excludeLobby"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="titleUids">UIDs of the titles to filter by.</param>
+    /// <param name="environments">Environments to filter by.</param>
+    /// <param name="scriptName">Game mode script to filter by.</param>
+    /// <param name="search">Text to search for.</param>
+    /// <param name="zone">Zone path to filter by, as returned by <see cref="ManiaPlanetAPI.GetZonesAsync"/>.</param>
+    /// <param name="onlyPublic">Whether to only include public servers.</param>
+    /// <param name="onlyPrivate">Whether to only include private servers.</param>
+    /// <param name="onlyFavorite">Whether to only include the favorite servers of the player.</param>
+    /// <param name="onlyLobby">Whether to only include lobby servers.</param>
+    /// <param name="excludeLobby">Whether to leave out lobby servers.</param>
+    /// <param name="offset">Number of entries to skip.</param>
+    /// <param name="length">Number of entries to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public virtual async Task<ImmutableList<OnlineServer>> SearchOnlineServersAsync(
         string login,
         string token,
@@ -330,6 +329,6 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.ImmutableListOnlineServer, cancellationToken)
-            ?? throw new Exception("This shouldn't be null.");
+            ?? throw new JsonException("The response body is null.");
     }
 }

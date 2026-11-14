@@ -10,12 +10,14 @@ A wrapper for these web APIs:
 - [Nadeo API](https://webservices.openplanet.dev/) (official TM2020 ingame API)
 - [Trackmania web API](https://doc.trackmania.com/web/web-services/)
 - [ManiaPlanet web API](https://doc.maniaplanet.com/web-services)
+- [ManiaPlanet Channel Record API](https://records.prod.live.maniaplanet.com/) (channel map leaderboards)
+- [ManiaPlanet Channel Feedback API](https://feedback.prod.live.maniaplanet.com/) (channel map feedback totals)
 - [Trackmania.io](https://openplanet.dev/tmio/api)
 - [Trackmania Web Services](http://developers.trackmania.com/webservices/) (old TMF web API)
-- [Trackmania Exchange](https://api2.mania.exchange/)
+- [Trackmania Exchange](https://api2.mania.exchange/), including Item Exchange
 - [UnitedLadder](https://ul.unitedascenders.xyz/)
-- XML protocol (for TMF, TMT, and ManiaPlanet)
-- XML-RPC protocol (for TMF, ManiaPlanet, and TM2020)
+- Master server APIs using XML (for TMF, TMT, and ManiaPlanet)
+- GBXRemote protocol using XML-RPC (for TMF, ManiaPlanet, and TM2020)
 
 This set of libraries was made to be very easy and straightforward to use, but also easily mocked, so that it can be integrated into the real world in no time.
 
@@ -36,18 +38,22 @@ Anything you can imagine!
 - [ManiaAPI.TMX](#maniaapitmx)
 - [ManiaAPI.TMX.Extensions.Hosting](#maniaapitmxextensionshosting)
 - [ManiaAPI.TMX.Extensions.Gbx](#maniaapitmxextensionsgbx)
-- [ManiaAPI.Xml](#maniaapixml)
-- [ManiaAPI.Xml.Extensions.Hosting](#maniaapixmlextensionshosting)
-- [ManiaAPI.XmlRpc](#maniaapixmlrpc)
+- [ManiaAPI.MasterServer](#maniaapimasterserver)
+- [ManiaAPI.MasterServer.Extensions.Hosting](#maniaapimasterserverextensionshosting)
+- [ManiaAPI.GBXRemote](#maniaapigbxremote)
 - [ManiaAPI.UnitedLadder](#maniaapiunitedladder)
 
 ### Samples
 
-- [WebAppXmlExample](Samples/WebAppXmlExample) - Blazor Server web application that demonstrates the use of the ManiaAPI.Xml API, currently only TMTurbo.
+- [WebAppMasterServerExample](Samples/WebAppMasterServerExample) - Blazor Server web application that demonstrates the use of the ManiaAPI.MasterServer API, currently only TMTurbo.
 - [WebAppTmxExample](Samples/WebAppTmxExample) - Blazor Server web application that demonstrates the use of the ManiaAPI.TMX API.
 - [WebAppAuthorizationExample](Samples/WebAppAuthorizationExample) - Simple ASP.NET Core web application to show how to conveniently use the OAuth2 from `ManiaAPI.TrackmaniaAPI.Extensions.Hosting` and `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting`.
 
 See the [Samples](Samples) folder for more.
+
+### MCP server
+
+[ManiaAPI.MCP](Src/ManiaAPI.MCP) lets AI assistants use ManiaAPI libraries effectively. Install it with `dotnet tool install -g ManiaAPI.MCP` and see [how to connect it](Src/ManiaAPI.MCP/README.md).
 
 ## ManiaAPI.NadeoAPI
 
@@ -254,6 +260,8 @@ Wraps https://api.trackmania.com/doc (Trackmania web API). **This API requires a
 - Get display names
 - Get account IDs from display names
 - Get user's map records
+- Get clubs the user is an admin of
+- Get, add, and remove user's favorite maps
 
 More will be added in the future.
 
@@ -361,6 +369,11 @@ Wraps https://maniaplanet.com/swagger (ManiaPlanet web API). This API does not r
   - Get title pack info (contains more info than from WebServices)
   - Search online servers (if you have login and token, allows filtering by favorites)
   - Downloading a title pack
+- Channel map leaderboards from the [Channel Record API](https://records.prod.live.maniaplanet.com/):
+  - Top 10 records with the ranks of chosen players
+  - Pages of records, up to 101 at once
+  - A player's record and rank
+- Channel map feedback totals (yes/no votes and star ratings) from the [Channel Feedback API](https://feedback.prod.live.maniaplanet.com/)
 
 ### Setup
 
@@ -391,6 +404,35 @@ if (user.Login != "username")
 {
 	throw new Exception("Invalid token");
 }
+```
+
+For leaderboards of channel maps, use the `ManiaPlanetChannelRecordAPI`. It doesn't need authorization.
+
+```cs
+using ManiaAPI.ManiaPlanetAPI;
+
+var channel = new ManiaPlanetChannelRecordAPI();
+
+// Top 10, the number of records, and the ranks of the given players
+var leaderboard = await channel.GetLeaderboardAsync("9W_9qjV56i67CWpYDclFyOhz5g", ["lbt76240"]);
+
+// Records 101 to 200
+var page = await channel.GetRecordsAsync("9W_9qjV56i67CWpYDclFyOhz5g", offset: 100, length: 100);
+
+// A player's record, or null Record when they have none
+var player = await channel.GetPlayerRecordAsync("9W_9qjV56i67CWpYDclFyOhz5g", "lbt76240");
+```
+
+For feedback of channel maps, use the `ManiaPlanetChannelFeedbackAPI`. Only the totals are public; votes and ratings of single maps need the game servers' credentials.
+
+```cs
+using ManiaAPI.ManiaPlanetAPI;
+
+var feedback = new ManiaPlanetChannelFeedbackAPI();
+
+var status = await feedback.GetStatusAsync();
+
+Console.WriteLine($"{status.YesNo.VotesYes} yes, {status.YesNo.VotesNo} no, {status.Stars.Notes5Star} five-star ratings");
 ```
 
 For DI, consider using the `ManiaAPI.ManiaPlanetAPI.Extensions.Hosting` package.
@@ -525,9 +567,24 @@ Wraps https://ws.trackmania.com/ (old TMF web API). **This API requires authoriz
 
 ### Features
 
-- Get player info (registration ID from login for example)
+- Players
+  - Info (registration ID from login for example)
+  - Nickname as HTML
+  - Tags
+  - Multiplayer (ladder) and solo (skill points) ranking, with the rank in each zone
+- Zones
+  - By ID or path, ID from path
+  - All zones and child zones, with paging and sorting
+- Rankings
+  - Solo leaderboard of players, overall or on a challenge (map), in any zone
+  - Multiplayer leaderboard of players in any zone and environment
+  - Multiplayer leaderboard of zones
+- Number of registered accounts
+- Short manialink codes
+- ManiaHome notifications from a manialink
+- Check that the service is up, without needing credentials
 
-More will be added in the future.
+Errors throw `TrackmaniaWSResponseException` (an `HttpRequestException`) with the message of the response, like `Invalid environment "Foo"`.
 
 ### Setup
 
@@ -537,6 +594,12 @@ using ManiaAPI.TrackmaniaWS;
 var ws = new TrackmaniaWS("tmf_yourapp", "password");
 
 // Ready to use
+```
+
+To check that the service is up, `PingAsync` uses its public test route, which ignores the credentials:
+
+```cs
+bool up = await ws.PingAsync();
 ```
 
 For DI, consider using the `ManiaAPI.TrackmaniaWS.Extensions.Hosting` package.
@@ -587,6 +650,7 @@ Wraps:
 - https://original.tm-exchange.com
 - https://sunrise.tm-exchange.com
 - https://nations.tm-exchange.com
+- https://item.exchange (as `IX`)
 
 ### Features
 
@@ -597,6 +661,7 @@ Wraps:
 - Search users
 - Get Gbx URLs and HTTP responses
 - Get image URLs and HTTP responses
+- Item Exchange: search and get items and item sets, user baskets, downloads and images
 
 ### Setup
 
@@ -622,6 +687,16 @@ using ManiaAPI.TMX;
 builder.Services.AddHttpClient("TMX_TMNF");
 builder.Services.AddScoped<TMX>(provider => new TMX(
     provider.GetRequiredService<IHttpClientFactory>().CreateClient("TMX_TMNF"), TmxSite.TMNF));
+```
+
+For Item Exchange, use `IX`:
+
+```cs
+using ManiaAPI.TMX;
+
+var ix = new IX();
+
+var result = await ix.SearchItemsAsync(new() { ItemName = ["rock"], Limit = 20 });
 ```
 
 For advanced DI, consider using the `ManiaAPI.TMX.Extensions.Hosting` package.
@@ -692,15 +767,17 @@ var map = await tmx.GetTrackGbxNodeAsync(12345);
 Console.WriteLine("Number of blocks: " + map.GetBlocks().Count());
 ```
 
-## ManiaAPI.Xml
+## ManiaAPI.MasterServer
 
-[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.Xml?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.Xml/)
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.MasterServer?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.MasterServer/)
 
-Wraps TMF, TMT, and ManiaPlanet XML ingame APIs. **Does not relate to the dedicated server XML-RPC.**
+Wraps the TMF, TMT, and ManiaPlanet master server APIs, which communicate using XML.
+
+Previously named `ManiaAPI.Xml`. To migrate, replace the package reference and change `using ManiaAPI.Xml` to `using ManiaAPI.MasterServer`, including game-specific namespaces such as `.MP4` and `.TMT`. The client and model names are unchanged.
 
 It currently **does not support any authentication** for its complexity and security reasons. If some of the leaderboard methods will become secured with authentication though, this will be considered. For authenticated functionality in TMUF, use the [TMF.NET](https://github.com/Laiteux/TMF.NET) library.
 
-For dedicated server XML-RPC communication, see `ManiaAPI.XmlRpc` (lightweight, all Nadeo servers) or [GbxRemote.Net](https://github.com/EvoEsports/GbxRemote.Net) (TM2020-focused) library.
+For dedicated server XML-RPC communication, see `ManiaAPI.GBXRemote` (lightweight, all Nadeo servers) or [GbxRemote.Net](https://github.com/EvoEsports/GbxRemote.Net) (TM2020-focused) library.
 
 ### Features
 
@@ -713,6 +790,7 @@ For TMUF:
   - Medals
 - Get ladder zone rankings
 - Get ladder player rankings
+- Get player achievements
 
 For ManiaPlanet:
 
@@ -751,7 +829,8 @@ For all games:
 ### Setup for TMUF
 
 ```cs
-using ManiaAPI.Xml;
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.TMUF;
 
 var masterServer = new MasterServerTMUF();
 ```
@@ -761,7 +840,8 @@ var masterServer = new MasterServerTMUF();
 First examples assume `Maniaplanet relay 1` master server is still running.
 
 ```cs
-using ManiaAPI.Xml;
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.MP4;
 
 var masterServer = new MasterServerMP4();
 ```
@@ -769,7 +849,8 @@ var masterServer = new MasterServerMP4();
 Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client.
 
 ```cs
-using ManiaAPI.Xml;
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.MP4;
 
 var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
@@ -781,7 +862,8 @@ var masterServer = new MasterServerMP4(httpClient);
 In case `Maniaplanet relay 1` shuts down / errors out, you have to reach out to the init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
 
 ```cs
-using ManiaAPI.Xml;
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.MP4;
 
 var initServer = new InitServerMP4();
 var waitingParams = await initServer.GetWaitingParamsAsync();
@@ -794,7 +876,8 @@ var masterServer = new MasterServerMP4(waitingParams.MasterServers.First());
 Example with enabled compression:
 
 ```cs
-using ManiaAPI.Xml;
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.MP4;
 
 var initServer = new InitServerMP4();
 var waitingParams = await initServer.GetWaitingParamsAsync();
@@ -815,7 +898,8 @@ The same idea works for ManiaPlanet 3 with `MasterServerMP3`, which uses `Maniap
 TMT handles 3 platforms: PC, XB1, and PS4. Each have their own init server and master server. Nadeo still tends to change these master servers, so it's recommended to first go through the init server.
 
 ```cs
-using ManiaAPI.Xml;
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.TMT;
 
 var initServer = new InitServerTMT(Platform.PC);
 var waitingParams = await initServer.GetWaitingParamsAsync();
@@ -828,7 +912,8 @@ var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
 Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client for the **master server**. Init server does not return large responses, so it's not necessary for that one.
 
 ```cs
-using ManiaAPI.Xml;
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.TMT;
 
 var initServer = new InitServerTMT(Platform.PC);
 var waitingParams = await initServer.GetWaitingParamsAsync();
@@ -845,7 +930,8 @@ var masterServer = new MasterServerTMT(httpClient);
 **For a simple setup with multiple platforms, the `AggregatedMasterServerTMT` is recommended:**
 
 ```cs
-using ManiaAPI.Xml;
+using ManiaAPI.MasterServer;
+using ManiaAPI.MasterServer.TMT;
 
 var waitingParams = Enum.GetValues<Platform>().ToDictionary(
     platform => platform, 
@@ -863,16 +949,35 @@ var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDicti
 // You can now use aggregatedMasterServer to work with all master servers at once
 ```
 
-## ManiaAPI.Xml.Extensions.Hosting
+### Errors
 
-[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.Xml.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.Xml.Extensions.Hosting/)
+When the master server rejects a request, a `MasterServerResponseException` is thrown. `Value` holds the raw error code, `Error` holds it as `MasterServerError` (codes recovered from the game executables), and `ErrorMessage` holds the message sent by the server. The same exception is thrown when a response can't be read, with these three properties set to `null`.
 
-Provides an efficient way to inject all XML services into your application.
+```cs
+try
+{
+    var player = await masterServer.GetPlayerInfosAsync("bigbang1112");
+}
+catch (MasterServerResponseException ex) when (ex.Error is MasterServerError.PlayerUnknown or MasterServerError.LoginUnknown)
+{
+    // ...
+}
+```
+
+`AggregatedMasterServerTMT` doesn't throw for a failing platform. It sets `ErrorMessage` and `Error` in `AggregatedSummaryInfo` of that platform instead.
+
+## ManiaAPI.MasterServer.Extensions.Hosting
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.MasterServer.Extensions.Hosting?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.MasterServer.Extensions.Hosting/)
+
+Provides an efficient way to inject master server services into your application.
+
+Previously named `ManiaAPI.Xml.Extensions.Hosting`. To migrate, replace the package reference and use `ManiaAPI.MasterServer.Extensions.Hosting`. The service registration methods are unchanged.
 
 ### Setup for TMUF
 
 ```cs
-using ManiaAPI.Xml.Extensions.Hosting;
+using ManiaAPI.MasterServer.Extensions.Hosting;
 
 builder.Services.AddMasterServerTMUF();
 ```
@@ -880,7 +985,7 @@ builder.Services.AddMasterServerTMUF();
 ### Setup for ManiaPlanet
 
 ```cs
-using ManiaAPI.Xml.Extensions.Hosting;
+using ManiaAPI.MasterServer.Extensions.Hosting;
 
 builder.Services.AddMasterServerMP4();
 ```
@@ -890,7 +995,7 @@ You can now inject `MasterServerMP4`, as long as you're fine relying on `Maniapl
 If you want to have better control over the selection of master servers, use this setup:
 
 ```cs
-using ManiaAPI.Xml.Extensions.Hosting;
+using ManiaAPI.MasterServer.Extensions.Hosting;
 
 builder.Services.AddMasterServerMP4();
 
@@ -916,7 +1021,7 @@ The same idea works for ManiaPlanet 3 with `AddMasterServerMP3()`, which uses `M
 ### Setup for TMT
 
 ```cs
-using ManiaAPI.Xml.Extensions.Hosting;
+using ManiaAPI.MasterServer.Extensions.Hosting;
 
 // Register the services
 builder.Services.AddMasterServerTMT();
@@ -951,7 +1056,7 @@ HTTP requests can transiently fail, so it's a good idea to add some retry logic.
 `AddMasterServerTMUF` returns an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
 
 ```cs
-using ManiaAPI.Xml.Extensions.Hosting;
+using ManiaAPI.MasterServer.Extensions.Hosting;
 
 builder.Services.AddMasterServerTMUF()
     .AddStandardResilienceHandler();
@@ -965,9 +1070,9 @@ builder.Services.AddMasterServerTMT(
     configureMasterServer: http => http.AddStandardResilienceHandler());
 ```
 
-## ManiaAPI.XmlRpc
+## ManiaAPI.GBXRemote
 
-[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.XmlRpc?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.XmlRpc/)
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.GBXRemote?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.GBXRemote/)
 
 Integrates the GBXRemote (XML-RPC) communication used between controllers and servers.
 
@@ -980,9 +1085,9 @@ This solution tries to be lightweight and compatible with as many Nadeo games as
 ### Usage
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.GBXRemote;
 
-await using var client = await XmlRpcClient.ConnectAsync("127.0.0.1");
+await using var client = await GBXRemoteClient.ConnectAsync("127.0.0.1");
 
 object authenticationResult = await client.CallAsync("Authenticate", ["SuperAdmin", "SuperAdmin"]);
 
@@ -1023,10 +1128,10 @@ await client.WaitForCloseAsync();
 
 ### Resilience
 
-`XmlRpcClient` communicates over a raw TCP connection. Wrap `ConnectAsync` with a [`Polly`](https://www.nuget.org/packages/Polly) pipeline to retry on transient connection failures:
+`GBXRemoteClient` communicates over a raw TCP connection. Add [`Microsoft.Extensions.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Resilience) and wrap `ConnectAsync` in a retry pipeline to handle transient connection failures:
 
 ```cs
-using ManiaAPI.XmlRpc;
+using ManiaAPI.GBXRemote;
 using Polly;
 using Polly.Retry;
 
@@ -1039,8 +1144,22 @@ var pipeline = new ResiliencePipelineBuilder()
     .Build();
 
 await using var client = await pipeline.ExecuteAsync(async token =>
-    await XmlRpcClient.ConnectAsync("127.0.0.1", 5000, cancellationToken: token));
+    await GBXRemoteClient.ConnectAsync("127.0.0.1", 5000, cancellationToken: token));
 ```
+
+### Migration from ManiaAPI.XmlRpc
+
+Replace the package reference with `ManiaAPI.GBXRemote` and use the `ManiaAPI.GBXRemote` namespace. Types use the `GBXRemote` prefix in place of `XmlRpc`:
+
+| Previous name | New name |
+| --- | --- |
+| `XmlRpcClient` | `GBXRemoteClient` |
+| `XmlRpcCall` | `GBXRemoteCall` |
+| `XmlRpcCallResult` | `GBXRemoteCallResult` |
+| `XmlRpcCallback` | `GBXRemoteCallback` |
+| `XmlRpcCallbackMessage` | `GBXRemoteCallbackMessage` |
+
+Method names and the wire protocol are unchanged.
 
 ## ManiaAPI.UnitedLadder
 
@@ -1075,15 +1194,7 @@ builder.Services.AddHttpClient<UnitedLadder>();
 > [!NOTE]
 > You don't need to build the solution/repository to use ManiaAPI.NET, **NuGet packages have been made for you**. This is only for internal development purposes.
 
-Make sure you have these framework SDKs available:
-
-- .NET 10
-- .NET 9
-- .NET 8
-
-**Visual Studio 2026** should be able to install those with default installation settings. Using Visual Studio 2022 might work, but Visual Studio 2019 will not work.
-
-In Visual Studio, you can just use Build Solution and everything should build. JetBrains Rider has been tested and also works.
+Make sure you have .NET 11 SDK available.
 
 In .NET CLI, run `dotnet build` on the solution (`.slnx`) level.
 

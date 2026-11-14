@@ -1,4 +1,5 @@
 using ManiaAPI.TMX.Attributes;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -86,7 +87,7 @@ public partial class MX : IMX
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.9.1";
+        const string version = PackageInfo.Version;
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
@@ -104,7 +105,7 @@ public partial class MX : IMX
             MxSite.Maniaplanet => "https://tm.mania.exchange/",
             MxSite.Trackmania => "https://trackmania.exchange/",
             MxSite.Shootmania => "https://sm.mania.exchange/",
-            _ => throw new NotImplementedException()
+            _ => throw new ArgumentOutOfRangeException(nameof(site), site, "Unknown site.")
         };
 
         Client.BaseAddress = new Uri(url);
@@ -129,7 +130,7 @@ public partial class MX : IMX
 
         response.EnsureSuccessStatusCode();
 
-        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), out var trackId))
+        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), CultureInfo.InvariantCulture, out var trackId))
         {
             return trackId;
         }
@@ -172,7 +173,7 @@ public partial class MX : IMX
 
         response.EnsureSuccessStatusCode();
 
-        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), out var mappackId))
+        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), CultureInfo.InvariantCulture, out var mappackId))
         {
             return mappackId;
         }

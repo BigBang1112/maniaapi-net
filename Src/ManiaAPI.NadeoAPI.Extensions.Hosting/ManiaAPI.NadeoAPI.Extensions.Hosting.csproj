@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <PackageId>ManiaAPI.NadeoAPI.Extensions.Hosting</PackageId>
-        <Version>2.9.0</Version>
+        <Version>2.10.0</Version>
         <Authors>BigBang1112</Authors>
         <Description>Extension methods of Nadeo API for ASP.NET Core. Part of the ManiaAPI.NET library set.</Description>
         <Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
@@ -10,12 +10,16 @@
         <PackageIcon>logo_icon_outline.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
-        <PackageReleaseNotes></PackageReleaseNotes>
+        <PackageReleaseNotes>
+- Fixed token refresh failures stopping the host or skipping refreshes for the other Nadeo services
+- Updated the `ManiaAPI.NadeoAPI` dependency to 2.10.0
+- Added .NET 11 support
+        </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <PropertyGroup>
-        <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
+        <TargetFrameworks>net11.0;net10.0;net9.0;net8.0</TargetFrameworks>
         <LangVersion>14</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -29,7 +33,6 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
 
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
         <NoWarn>1591</NoWarn>

@@ -3,7 +3,13 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI.Converters;
 
-internal sealed class BoolNumberConverter : JsonConverter<bool>
+/// <summary>
+/// Converts a boolean that the Nadeo API sends as the number 1 or 0.
+/// </summary>
+/// <remarks>
+/// Public so that a <see cref="JsonSerializerContext"/> outside this library can use it when it includes Nadeo API models.
+/// </remarks>
+public sealed class BoolNumberConverter : JsonConverter<bool>
 {
     public override bool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

@@ -31,6 +31,26 @@ using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 builder.Services.AddManiaPlanetIngameAPI();
 ```
 
+## Setup `ManiaPlanetChannelRecordAPI` injection
+
+`ManiaPlanetChannelRecordAPI` (channel map leaderboards) will be available as a transient, the same way.
+
+```cs
+using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
+
+builder.Services.AddManiaPlanetChannelRecordAPI();
+```
+
+## Setup `ManiaPlanetChannelFeedbackAPI` injection
+
+`ManiaPlanetChannelFeedbackAPI` (channel map feedback totals) will be available as a transient, the same way.
+
+```cs
+using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
+
+builder.Services.AddManiaPlanetChannelFeedbackAPI();
+```
+
 ## Setup OAuth2
 
 For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web-services/oauth2). Generate your credentials [here](https://maniaplanet.com/web-services-manager). **The redirect URL is the `/signin-maniaplanet` relative to the web root**, for example: `https://localhost:7864/signin-maniaplanet`.

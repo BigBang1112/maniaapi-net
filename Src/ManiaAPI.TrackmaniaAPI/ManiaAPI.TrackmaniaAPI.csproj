@@ -1,43 +1,50 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<PackageId>ManiaAPI.TrackmaniaAPI</PackageId>
-		<Version>2.8.5</Version>
-		<Authors>BigBang1112</Authors>
-		<Description>Wrapper for the official web API from Trackmania released in 2020. Part of the ManiaAPI.NET library set.</Description>
-		<Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
-		<PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
-		<PackageIcon>logo_icon_outline.png</PackageIcon>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
-		<PackageReleaseNotes></PackageReleaseNotes>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-	</PropertyGroup>
+    <PropertyGroup>
+        <PackageId>ManiaAPI.TrackmaniaAPI</PackageId>
+        <Version>2.10.0</Version>
+        <Authors>BigBang1112</Authors>
+        <Description>Wrapper for the official web API from Trackmania released in 2020. Part of the ManiaAPI.NET library set.</Description>
+        <Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
+        <PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
+        <PackageIcon>logo_icon_outline.png</PackageIcon>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
+        <PackageReleaseNotes>
+- Added `GetUserAdminClubsAsync`, `GetUserFavoriteMapsAsync`, `AddUserFavoriteMapAsync`, and `RemoveUserFavoriteMapAsync` for player OAuth tokens
+- Added public JSON converters and access to `TrackmaniaAPIHandler.Authorization` for external serialization and player tokens
+- Fixed concurrent authorization for clients sharing a handler and encoding of multiple OAuth scopes
+- Fixed display name and account ID lookups handling empty results without hiding malformed JSON, and escaped display names in requests
+- Updated the User-Agent to report the installed package version
+- Added .NET 11 support
+        </PackageReleaseNotes>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    </PropertyGroup>
 
-	<PropertyGroup>
-		<TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
-		<LangVersion>14</LangVersion>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<IsTrimmable>true</IsTrimmable>
-		<IsAotCompatible>true</IsAotCompatible>
+    <PropertyGroup>
+        <TargetFrameworks>net11.0;net10.0;net9.0;net8.0</TargetFrameworks>
+        <LangVersion>14</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsTrimmable>true</IsTrimmable>
+        <IsAotCompatible>true</IsAotCompatible>
 
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
 
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-		<NoWarn>1591</NoWarn>
-	</PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+        <NoWarn>1591</NoWarn>
+    </PropertyGroup>
 
-	<ItemGroup>
+    <ItemGroup>
         <None Include="../../logo_icon_outline.png" Pack="true" PackagePath="\" />
-		<None Include="README.md" Pack="true" PackagePath="\" />
-	</ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
 
 </Project>

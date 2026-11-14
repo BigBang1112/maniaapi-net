@@ -1,0 +1,17 @@
+<Project>
+
+    <!--
+        Live tests run only on the newest target framework, the first in TargetFrameworks, so a run of every framework
+        sends each service one set of requests rather than one per framework, which would hit their rate limits.
+        This is a .targets file, so it sees TargetFrameworks set in a test project too. See LiveTestAttribute.
+    -->
+    <PropertyGroup>
+        <LiveTestFramework Condition="'$(TargetFrameworks)' != ''">$(TargetFrameworks.Split(';')[0].Trim())</LiveTestFramework>
+        <LiveTestFramework Condition="'$(TargetFrameworks)' == ''">$(TargetFramework)</LiveTestFramework>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(TargetFramework)' == '$(LiveTestFramework)'">
+        <DefineConstants>$(DefineConstants);LIVE_TEST_FRAMEWORK</DefineConstants>
+    </PropertyGroup>
+
+</Project>

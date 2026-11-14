@@ -43,6 +43,7 @@ internal class TrackmaniaAuthenticationHandler(
 
         await Events.CreatingTicket(context);
 
-        return await base.CreateTicketAsync(identity, properties, tokens);
+        // Not base.CreateTicketAsync, which would raise CreatingTicket again with an empty user payload
+        return new AuthenticationTicket(context.Principal!, context.Properties, Scheme.Name);
     }
 }

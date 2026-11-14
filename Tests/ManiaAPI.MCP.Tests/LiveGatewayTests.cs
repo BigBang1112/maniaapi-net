@@ -1,0 +1,82 @@
+using ManiaAPI.MCP.Catalog;
+using ManiaAPI.MCP.Configuration;
+using ManiaAPI.MCP.Engine;
+using ManiaAPI.MCP.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using ManiaAPI.MCP.Tools;
+using ModelContextProtocol.Protocol;
+
+namespace ManiaAPI.MCP.Tests;
+
+[LiveTest]
+public class LiveGatewayTests
+{
+    [Test]
+    public async Task ExchangeRead()
+    {
+        using var services = EngineTests.CreateServices();
+        using var request = services.CreateScope();
+
+        var result = await services.GetRequiredService<GatewayTools>().CallAsync(new CallToolRequestParams
+        {
+            Name = "exchange_search",
+            Arguments = new Dictionary<string, System.Text.Json.JsonElement>
+            {
+                ["site"] = EngineTests.Json("\"Trackmania\""),
+                ["parameters"] = EngineTests.Json("{\"count\":1}")
+            }
+        }, request.ServiceProvider, CancellationToken.None);
+
+        await Assert.That(result.IsError ?? false).IsFalse();
+    }
+
+    [Test]
+    public async Task Trackmania2020Read()
+    {
+        var configuration = TestConfiguration.Create(new Dictionary<string, string?>
+        {
+            ["ManiaAPI:NadeoAPI:Login"] = LiveSettings.NadeoAPI.ServiceAccount.Login,
+            ["ManiaAPI:NadeoAPI:Password"] = LiveSettings.NadeoAPI.ServiceAccount.Password
+        });
+
+        var collection = new ServiceCollection();
+        collection.AddLogging();
+        collection.AddManiaAPI(configuration);
+
+        using var services = collection.BuildServiceProvider();
+        using var request = services.CreateScope();
+
+        var result = await services.GetRequiredService<GatewayTools>().CallAsync(new CallToolRequestParams
+        {
+            Name = "trackmania2020_campaign",
+            Arguments = new Dictionary<string, System.Text.Json.JsonElement> { ["length"] = EngineTests.Json("1") }
+        }, request.ServiceProvider, CancellationToken.None);
+
+        await Assert.That(result.IsError ?? false).IsFalse();
+    }
+
+    [Test]
+    [Arguments("tmuf_player")]
+    [Arguments("tmnf_player")]
+    [Arguments("maniaplanet_player")]
+    [Arguments("trackmaniaturbo_leaderboard")]
+    public async Task LegacyFeaturedRead(string tool)
+    {
+        using var services = EngineTests.CreateServices();
+        using var request = services.CreateScope();
+
+        var result = await services.GetRequiredService<GatewayTools>().CallAsync(new CallToolRequestParams
+        {
+            Name = tool,
+            Arguments = tool switch
+            {
+                "trackmaniaturbo_leaderboard" => new Dictionary<string, System.Text.Json.JsonElement>(),
+                // United and Nations master servers have separate accounts, so TMNF needs a Nations login.
+                "tmnf_player" => new Dictionary<string, System.Text.Json.JsonElement> { ["login"] = EngineTests.Json("\"thaumictom\"") },
+                _ => new Dictionary<string, System.Text.Json.JsonElement> { ["login"] = EngineTests.Json("\"bigbang1112\"") }
+            }
+        }, request.ServiceProvider, CancellationToken.None);
+
+        await Assert.That(result.IsError ?? false).IsFalse();
+    }
+}

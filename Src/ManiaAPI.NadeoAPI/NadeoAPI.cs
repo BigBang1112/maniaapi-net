@@ -34,15 +34,13 @@ public abstract class NadeoAPI : INadeoAPI
     public DateTimeOffset? RefreshAt => Handler.JWT?.RefreshAt;
     public DateTimeOffset? ExpirationTime => Handler.JWT?.ExpirationTime;
 
-    private readonly SemaphoreSlim semaphore = new(1, 1);
-
     /// <summary>
-    /// 
+    /// Creates a client that sends requests through <paramref name="client"/>, authorized with the tokens kept in <paramref name="handler"/>.
     /// </summary>
-    /// <param name="client"></param>
-    /// <param name="handler"></param>
-    /// <param name="automaticallyAuthorize"></param>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <param name="client">HTTP client to send requests with. The library's User-Agent is added to it.</param>
+    /// <param name="handler">Holds the tokens. Clients that share it share the authorization.</param>
+    /// <param name="automaticallyAuthorize">Whether requests refresh the token once its refresh time has passed.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="client"/> or <paramref name="handler"/> is null.</exception>
     protected NadeoAPI(HttpClient client, NadeoAPIHandler handler, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
@@ -52,7 +50,7 @@ public abstract class NadeoAPI : INadeoAPI
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.9.0";
+        const string version = PackageInfo.Version;
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
@@ -64,15 +62,10 @@ public abstract class NadeoAPI : INadeoAPI
     }
 
     /// <summary>
-    /// 
+    /// Signs in with a service account. <paramref name="method"/> is ignored, as Ubisoft account authentication no longer works.
     /// </summary>
-    /// <param name="login"></param>
-    /// <param name="password"></param>
-    /// <param name="method"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <exception cref="ArgumentException"><paramref name="login"/> or <paramref name="password"/> is null or empty.</exception>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
     [Obsolete("Use AuthorizeAsync(string login, string password, CancellationToken cancellationToken) instead. The Ubisoft account authentication method is no longer working (create a service account instead: https://www.trackmania.com/player/service-account)")]
     public virtual async Task AuthorizeAsync(string login, string password, AuthorizationMethod method, CancellationToken cancellationToken = default)
     {
@@ -80,13 +73,15 @@ public abstract class NadeoAPI : INadeoAPI
     }
 
     /// <summary>
-    /// 
+    /// Signs in with a service account and stores the tokens in <see cref="Handler"/>.
+    /// The credentials are also kept for signing in again later when <see cref="NadeoAPIHandler.SaveCredentials"/> is true.
     /// </summary>
-    /// <param name="login"></param>
-    /// <param name="password"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <param name="login">Login of the service account.</param>
+    /// <param name="password">Password of the service account.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <exception cref="ArgumentException"><paramref name="login"/> or <paramref name="password"/> is null or empty.</exception>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
+    /// <exception cref="JsonException">The response has no usable tokens.</exception>
     public virtual async Task AuthorizeAsync(string login, string password, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(login);
@@ -104,9 +99,13 @@ public abstract class NadeoAPI : INadeoAPI
             Content = content
         };
 
-        using var response = await Client.SendAsync(authRequest, cancellationToken);
+        await RequestTokenAsync(authRequest, cancellationToken);
 
-        await SaveTokenResponseAsync(response, cancellationToken);
+        // Kept so RefreshAsync can reauthorize once the refresh token has expired too
+        if (Handler.SaveCredentials)
+        {
+            Handler.SavedCredentials = new NadeoAPICredentials(login, password);
+        }
     }
 
     public async Task AuthorizeAsync(NadeoAPICredentials credentials, CancellationToken cancellationToken = default)
@@ -115,12 +114,9 @@ public abstract class NadeoAPI : INadeoAPI
     }
 
     /// <summary>
-    /// 
+    /// Throws for an unsuccessful response, with the error from its body when it has one.
     /// </summary>
-    /// <param name="response"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="NadeoAPIResponseException">The response is an error.</exception>
     private static async ValueTask ValidateResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         if (response.IsSuccessStatusCode)
@@ -134,94 +130,166 @@ public abstract class NadeoAPI : INadeoAPI
         {
             error = await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.ErrorResponse, cancellationToken);
         }
-        catch (JsonException)
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
         {
+            // Not JSON, or a charset that can't be decoded, so only the status describes the error
             error = null;
         }
 
         throw new NadeoAPIResponseException(error, response.StatusCode, response.ReasonPhrase);
     }
 
-    internal async Task SaveTokenResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    /// <summary>
+    /// Sends a request to the authentication endpoint and stores the tokens from the response.
+    /// </summary>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
+    /// <exception cref="JsonException">The response has no usable tokens.</exception>
+    private async Task RequestTokenAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        response.EnsureSuccessStatusCode();
+        HttpResponseMessage response;
+
+        try
+        {
+            response = await Client.SendAsync(request, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new NadeoAPIResponseException(ex.Message, ex);
+        }
+
+        using (response)
+        {
+            await ValidateResponseAsync(response, cancellationToken);
 
 #if DEBUG
-        var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
+            var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 #endif
 
-        var (accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.AuthorizationResponse, cancellationToken)
-            ?? throw new Exception("This shouldn't be null.");
+            var (accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(NadeoAPIJsonContext.Default.AuthorizationResponse, cancellationToken)
+                ?? throw new JsonException("The authentication response body is null.");
 
-        Handler.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken ?? throw new Exception("accessToken is null")}");
-        Handler.RefreshToken = refreshToken ?? throw new Exception("refreshToken is null");
+            if (accessToken is null || refreshToken is null)
+            {
+                throw new JsonException("The authentication response is missing the access token or the refresh token.");
+            }
 
-        Handler.JWT = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);
+            Handler.Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={accessToken}");
+            Handler.RefreshToken = refreshToken;
+
+            Handler.JWT = JwtPayloadNadeoAPI.DecodeFromAccessToken(accessToken);
+
+            // Already authorized, so the next request doesn't sign in with them again
+            Handler.PendingCredentials = null;
+        }
     }
 
     public virtual async ValueTask<bool> RefreshAsync(CancellationToken cancellationToken = default)
     {
-        if (Handler.RefreshToken is null || RefreshAt is null || DateTimeOffset.UtcNow < RefreshAt.Value || ExpirationTime is null)
+        if (!IsRefreshDue())
         {
             return false;
         }
 
-        // if older than 20 hours, reauthorize if SaveCredentials
-        if (Handler.SaveCredentials && DateTimeOffset.UtcNow >= ExpirationTime.Value.AddHours(20))
+        await Handler.AuthorizationLock.WaitAsync(cancellationToken);
+
+        try
         {
-            await AuthorizeAsync(Handler.SavedCredentials ?? throw new Exception("No credentials available to reauthorize."), cancellationToken);
+            // Another client sharing the handler may have refreshed while this one waited
+            if (!IsRefreshDue())
+            {
+                return false;
+            }
+
+            // If expired for over 20 hours, the refresh token is likely expired too, so reauthorize when credentials were saved.
+            // Without saved credentials, try the refresh token anyway.
+            if (Handler.SaveCredentials && Handler.SavedCredentials is not null && DateTimeOffset.UtcNow >= ExpirationTime!.Value.AddHours(20))
+            {
+                await AuthorizeAsync(Handler.SavedCredentials, cancellationToken);
+                return true;
+            }
+
+            using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh")
+            {
+                Headers = { Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={Handler.RefreshToken}") }
+            };
+
+            await RequestTokenAsync(message, cancellationToken);
+
             return true;
         }
-
-        using var message = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/refresh")
+        finally
         {
-            Headers = { Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={Handler.RefreshToken}") }
-        };
-
-        using var response = await Client.SendAsync(message, cancellationToken);
-
-        await SaveTokenResponseAsync(response, cancellationToken);
-
-        return true;
+            Handler.AuthorizationLock.Release();
+        }
     }
 
     /// <summary>
-    /// 
+    /// Signs in with the handler's pending credentials, unless Nadeo already rejected them.
     /// </summary>
-    /// <param name="method"></param>
-    /// <param name="endpoint"></param>
-    /// <param name="content"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="NadeoAPIResponseException">Signing in failed now or the credentials were rejected before.</exception>
+    private async Task AuthorizePendingAsync(CancellationToken cancellationToken)
+    {
+        await Handler.AuthorizationLock.WaitAsync(cancellationToken);
+
+        try
+        {
+            // Another client sharing the handler may have authorized while this one waited
+            if (Handler.PendingCredentials is not { } credentials)
+            {
+                return;
+            }
+
+            if (Handler.CredentialsRejection is { } rejection && rejection.Credentials == credentials)
+            {
+                // Only rejections with a 401 or 403 status are stored. The original is kept for its stack trace and correlation.
+                throw new NadeoAPIResponseException(rejection.Error.Response, rejection.Error.StatusCode!.Value, rejection.Error.ReasonPhrase, rejection.Error);
+            }
+
+            try
+            {
+                await AuthorizeAsync(credentials, cancellationToken);
+            }
+            catch (NadeoAPIResponseException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            {
+                // Wrong credentials stay wrong, so they aren't sent again until they're replaced
+                Handler.CredentialsRejection = (credentials, ex);
+                throw;
+            }
+        }
+        finally
+        {
+            Handler.AuthorizationLock.Release();
+        }
+    }
+
+    private bool IsRefreshDue()
+    {
+        return Handler.RefreshToken is not null
+            && RefreshAt.HasValue
+            && ExpirationTime.HasValue
+            && DateTimeOffset.UtcNow >= RefreshAt.Value;
+    }
+
+    /// <summary>
+    /// Sends an authorized request to an endpoint of this service, signing in with pending credentials or refreshing the token first when needed.
+    /// </summary>
+    /// <param name="method">HTTP method of the request.</param>
+    /// <param name="endpoint">Path relative to <see cref="BaseAddress"/>, including any query.</param>
+    /// <param name="content">Body of the request, disposed with it.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The successful response, which the caller disposes.</returns>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
     public async Task<HttpResponseMessage> SendAsync(HttpMethod method, string? endpoint, HttpContent? content = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(method);
 
         if (Handler.PendingCredentials is not null)
         {
-            await semaphore.WaitAsync(cancellationToken);
-            try
-            {
-                if (Handler.PendingCredentials is not null)
-                {
-                    await AuthorizeAsync(Handler.PendingCredentials, cancellationToken);
-
-                    if (Handler.SaveCredentials)
-                    {
-                        Handler.SavedCredentials = Handler.PendingCredentials;
-                    }
-
-                    Handler.PendingCredentials = null;
-                }
-            }
-            finally
-            {
-                semaphore.Release();
-            }
+            await AuthorizePendingAsync(cancellationToken);
         }
 
-        if (AutomaticallyAuthorize && ExpirationTime.HasValue && DateTimeOffset.UtcNow >= ExpirationTime)
+        // Refreshed from the refresh time rather than the expiration, so a request isn't sent with a token about to expire
+        if (AutomaticallyAuthorize && RefreshAt.HasValue && DateTimeOffset.UtcNow >= RefreshAt)
         {
             await RefreshAsync(cancellationToken);
         }
@@ -234,46 +302,50 @@ public abstract class NadeoAPI : INadeoAPI
             request.Content = content;
         }
 
+        HttpResponseMessage response;
+
         try
         {
-            var response = await Client.SendAsync(request, cancellationToken);
-
-            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {response.StatusCode} {await response.Content.ReadAsStringAsync(cancellationToken)}");
-
-            await ValidateResponseAsync(response, cancellationToken);
-
-            return response;
+            response = await Client.SendAsync(request, cancellationToken);
         }
         catch (HttpRequestException ex)
         {
-            throw new NadeoAPIResponseException(ex.Message, ex.InnerException);
+            throw new NadeoAPIResponseException(ex.Message, ex);
+        }
+
+        try
+        {
+            await ValidateResponseAsync(response, cancellationToken);
+
+            // After validation, so an error body that can't be read as a string still throws the response exception in Debug builds
+            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {response.StatusCode} {await response.Content.ReadAsStringAsync(cancellationToken)}");
+
+            return response;
+        }
+        catch
+        {
+            // The caller only disposes a response it gets back
+            response.Dispose();
+            throw;
         }
     }
 
     /// <summary>
-    /// 
+    /// Sends a GET request and reads the JSON response.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="endpoint"></param>
-    /// <param name="jsonTypeInfo"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
+    /// <exception cref="JsonException">The response body is null or isn't valid JSON for <typeparamref name="T"/>.</exception>
     protected async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
-        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
     /// <summary>
-    /// 
+    /// Sends a GET request and reads the JSON response, or returns the default value when the response has no content (HTTP 204).
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="endpoint"></param>
-    /// <param name="jsonTypeInfo"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
+    /// <exception cref="JsonException">The response body isn't valid JSON for <typeparamref name="T"/>.</exception>
     protected async Task<T?> GetNullableJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
@@ -287,19 +359,14 @@ public abstract class NadeoAPI : INadeoAPI
     }
 
     /// <summary>
-    /// 
+    /// Sends a POST request with a JSON body and reads the JSON response.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="endpoint"></param>
-    /// <param name="content"></param>
-    /// <param name="jsonTypeInfo"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NadeoAPIResponseException"></exception>
+    /// <exception cref="NadeoAPIResponseException">The request failed or the response is an error.</exception>
+    /// <exception cref="JsonException">The response body is null or isn't valid JSON for <typeparamref name="T"/>.</exception>
     protected async Task<T> PostJsonAsync<T>(string? endpoint, JsonContent content, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, endpoint, content, cancellationToken: cancellationToken);
-        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
 #if DEBUG

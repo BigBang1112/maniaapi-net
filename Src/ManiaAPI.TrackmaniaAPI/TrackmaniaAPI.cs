@@ -1,8 +1,8 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Reflection.PortableExecutable;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
@@ -19,6 +19,22 @@ public interface ITrackmaniaAPI : IDisposable
     Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(params Guid[] accountIds);
     Task<User> GetUserAsync(CancellationToken cancellationToken = default);
     Task<ImmutableList<MapRecord>> GetUserMapRecordsAsync(IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets the clubs the player is an admin of. Requires the <c>clubs</c> scope and a token associated with a player (not the client credentials flow).
+    /// </summary>
+    Task<ImmutableList<AdminClub>> GetUserAdminClubsAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets the player's favorite maps. Requires the <c>read_favorite</c> scope and a token associated with a player (not the client credentials flow).
+    /// </summary>
+    Task<ImmutableList<FavoriteMap>> GetUserFavoriteMapsAsync(int length = 10, int offset = 0, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Adds a map to the player's favorite maps. Requires the <c>write_favorite</c> scope and a token associated with a player (not the client credentials flow).
+    /// </summary>
+    Task AddUserFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Removes a map from the player's favorite maps. Requires the <c>write_favorite</c> scope and a token associated with a player (not the client credentials flow).
+    /// </summary>
+    Task RemoveUserFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default);
 }
 
 public class TrackmaniaAPI : ITrackmaniaAPI
@@ -32,15 +48,13 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     public HttpClient Client { get; }
     public bool AutomaticallyAuthorize { get; }
 
-    private readonly SemaphoreSlim semaphore = new(1, 1);
-
     /// <summary>
     /// Creates a new instance of the Trackmania API client.
     /// </summary>
     /// <param name="client">HTTP client.</param>
     /// <param name="handler">Handler to use for the Trackmania API.</param>
     /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.</param>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="client"/> or <paramref name="handler"/> is null.</exception>
     public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
@@ -50,7 +64,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.8.5";
+        const string version = PackageInfo.Version;
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
@@ -70,8 +84,8 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// <param name="clientSecret">Client secret.</param>
     /// <param name="scopes">Scopes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentException"><paramref name="clientId"/> or <paramref name="clientSecret"/> is null or empty.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="scopes"/> is null.</exception>
     public virtual async Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(clientId);
@@ -83,10 +97,23 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             { "grant_type", "client_credentials" },
             { "client_id", clientId },
             { "client_secret", clientSecret },
-            { "scope", string.Join("%20", scopes) }
+            { "scope", string.Join(' ', scopes) }
         };
 
-        using var response = await Client.PostAsync($"{BaseAddress}/access_token", new FormUrlEncodedContent(values), cancellationToken);
+        using var content = new FormUrlEncodedContent(values);
+
+        HttpResponseMessage response;
+
+        try
+        {
+            response = await Client.PostAsync($"{BaseAddress}/access_token", content, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new TrackmaniaAPIResponseException(ex.Message, ex);
+        }
+
+        using var _ = response;
 
 #if DEBUG
         var stringResult = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -94,7 +121,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 
         await ValidateResponseAsync(response, cancellationToken);
 
-        var (_, _, accessToken) = await response.Content.ReadFromJsonAsync(TrackmaniaAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        var (_, _, accessToken) = await response.Content.ReadFromJsonAsync(TrackmaniaAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new JsonException("The response body is null.");
 
         Handler.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         Handler.Payload = JwtPayloadTrackmaniaAPI.DecodeFromAccessToken(accessToken);
@@ -128,8 +155,9 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         {
             error = await response.Content.ReadFromJsonAsync(TrackmaniaAPIJsonContext.Default.ErrorResponse, cancellationToken);
         }
-        catch (JsonException)
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
         {
+            // Not JSON, or a charset that can't be decoded, so only the status describes the error
             error = null;
         }
 
@@ -142,7 +170,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// <param name="accountIds">Account IDs.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Dictionary of nicknames.</returns>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="accountIds"/> is null.</exception>
     public virtual async Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(accountIds);
@@ -152,20 +180,13 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             return ImmutableDictionary<Guid, string>.Empty;
         }
 
-        return await GetJsonAsync($"display-names?{string.Join('&', accountIds.Select((x, i) => $"accountId[{i}]={x}"))}",
+        return await GetDictionaryJsonAsync($"display-names?{string.Join('&', accountIds.Select((x, i) => $"accountId[{i}]={x}"))}",
             TrackmaniaAPIJsonContext.Default.ImmutableDictionaryGuidString, cancellationToken);
     }
 
     public async Task<ImmutableDictionary<Guid, string>> GetDisplayNamesAsync(params Guid[] accountIds)
     {
-        try
-        {
-            return await GetDisplayNamesAsync(accountIds, CancellationToken.None);
-        }
-        catch (JsonException)
-        {
-            return ImmutableDictionary<Guid, string>.Empty;
-        }
+        return await GetDisplayNamesAsync(accountIds, CancellationToken.None);
     }
 
     public virtual async Task<User> GetUserAsync(CancellationToken cancellationToken = default)
@@ -182,20 +203,13 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             return ImmutableDictionary<string, Guid>.Empty;
         }
 
-        return await GetJsonAsync($"display-names/account-ids?{string.Join('&', displayNames.Select((x, i) => $"displayName[{i}]={x}"))}",
+        return await GetDictionaryJsonAsync($"display-names/account-ids?{string.Join('&', displayNames.Select((x, i) => $"displayName[{i}]={Uri.EscapeDataString(x)}"))}",
             TrackmaniaAPIJsonContext.Default.ImmutableDictionaryStringGuid, cancellationToken);
     }
 
     public async Task<ImmutableDictionary<string, Guid>> GetAccountIdsAsync(params string[] accountIds)
     {
-        try
-        {
-            return await GetAccountIdsAsync(accountIds, CancellationToken.None);
-        }
-        catch (JsonException)
-        {
-            return ImmutableDictionary<string, Guid>.Empty;
-        }
+        return await GetAccountIdsAsync(accountIds, CancellationToken.None);
     }
 
     public virtual async Task<ImmutableList<MapRecord>> GetUserMapRecordsAsync(IEnumerable<Guid> mapIds, CancellationToken cancellationToken = default)
@@ -211,40 +225,140 @@ public class TrackmaniaAPI : ITrackmaniaAPI
             TrackmaniaAPIJsonContext.Default.ImmutableListMapRecord, cancellationToken);
     }
 
-    protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    public virtual async Task<ImmutableList<AdminClub>> GetUserAdminClubsAsync(CancellationToken cancellationToken = default)
     {
-        await semaphore.WaitAsync(cancellationToken);
+        return (await GetJsonAsync("user/clubs/admin", TrackmaniaAPIJsonContext.Default.AdminClubCollection, cancellationToken)).Clubs;
+    }
+
+    public virtual async Task<ImmutableList<FavoriteMap>> GetUserFavoriteMapsAsync(int length = 10, int offset = 0, CancellationToken cancellationToken = default)
+    {
+        return (await GetJsonAsync($"user/maps/favorite?length={length}&offset={offset}", TrackmaniaAPIJsonContext.Default.FavoriteMapCollection, cancellationToken)).List;
+    }
+
+    public virtual async Task AddUserFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+
+        var content = JsonContent.Create(new FavoriteMapRequest(mapUid), TrackmaniaAPIJsonContext.Default.FavoriteMapRequest);
+        using var response = await SendAsync(HttpMethod.Post, "user/maps/favorite/add", content, cancellationToken);
+    }
+
+    public virtual async Task RemoveUserFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mapUid);
+
+        var content = JsonContent.Create(new FavoriteMapRequest(mapUid), TrackmaniaAPIJsonContext.Default.FavoriteMapRequest);
+        using var response = await SendAsync(HttpMethod.Post, "user/maps/favorite/remove", content, cancellationToken);
+    }
+
+    /// <summary>
+    /// Like <see cref="GetJsonAsync{T}"/>, but for endpoints that answer with an empty array instead of an empty object when nothing matches.
+    /// </summary>
+    private async Task<ImmutableDictionary<TKey, TValue>> GetDictionaryJsonAsync<TKey, TValue>(
+        string endpoint,
+        JsonTypeInfo<ImmutableDictionary<TKey, TValue>> jsonTypeInfo,
+        CancellationToken cancellationToken) where TKey : notnull
+    {
+        using var response = await SendAsync(HttpMethod.Get, endpoint, content: null, cancellationToken);
+
+        byte[] json;
 
         try
         {
-            if (AutomaticallyAuthorize && Handler.Credentials is not null
-                && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime))
-            {
-                await AuthorizeAsync(Handler.Credentials, cancellationToken);
-            }
-        }
-        finally
-        {
-            semaphore.Release();
-        }
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
-        request.Headers.Authorization = Handler.Authorization;
-
-        try
-        {
-            using var response = await Client.SendAsync(request, cancellationToken);
-
-            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
-
-            await ValidateResponseAsync(response, cancellationToken);
-
-            return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+            json = await response.Content.ReadAsByteArrayAsync(cancellationToken);
         }
         catch (HttpRequestException ex)
         {
-            throw new TrackmaniaAPIResponseException(ex.Message, ex.InnerException);
+            throw new TrackmaniaAPIResponseException(ex.Message, ex);
         }
+
+        if (IsEmptyArray(json))
+        {
+            return ImmutableDictionary<TKey, TValue>.Empty;
+        }
+
+        return JsonSerializer.Deserialize(json, jsonTypeInfo) ?? throw new JsonException("The response body is null.");
+    }
+
+    private static bool IsEmptyArray(ReadOnlySpan<byte> json)
+    {
+        var reader = new Utf8JsonReader(json);
+
+        return reader.Read() && reader.TokenType == JsonTokenType.StartArray
+            && reader.Read() && reader.TokenType == JsonTokenType.EndArray;
+    }
+
+    protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Get, endpoint, content: null, cancellationToken);
+
+        try
+        {
+            return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new TrackmaniaAPIResponseException(ex.Message, ex);
+        }
+    }
+
+    /// <summary>
+    /// Sends an authorized request and validates the response. The caller is responsible for disposing the returned response.
+    /// </summary>
+    protected internal async Task<HttpResponseMessage> SendAsync(HttpMethod method, string? endpoint, HttpContent? content, CancellationToken cancellationToken = default)
+    {
+        if (AutomaticallyAuthorize && IsAuthorizationDue(out _))
+        {
+            await Handler.AuthorizationLock.WaitAsync(cancellationToken);
+
+            try
+            {
+                // Another client sharing the handler may have authorized while this one waited
+                if (IsAuthorizationDue(out var credentials))
+                {
+                    await AuthorizeAsync(credentials, cancellationToken);
+                }
+            }
+            finally
+            {
+                Handler.AuthorizationLock.Release();
+            }
+        }
+
+        using var request = new HttpRequestMessage(method, $"{BaseAddress}/{endpoint}") { Content = content };
+        request.Headers.Authorization = Handler.Authorization;
+
+        HttpResponseMessage response;
+
+        try
+        {
+            response = await Client.SendAsync(request, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new TrackmaniaAPIResponseException(ex.Message, ex);
+        }
+
+        try
+        {
+            await ValidateResponseAsync(response, cancellationToken);
+
+            // After validation, so an error body that can't be read as a string still throws the response exception in Debug builds
+            Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
+
+            return response;
+        }
+        catch
+        {
+            response.Dispose();
+            throw;
+        }
+    }
+
+    private bool IsAuthorizationDue([NotNullWhen(true)] out TrackmaniaAPICredentials? credentials)
+    {
+        credentials = Handler.Credentials;
+        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime);
     }
 
     public virtual void Dispose()

@@ -1,5 +1,6 @@
 ﻿namespace ManiaAPI.ManiaPlanetAPI;
 
+[Obsolete("ManiaPlanetAPI never throws this exception. It will be removed in a future version.")]
 public class MissingRefreshTokenException : Exception
 {
     public ErrorResponse? Response { get; }

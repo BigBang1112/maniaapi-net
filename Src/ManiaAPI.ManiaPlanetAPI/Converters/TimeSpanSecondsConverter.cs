@@ -4,7 +4,10 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.ManiaPlanetAPI.Converters;
 
-internal sealed class TimeSpanSecondsConverter : JsonConverter<TimeSpan>
+/// <summary>
+/// Converts a <see cref="TimeSpan"/> to and from a number of seconds.
+/// </summary>
+public sealed class TimeSpanSecondsConverter : JsonConverter<TimeSpan>
 {
     public override TimeSpan Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

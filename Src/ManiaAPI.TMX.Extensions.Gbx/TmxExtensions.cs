@@ -50,11 +50,6 @@ public static class TmxExtensions
     /// <summary>
     /// With just a direct node, some Gbx properties are lost and need to be reintroduced when serializing the object back to Gbx.
     /// </summary>
-    /// <param name="tmx"></param>
-    /// <param name="trackId"></param>
-    /// <param name="settings"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public static async Task<CGameCtnChallenge> GetTrackGbxNodeAsync(this TMX tmx, long trackId, GbxReadSettings settings = default, CancellationToken cancellationToken = default)
     {
         return (await tmx.GetTrackGbxAsync(trackId, settings, cancellationToken)).Node;
@@ -112,11 +107,6 @@ public static class TmxExtensions
     /// <summary>
     /// With just a direct node, some Gbx properties are lost and need to be reintroduced when serializing the object back to Gbx.
     /// </summary>
-    /// <param name="tmx"></param>
-    /// <param name="replayId"></param>
-    /// <param name="settings"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public static async Task<CGameCtnReplayRecord> GetReplayGbxNodeAsync(this TMX tmx, long replayId, GbxReadSettings settings = default, CancellationToken cancellationToken = default)
     {
         return (await tmx.GetReplayGbxAsync(replayId, settings, cancellationToken)).Node;

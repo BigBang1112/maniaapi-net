@@ -4,7 +4,13 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI.Converters;
 
-internal sealed class DateTimeOffsetUnixConverter : JsonConverter<DateTimeOffset>
+/// <summary>
+/// Converts a date that the Nadeo API sends as a Unix timestamp in seconds.
+/// </summary>
+/// <remarks>
+/// Public so that a <see cref="JsonSerializerContext"/> outside this library can use it when it includes Nadeo API models.
+/// </remarks>
+public sealed class DateTimeOffsetUnixConverter : JsonConverter<DateTimeOffset>
 {
     public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

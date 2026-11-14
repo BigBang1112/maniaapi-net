@@ -17,6 +17,7 @@ Features this setup brings:
 - You can inject `ImmutableDictionary<TmxSite, TMX>` to get all TMX sites as individual instances
 - If you don't need specific site context, you can inject `IEnumerable<TMX>` to get all TMX sites
 - Specific `TMX` can be injected using `[FromKeyedServices(TmxSite.TMNF)]`
+- `IX` (Item Exchange) can be injected directly, as there's only one site
 
 > [!WARNING]
 > If you just inject `TMX` alone, it will give the last-registered one (in this case, Original). If you need a specific site, use `[FromKeyedServices(...)]`.

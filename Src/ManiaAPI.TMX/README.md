@@ -11,6 +11,7 @@ Wraps:
 - https://original.tm-exchange.com	
 - https://sunrise.tm-exchange.com	
 - https://nations.tm-exchange.com
+- https://item.exchange (as `IX`)
 
 ### Setup
 
@@ -143,6 +144,67 @@ foreach (var item in userCollection.Results)
 {
     Console.WriteLine(item.Name);
 }
+```
+
+### Search Videos
+
+```cs
+var videoCollection = await tmx.SearchVideosAsync(new()
+{
+    TrackId = [4808334],
+    Count = 10
+});
+
+foreach (var item in videoCollection.Results)
+{
+    Console.WriteLine($"{item.Title}: {item.Link}");
+}
+```
+
+### Get site metadata
+
+Search orders, tags, track types and vehicles of the site, for the values used in search parameters:
+
+```cs
+var trackOrders = await tmx.GetTrackSearchOrdersAsync(); // also trackpack, user, video and leaderboard orders
+var tags = await tmx.GetTagsAsync();
+var tagDescriptions = await tmx.GetTagDescriptionsAsync();
+var trackTypes = await tmx.GetTrackTypesAsync();
+var vehicles = await tmx.GetVehiclesAsync();
+```
+
+### Item Exchange
+
+`IX` wraps https://item.exchange, which hosts custom items, blocks and item sets for ManiaPlanet and Trackmania. It has no v2 API, so it uses the v1 methods the MX API documentation lists as active.
+
+```cs
+using ManiaAPI.TMX;
+
+var ix = new IX();
+
+// Search items, 10 to 200 per page
+var result = await ix.SearchItemsAsync(new()
+{
+    ItemName = ["rock"],
+    Collections = [IXEnvironment.Valley],
+    Limit = 20
+});
+
+foreach (var item in result.Results)
+{
+    Console.WriteLine($"{item.Name} ({item.TypeName}) by {item.Username}");
+}
+
+// Items or sets by ID, a user's basket, and random picks
+var items = await ix.GetItemsAsync([256, 40503]);
+var sets = await ix.GetItemSetsAsync([41]); // with their items
+var basket = await ix.GetBasketAsync(1814); // null for an unknown user
+var random = await ix.GetRandomItemAsync(new() { Game = IXGame.Trackmania });
+
+// Downloads and images
+using var download = await ix.GetItemDownloadResponseAsync(40503); // .Gbx, or .zip when an item needs several files
+string icon = ix.GetItemIconUrl(256);
+string setImage = ix.GetItemSetImageUrl(41, position: 1);
 ```
 
 ### Get Replay Gbx

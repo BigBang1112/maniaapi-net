@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
 namespace ManiaAPI.UnitedLadder;
@@ -31,7 +32,7 @@ public class UnitedLadder : IUnitedLadder
         var headers = Client.DefaultRequestHeaders;
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.7.0";
+        const string version = PackageInfo.Version;
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
@@ -49,7 +50,7 @@ public class UnitedLadder : IUnitedLadder
 
     public virtual async Task<Player> GetPlayerAsync(string login, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"player/{login}", UnitedLadderJsonContext.Default.Player, cancellationToken);
+        return await GetJsonAsync($"player/{Uri.EscapeDataString(login)}", UnitedLadderJsonContext.Default.Player, cancellationToken);
     }
 
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
@@ -62,7 +63,7 @@ public class UnitedLadder : IUnitedLadder
 
         Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
-        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
+        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
     }
 
     public virtual void Dispose()

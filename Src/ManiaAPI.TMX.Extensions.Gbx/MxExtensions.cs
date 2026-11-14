@@ -50,11 +50,6 @@ public static class MxExtensions
     /// <summary>
     /// With just a direct node, some Gbx properties are lost and need to be reintroduced when serializing the object back to Gbx.
     /// </summary>
-    /// <param name="mx"></param>
-    /// <param name="mapId"></param>
-    /// <param name="settings"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public static async Task<CGameCtnChallenge> GetMapGbxNodeAsync(this MX mx, long mapId, GbxReadSettings settings = default, CancellationToken cancellationToken = default)
     {
         return (await mx.GetMapGbxAsync(mapId, settings, cancellationToken)).Node;
@@ -112,11 +107,6 @@ public static class MxExtensions
     /// <summary>
     /// With just a direct node, some Gbx properties are lost and need to be reintroduced when serializing the object back to Gbx.
     /// </summary>
-    /// <param name="mx"></param>
-    /// <param name="replayId"></param>
-    /// <param name="settings"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public static async Task<CGameCtnReplayRecord> GetReplayGbxNodeAsync(this MX mx, long replayId, GbxReadSettings settings = default, CancellationToken cancellationToken = default)
     {
         return (await mx.GetReplayGbxAsync(replayId, settings, cancellationToken)).Node;

@@ -1,0 +1,36 @@
+<Project>
+
+    <!--
+        Generates PackageInfo.Version from the project's <Version>, so the User-Agent always matches the package version
+        without reading assembly attributes through reflection at run time.
+    -->
+    <Target Name="GeneratePackageInfo"
+            BeforeTargets="CoreCompile"
+            DependsOnTargets="PrepareForBuild"
+            Condition="'$(Version)' != ''">
+
+        <PropertyGroup>
+            <PackageInfoFile>$(IntermediateOutputPath)PackageInfo.g.cs</PackageInfoFile>
+            <PackageInfoCode>
+// &lt;auto-generated /&gt;
+namespace $(RootNamespace)%3B
+
+internal static class PackageInfo
+{
+    /// &lt;summary&gt;
+    /// The package version from the project file.
+    /// &lt;/summary&gt;
+    public const string Version = &quot;$(Version)&quot;%3B
+}
+            </PackageInfoCode>
+        </PropertyGroup>
+
+        <WriteLinesToFile File="$(PackageInfoFile)" Lines="$(PackageInfoCode)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+
+        <ItemGroup>
+            <Compile Include="$(PackageInfoFile)" />
+            <FileWrites Include="$(PackageInfoFile)" />
+        </ItemGroup>
+    </Target>
+
+</Project>

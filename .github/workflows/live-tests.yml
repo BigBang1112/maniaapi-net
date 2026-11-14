@@ -1,0 +1,65 @@
+name: Live tests
+
+# Live tests send real requests to Nadeo, ManiaPlanet, Trackmania.io, the exchanges, and the master servers.
+# They run on a schedule instead of on every push, so an outage of one of those services doesn't block pull requests.
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  live:
+    name: Live tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: latest
+
+      # Only net11.0 runs, so each service gets one set of requests. -f can't be passed for the whole
+      # solution, because the TMX source generator targets netstandard2.0.
+      # Projects without live tests run zero tests, which Microsoft Testing Platform reports as exit code 8.
+      - name: Test
+        # Each variable sets a LiveSettings key: MANIAAPI_ + the key with ':' replaced by '__', like NadeoAPI:ServiceAccount:Login.
+        env:
+          MANIAAPI_LIVETESTS__ENABLED: true
+          MANIAAPI_NADEOAPI__DEDICATEDSERVER__LOGIN: ${{ secrets.NADEO_API_LOGIN }}
+          MANIAAPI_NADEOAPI__DEDICATEDSERVER__PASSWORD: ${{ secrets.NADEO_API_PASSWORD }}
+          MANIAAPI_NADEOAPI__SERVICEACCOUNT__LOGIN: ${{ secrets.NADEO_API_SERVICEACCOUNT_LOGIN }}
+          MANIAAPI_NADEOAPI__SERVICEACCOUNT__PASSWORD: ${{ secrets.NADEO_API_SERVICEACCOUNT_PASSWORD }}
+          MANIAAPI_TRACKMANIA__CLIENTID: ${{ secrets.TRACKMANIA_API_CLIENTID }}
+          MANIAAPI_TRACKMANIA__CLIENTSECRET: ${{ secrets.TRACKMANIA_API_CLIENTSECRET }}
+          MANIAAPI_MANIAPLANET__CLIENTID: ${{ secrets.MANIAPLANET_API_CLIENTID }}
+          MANIAAPI_MANIAPLANET__CLIENTSECRET: ${{ secrets.MANIAPLANET_API_CLIENTSECRET }}
+        run: |
+          status=0
+          for project in Tests/*/*.csproj; do
+            dotnet test --project "$project" -c Release -f net11.0 --treenode-filter "/*/*/*/*[Category=Live]" --ignore-exit-code 8 \
+              --report-trx --results-directory "$GITHUB_WORKSPACE/TestResults" || status=1
+          done
+          exit $status
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-test-results
+          path: TestResults/*
+          if-no-files-found: ignore

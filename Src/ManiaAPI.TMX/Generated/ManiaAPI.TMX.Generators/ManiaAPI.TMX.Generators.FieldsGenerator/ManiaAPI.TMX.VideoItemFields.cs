@@ -13,6 +13,7 @@ public readonly record struct VideoItemFields
     public bool LinkId { get; init; }
     public bool Thumbnail { get; init; }
     public bool PostedAt { get; init; }
+    public bool UpdatedAt { get; init; }
     public bool PublishedAt { get; init; }
     public bool Length { get; init; }
     public bool MapCount { get; init; }
@@ -29,6 +30,7 @@ public readonly record struct VideoItemFields
         LinkId = true,
         Thumbnail = true,
         PostedAt = true,
+        UpdatedAt = true,
         PublishedAt = true,
         Length = true,
         MapCount = true,
@@ -120,6 +122,13 @@ public readonly record struct VideoItemFields
         {
             if (!first) sb.Append("%2C");
             sb.Append(nameof(global::ManiaAPI.TMX.VideoItem.PostedAt));
+            first = false;
+        }
+
+        if (UpdatedAt)
+        {
+            if (!first) sb.Append("%2C");
+            sb.Append(nameof(global::ManiaAPI.TMX.VideoItem.UpdatedAt));
             first = false;
         }
 

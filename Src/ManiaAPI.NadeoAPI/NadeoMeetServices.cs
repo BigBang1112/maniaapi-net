@@ -10,10 +10,10 @@ public interface INadeoMeetServices : INadeoAPI
 
     Task<ImmutableList<Competition>> GetCompetitionsAsync(int length = 10, int offset = 0, CancellationToken cancellationToken = default);
     /// <summary>
+    /// Gets a competition, like a Cup of the Day.
     /// </summary>
     /// <param name="competitionId">Either the numerical <see cref="Competition.Id"/> or the <see cref="Competition.LiveId"/>.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<Competition> GetCompetitionAsync(string competitionId, CancellationToken cancellationToken = default);
     Task<ImmutableList<CompetitionLeaderboardEntry>> GetCompetitionLeaderboardAsync(string competitionId, int length = 10, int offset = 0, CancellationToken cancellationToken = default);
     Task<ImmutableList<CompetitionParticipant>> GetCompetitionParticipantsAsync(string competitionId, int length = 10, int offset = 0, CancellationToken cancellationToken = default);
@@ -23,21 +23,17 @@ public interface INadeoMeetServices : INadeoAPI
     /// <summary>
     /// This request returns empty list if authenticated through dedicated server.
     /// </summary>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ClubCompetitionListItemCollection> GetMyClubCompetitionsAsync(int length = 10, int offset = 0, CancellationToken cancellationToken = default);
     Task<ClubCompetitionDetails> GetClubCompetitionAsync(int clubCompetitionId, CancellationToken cancellationToken = default);
 
     Task<CompetitionRoundMatchCollection> GetCompetitionRoundMatchesAsync(string roundId, int length = 10, int offset = 0, CancellationToken cancellationToken = default);
     /// <summary>
+    /// Gets the results of a competition match.
     /// </summary>
     /// <param name="compMatchId">A competition match ID, as retrieved from <see cref="GetCompetitionRoundMatchesAsync"/>. Not the same as a regular match ID.</param>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="length">Number of results to retrieve.</param>
+    /// <param name="offset">Number of results to skip.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<CompetitionMatchResults> GetCompetitionMatchResultsAsync(string compMatchId, int length = 10, int offset = 0, CancellationToken cancellationToken = default);
     Task<ImmutableList<CompetitionMatchResults>> GetCompetitionPlayerMatchesAsync(string competitionId, Guid accountId, CancellationToken cancellationToken = default);
 
@@ -45,8 +41,7 @@ public interface INadeoMeetServices : INadeoAPI
     /// Match information is only stored on Nadeo's servers for about a month.
     /// </summary>
     /// <param name="matchId">Either the numerical match ID or its live ID.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<MatchInfo> GetMatchAsync(string matchId, CancellationToken cancellationToken = default);
     Task<ImmutableList<MatchParticipant>> GetMatchParticipantsAsync(string matchId, CancellationToken cancellationToken = default);
     Task<ImmutableList<MatchTeamResult>> GetMatchTeamsAsync(string matchId, CancellationToken cancellationToken = default);
@@ -54,10 +49,6 @@ public interface INadeoMeetServices : INadeoAPI
     /// <summary>
     /// Challenges are separate leaderboard structures that can be part of a competition, for example in the form of a qualifying session.
     /// </summary>
-    /// <param name="length"></param>
-    /// <param name="offset"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<ImmutableList<Challenge>> GetChallengesAsync(int length = 10, int offset = 0, CancellationToken cancellationToken = default);
     Task<Challenge> GetChallengeAsync(string challengeId, CancellationToken cancellationToken = default);
     Task<ChallengeLeaderboard> GetChallengeLeaderboardAsync(string challengeId, int length = 10, int offset = 0, CancellationToken cancellationToken = default);
@@ -67,17 +58,13 @@ public interface INadeoMeetServices : INadeoAPI
     /// This request requires authentication through service account. Be careful with this request - if you send heartbeats but don't join and complete a match once it becomes available, the account may be penalized. To stop queueing, use <see cref="CancelMatchmakingAsync"/>.
     /// </summary>
     /// <param name="matchmakingType">See the glossary for a list of available matchmaking types and their IDs.</param>
-    /// <param name="code"></param>
+    /// <param name="code">Sent as <c>code</c> in the heartbeat request body.</param>
     /// <param name="playWith">The account IDs of the players to queue with. Leave empty to queue solo.</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task<MatchmakingHeartbeatStatus> SendMatchmakingHeartbeatAsync(int matchmakingType, string code, IEnumerable<Guid> playWith, CancellationToken cancellationToken = default);
     /// <summary>
     /// This request requires authentication through service account.
     /// </summary>
-    /// <param name="matchmakingType"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task CancelMatchmakingAsync(int matchmakingType, CancellationToken cancellationToken = default);
     Task<MatchmakingRankingCollection> GetMatchmakingRankingsAsync(int matchmakingType, int length = 10, int offset = 0, CancellationToken cancellationToken = default);
     Task<MatchmakingRankingCollection> GetMatchmakingPlayerRanksAsync(int matchmakingType, IEnumerable<Guid> accountIds, CancellationToken cancellationToken = default);
@@ -86,9 +73,6 @@ public interface INadeoMeetServices : INadeoAPI
     /// <summary>
     /// This request returns empty model if authenticated through dedicated server.
     /// </summary>
-    /// <param name="matchmakingType"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<MatchmakingPlayerStatus> GetMatchmakingPlayerStatusAsync(int matchmakingType, CancellationToken cancellationToken = default);
     Task<MatchmakingSummary> GetMatchmakingSummaryAsync(CancellationToken cancellationToken = default);
 
@@ -193,7 +177,7 @@ public class NadeoMeetServices : NadeoAPI, INadeoMeetServices
     {
         ArgumentException.ThrowIfNullOrEmpty(compMatchId);
 
-        return await GetJsonAsync($"matches/{compMatchId}/results?length={length}&offset={offset}",
+        return await GetJsonAsync($"matches/{UrlHelper.EscapePathSegment(compMatchId)}/results?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.CompetitionMatchResults, cancellationToken);
     }
 
@@ -251,7 +235,7 @@ public class NadeoMeetServices : NadeoAPI, INadeoMeetServices
         ArgumentException.ThrowIfNullOrEmpty(challengeId);
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"challenges/{challengeId}/records/maps/{mapUid}?length={length}&offset={offset}",
+        return await GetJsonAsync($"challenges/{challengeId}/records/maps/{UrlHelper.EscapePathSegment(mapUid)}?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.ImmutableListChallengeMapRecord, cancellationToken);
     }
 

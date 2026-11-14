@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+    <PropertyGroup>
+        <TargetFramework>net11.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>14</LangVersion>
+        <PackAsTool>true</PackAsTool>
+        <IsPackable>true</IsPackable>
+        <ToolCommandName>maniaapi-mcp</ToolCommandName>
+        <PackageId>ManiaAPI.MCP</PackageId>
+        <Version>0.1.0</Version>
+        <PackageReleaseNotes>
+- Initial release
+        </PackageReleaseNotes>
+        <Authors>BigBang1112</Authors>
+        <Description>Stateless MCP gateway for ManiaAPI.NET.</Description>
+        <Copyright>Copyright (c) 2026 Petr Pivoňka</Copyright>
+        <PackageProjectUrl>https://github.com/BigBang1112/maniaapi-net</PackageProjectUrl>
+        <PackageIcon>logo_icon_outline.png</PackageIcon>
+        <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, mcp, model context protocol, ai</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <UserSecretsId>ManiaAPI.MCP</UserSecretsId>
+        <!-- An inaccessible [JsonConverter] on a library model is otherwise skipped silently, changing the serialized result. -->
+        <WarningsAsErrors>$(WarningsAsErrors);SYSLIB1220</WarningsAsErrors>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
+        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
+        <PackageReference Include="JsonSchema.Net" Version="7.3.4" />
+        <ProjectReference Include="../ManiaAPI.NadeoAPI.Extensions.Hosting/ManiaAPI.NadeoAPI.Extensions.Hosting.csproj" />
+        <ProjectReference Include="../ManiaAPI.TrackmaniaAPI.Extensions.Hosting/ManiaAPI.TrackmaniaAPI.Extensions.Hosting.csproj" />
+        <ProjectReference Include="../ManiaAPI.TMX.Extensions.Hosting/ManiaAPI.TMX.Extensions.Hosting.csproj" />
+        <ProjectReference Include="../ManiaAPI.MasterServer.Extensions.Hosting/ManiaAPI.MasterServer.Extensions.Hosting.csproj" />
+        <ProjectReference Include="../ManiaAPI.ManiaPlanetAPI.Extensions.Hosting/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.csproj" />
+        <ProjectReference Include="../ManiaAPI.TrackmaniaWS.Extensions.Hosting/ManiaAPI.TrackmaniaWS.Extensions.Hosting.csproj" />
+        <ProjectReference Include="../ManiaAPI.UnitedLadder/ManiaAPI.UnitedLadder.csproj" />
+        <ProjectReference Include="../ManiaAPI.NadeoAPI.Extensions.Gbx/ManiaAPI.NadeoAPI.Extensions.Gbx.csproj" />
+        <ProjectReference Include="../ManiaAPI.TMX.Extensions.Gbx/ManiaAPI.TMX.Extensions.Gbx.csproj" />
+        <ProjectReference Include="../../Generators/ManiaAPI.MCP.Generators/ManiaAPI.MCP.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <None Include="../../logo_icon_outline.png" Pack="true" PackagePath="/" />
+        <None Include="README.md" Pack="true" PackagePath="/" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="../ManiaAPI.NadeoAPI/NadeoServices.cs" />
+        <AdditionalFiles Include="../ManiaAPI.NadeoAPI/NadeoLiveServices.cs" />
+        <AdditionalFiles Include="../ManiaAPI.NadeoAPI/NadeoMeetServices.cs" />
+        <AdditionalFiles Include="../ManiaAPI.TrackmaniaAPI/TrackmaniaAPI.cs" />
+        <AdditionalFiles Include="../ManiaAPI.TMX/TMX.cs" />
+        <AdditionalFiles Include="../ManiaAPI.TMX/MX.cs" />
+        <AdditionalFiles Include="Catalog/Overrides.accounts" />
+        <AdditionalFiles Include="../ManiaAPI.MasterServer/**/*.cs" Exclude="../ManiaAPI.MasterServer/obj/**/*.cs;../ManiaAPI.MasterServer/bin/**/*.cs" />
+        <AdditionalFiles Include="../ManiaAPI.ManiaPlanetAPI/ManiaPlanetAPI.cs" />
+        <AdditionalFiles Include="../ManiaAPI.ManiaPlanetAPI/ManiaPlanetIngameAPI.cs" />
+        <AdditionalFiles Include="../ManiaAPI.TrackmaniaWS/TrackmaniaWS.cs" />
+        <AdditionalFiles Include="../ManiaAPI.UnitedLadder/UnitedLadder.cs" />
+    </ItemGroup>
+</Project>

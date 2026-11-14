@@ -65,6 +65,8 @@ namespace ManiaAPI.NadeoAPI;
 [JsonSerializable(typeof(ClubCampaignCreation))]
 [JsonSerializable(typeof(ClubRoomCreation))]
 [JsonSerializable(typeof(ClubRoomEdition))]
+[JsonSerializable(typeof(ClubRoomFromServerCreation))]
+[JsonSerializable(typeof(ClubRoomFromServerEdition))]
 [JsonSerializable(typeof(ClubNewsCreation))]
 [JsonSerializable(typeof(ClubNewsEdition))]
 [JsonSerializable(typeof(ClubNews))]

@@ -30,4 +30,28 @@ public static class ManiaPlanetAPIServiceExtensions
                 client.BaseAddress = new Uri(ManiaPlanetIngameAPI.BaseAddress);
             });
     }
+
+    /// <summary>
+    /// Adds the ManiaPlanet Channel Record API client (channel map leaderboards), which needs no authorization.
+    /// </summary>
+    public static IHttpClientBuilder AddManiaPlanetChannelRecordAPI(this IServiceCollection services)
+    {
+        return services.AddHttpClient<ManiaPlanetChannelRecordAPI>()
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri(ManiaPlanetChannelRecordAPI.BaseAddress);
+            });
+    }
+
+    /// <summary>
+    /// Adds the ManiaPlanet Channel Feedback API client (votes and ratings of channel maps), which needs no authorization.
+    /// </summary>
+    public static IHttpClientBuilder AddManiaPlanetChannelFeedbackAPI(this IServiceCollection services)
+    {
+        return services.AddHttpClient<ManiaPlanetChannelFeedbackAPI>()
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri(ManiaPlanetChannelFeedbackAPI.BaseAddress);
+            });
+    }
 }

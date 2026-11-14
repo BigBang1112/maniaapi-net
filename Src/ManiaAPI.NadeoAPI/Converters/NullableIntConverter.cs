@@ -4,7 +4,13 @@ using System.Text.Json.Serialization;
 
 namespace ManiaAPI.NadeoAPI.Converters;
 
-internal sealed class NullableIntConverter : JsonConverter<int?>
+/// <summary>
+/// Converts an optional number that the Nadeo API sends as <see cref="uint.MaxValue"/> or -1 when there is none.
+/// </summary>
+/// <remarks>
+/// Public so that a <see cref="JsonSerializerContext"/> outside this library can use it when it includes Nadeo API models.
+/// </remarks>
+public sealed class NullableIntConverter : JsonConverter<int?>
 {
     public override int? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

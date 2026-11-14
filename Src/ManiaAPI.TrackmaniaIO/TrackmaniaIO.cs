@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
 namespace ManiaAPI.TrackmaniaIO;
@@ -11,7 +12,7 @@ public interface ITrackmaniaIO : IDisposable
     HttpClient Client { get; }
 
     Task<CampaignCollection> GetSeasonalCampaignsAsync(int page = 0, CancellationToken cancellationToken = default);
-    Task<CampaignCollection> GetClubCampaignsAsync(int page = 0, CancellationToken cancellationToken = default);
+    Task<CampaignCollection> GetClubCampaignsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default);
     [Obsolete("Use GetWeeklyShortCampaignsAsync instead.")]
     Task<CampaignCollection> GetWeeklyCampaignsAsync(int page = 0, CancellationToken cancellationToken = default);
     Task<CampaignCollection> GetWeeklyShortCampaignsAsync(int page = 0, CancellationToken cancellationToken = default);
@@ -26,37 +27,49 @@ public interface ITrackmaniaIO : IDisposable
     Task<Leaderboard> GetLeaderboardAsync(string mapUid, int offset = 0, int length = 15, CancellationToken cancellationToken = default);
     Task<ImmutableList<WorldRecord>> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default);
     Task<Map> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default);
-    Task<ClubCollection> GetClubsAsync(int page = 0, CancellationToken cancellationToken = default);
+    Task<ClubCollection> GetClubsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default);
     Task<Club> GetClubAsync(int clubId, CancellationToken cancellationToken = default);
     Task<ClubMemberCollection> GetClubMembersAsync(int clubId, int page = 0, CancellationToken cancellationToken = default);
     Task<ClubActivityCollection> GetClubActivitiesAsync(int clubId, int page = 0, CancellationToken cancellationToken = default);
-    Task<ClubRoomCollection> GetClubRoomsAsync(int page = 0, CancellationToken cancellationToken = default);
+    Task<ClubRoomCollection> GetClubRoomsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default);
     Task<ClubRoom> GetClubRoomAsync(int clubId, int roomId, CancellationToken cancellationToken = default);
     Task<TrackOfTheDayMonth> GetTrackOfTheDaysAsync(int page = 0, CancellationToken cancellationToken = default);
     Task<AdCollection> GetAdsAsync(CancellationToken cancellationToken = default);
-    Task<CompetitionCollection> GetCompetitionsAsync(int page = 0, CancellationToken cancellationToken = default);
+    Task<CompetitionCollection> GetCompetitionsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default);
     Task<Competition> GetCompetitionAsync(int competitionId, CancellationToken cancellationToken = default);
 }
 
 public class TrackmaniaIO : ITrackmaniaIO
 {
-    internal static long? RateLimitRemaining;
-    internal static DateTimeOffset? RateLimitReset;
-
     public const string BaseAddress = "https://trackmania.io/api";
 
+    private readonly RateLimiter rateLimiter;
+
     public HttpClient Client { get; }
+
+    /// <summary>
+    /// How many times a request is retried after a 429 Too Many Requests response, waiting as long as the response asks each time. Set to 0 to throw on the first 429. Default is 3.
+    /// </summary>
+    /// <remarks>
+    /// Requests are already held back when the rate limit is used up, so a 429 only happens when something else uses the same rate limit, like another process.
+    /// </remarks>
+    public int MaxRateLimitRetries { get; set; } = 3;
 
     /// <summary>
     /// Make sure your user agent is descriptive enough, otherwise you might receive 403 Forbidden responses in the future.
     /// </summary>
     /// <param name="client">HTTP client.</param>
     /// <param name="userAgent">Custom user agent as explained here: https://openplanet.dev/tmio/api</param>
-    public TrackmaniaIO(HttpClient client, string userAgent)
+    public TrackmaniaIO(HttpClient client, string userAgent) : this(client, userAgent, RateLimiter.Shared)
+    {
+    }
+
+    internal TrackmaniaIO(HttpClient client, string userAgent, RateLimiter rateLimiter)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
 
         Client = client ?? throw new ArgumentNullException(nameof(client));
+        this.rateLimiter = rateLimiter;
 
         var headers = Client.DefaultRequestHeaders;
 
@@ -66,7 +79,7 @@ public class TrackmaniaIO : ITrackmaniaIO
         }
 
         const string product = "ManiaAPI.NET";
-        const string version = "2.7.0";
+        const string version = PackageInfo.Version;
 
         var libraryExists = headers.UserAgent.Any(h => h.Product?.Name == product && h.Product?.Version == version);
 
@@ -91,9 +104,9 @@ public class TrackmaniaIO : ITrackmaniaIO
         return await GetJsonAsync($"campaigns/seasonal/{page}", TrackmaniaIOJsonContext.Default.CampaignCollection, cancellationToken);
     }
 
-    public virtual async Task<CampaignCollection> GetClubCampaignsAsync(int page = 0, CancellationToken cancellationToken = default)
+    public virtual async Task<CampaignCollection> GetClubCampaignsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"campaigns/club/{page}", TrackmaniaIOJsonContext.Default.CampaignCollection, cancellationToken);
+        return await GetJsonAsync($"campaigns/club/{page}{SearchQuery(search)}", TrackmaniaIOJsonContext.Default.CampaignCollection, cancellationToken);
     }
 
     [Obsolete("Use GetWeeklyShortCampaignsAsync instead.")]
@@ -143,33 +156,33 @@ public class TrackmaniaIO : ITrackmaniaIO
         ArgumentException.ThrowIfNullOrEmpty(leaderboardUid);
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"leaderboard/{leaderboardUid}/{mapUid}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
+        return await GetJsonAsync($"leaderboard/{UrlHelper.EscapePathSegment(leaderboardUid)}/{UrlHelper.EscapePathSegment(mapUid)}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
     }
 
     public virtual async Task<Leaderboard> GetLeaderboardAsync(string mapUid, int offset = 0, int length = 15, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"leaderboard/map/{mapUid}?offset={offset}&length={length}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
+        return await GetJsonAsync($"leaderboard/map/{UrlHelper.EscapePathSegment(mapUid)}?offset={offset}&length={length}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
     }
 
     public virtual async Task<ImmutableList<WorldRecord>> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(leaderboardUid);
 
-        return await GetJsonAsync($"leaderboard/track/{leaderboardUid}", TrackmaniaIOJsonContext.Default.ImmutableListWorldRecord, cancellationToken);
+        return await GetJsonAsync($"leaderboard/track/{UrlHelper.EscapePathSegment(leaderboardUid)}", TrackmaniaIOJsonContext.Default.ImmutableListWorldRecord, cancellationToken);
     }
 
     public virtual async Task<Map> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"map/{mapUid}", TrackmaniaIOJsonContext.Default.Map, cancellationToken);
+        return await GetJsonAsync($"map/{UrlHelper.EscapePathSegment(mapUid)}", TrackmaniaIOJsonContext.Default.Map, cancellationToken);
     }
 
-    public virtual async Task<ClubCollection> GetClubsAsync(int page = 0, CancellationToken cancellationToken = default)
+    public virtual async Task<ClubCollection> GetClubsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"clubs/{page}", TrackmaniaIOJsonContext.Default.ClubCollection, cancellationToken);
+        return await GetJsonAsync($"clubs/{page}{SearchQuery(search)}", TrackmaniaIOJsonContext.Default.ClubCollection, cancellationToken);
     }
 
     public virtual async Task<Club> GetClubAsync(int clubId, CancellationToken cancellationToken = default)
@@ -187,9 +200,9 @@ public class TrackmaniaIO : ITrackmaniaIO
         return await GetJsonAsync($"club/{clubId}/activities/{page}", TrackmaniaIOJsonContext.Default.ClubActivityCollection, cancellationToken);
     }
 
-    public virtual async Task<ClubRoomCollection> GetClubRoomsAsync(int page = 0, CancellationToken cancellationToken = default)
+    public virtual async Task<ClubRoomCollection> GetClubRoomsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"rooms/{page}", TrackmaniaIOJsonContext.Default.ClubRoomCollection, cancellationToken);
+        return await GetJsonAsync($"rooms/{page}{SearchQuery(search)}", TrackmaniaIOJsonContext.Default.ClubRoomCollection, cancellationToken);
     }
 
     public virtual async Task<ClubRoom> GetClubRoomAsync(int clubId, int roomId, CancellationToken cancellationToken = default)
@@ -207,9 +220,9 @@ public class TrackmaniaIO : ITrackmaniaIO
         return await GetJsonAsync("ads", TrackmaniaIOJsonContext.Default.AdCollection, cancellationToken);
     }
 
-    public virtual async Task<CompetitionCollection> GetCompetitionsAsync(int page = 0, CancellationToken cancellationToken = default)
+    public virtual async Task<CompetitionCollection> GetCompetitionsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"competitions/{page}", TrackmaniaIOJsonContext.Default.CompetitionCollection, cancellationToken);
+        return await GetJsonAsync($"competitions/{page}{SearchQuery(search)}", TrackmaniaIOJsonContext.Default.CompetitionCollection, cancellationToken);
     }
 
     public virtual async Task<Competition> GetCompetitionAsync(int competitionId, CancellationToken cancellationToken = default)
@@ -219,40 +232,45 @@ public class TrackmaniaIO : ITrackmaniaIO
 
     protected internal async Task<T> GetJsonAsync<T>(string? endpoint, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken = default)
     {
-        if (RateLimitRemaining == 0)
+        for (var retry = 0; ; retry++)
         {
-            while (DateTime.UtcNow < RateLimitReset)
+            await rateLimiter.AcquireAsync(cancellationToken);
+
+            HttpResponseMessage response;
+
+            try
             {
-                await Task.Delay(100, cancellationToken);
+                response = await Client.GetAsync($"{BaseAddress}/{endpoint}", cancellationToken);
+            }
+            catch
+            {
+                rateLimiter.Cancel();
+                throw;
+            }
+
+            using (response)
+            {
+                // Read the rate limit before the status, so that error responses update it too.
+                var retryDelay = rateLimiter.Complete(response);
+
+                if (retryDelay.HasValue && retry < MaxRateLimitRetries)
+                {
+                    // The rate limiter now holds every request back until the delay passes, including this retry.
+                    continue;
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
+
+                return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new JsonException("The response body is null.");
             }
         }
-
-        using var response = await Client.GetAsync($"{BaseAddress}/{endpoint}", cancellationToken);
-
-        response.EnsureSuccessStatusCode();
-
-        RateLimitRemaining = GetHeaderNumberValue("X-Ratelimit-Remaining", response) ?? RateLimitRemaining - 1;
-
-        var rateLimitResetCurrent = GetHeaderNumberValue("X-Ratelimit-Reset", response);
-
-        if (rateLimitResetCurrent.HasValue)
-        {
-            RateLimitReset = DateTimeOffset.UtcNow + TimeSpan.FromSeconds(rateLimitResetCurrent.Value);
-        }
-
-        Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
-
-        return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken) ?? throw new Exception("This shouldn't be null.");
     }
 
-    internal static long? GetHeaderNumberValue(string name, HttpResponseMessage response)
+    private static string SearchQuery(string? search)
     {
-        if (!response.Headers.TryGetValues(name, out IEnumerable<string>? values))
-        {
-            return null;
-        }
-
-        return long.TryParse(values.FirstOrDefault(), out long value) ? value : null;
+        return string.IsNullOrEmpty(search) ? "" : $"?search={Uri.EscapeDataString(search)}";
     }
 
     public virtual void Dispose()
