@@ -61,11 +61,19 @@ public sealed class LinkedAccountTokens(
         var accessToken = root.GetProperty("access_token").GetString()
             ?? throw new InvalidOperationException("The OAuth provider did not return an access token.");
 
+        // A field that is missing or null keeps its previous value, so a provider that doesn't rotate
+        // refresh tokens doesn't erase the one that still works.
         var updated = new LinkedTokens(
             accessToken,
-            root.TryGetProperty("refresh_token", out var refresh) ? refresh.GetString() : tokens.RefreshToken,
-            clock.GetUtcNow().AddSeconds(root.TryGetProperty("expires_in", out var expires) ? expires.GetDouble() : 3600),
-            root.TryGetProperty("scope", out var granted) ? granted.GetString()!.Split(' ', StringSplitOptions.RemoveEmptyEntries) : tokens.Scopes);
+            root.TryGetProperty("refresh_token", out var refresh) && refresh.ValueKind == JsonValueKind.String
+                ? refresh.GetString()
+                : tokens.RefreshToken,
+            clock.GetUtcNow().AddSeconds(root.TryGetProperty("expires_in", out var expires) && expires.ValueKind == JsonValueKind.Number
+                ? expires.GetDouble()
+                : 3600),
+            root.TryGetProperty("scope", out var granted) && granted.ValueKind == JsonValueKind.String
+                ? granted.GetString()!.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                : tokens.Scopes);
 
         await store.WriteAsync(caller, provider, updated, cancellationToken);
 

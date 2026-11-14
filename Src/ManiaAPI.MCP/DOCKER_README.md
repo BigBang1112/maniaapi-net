@@ -24,6 +24,8 @@ docker run -d -p 8080:8080 \
 
 Clients send the key in the `X-Api-Key` header. Connect to `/mcp` for everything, or to a game endpoint like `/mcp/trackmania2020`, `/mcp/tmnf`, or `/mcp/exchange`. `/healthz` needs no key and is used by the image's health check.
 
+Each API key can make 120 MCP requests per minute; past that, requests get `429 Too Many Requests` until the minute is over.
+
 ## Run over stdio
 
 Run it interactively, with any arguments other than `--http`, like `--toolsets tmnf,exchange`, or `""` for none:
@@ -45,7 +47,8 @@ codex mcp add maniaapi -- docker run -i --rm \
 Exchange, master servers, and ManiaPlanet reads work without any credentials. The rest needs them:
 
 - `ManiaAPI__NadeoAPI__Login` and `ManiaAPI__NadeoAPI__Password` for TM2020 (Nadeo API), from a [service account](https://www.trackmania.com/player/service-account)
-- `ManiaAPI__TrackmaniaAPI__ClientId` and `ManiaAPI__TrackmaniaAPI__ClientSecret` for the Trackmania web API
+- `ManiaAPI__TrackmaniaAPI__ClientId` and `ManiaAPI__TrackmaniaAPI__ClientSecret` for the Trackmania web API, and to link Trackmania accounts
+- `ManiaAPI__ManiaPlanet__ClientId` and `ManiaAPI__ManiaPlanet__ClientSecret` to link ManiaPlanet accounts; optional for the ManiaPlanet web API, which also works without them
 - `ManiaAPI__TrackmaniaWS__Username` and `ManiaAPI__TrackmaniaWS__Password` for Trackmania Web Services
 
 Pass them as environment variables, or as [Docker secrets](https://docs.docker.com/engine/swarm/secrets/) mounted in `/run/secrets`, one file per setting named like the variable. Missing credentials just hide the operations that need them.

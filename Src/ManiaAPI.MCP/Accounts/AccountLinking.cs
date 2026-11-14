@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using ManiaAPI.MCP.Configuration;
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
@@ -59,7 +60,9 @@ public static class AccountLinking
                 throw new InvalidOperationException("The account-link request is invalid.");
             }
 
-            var granted = context.TokenResponse.Response?.RootElement.TryGetProperty("scope", out var scopeValue) == true
+            // Without a scope string in the response, the provider granted what was asked for
+            var granted = context.TokenResponse.Response?.RootElement.TryGetProperty("scope", out var scopeValue) == true &&
+                scopeValue.ValueKind == JsonValueKind.String
                 ? scopeValue.GetString()!.Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 : scopes;
 

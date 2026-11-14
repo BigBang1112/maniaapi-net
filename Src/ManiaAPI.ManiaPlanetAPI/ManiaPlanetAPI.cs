@@ -524,19 +524,30 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
         request.Headers.Authorization = Handler.Authorization;
 
+        HttpResponseMessage response;
+
         try
         {
-            var response = await Client.SendAsync(request, cancellationToken);
+            response = await Client.SendAsync(request, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new ManiaPlanetAPIResponseException(ex.Message, ex);
+        }
 
+        try
+        {
             Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
             await ValidateResponseAsync(response, cancellationToken);
 
             return response;
         }
-        catch (HttpRequestException ex)
+        catch
         {
-            throw new ManiaPlanetAPIResponseException(ex.Message, ex.InnerException);
+            // The caller only disposes a response it gets back
+            response.Dispose();
+            throw;
         }
     }
 

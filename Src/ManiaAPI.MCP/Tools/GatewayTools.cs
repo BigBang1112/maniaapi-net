@@ -185,17 +185,26 @@ public sealed class GatewayTools(
         {
             var scope = Scope();
             var args = request.Arguments ?? new Dictionary<string, JsonElement>();
-            var tool = List().Tools.FirstOrDefault(x => x.Name == request.Name);
 
-            if (tool is null)
+            // Only the called tool's schema is built, not the whole list, which has every operation's schema
+            // when they are exposed as tools.
+            Tool? featuredTool = null;
+            Operation? operation = null;
+
+            var inputSchema = request.Name switch
             {
-                throw new ArgumentException("Unknown tool in this endpoint's scope.");
-            }
+                "maniaapi_search" => SearchSchema,
+                "maniaapi_describe" => DescribeSchema,
+                "maniaapi_invoke" => InvokeSchema,
+                _ when (featuredTool = featured.List(scope).FirstOrDefault(x => x.Name == request.Name)) is not null => featuredTool.InputSchema,
+                _ when (operation = DirectOperation(request.Name, scope)) is not null => OperationToolSchema(operation, scope),
+                _ => throw new ArgumentException("Unknown tool in this endpoint's scope.")
+            };
 
             var input = new JsonObject(args.Select(x => new KeyValuePair<string, JsonNode?>(x.Key,
                 JsonNode.Parse(x.Value.GetRawText()))));
 
-            engine.ValidateArguments(tool.InputSchema, Parse(input.ToJsonString()));
+            engine.ValidateArguments(inputSchema, Parse(input.ToJsonString()));
 
             JsonObject result;
 
@@ -229,30 +238,21 @@ public sealed class GatewayTools(
                         scope, services, shape, cancellationToken, confirmed: approved);
                     break;
 
+                case var _ when featuredTool is not null:
+                    result = await featured.InvokeAsync(request.Name, Parse(input.ToJsonString()), scope, services, cancellationToken);
+                    break;
+
                 default:
-                    if (featured.List(scope).Any(tool => tool.Name == request.Name))
-                    {
-                        result = await featured.InvokeAsync(request.Name, Parse(input.ToJsonString()), scope, services, cancellationToken);
-                        break;
-                    }
-
-                    var operation = options.ExposeOperationsAsTools
-                        ? engine.Available(scope).FirstOrDefault(x => x.Id.Replace('.', '_') == request.Name)
-                        : null;
-
-                    if (operation is null)
-                    {
-                        throw new ArgumentException("Unknown tool in this endpoint's scope.");
-                    }
-
+                    // Resolved with the schema above, which throws for an unknown tool
+                    var direct = operation!;
                     var arguments = new JsonObject(args.Select(x => new KeyValuePair<string, JsonNode?>(x.Key,
                         JsonNode.Parse(x.Value.GetRawText()))));
                     arguments.Remove("confirm");
 
                     var directArguments = Parse(arguments.ToJsonString());
-                    var directApproved = Confirm(operation, directArguments, scope, args, request, server);
+                    var directApproved = Confirm(direct, directArguments, scope, args, request, server);
 
-                    result = await engine.InvokeAsync(operation.Id, directArguments, scope,
+                    result = await engine.InvokeAsync(direct.Id, directArguments, scope,
                         services, cancellationToken: cancellationToken, confirmed: directApproved);
                     break;
             }
@@ -549,6 +549,16 @@ public sealed class GatewayTools(
 
         return confirmation.Authorize(operation, arguments, scopeKey, caller,
             args.TryGetValue("confirm", out var value) && value.ValueKind == JsonValueKind.True, request, server);
+    }
+
+    /// <summary>
+    /// The operation a directly exposed tool calls, or null when operations aren't exposed as tools or none matches.
+    /// </summary>
+    private Operation? DirectOperation(string name, GameScope scope)
+    {
+        return options.ExposeOperationsAsTools
+            ? engine.Available(scope).FirstOrDefault(x => x.Id.Replace('.', '_') == name)
+            : null;
     }
 
     private static JsonElement OperationToolSchema(Operation operation, GameScope scope)

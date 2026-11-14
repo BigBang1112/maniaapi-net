@@ -59,9 +59,24 @@ public class DiscoveryTests
 
         var message = result.StructuredContent!.Value.GetProperty("message").GetString();
 
-        await Assert.That(result.IsError).IsEqualTo(true);
+        await Assert.That(result.IsError ?? false).IsTrue();
         await Assert.That(message).Contains("platform");
         await Assert.That(message).DoesNotContain("validation failed");
+    }
+
+    [Test]
+    [Arguments("tmnf_player", false, "login")]
+    [Arguments("masterserver_tmnf_player_infos", true, "login")]
+    [Arguments("masterserver_tmnf_player_infos", false, "Unknown tool")]
+    [Arguments("tmnf_nonexistent", true, "Unknown tool")]
+    public async Task CallsAreValidatedAgainstTheCalledToolOnly(string tool, bool exposeOperations, string expectedMessage)
+    {
+        using var services = CreateServices(exposeOperations: exposeOperations);
+        var result = await services.GetRequiredService<GatewayTools>().CallAsync(
+            new CallToolRequestParams { Name = tool, Arguments = new Dictionary<string, JsonElement>() }, services, CancellationToken.None);
+
+        await Assert.That(result.IsError ?? false).IsTrue();
+        await Assert.That(result.StructuredContent!.Value.GetProperty("message").GetString()).Contains(expectedMessage);
     }
 
     [Test]
@@ -156,12 +171,13 @@ public class DiscoveryTests
         }
     }
 
-    private static ServiceProvider CreateServices(bool trackmaniaApi = true)
+    private static ServiceProvider CreateServices(bool trackmaniaApi = true, bool exposeOperations = false)
     {
         var settings = new Dictionary<string, string?>
         {
             ["ManiaAPI:NadeoAPI:Login"] = "test-login",
-            ["ManiaAPI:NadeoAPI:Password"] = "test-password"
+            ["ManiaAPI:NadeoAPI:Password"] = "test-password",
+            ["ManiaAPI:ExposeOperationsAsTools"] = exposeOperations ? "true" : "false"
         };
 
         if (trackmaniaApi)

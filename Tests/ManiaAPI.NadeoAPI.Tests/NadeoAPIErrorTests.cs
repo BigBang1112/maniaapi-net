@@ -59,6 +59,19 @@ public class NadeoAPIErrorTests
         var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetZonesAsync());
 
         await Assert.That(ex!.Message).IsEqualTo("Connection refused");
+        await Assert.That(ex.InnerException).IsTypeOf<HttpRequestException>();
+    }
+
+    [Test]
+    public async Task GetZonesAsync_ErrorResponse_DisposesResponse()
+    {
+        var content = new TrackingContent("""{"code":"","correlation_id":"","message":"Forbidden","info":{}}""");
+        var fake = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.Forbidden) { Content = content });
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetZonesAsync());
+
+        await Assert.That(content.Disposed).IsTrue();
     }
 
     [Test]
@@ -79,6 +92,17 @@ public class NadeoAPIErrorTests
         using var ns = new NadeoServices(fake.CreateClient());
 
         await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.GetSkinInfoAsync(SkinId));
+    }
+
+    private sealed class TrackingContent(string json) : StringContent(json, System.Text.Encoding.UTF8, "application/json")
+    {
+        public bool Disposed { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            Disposed = true;
+            base.Dispose(disposing);
+        }
     }
 
     private static HttpResponseMessage BadGatewayHtml()

@@ -255,7 +255,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         }
         catch (HttpRequestException ex)
         {
-            throw new TrackmaniaAPIResponseException(ex.Message, ex.InnerException);
+            throw new TrackmaniaAPIResponseException(ex.Message, ex);
         }
 
         if (IsEmptyArray(json))
@@ -284,7 +284,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         }
         catch (HttpRequestException ex)
         {
-            throw new TrackmaniaAPIResponseException(ex.Message, ex.InnerException);
+            throw new TrackmaniaAPIResponseException(ex.Message, ex);
         }
     }
 
@@ -322,7 +322,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
         }
         catch (HttpRequestException ex)
         {
-            throw new TrackmaniaAPIResponseException(ex.Message, ex.InnerException);
+            throw new TrackmaniaAPIResponseException(ex.Message, ex);
         }
 
         try

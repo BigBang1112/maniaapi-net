@@ -278,19 +278,30 @@ public abstract class NadeoAPI : INadeoAPI
             request.Content = content;
         }
 
+        HttpResponseMessage response;
+
         try
         {
-            var response = await Client.SendAsync(request, cancellationToken);
+            response = await Client.SendAsync(request, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new NadeoAPIResponseException(ex.Message, ex);
+        }
 
+        try
+        {
             Debug.WriteLine($"Route: {endpoint}{Environment.NewLine}Response: {response.StatusCode} {await response.Content.ReadAsStringAsync(cancellationToken)}");
 
             await ValidateResponseAsync(response, cancellationToken);
 
             return response;
         }
-        catch (HttpRequestException ex)
+        catch
         {
-            throw new NadeoAPIResponseException(ex.Message, ex.InnerException);
+            // The caller only disposes a response it gets back
+            response.Dispose();
+            throw;
         }
     }
 

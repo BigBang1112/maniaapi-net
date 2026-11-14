@@ -84,7 +84,8 @@ ManiaAPI__NadeoAPI__Password = "ls>97jO>e3>>D/Ce"
 Exchange, master servers, and ManiaPlanet reads work without any credentials. The rest needs them:
 
 - `ManiaAPI:NadeoAPI:Login` and `Password` for TM2020 (Nadeo API), create your service account [here](https://www.trackmania.com/player/service-account)
-- `ManiaAPI:TrackmaniaAPI:ClientId` and `ClientSecret` for the Trackmania web API
+- `ManiaAPI:TrackmaniaAPI:ClientId` and `ClientSecret` for the Trackmania web API, and to link Trackmania accounts
+- `ManiaAPI:ManiaPlanet:ClientId` and `ClientSecret` to link ManiaPlanet accounts; optional for the ManiaPlanet web API, which also works without them
 - `ManiaAPI:TrackmaniaWS:Username` and `Password` for Trackmania Web Services
 
 Pass them as environment variables (`:` becomes `__`), user secrets, or `appsettings.json`. Missing credentials just hide the operations that need them.
@@ -98,6 +99,8 @@ maniaapi-mcp --http --urls http://localhost:5199
 ```
 
 Clients send the key in the `X-Api-Key` header. Connect to `/mcp` for everything, or to a game endpoint like `/mcp/trackmania2020`, `/mcp/tmnf`, or `/mcp/exchange`.
+
+Each API key can make 120 MCP requests per minute; past that, requests get `429 Too Many Requests` until the minute is over.
 
 ```json
 {
@@ -140,6 +143,8 @@ Writes stay off in the container over HTTP, as it listens on all interfaces rath
 Disabled by default. Set `ManiaAPI:AllowWrites` to `true` to allow things like editing clubs or uploading maps.
 
 Every write asks for your approval first. Writes only work locally (stdio, or HTTP on loopback).
+
+The approval comes back in a second request, which has to reach the same server instance within 5 minutes. Running several instances on the same machine behind a proxy, or restarting in between, can make the approval fail, so run a single instance when writes are on.
 
 ## Link player accounts
 
