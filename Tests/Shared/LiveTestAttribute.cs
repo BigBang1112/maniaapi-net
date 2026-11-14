@@ -19,14 +19,26 @@ internal sealed class LiveTestAttribute : SkipAttribute, ITestDiscoveryEventRece
     /// </summary>
     public const int RetryBackoffMilliseconds = 2000;
 
+    /// <summary>
+    /// Whether this build targets the newest framework of the test project, the only one live tests run on, so a run of
+    /// every framework doesn't send each service one set of requests per framework. Set in Directory.Build.targets.
+    /// </summary>
+#if LIVE_TEST_FRAMEWORK
+    public const bool IsLiveTestFramework = true;
+#else
+    public const bool IsLiveTestFramework = false;
+#endif
+
     public LiveTestAttribute()
-        : base($"Live test. Set the '{LiveSettings.EnabledKey}' user secret or the {LiveSettings.ToEnvironmentVariable(LiveSettings.EnabledKey)} environment variable to true to run it.")
+        : base(IsLiveTestFramework
+            ? $"Live test. Set the '{LiveSettings.EnabledKey}' user secret or the {LiveSettings.ToEnvironmentVariable(LiveSettings.EnabledKey)} environment variable to true to run it."
+            : "Live test. Live tests run only on the newest target framework of the test project.")
     {
     }
 
     public override Task<bool> ShouldSkip(TestRegisteredContext context)
     {
-        return Task.FromResult(!LiveSettings.Enabled);
+        return Task.FromResult(!IsLiveTestFramework || !LiveSettings.Enabled);
     }
 
     public ValueTask OnTestDiscovered(DiscoveredTestContext context)
