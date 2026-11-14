@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Globalization;
 
 namespace ManiaAPI.MasterServer;
 
@@ -91,17 +92,17 @@ public abstract class MasterServer : AnyServer, IMasterServer
                         zone = xml.ReadContentAsString();
                         break;
                     case "d":
-                        d = int.Parse(xml.ReadContent());
+                        d = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                         break;
                     case "e":
-                        var e = long.Parse(xml.ReadContent());
+                        var e = long.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                         createdAt = e == 0 ? null : DateTimeOffset.FromUnixTimeSeconds(e);
                         break;
                     case "j":
-                        lastZoneUpdate = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                        lastZoneUpdate = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent(), CultureInfo.InvariantCulture));
                         break;
                     case "k":
-                        k = int.Parse(xml.ReadContent());
+                        k = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                         break;
                     default:
                         xml.ReadContent();

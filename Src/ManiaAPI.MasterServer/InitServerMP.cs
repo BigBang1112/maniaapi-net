@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Globalization;
 
 namespace ManiaAPI.MasterServer;
 
@@ -40,7 +41,7 @@ public abstract class InitServerMP : AnyServer, IInitServerMP
                 switch (element)
                 {
                     case "wt":
-                        waitingQueueDuration = int.Parse(xml.ReadContent());
+                        waitingQueueDuration = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                         break;
                     case "wm":
                         waitingQueueMessage = xml.ReadContentAsString();
@@ -66,10 +67,10 @@ public abstract class InitServerMP : AnyServer, IInitServerMP
                                     path = xml.ReadContentAsString();
                                     break;
                                 case "e":
-                                    portHttps = int.Parse(xml.ReadContent());
+                                    portHttps = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                                     break;
                                 case "f":
-                                    portHttp = int.Parse(xml.ReadContent());
+                                    portHttp = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                                     break;
                                 default:
                                     xml.ReadContent();

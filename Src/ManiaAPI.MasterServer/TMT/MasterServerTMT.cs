@@ -1,5 +1,6 @@
 ﻿using MinimalXmlReader;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Text;
 using TmEssentials;
 
@@ -192,7 +193,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
                         zone = xml.ReadContentAsString();
                         break;
                     case "d":
-                        timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                        timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent(), CultureInfo.InvariantCulture));
                         break;
                     case "i":
                         units.Add(XmlHelper.ReadRecordUnit<T>(ref xml));
@@ -223,7 +224,7 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
             switch (itemElement)
             {
                 case "d":
-                    timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                    timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent(), CultureInfo.InvariantCulture));
                     break;
                 case "i":
                     units.Add(XmlHelper.ReadRecordUnit<T>(ref xml));

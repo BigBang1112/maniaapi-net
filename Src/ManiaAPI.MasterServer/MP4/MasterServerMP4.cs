@@ -1,6 +1,7 @@
 ﻿using ManiaAPI.MasterServer.MP3;
 using MinimalXmlReader;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -340,10 +341,10 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
                             _ = Enum.TryParse(xml.ReadContentAsString(), out type);
                             break;
                         case "d":
-                            timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                            timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent(), CultureInfo.InvariantCulture));
                             break;
                         case "n":
-                            count = int.Parse(xml.ReadContent());
+                            count = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                             break;
                         case "i":
                             skillpoints = ReadAllLeaderboardRecords<uint>(ref xml);
@@ -462,10 +463,10 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
                             _ = Enum.TryParse(xml.ReadContentAsString(), out type);
                             break;
                         case "d":
-                            timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                            timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent(), CultureInfo.InvariantCulture));
                             break;
                         case "n":
-                            count = int.Parse(xml.ReadContent());
+                            count = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                             break;
                         case "i":
                             if (isBinary)
@@ -586,7 +587,7 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
             switch (itemElement)
             {
                 case "r":
-                    rank = int.Parse(xml.ReadContent());
+                    rank = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                     break;
                 case "l":
                     login = xml.ReadContentAsString();
@@ -595,7 +596,7 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
                     nickname = xml.ReadContentAsString();
                     break;
                 case "s":
-                    score = uint.Parse(xml.ReadContent());
+                    score = uint.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                     break;
                 case "f":
                     fileName = xml.ReadContentAsString();

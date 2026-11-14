@@ -101,7 +101,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                 switch (element)
                 {
                     case "c":
-                        playerCount = int.Parse(xml.ReadContent());
+                        playerCount = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                         break;
                     case "v":
                         var rank = 0;
@@ -114,13 +114,13 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                             switch (valueElement)
                             {
                                 case "g":
-                                    rank = int.Parse(xml.ReadContent());
+                                    rank = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                                     break;
                                 case "n":
                                     nickname = xml.ReadContentAsString();
                                     break;
                                 case "h":
-                                    score = int.Parse(xml.ReadContent());
+                                    score = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                                     break;
                                 case "i":
                                     leagueLogoUrl = xml.ReadContentAsString();
@@ -181,7 +181,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                 switch (element)
                 {
                     case "c":
-                        leagueCount = int.Parse(xml.ReadContent());
+                        leagueCount = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                         break;
                     case "v":
                         var rank = 0;
@@ -194,16 +194,16 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                             switch (valueElement)
                             {
                                 case "g":
-                                    rank = int.Parse(xml.ReadContent());
+                                    rank = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                                     break;
                                 case "n":
                                     name = xml.ReadContentAsString();
                                     break;
                                 case "h":
-                                    score = int.Parse(xml.ReadContent());
+                                    score = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                                     break;
                                 case "l":
-                                    playerCount = int.Parse(xml.ReadContent());
+                                    playerCount = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                                     break;
                                 default:
                                     xml.ReadContent();
@@ -257,7 +257,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                 switch (element)
                 {
                     case "c":
-                        achievementCount = int.Parse(xml.ReadContent());
+                        achievementCount = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                         break;
                     case "v":
                         var mapUid = string.Empty;
@@ -276,16 +276,16 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                                     mapUid = xml.ReadContentAsString();
                                     break;
                                 case "x":
-                                    skillpoints = int.Parse(xml.ReadContent());
+                                    skillpoints = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                                     break;
                                 case "n":
                                     name = xml.ReadContentAsString();
                                     break;
                                 case "d":
-                                    d = int.Parse(xml.ReadContent());
+                                    d = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                                     break;
                                 case "m":
-                                    m = int.Parse(xml.ReadContent());
+                                    m = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                                     break;
                                 case "e":
                                     environment = xml.ReadContentAsString();
@@ -376,7 +376,7 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
                                     pendingTimestamp = DateTimeOffset.ParseExact(xml.ReadContent(), "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
                                     break;
                                 case "t":
-                                    pendingType = int.Parse(xml.ReadContent());
+                                    pendingType = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                                     break;
                                 default:
                                     xml.ReadContent();

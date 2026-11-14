@@ -1,3 +1,4 @@
+using System.Globalization;
 using ManiaAPI.MasterServer.MP4;
 using ManiaAPI.MasterServer.TMUF;
 
@@ -183,7 +184,30 @@ public class MasterServerTests
         var fake = MasterServerXml.Handler("<html><body>Maintenance</body></html>");
         using var server = new MasterServerTMUF(fake.CreateClient(Url));
 
-        await Assert.ThrowsAsync<Exception>(() => server.TestAsync());
+        await Assert.ThrowsAsync<MasterServerResponseException>(() => server.TestAsync());
+    }
+
+    [Test]
+    public async Task GetPlayerInfosAsync_NegativeErrorCodeInHebrewCulture_ParsesInvariant()
+    {
+        // Built before switching the culture, so the response has a plain "-5" like a real master server sends
+        var fake = MasterServerXml.Handler(MasterServerXml.Error("GetPlayerInfos", -5, "error"));
+        using var server = new MasterServerMP4(fake.CreateClient(Url));
+
+        var culture = CultureInfo.CurrentCulture;
+        // Hebrew uses U+200E before the minus sign, so parsing a plain "-5" with it fails
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("he-IL");
+
+        try
+        {
+            var ex = await Assert.ThrowsAsync<XmlRequestException>(() => server.GetPlayerInfosAsync("nobody"));
+
+            await Assert.That(ex!.Value).IsEqualTo(-5);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
     }
 
     [Test]

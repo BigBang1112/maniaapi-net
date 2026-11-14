@@ -1,4 +1,5 @@
 using ManiaAPI.TMX.Attributes;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -129,7 +130,7 @@ public partial class MX : IMX
 
         response.EnsureSuccessStatusCode();
 
-        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), out var trackId))
+        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), CultureInfo.InvariantCulture, out var trackId))
         {
             return trackId;
         }
@@ -172,7 +173,7 @@ public partial class MX : IMX
 
         response.EnsureSuccessStatusCode();
 
-        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), out var mappackId))
+        if (long.TryParse(response.RequestMessage?.RequestUri?.Segments.LastOrDefault(), CultureInfo.InvariantCulture, out var mappackId))
         {
             return mappackId;
         }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 
 namespace ManiaAPI.TrackmaniaIO;
@@ -138,6 +139,6 @@ internal sealed class RateLimiter
             return null;
         }
 
-        return long.TryParse(values.FirstOrDefault(), out long value) ? value : null;
+        return long.TryParse(values.FirstOrDefault(), CultureInfo.InvariantCulture, out long value) ? value : null;
     }
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -60,7 +61,7 @@ public sealed class WriteConfirmation(IDataProtectionProvider protection, TimePr
                 throw new ArgumentException("The write confirmation is invalid or belongs to another deployment.");
             }
 
-            if (parts.Length != 2 || !long.TryParse(parts[0], out var expires) ||
+            if (parts.Length != 2 || !long.TryParse(parts[0], CultureInfo.InvariantCulture, out var expires) ||
                 expires < clock.GetUtcNow().ToUnixTimeSeconds() || parts[1] != hash)
             {
                 throw new ArgumentException("The write confirmation expired or its arguments changed. Request confirmation again.");
@@ -95,6 +96,6 @@ public sealed class WriteConfirmation(IDataProtectionProvider protection, TimePr
                     Required = ["confirm"]
                 }
             })
-        }, protector.Protect(expiration + "|" + hash));
+        }, protector.Protect(expiration.ToString(CultureInfo.InvariantCulture) + "|" + hash));
     }
 }

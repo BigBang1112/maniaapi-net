@@ -1,5 +1,6 @@
 ﻿using MinimalXmlReader;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Text;
 
 namespace ManiaAPI.MasterServer;
@@ -100,10 +101,10 @@ public abstract class MasterServerMP : MasterServer, IMasterServerMP
                             zone = xml.ReadContentAsString();
                             break;
                         case "d":
-                            timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent()));
+                            timestamp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(xml.ReadContent(), CultureInfo.InvariantCulture));
                             break;
                         case "c":
-                            count = int.Parse(xml.ReadContent());
+                            count = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                             break;
                         case "i":
                             ladderPointsBuilder.Add(ReadLadderRank(ref xml));
@@ -160,7 +161,7 @@ public abstract class MasterServerMP : MasterServer, IMasterServerMP
                     score = double.Parse(xml.ReadContent(), System.Globalization.CultureInfo.InvariantCulture);
                     break;
                 case "r":
-                    rank = int.Parse(xml.ReadContent());
+                    rank = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                     break;
                 default:
                     xml.ReadContent();

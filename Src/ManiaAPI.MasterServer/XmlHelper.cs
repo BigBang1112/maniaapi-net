@@ -164,7 +164,7 @@ internal static partial class XmlHelper
             switch (errorElement)
             {
                 case "v":
-                    value = int.Parse(xml.ReadContent());
+                    value = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                     break;
                 case "m":
                     message = xml.ReadContentAsString();
@@ -190,10 +190,10 @@ internal static partial class XmlHelper
             switch (element)
             {
                 case "s":
-                    score = uint.Parse(xml.ReadContent());
+                    score = uint.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                     break;
                 case "c":
-                    count = int.Parse(xml.ReadContent());
+                    count = int.Parse(xml.ReadContent(), CultureInfo.InvariantCulture);
                     break;
                 default:
                     xml.ReadContent();
