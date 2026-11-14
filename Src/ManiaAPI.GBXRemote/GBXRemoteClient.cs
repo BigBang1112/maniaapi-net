@@ -290,7 +290,8 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
             }
             else
             {
-                if (!pendingRequests.ContainsKey(handle))
+                // Looked up once, so a channel removed by a caller that gave up isn't added back
+                if (!pendingRequests.TryGetValue(handle, out var channel))
                 {
                     LogUnknownHandle(logger, handle);
                     continue;
@@ -298,8 +299,8 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
 
                 LogReceivedXmlResponse(logger, handle, payload);
 
-                var channel = GetOrCreatePendingRequestChannel(handle);
-                await channel.Writer.WriteAsync(payload, cancellationToken);
+                // A channel takes the one response to its call, and a duplicate response must not block this loop
+                channel.Writer.TryWrite(payload);
             }
         }
     }
@@ -440,6 +441,8 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
 
         var semaphoreAcquired = false;
         uint? handle = null;
+        Channel<string>? channel = null;
+        var awaitingResponse = false;
 
         try
         {
@@ -455,7 +458,7 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
             // by ListenAsync before this method gets a chance to create the channel - the
             // subsequent read would then wait forever with no writer left to complete it.
             handle = version >= 2 ? GetNextHandle() : NoHandle;
-            var channel = GetOrCreatePendingRequestChannel(handle.Value);
+            channel = GetOrCreatePendingRequestChannel(handle.Value);
 
             // The ListenTask cancels cts once the connection is lost/closed. Watching it covers calls made after that,
             // whose channel the ListenTask never completes, and whose write can still succeed into the socket buffer.
@@ -464,12 +467,14 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
             var startTime = Stopwatch.GetTimestamp();
 
             await SendXmlPayloadAsync(handle.Value, xmlPayload, connectionCts.Token);
+            awaitingResponse = true;
 
             LogMethodSent(logger, methodName, handle.Value);
 
             // If the connection is lost/closed while this is pending, the ListenTask completes
             // this channel's writer, which makes ReadAsync throw ChannelClosedException instead of hanging forever.
             var xml = await channel.Reader.ReadAsync(connectionCts.Token);
+            awaitingResponse = false;
 
             var elapsed = Stopwatch.GetElapsedTime(startTime);
 
@@ -487,15 +492,44 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         }
         finally
         {
-            if (handle.HasValue)
+            // GBXRemote 1 responses have no handle, so the response to a call given up on would be taken as the response
+            // to the next call. The call stays registered until that response arrives and is thrown away.
+            if (semaphoreAcquired && awaitingResponse)
             {
-                pendingRequests.Remove(handle.Value, out _);
+                _ = DiscardLateResponseAsync(channel!);
             }
+            else
+            {
+                if (handle.HasValue)
+                {
+                    pendingRequests.Remove(handle.Value, out _);
+                }
 
-            if (semaphoreAcquired)
-            {
-                v1CallSemaphore?.Release();
+                if (semaphoreAcquired)
+                {
+                    v1CallSemaphore?.Release();
+                }
             }
+        }
+    }
+
+    /// <summary>
+    /// Waits for the response to a GBXRemote 1 call that was given up on, then lets the next call go.
+    /// </summary>
+    private async Task DiscardLateResponseAsync(Channel<string> channel)
+    {
+        try
+        {
+            // The ListenTask completes the channel or cancels cts once the connection is closed
+            await channel.Reader.ReadAsync(cts.Token);
+        }
+        catch (Exception ex) when (ex is ChannelClosedException or OperationCanceledException)
+        {
+        }
+        finally
+        {
+            pendingRequests.Remove(NoHandle, out _);
+            v1CallSemaphore!.Release();
         }
     }
 
@@ -845,13 +879,13 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         }
     }
 
+    // cts and the semaphores aren't disposed. The background loops, calls in progress, and discarding of late GBXRemote 1
+    // responses can still use them after disposal returns. They create no timer or wait handle, so they hold nothing to release.
+
     public void Dispose()
     {
         cts.Cancel();
         tcp.Dispose();
-        cts.Dispose();
-        v1CallSemaphore?.Dispose();
-        writeSemaphore.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -873,9 +907,6 @@ public partial class GBXRemoteClient : IDisposable, IAsyncDisposable
         }
 
         tcp.Dispose();
-        cts.Dispose();
-        v1CallSemaphore?.Dispose();
-        writeSemaphore.Dispose();
 
         GC.SuppressFinalize(this);
     }

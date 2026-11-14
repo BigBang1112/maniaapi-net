@@ -14,6 +14,8 @@
 - **Renamed `ManiaAPI.XmlRpc` to `ManiaAPI.GBXRemote`**. Update package references and namespaces, and replace `XmlRpcClient`, `XmlRpcCall`, `XmlRpcCallResult`, `XmlRpcCallback`, and `XmlRpcCallbackMessage` with their `GBXRemote` equivalents
 - Fixed concurrent calls interleaving writes on the same connection
 - Fixed calls hanging after disconnection and sockets leaking when connection setup fails
+- Fixed GBXRemote 1 calls receiving the response to a cancelled call
+- Fixed `Dispose` throwing `ObjectDisposedException` in calls and callbacks still in progress
 - Fixed malformed callbacks stopping callback processing, invalid payload sizes causing excessive allocations, and integer serialization depending on the current culture
 - Added .NET 11 support
         </PackageReleaseNotes>

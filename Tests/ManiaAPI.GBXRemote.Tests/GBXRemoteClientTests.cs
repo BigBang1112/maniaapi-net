@@ -291,6 +291,35 @@ public class GBXRemoteClientTests
     }
 
     [Test]
+    public async Task CallAsync_Version1_CallAfterCancelledCall_GetsItsOwnResponse()
+    {
+        await using var session = await FakeGbxRemoteServer.ConnectAsync("GBXRemote 1");
+        using var cancellation = new CancellationTokenSource();
+        var cancelled = session.Client.CallAsync<string>("GetServerName", [], cancellation.Token);
+        await session.Connection.ReadAsync();
+        cancellation.Cancel();
+        await Assert.ThrowsAsync<OperationCanceledException>(() => cancelled.WaitAsync(Timeout));
+
+        var next = session.Client.CallAsync<string>("GetVersion");
+        // The response to the cancelled call arrives late, before the response to the next call
+        await session.Connection.RespondAsync(0, "<string>late</string>");
+        await session.Connection.ReadAsync();
+        await session.Connection.RespondAsync(0, "<string>own</string>");
+
+        await Assert.That(await next.WaitAsync(Timeout)).IsEqualTo("own");
+    }
+
+    [Test]
+    public async Task CallAsync_AfterDispose_ThrowsClientException()
+    {
+        await using var session = await FakeGbxRemoteServer.ConnectAsync();
+
+        session.Client.Dispose();
+
+        await Assert.ThrowsAsync<ClientException>(() => session.Client.CallAsync("GetVersion").WaitAsync(Timeout));
+    }
+
+    [Test]
     public async Task WaitForCloseAsync_ServerCloses_Completes()
     {
         await using var session = await FakeGbxRemoteServer.ConnectAsync();
