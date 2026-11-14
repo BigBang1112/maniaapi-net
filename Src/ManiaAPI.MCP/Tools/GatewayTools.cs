@@ -406,9 +406,7 @@ public sealed class GatewayTools(
                     ["optional"] = operation.Requires == "none",
                     ["scopes"] = new JsonArray(operation.OAuthScopes.Select(scope => (JsonNode?)JsonValue.Create(scope)).ToArray())
                 } : null,
-                ["pagination"] = new JsonArray(new[] { "length", "offset", "count", "after", "before" }
-                    .Where(name => operation.Overloads.Any(x => x.Signature.Contains(name, StringComparison.OrdinalIgnoreCase)))
-                    .Select(x => (JsonNode?)JsonValue.Create(x)).ToArray()),
+                ["pagination"] = new JsonArray(Pagination(operation).Select(x => (JsonNode?)JsonValue.Create(x)).ToArray()),
                 ["allowedSites"] = new JsonArray((operation.ExchangeClient is null ? [] : scope.Sites(operation))
                     .Select(x => (JsonNode?)JsonValue.Create(x)).ToArray()),
                 ["relatedOperations"] = new JsonArray(related),
@@ -423,6 +421,35 @@ public sealed class GatewayTools(
         }
 
         return new JsonObject { ["operations"] = descriptions };
+    }
+
+    /// <summary>
+    /// Paging parameters the operation takes, matched by name among its arguments and the fields of an argument
+    /// object (like the <c>parameters</c> of exchange searches), not by substring, so <c>accountId</c> isn't <c>count</c>.
+    /// </summary>
+    private static IEnumerable<string> Pagination(Operation operation)
+    {
+        var names = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var overload in operation.Overloads)
+        {
+            if (overload.Schema["properties"] is not JsonObject properties)
+            {
+                continue;
+            }
+
+            foreach (var (name, value) in properties)
+            {
+                names.Add(name);
+
+                if (value?["properties"] is JsonObject fields)
+                {
+                    names.UnionWith(fields.Select(field => field.Key));
+                }
+            }
+        }
+
+        return new[] { "length", "offset", "count", "after", "before" }.Where(names.Contains);
     }
 
     private static JsonNode? Example(JsonNode schema, int depth)

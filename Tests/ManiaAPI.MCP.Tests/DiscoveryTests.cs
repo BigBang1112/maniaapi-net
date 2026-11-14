@@ -102,6 +102,22 @@ public class DiscoveryTests
     }
 
     [Test]
+    public async Task DescribeReportsOnlyActualPaginationParameters()
+    {
+        using var services = CreateServices();
+        var result = await Call(services, "maniaapi_describe", """{"operations":["nadeo.live.top_leaderboard","nadeo.core.player_zone","mx.search_maps"]}""");
+        string[] Pagination(int index) => result["operations"]![index]!["pagination"]!.AsArray().Select(x => x!.GetValue<string>()).ToArray();
+
+        await Assert.That(Pagination(0)).IsEquivalentTo(["length", "offset"]);
+
+        // accountId contains "count", but isn't a page size.
+        await Assert.That(Pagination(1)).IsEmpty();
+
+        // Exchange searches page through fields of their parameters object.
+        await Assert.That(Pagination(2)).IsEquivalentTo(["count", "after", "before"]);
+    }
+
+    [Test]
     public async Task MasterServerOperationsHaveNoSeparateTimedDuplicates()
     {
         var catalog = GeneratedCatalog.Create();

@@ -14,7 +14,9 @@ public sealed class ResourceService(OperationEngine engine, GatewayTools gateway
             .Select(operation => new ResourceTemplate
             {
                 Name = operation.Id,
-                Description = operation.Summary + " Allowed exchange sites: " + string.Join(", ", scope.Sites(operation)),
+                Description = operation.ExchangeClient is null
+                    ? operation.Summary
+                    : operation.Summary + " Allowed exchange sites: " + string.Join(", ", scope.Sites(operation)),
                 UriTemplate = "maniaapi://operation/" + operation.Id + "{?arguments}"
             })
             .ToList();

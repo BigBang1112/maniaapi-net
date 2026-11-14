@@ -36,6 +36,17 @@ public class ResourceTests
     }
 
     [Test]
+    public async Task OnlyExchangeTemplatesNameExchangeSites()
+    {
+        using var services = EngineTests.CreateServices(BinaryHandler([]));
+        var templates = services.GetRequiredService<ResourceService>().List().ResourceTemplates
+            .ToDictionary(x => x.Name, x => x.Description ?? "");
+
+        await Assert.That(templates["mx.map_gbx_response"]).Contains("Allowed exchange sites: Trackmania, Maniaplanet, Shootmania");
+        await Assert.That(templates["masterserver.tmuf.download_scores"]).DoesNotContain("exchange sites");
+    }
+
+    [Test]
     public async Task CrossGameResourceIsRejectedBeforeDownload()
     {
         var fake = BinaryHandler([1]);
