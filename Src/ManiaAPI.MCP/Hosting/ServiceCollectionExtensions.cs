@@ -31,23 +31,7 @@ public static class ServiceCollectionExtensions
 
         services.AddOptions<McpOptions>()
             .Bind(configuration.GetSection(McpOptions.Section))
-            .PostConfigure(options =>
-            {
-                // The binder appends configured array items to non-empty defaults, so a configured array
-                // would only ever add to the defaults. Replace them instead.
-                var section = configuration.GetSection(McpOptions.Section);
-                ReplaceArray(section, "Toolsets", values => options.Toolsets = values);
-                ReplaceArray(section, "MasterServer:Games", values => options.MasterServer.Games = values);
-                ReplaceArray(section, "Exchange:Sites", values => options.Exchange.Sites = values);
-                ReplaceArray(section, "Exchange:MxSites", values => options.Exchange.MxSites = values);
-                ReplaceArray(section, "AccountLinking:TrackmaniaScopes", values => options.AccountLinking.TrackmaniaScopes = values);
-                ReplaceArray(section, "AccountLinking:ManiaPlanetScopes", values => options.AccountLinking.ManiaPlanetScopes = values);
-
-                if (toolsets is not null)
-                {
-                    options.Toolsets = toolsets;
-                }
-            })
+            .PostConfigure(options => ReplaceArrays(options, configuration, toolsets))
             .ValidateOnStart();
 
         services.AddSingleton(provider => provider.GetRequiredService<IOptions<McpOptions>>().Value);
@@ -63,7 +47,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<LegacyClients>();
         services.AddScoped<LinkedClients>();
 
+        // Read here too, as the registrations below depend on it. It needs the same array fix as the bound options.
         var options = configuration.GetSection(McpOptions.Section).Get<McpOptions>() ?? new McpOptions();
+        ReplaceArrays(options, configuration, toolsets);
 
         if (options.AccountLinking.Enabled && !string.IsNullOrWhiteSpace(options.AccountLinking.DataProtectionKeyPath))
         {
@@ -143,6 +129,26 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ResourceService>();
 
         return services;
+    }
+
+    /// <summary>
+    /// The binder appends configured array items to non-empty defaults, so a configured array would only ever
+    /// add to the defaults. This replaces them instead, and applies the toolsets given on the command line.
+    /// </summary>
+    private static void ReplaceArrays(McpOptions options, IConfiguration configuration, string[]? toolsets)
+    {
+        var section = configuration.GetSection(McpOptions.Section);
+        ReplaceArray(section, "Toolsets", values => options.Toolsets = values);
+        ReplaceArray(section, "MasterServer:Games", values => options.MasterServer.Games = values);
+        ReplaceArray(section, "Exchange:Sites", values => options.Exchange.Sites = values);
+        ReplaceArray(section, "Exchange:MxSites", values => options.Exchange.MxSites = values);
+        ReplaceArray(section, "AccountLinking:TrackmaniaScopes", values => options.AccountLinking.TrackmaniaScopes = values);
+        ReplaceArray(section, "AccountLinking:ManiaPlanetScopes", values => options.AccountLinking.ManiaPlanetScopes = values);
+
+        if (toolsets is not null)
+        {
+            options.Toolsets = toolsets;
+        }
     }
 
     private static void ReplaceArray(IConfigurationSection section, string key, Action<string[]> set)

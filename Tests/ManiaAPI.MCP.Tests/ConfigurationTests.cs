@@ -2,8 +2,11 @@ using System.Security.Cryptography;
 using System.Text;
 using ManiaAPI.MCP.Configuration;
 using ManiaAPI.MCP.Hosting;
+using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Authentication;
+using ManiaAPI.TrackmaniaAPI.Extensions.Hosting.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace ManiaAPI.MCP.Tests;
 
@@ -119,6 +122,37 @@ public class ConfigurationTests
         await Assert.That(options.Toolsets).IsEquivalentTo(["exchange"]);
         await Assert.That(options.Exchange.Sites).IsEquivalentTo(["TMNF"]);
         await Assert.That(options.Exchange.MxSites).IsEquivalentTo(["Trackmania", "Maniaplanet", "Shootmania"]);
+    }
+
+    [Test]
+    public async Task ConfiguredAccountLinkingScopesReplaceDefaults()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "maniaapi-mcp-" + Guid.NewGuid().ToString("N"));
+        var configuration = TestConfiguration.Create(new Dictionary<string, string?>
+        {
+            ["ManiaAPI:TrackmaniaAPI:ClientId"] = "client",
+            ["ManiaAPI:TrackmaniaAPI:ClientSecret"] = "secret",
+            ["ManiaAPI:ManiaPlanet:ClientId"] = "client",
+            ["ManiaAPI:ManiaPlanet:ClientSecret"] = "secret",
+            ["ManiaAPI:AccountLinking:Enabled"] = "true",
+            ["ManiaAPI:AccountLinking:PublicOrigin"] = "https://localhost",
+            ["ManiaAPI:AccountLinking:StorePath"] = Path.Combine(directory, "tokens"),
+            ["ManiaAPI:AccountLinking:DataProtectionKeyPath"] = Path.Combine(directory, "keys"),
+            ["ManiaAPI:AccountLinking:TrackmaniaScopes:0"] = "clubs",
+            ["ManiaAPI:AccountLinking:ManiaPlanetScopes:0"] = "basic"
+        });
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddManiaAPI(configuration);
+
+        using var provider = services.BuildServiceProvider();
+
+        var trackmania = provider.GetRequiredService<IOptionsMonitor<TrackmaniaAuthenticationOptions>>().Get("LinkTrackmania");
+        var maniaPlanet = provider.GetRequiredService<IOptionsMonitor<ManiaPlanetAuthenticationOptions>>().Get("LinkManiaplanet");
+
+        await Assert.That(trackmania.Scope).IsEquivalentTo(["clubs"]);
+        await Assert.That(maniaPlanet.Scope).IsEquivalentTo(["basic"]);
     }
 
     [Test]
