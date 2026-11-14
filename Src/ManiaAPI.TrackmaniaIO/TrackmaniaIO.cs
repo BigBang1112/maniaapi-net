@@ -156,28 +156,28 @@ public class TrackmaniaIO : ITrackmaniaIO
         ArgumentException.ThrowIfNullOrEmpty(leaderboardUid);
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"leaderboard/{leaderboardUid}/{mapUid}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
+        return await GetJsonAsync($"leaderboard/{UrlHelper.EscapePathSegment(leaderboardUid)}/{UrlHelper.EscapePathSegment(mapUid)}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
     }
 
     public virtual async Task<Leaderboard> GetLeaderboardAsync(string mapUid, int offset = 0, int length = 15, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"leaderboard/map/{mapUid}?offset={offset}&length={length}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
+        return await GetJsonAsync($"leaderboard/map/{UrlHelper.EscapePathSegment(mapUid)}?offset={offset}&length={length}", TrackmaniaIOJsonContext.Default.Leaderboard, cancellationToken);
     }
 
     public virtual async Task<ImmutableList<WorldRecord>> GetRecentWorldRecordsAsync(string leaderboardUid, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(leaderboardUid);
 
-        return await GetJsonAsync($"leaderboard/track/{leaderboardUid}", TrackmaniaIOJsonContext.Default.ImmutableListWorldRecord, cancellationToken);
+        return await GetJsonAsync($"leaderboard/track/{UrlHelper.EscapePathSegment(leaderboardUid)}", TrackmaniaIOJsonContext.Default.ImmutableListWorldRecord, cancellationToken);
     }
 
     public virtual async Task<Map> GetMapInfoAsync(string mapUid, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"map/{mapUid}", TrackmaniaIOJsonContext.Default.Map, cancellationToken);
+        return await GetJsonAsync($"map/{UrlHelper.EscapePathSegment(mapUid)}", TrackmaniaIOJsonContext.Default.Map, cancellationToken);
     }
 
     public virtual async Task<ClubCollection> GetClubsAsync(int page = 0, string search = "", CancellationToken cancellationToken = default)

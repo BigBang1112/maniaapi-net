@@ -64,6 +64,31 @@ public class NadeoLiveServicesTests
     }
 
     [Test]
+    public async Task GetTopLeaderboardAsync_MapUidWithUrlCharacters_StaysInItsSegment()
+    {
+        var fake = FakeHttpMessageHandler.Json(EmptyLeaderboardJson);
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await nls.GetTopLeaderboardAsync("../club/1?x=#", length: 5, offset: 10);
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).StartsWith($"{LiveUrl}/token/leaderboard/group/{PersonalBest}/map/..%2Fclub%2F1%3Fx%3D%23/top?length=5&offset=10&onlyWorld=");
+    }
+
+    [Test]
+    [Arguments("")]
+    [Arguments(".")]
+    [Arguments("..")]
+    public async Task GetTopLeaderboardAsync_MapUidNotASegment_ThrowsWithoutRequest(string mapUid)
+    {
+        var fake = FakeHttpMessageHandler.Json(EmptyLeaderboardJson);
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await Assert.ThrowsAsync<ArgumentException>(() => nls.GetTopLeaderboardAsync(mapUid));
+
+        await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
     public async Task GetTopLeaderboardAsync_ReturnsLeaderboard()
     {
         var fake = FakeHttpMessageHandler.Json(EmptyLeaderboardJson);

@@ -127,6 +127,30 @@ public class TrackmaniaIOTests
     }
 
     [Test]
+    public async Task GetLeaderboardAsync_MapUidWithUrlCharacters_StaysInItsSegment()
+    {
+        var handler = FakeHttpMessageHandler.Json("""{"tops":[],"playercount":0}""");
+        using var tmio = new TrackmaniaIO(handler.CreateClient(), UserAgent);
+
+        await tmio.GetLeaderboardAsync("../club/1?x=#", offset: 15, length: 50);
+
+        await Assert.That(handler.Request.Uri.AbsoluteUri).IsEqualTo("https://trackmania.io/api/leaderboard/map/..%2Fclub%2F1%3Fx%3D%23?offset=15&length=50");
+    }
+
+    [Test]
+    [Arguments(".")]
+    [Arguments("..")]
+    public async Task GetLeaderboardAsync_DotSegmentMapUid_ThrowsWithoutRequest(string mapUid)
+    {
+        var handler = FakeHttpMessageHandler.Json("{}");
+        using var tmio = new TrackmaniaIO(handler.CreateClient(), UserAgent);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => tmio.GetLeaderboardAsync(mapUid));
+
+        await Assert.That(handler.Requests).IsEmpty();
+    }
+
+    [Test]
     public async Task GetLeaderboardAsync_EmptyMapUid_ThrowsWithoutRequest()
     {
         var handler = FakeHttpMessageHandler.Json("{}");

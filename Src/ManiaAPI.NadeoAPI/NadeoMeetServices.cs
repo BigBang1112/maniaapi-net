@@ -193,7 +193,7 @@ public class NadeoMeetServices : NadeoAPI, INadeoMeetServices
     {
         ArgumentException.ThrowIfNullOrEmpty(compMatchId);
 
-        return await GetJsonAsync($"matches/{compMatchId}/results?length={length}&offset={offset}",
+        return await GetJsonAsync($"matches/{UrlHelper.EscapePathSegment(compMatchId)}/results?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.CompetitionMatchResults, cancellationToken);
     }
 
@@ -251,7 +251,7 @@ public class NadeoMeetServices : NadeoAPI, INadeoMeetServices
         ArgumentException.ThrowIfNullOrEmpty(challengeId);
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"challenges/{challengeId}/records/maps/{mapUid}?length={length}&offset={offset}",
+        return await GetJsonAsync($"challenges/{challengeId}/records/maps/{UrlHelper.EscapePathSegment(mapUid)}?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.ImmutableListChallengeMapRecord, cancellationToken);
     }
 

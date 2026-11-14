@@ -426,7 +426,7 @@ public class NadeoServices : NadeoAPI, INadeoServices
     {
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"maps/{mapUid}/votes", NadeoAPIJsonContext.Default.MapVote, cancellationToken);
+        return await GetJsonAsync($"maps/{UrlHelper.EscapePathSegment(mapUid)}/votes", NadeoAPIJsonContext.Default.MapVote, cancellationToken);
     }
 
     public virtual async Task SetMapVoteAsync(string mapUid, int vote, CancellationToken cancellationToken = default)
@@ -434,7 +434,7 @@ public class NadeoServices : NadeoAPI, INadeoServices
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
         var jsonContent = JsonContent.Create(new MapVoteRequest(vote), NadeoAPIJsonContext.Default.MapVoteRequest);
-        using var response = await SendAsync(HttpMethod.Post, $"maps/{mapUid}/votes", jsonContent, cancellationToken);
+        using var response = await SendAsync(HttpMethod.Post, $"maps/{UrlHelper.EscapePathSegment(mapUid)}/votes", jsonContent, cancellationToken);
     }
 
     public virtual async Task<MapInfoCollection> GetSubmittedMapsAsync(CancellationToken cancellationToken = default)

@@ -389,7 +389,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
 
         try
         {
-            return await GetJsonAsync($"token/map/{mapUid}", NadeoAPIJsonContext.Default.MapInfoLive, cancellationToken);
+            return await GetJsonAsync($"token/map/{UrlHelper.EscapePathSegment(mapUid)}", NadeoAPIJsonContext.Default.MapInfoLive, cancellationToken);
         }
         catch (NadeoAPIResponseException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
@@ -412,7 +412,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/Personal_Best/map/{mapUid}/top?length={length}&offset={offset}&onlyWorld={onlyWorld}",
+        return await GetJsonAsync($"token/leaderboard/group/Personal_Best/map/{UrlHelper.EscapePathSegment(mapUid)}/top?length={length}&offset={offset}&onlyWorld={onlyWorld}",
             NadeoAPIJsonContext.Default.TopLeaderboardCollection, cancellationToken);
     }
 
@@ -420,7 +420,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(groupUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/{groupUid}/map/{mapUid}/top?length={length}&offset={offset}&onlyWorld={onlyWorld}",
+        return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}/map/{UrlHelper.EscapePathSegment(mapUid)}/top?length={length}&offset={offset}&onlyWorld={onlyWorld}",
             NadeoAPIJsonContext.Default.TopLeaderboardCollection, cancellationToken);
     }
 
@@ -429,7 +429,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
         ArgumentException.ThrowIfNullOrEmpty(groupUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/{groupUid}/map/{mapUid}/top?onlyWorld=false&zoneId={zoneId}",
+        return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}/map/{UrlHelper.EscapePathSegment(mapUid)}/top?onlyWorld=false&zoneId={zoneId}",
             NadeoAPIJsonContext.Default.TopLeaderboardCollection, cancellationToken);
     }
 
@@ -458,7 +458,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         
         var queryParams = mapUids
             .Zip(scores, (mapUid, score) =>
-                $"scores[{mapUid}]={score}")
+                $"scores[{Uri.EscapeDataString(mapUid)}]={score}")
             .Aggregate((a, b) => $"{a}&{b}");
         
         try
@@ -482,7 +482,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
         ArgumentException.ThrowIfNullOrEmpty(groupUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/{groupUid}/map/{mapUid}/medals",
+        return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}/map/{UrlHelper.EscapePathSegment(mapUid)}/medals",
             NadeoAPIJsonContext.Default.MedalRecordCollection, cancellationToken);
     }
 
@@ -490,7 +490,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/Personal_Best/map/{mapUid}/medals",
+        return await GetJsonAsync($"token/leaderboard/group/Personal_Best/map/{UrlHelper.EscapePathSegment(mapUid)}/medals",
             NadeoAPIJsonContext.Default.MedalRecordCollection, cancellationToken);
     }
 
@@ -504,7 +504,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"campaign/map/{mapUid}", NadeoAPIJsonContext.Default.TrackOfTheDayInfo, cancellationToken);
+        return await GetJsonAsync($"campaign/map/{UrlHelper.EscapePathSegment(mapUid)}", NadeoAPIJsonContext.Default.TrackOfTheDayInfo, cancellationToken);
     }
 
     public virtual async Task<CampaignCollection> GetSeasonalCampaignsAsync(int length, int offset = 0, CancellationToken cancellationToken = default)
@@ -517,7 +517,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(groupUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/{groupUid}?accountId={accountId}",
+        return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}?accountId={accountId}",
             NadeoAPIJsonContext.Default.SeasonPlayerRankingCollection, cancellationToken);
     }
 
@@ -703,7 +703,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(groupUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/{groupUid}/top?length={length}&offset={offset}{(onlyWorld is null ? "" : $"&onlyWorld={onlyWorld}")}",
+        return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}/top?length={length}&offset={offset}{(onlyWorld is null ? "" : $"&onlyWorld={onlyWorld}")}",
             NadeoAPIJsonContext.Default.CampaignRankingCollection, cancellationToken);
     }
 
@@ -711,7 +711,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(groupUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/{groupUid}/club/{clubId}/top?length={length}&offset={offset}",
+        return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}/club/{clubId}/top?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.ClubCampaignTopCollection, cancellationToken);
     }
 
@@ -719,7 +719,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(groupUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/{groupUid}/club/{clubId}",
+        return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}/club/{clubId}",
             NadeoAPIJsonContext.Default.ClubCampaignRanking, cancellationToken);
     }
 
@@ -728,7 +728,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         ArgumentException.ThrowIfNullOrEmpty(groupUid);
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/{groupUid}/map/{mapUid}/club/{clubId}",
+        return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}/map/{UrlHelper.EscapePathSegment(mapUid)}/club/{clubId}",
             NadeoAPIJsonContext.Default.ClubMapRecord, cancellationToken);
     }
 
@@ -760,7 +760,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         ArgumentException.ThrowIfNullOrEmpty(groupUid);
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/{groupUid}/map/{mapUid}/surround/{lower}/{upper}?" +
+        return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}/map/{UrlHelper.EscapePathSegment(mapUid)}/surround/{lower}/{upper}?" +
             $"{(score is null ? "" : $"score={score}&")}" +
             $"{(onlyWorld is null ? "" : $"onlyWorld={onlyWorld}&")}" +
             $"{(zoneId is null ? "" : $"zoneId={zoneId}")}",
@@ -772,7 +772,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         ArgumentException.ThrowIfNullOrEmpty(groupUid);
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        return await GetJsonAsync($"token/leaderboard/group/{groupUid}/map/{mapUid}/club/{clubId}/top?length={length}&offset={offset}",
+        return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}/map/{UrlHelper.EscapePathSegment(mapUid)}/club/{clubId}/top?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.ClubTopLeaderboard, cancellationToken);
     }
 
@@ -804,14 +804,14 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        using var response = await SendAsync(HttpMethod.Post, $"token/map/favorite/{mapUid}/add", cancellationToken: cancellationToken);
+        using var response = await SendAsync(HttpMethod.Post, $"token/map/favorite/{UrlHelper.EscapePathSegment(mapUid)}/add", cancellationToken: cancellationToken);
     }
 
     public virtual async Task RemoveFavoriteMapAsync(string mapUid, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(mapUid);
 
-        using var response = await SendAsync(HttpMethod.Post, $"token/map/favorite/{mapUid}/remove", cancellationToken: cancellationToken);
+        using var response = await SendAsync(HttpMethod.Post, $"token/map/favorite/{UrlHelper.EscapePathSegment(mapUid)}/remove", cancellationToken: cancellationToken);
     }
 
     public virtual async Task<MapInfoLiveCollection> GetFavoriteMapsAsync(int length, int offset = 0, string sort = "date", string order = "desc", string? mapTypeList = null, bool? playable = null, bool? onlyMine = null, CancellationToken cancellationToken = default)
@@ -1006,7 +1006,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(reviewType);
 
-        return await GetJsonAsync($"token/map-review/{reviewType}/connect", NadeoAPIJsonContext.Default.MapReviewConnectInfo, cancellationToken);
+        return await GetJsonAsync($"token/map-review/{UrlHelper.EscapePathSegment(reviewType)}/connect", NadeoAPIJsonContext.Default.MapReviewConnectInfo, cancellationToken);
     }
 
     public virtual async Task<SubmittedMapCollection> GetClubMapReviewSubmissionsAsync(int clubId, int activityId, int length, int offset = 0, CancellationToken cancellationToken = default)
@@ -1019,7 +1019,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(reviewType);
 
-        return await GetJsonAsync($"token/map-review/{reviewType}/submitted-map?length={length}&offset={offset}",
+        return await GetJsonAsync($"token/map-review/{UrlHelper.EscapePathSegment(reviewType)}/submitted-map?length={length}&offset={offset}",
             NadeoAPIJsonContext.Default.SubmittedMapCollection, cancellationToken);
     }
 
@@ -1027,7 +1027,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     {
         ArgumentException.ThrowIfNullOrEmpty(reviewType);
 
-        return (await GetJsonAsync($"token/map-review/{reviewType}/waiting-time",
+        return (await GetJsonAsync($"token/map-review/{UrlHelper.EscapePathSegment(reviewType)}/waiting-time",
             NadeoAPIJsonContext.Default.MapReviewWaitingTime, cancellationToken)).Seconds;
     }
 }
