@@ -6,7 +6,6 @@
 **/.vscode/
 **/.idea/
 **/node_modules/
-.git/
 .github/
 Tests/
 Samples/
