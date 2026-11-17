@@ -4,8 +4,6 @@ using ManiaAPI.MCP.Tools;
 using ModelContextProtocol.AspNetCore;
 using ManiaAPI.MCP.Resources;
 using ManiaAPI.MCP.Accounts;
-using ModelContextProtocol.Protocol;
-using SimplestGitSourceGenerator;
 
 namespace ManiaAPI.MCP;
 
@@ -110,11 +108,7 @@ public static class Program
 
     private static Microsoft.Extensions.DependencyInjection.IMcpServerBuilder AddGateway(IServiceCollection services)
     {
-        return services.AddMcpServer(options => options.ServerInfo = new Implementation
-            {
-                Name = "ManiaAPI.MCP",
-                Version = $"{PackageInfo.Version}+{SimplestGit.CommitHash}"
-            })
+        return services.AddMcpServer(ServerMetadata.Apply)
             .WithListToolsHandler((context, _) =>
                 ValueTask.FromResult(context.Services!.GetRequiredService<GatewayTools>().List()))
             .WithCallToolHandler((context, cancellationToken) =>

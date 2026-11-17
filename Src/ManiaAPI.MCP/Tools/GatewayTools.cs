@@ -149,11 +149,12 @@ public sealed class GatewayTools(
                 "Trackmania 2 uses ManiaPlanet APIs and MX Maniaplanet; ShootMania uses MX Shootmania. " +
                 "Explicit titles/environments remain in the query. Available exchange sites: " + sites + "." +
                 MissingCredentialsNote(scope),
-                SearchSchema, true),
+                SearchSchema, readOnly: true, idempotent: true),
             CreateTool("maniaapi_describe", "Describe up to 10 operation IDs, their schemas, overloads, authentication and pagination.",
-                DescribeSchema, true),
+                DescribeSchema, readOnly: true, idempotent: true),
+            // Without writes allowed, the engine refuses every operation that isn't read-only.
             CreateTool("maniaapi_invoke", "Invoke one catalog operation within this endpoint's scope. Writes require confirmation. Credentials remain on the server.",
-                InvokeSchema, false)
+                InvokeSchema, readOnly: !options.AllowWrites)
         ];
 
         tools.AddRange(featured.List(scope));
@@ -524,7 +525,7 @@ public sealed class GatewayTools(
         return result;
     }
 
-    private Tool CreateTool(string name, string description, JsonElement schema, bool readOnly)
+    private Tool CreateTool(string name, string description, JsonElement schema, bool readOnly, bool idempotent = false)
     {
         return new Tool
         {
@@ -535,6 +536,7 @@ public sealed class GatewayTools(
             {
                 ReadOnlyHint = readOnly,
                 DestructiveHint = options.AllowWrites && !readOnly,
+                IdempotentHint = idempotent ? true : null,
                 OpenWorldHint = true
             }
         };

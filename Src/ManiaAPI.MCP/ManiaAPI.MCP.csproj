@@ -8,9 +8,9 @@
         <IsPackable>true</IsPackable>
         <ToolCommandName>maniaapi-mcp</ToolCommandName>
         <PackageId>ManiaAPI.MCP</PackageId>
-        <Version>0.1.0</Version>
+        <Version>0.1.1</Version>
         <PackageReleaseNotes>
-- Initial release
+- Enhance metadata
         </PackageReleaseNotes>
         <Authors>BigBang1112</Authors>
         <Description>Stateless MCP gateway for ManiaAPI.NET.</Description>
