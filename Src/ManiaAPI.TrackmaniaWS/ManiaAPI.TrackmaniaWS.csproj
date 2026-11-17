@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <PackageId>ManiaAPI.TrackmaniaWS</PackageId>
-        <Version>2.10.0</Version>
+        <Version>2.10.1</Version>
         <Authors>BigBang1112</Authors>
         <Description>Wrapper for the old TMF web API (ws.trackmania.com). Part of the ManiaAPI.NET library set.</Description>
         <Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
@@ -11,12 +11,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, io</PackageTags>
         <PackageReleaseNotes>
-- Added player tags, HTML nicknames, solo and multiplayer rankings, zone queries, and player, challenge, and zone leaderboards
-- Added registered player counts, Manialink details, ManiaHome notifications, and `PingAsync`
-- Added `TrackmaniaWSResponseException` for API error responses and converters for string-encoded numbers and integer lists
-- Made JSON converters public for external serialization
-- Updated the User-Agent to report the installed package version
-- Added .NET 11 support
+- Updated TmEssentials to 2.9.0
         </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
@@ -51,7 +46,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="TmEssentials" Version="2.6.0" />
+        <PackageReference Include="TmEssentials" Version="2.9.0" />
     </ItemGroup>
 
 

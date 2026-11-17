@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <PackageId>ManiaAPI.TrackmaniaIO</PackageId>
-        <Version>2.10.0</Version>
+        <Version>2.10.1</Version>
         <Authors>BigBang1112</Authors>
         <Description>Wrapper for the Trackmania.io API. Part of the ManiaAPI.NET library set.</Description>
         <Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
@@ -11,11 +11,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, io</PackageTags>
         <PackageReleaseNotes>
-- Added search filters to `GetClubCampaignsAsync`, `GetClubsAsync`, `GetClubRoomsAsync`, and `GetCompetitionsAsync`
-  - **Changed these method signatures** by inserting `search` before `cancellationToken`. Update positional cancellation arguments to use `cancellationToken:` and update overrides and interface implementations
-- Fixed rate limiting across concurrent requests and client instances, with automatic retries for HTTP 429 responses controlled by `MaxRateLimitRetries`
-- Updated the User-Agent to report the installed package version
-- Added .NET 11 support
+- Updated TmEssentials to 2.9.0
         </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
@@ -50,7 +46,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="TmEssentials" Version="2.6.0" />
+        <PackageReference Include="TmEssentials" Version="2.9.0" />
     </ItemGroup>
 
 </Project>
