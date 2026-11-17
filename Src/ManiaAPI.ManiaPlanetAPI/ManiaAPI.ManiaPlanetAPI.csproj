@@ -12,7 +12,7 @@
         <PackageTags>trackmania, shootmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
         <PackageReleaseNotes>
 - Fixed authorization failing on access tokens with fractional timestamps
-- Made `AuthorizationResponse.RefreshToken` nullable
+- Made `AuthorizationResponse.RefreshToken` nullable and obsolete, as ManiaPlanet never sends it
         </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
