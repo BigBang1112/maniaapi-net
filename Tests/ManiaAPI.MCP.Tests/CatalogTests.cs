@@ -79,8 +79,8 @@ public class CatalogTests
 
         foreach (var name in new[] { "maniaapi_search", "maniaapi_describe" })
         {
-            await Assert.That(tools[name].Annotations!.ReadOnlyHint).IsEqualTo(true);
-            await Assert.That(tools[name].Annotations!.IdempotentHint).IsEqualTo(true);
+            await Assert.That(tools[name].Annotations!.ReadOnlyHint).IsTrue();
+            await Assert.That(tools[name].Annotations!.IdempotentHint).IsTrue();
         }
     }
 
