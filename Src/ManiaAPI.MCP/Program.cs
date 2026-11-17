@@ -108,7 +108,7 @@ public static class Program
 
     private static Microsoft.Extensions.DependencyInjection.IMcpServerBuilder AddGateway(IServiceCollection services)
     {
-        return services.AddMcpServer()
+        return services.AddMcpServer(ServerMetadata.Apply)
             .WithListToolsHandler((context, _) =>
                 ValueTask.FromResult(context.Services!.GetRequiredService<GatewayTools>().List()))
             .WithCallToolHandler((context, cancellationToken) =>

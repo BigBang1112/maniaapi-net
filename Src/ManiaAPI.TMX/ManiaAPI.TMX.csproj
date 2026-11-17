@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <PackageId>ManiaAPI.TMX</PackageId>
-        <Version>2.10.0</Version>
+        <Version>2.10.1</Version>
         <Authors>BigBang1112</Authors>
         <Description>Wrapper for the TMX API, currently only on tm-exchange.com. Part of the ManiaAPI.NET library set.</Description>
         <Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
@@ -11,12 +11,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, tmx, mx, exchange</PackageTags>
         <PackageReleaseNotes>
-- **Added `IX` for Item Exchange**, including item and set searches, baskets, downloads, icons, and images
-- Added TMX video searches and metadata requests for search orders, tags, tag descriptions, track types, and vehicles
-- Fixed generated video field selections requesting fields unavailable on the selected TMX or MX site
-- Made JSON converters public so external serializers preserve Exchange integer and time formats
-- Updated the User-Agent to report the installed package version
-- Added .NET 11 support
+- Updated TmEssentials to 2.9.0
         </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
@@ -57,7 +52,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="TmEssentials" Version="2.6.0" />
+        <PackageReference Include="TmEssentials" Version="2.9.0" />
     </ItemGroup>
 
     <ItemGroup>

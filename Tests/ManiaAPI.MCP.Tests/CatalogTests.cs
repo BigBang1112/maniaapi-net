@@ -60,6 +60,31 @@ public class CatalogTests
     }
 
     [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task GatewayToolAnnotationsFollowAllowWrites(bool allowWrites)
+    {
+        var collection = new ServiceCollection();
+        collection.AddLogging();
+        collection.AddManiaAPI(TestConfiguration.Create(
+            new Dictionary<string, string?> { ["ManiaAPI:AllowWrites"] = allowWrites.ToString() }));
+
+        using var services = collection.BuildServiceProvider();
+        var tools = services.GetRequiredService<GatewayTools>().List().Tools.ToDictionary(x => x.Name);
+        var invoke = tools["maniaapi_invoke"].Annotations!;
+
+        await Assert.That(invoke.ReadOnlyHint).IsEqualTo(!allowWrites);
+        await Assert.That(invoke.DestructiveHint).IsEqualTo(allowWrites);
+        await Assert.That(invoke.IdempotentHint).IsNull();
+
+        foreach (var name in new[] { "maniaapi_search", "maniaapi_describe" })
+        {
+            await Assert.That(tools[name].Annotations!.ReadOnlyHint).IsTrue();
+            await Assert.That(tools[name].Annotations!.IdempotentHint).IsTrue();
+        }
+    }
+
+    [Test]
     public async Task ToolSchemasAreFlatObjectsWithResolvableReferences()
     {
         // Clients such as the Anthropic API reject anyOf/oneOf/allOf at the top level of an input schema.

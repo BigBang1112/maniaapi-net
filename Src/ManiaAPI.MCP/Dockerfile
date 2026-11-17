@@ -4,6 +4,7 @@
 #   docker build -f Src/ManiaAPI.MCP/Dockerfile -t maniaapi-mcp .
 
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:11.0-alpine AS build
+RUN apk add --no-cache git
 WORKDIR /src
 
 # Restore first, so the packages stay cached until a project file changes
@@ -31,6 +32,7 @@ RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
 
 COPY Generators/ Generators/
 COPY Src/ Src/
+COPY .git/ .git/
 
 # The libraries pack themselves on build, which the image doesn't need
 RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \

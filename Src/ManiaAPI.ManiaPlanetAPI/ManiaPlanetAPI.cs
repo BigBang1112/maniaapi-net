@@ -184,7 +184,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
         await ValidateResponseAsync(response, cancellationToken);
 
-        var (_, _, accessToken, refreshToken) = await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new JsonException("The response body is null.");
+        var accessToken = (await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.AuthorizationResponse, cancellationToken) ?? throw new JsonException("The response body is null.")).AccessToken;
 
         Handler.Payload = JwtPayloadManiaPlanetAPI.DecodeFromAccessToken(accessToken);
 

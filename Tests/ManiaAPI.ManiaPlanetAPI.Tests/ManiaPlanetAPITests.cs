@@ -277,20 +277,21 @@ public class ManiaPlanetAPITests
 
     private static ManiaPlanetAPI CreateApi(FakeHttpMessageHandler fake) => new(fake.CreateClient(), new ManiaPlanetAPIHandler());
 
+    // Like the real tokens, with fractional seconds in the time claims and no refresh token.
     private static HttpResponseMessage TokenResponse(DateTimeOffset expiresAt)
     {
         var accessToken = TestJwt.Create($$"""
             {
               "jti": "token-id",
               "aud": "{{ClientId}}",
-              "iat": {{expiresAt.AddHours(-1).ToUnixTimeSeconds()}},
-              "nbf": {{expiresAt.AddHours(-1).ToUnixTimeSeconds()}},
+              "iat": {{expiresAt.AddHours(-1).ToUnixTimeSeconds()}}.948835,
+              "nbf": {{expiresAt.AddHours(-1).ToUnixTimeSeconds()}}.948837,
               "exp": {{expiresAt.ToUnixTimeSeconds()}},
               "sub": "{{ClientId}}",
               "scopes": ["basic", "titles"]
             }
             """);
 
-        return FakeResponse.Json($$"""{"token_type":"Bearer","expires_in":3600,"access_token":"{{accessToken}}","refresh_token":"refresh"}""");
+        return FakeResponse.Json($$"""{"token_type":"Bearer","expires_in":3600,"access_token":"{{accessToken}}"}""");
     }
 }

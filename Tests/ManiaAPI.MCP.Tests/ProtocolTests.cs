@@ -25,7 +25,7 @@ public class ProtocolTests
             builder.Services.AddHttpClient("MX_Trackmania").ConfigurePrimaryHttpMessageHandler(() => handler);
         }
 
-        builder.Services.AddMcpServer()
+        builder.Services.AddMcpServer(ServerMetadata.Apply)
             .WithListToolsHandler((context, _) =>
                 ValueTask.FromResult(context.Services!.GetRequiredService<GatewayTools>().List()))
             .WithCallToolHandler((context, cancellationToken) =>
@@ -61,6 +61,27 @@ public class ProtocolTests
 
         using var invalid = await http.PostAsync("/mcp", new StringContent("{}"));
         await Assert.That(invalid.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+    }
+
+    [Test]
+    public async Task InitializeAnnouncesServerMetadataAndInstructions()
+    {
+        await using var app = await StartHttpAsync();
+        using var http = app.GetTestClient();
+        http.DefaultRequestHeaders.Add(HttpSecurity.ApiKeyHeader, "protocol-test-key");
+
+        var transport = new HttpClientTransport(new HttpClientTransportOptions
+        {
+            Endpoint = new Uri("http://localhost/mcp")
+        }, http);
+
+        await using var client = await McpClient.CreateAsync(transport);
+
+        await Assert.That(client.ServerInfo.Name).IsEqualTo("ManiaAPI.MCP");
+        await Assert.That(client.ServerInfo.Title).IsEqualTo("ManiaAPI.NET");
+        await Assert.That(client.ServerInfo.WebsiteUrl).IsEqualTo("https://github.com/BigBang1112/maniaapi-net");
+        await Assert.That(client.ServerInfo.Icons!.Single().Source).EndsWith("/logo_icon_outline.png");
+        await Assert.That(client.ServerInstructions).IsEqualTo(ServerMetadata.Instructions);
     }
 
     [Test]
