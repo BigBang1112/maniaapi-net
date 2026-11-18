@@ -43,7 +43,11 @@ public sealed class CatalogGenerator : IIncrementalGenerator
         ("ManiaAPI.ManiaPlanetAPI.IManiaPlanetChannelRecordAPI", "maniaplanet.channel_record", "maniaplanet", "none", null),
         ("ManiaAPI.ManiaPlanetAPI.IManiaPlanetChannelFeedbackAPI", "maniaplanet.channel_feedback", "maniaplanet", "none", null),
         ("ManiaAPI.TrackmaniaWS.ITrackmaniaWS", "trackmania.ws", "tmuf", "tmws", null),
-        ("ManiaAPI.UnitedLadder.IUnitedLadder", "united.ladder", "tmuf", "none", null)
+        ("ManiaAPI.UnitedLadder.IUnitedLadder", "united.ladder", "tmuf", "none", null),
+        // Dedimania has records of TMF and ManiaPlanet maps, so each of those toolsets gets it.
+        ("ManiaAPI.Dedimania.IDedimania", "dedimania.tmuf", "tmuf", "none", null),
+        ("ManiaAPI.Dedimania.IDedimania", "dedimania.tmnf", "tmnf", "none", null),
+        ("ManiaAPI.Dedimania.IDedimania", "dedimania.maniaplanet", "maniaplanet", "none", null)
     ];
 
     public void Initialize(IncrementalGeneratorInitializationContext context)

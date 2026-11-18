@@ -102,6 +102,7 @@ public static class ServiceCollectionExtensions
         }
 
         services.AddHttpClient<UnitedLadder.UnitedLadder>();
+        services.AddHttpClient<Dedimania.Dedimania>();
         services.AddTrackmaniaAPI(o =>
         {
             if (options.TrackmaniaAPI.Configured)

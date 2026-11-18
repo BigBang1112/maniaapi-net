@@ -165,6 +165,7 @@ public sealed class InvocationContext(
             "maniaplanet.channel_feedback" => services.GetRequiredService<ManiaPlanetAPI.ManiaPlanetChannelFeedbackAPI>(),
             "trackmania.ws" => services.GetRequiredService<TrackmaniaWS.TrackmaniaWS>(),
             "united.ladder" => services.GetRequiredService<UnitedLadder.UnitedLadder>(),
+            "dedimania.tmuf" or "dedimania.tmnf" or "dedimania.maniaplanet" => services.GetRequiredService<Dedimania.Dedimania>(),
             _ => throw new InvalidOperationException("Unknown catalog client.")
         };
 

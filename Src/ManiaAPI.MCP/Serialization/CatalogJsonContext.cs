@@ -258,6 +258,11 @@ namespace ManiaAPI.MCP.Serialization;
 [JsonSerializable(typeof(global::ManiaAPI.TrackmaniaWS.ZoneLeaderboard), TypeInfoPropertyName = "WsZoneLeaderboard")]
 [JsonSerializable(typeof(global::ManiaAPI.TrackmaniaWS.ZoneSort?), TypeInfoPropertyName = "WsZoneSort")]
 [JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.TrackmaniaWS.PlayerTag>), TypeInfoPropertyName = "WsPlayerTags")]
+[JsonSerializable(typeof(global::ManiaAPI.Dedimania.Map), TypeInfoPropertyName = "DedimaniaMap")]
+[JsonSerializable(typeof(global::ManiaAPI.Dedimania.MapRecord), TypeInfoPropertyName = "DedimaniaMapRecord")]
+[JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.Dedimania.MapRecord>), TypeInfoPropertyName = "DedimaniaMapRecords")]
+[JsonSerializable(typeof(global::ManiaAPI.Dedimania.GameMode), TypeInfoPropertyName = "DedimaniaGameMode")]
+[JsonSerializable(typeof(global::ManiaAPI.Dedimania.GameMode?), TypeInfoPropertyName = "DedimaniaGameModeNullable")]
 [JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.TrackmaniaWS.Zone>), TypeInfoPropertyName = "WsZones")]
 // TimeInt32 is written as integer milliseconds; without the converter every TimeSpan-like property is serialized.
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, UseStringEnumConverter = true,

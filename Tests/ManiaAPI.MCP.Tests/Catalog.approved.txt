@@ -1,3 +1,6 @@
+dedimania.maniaplanet.map [none, serviceOnly=False, readOnly=True, playerOnly=False] uid: string, mode?: Rounds|TimeAttack = null
+dedimania.tmnf.map [none, serviceOnly=False, readOnly=True, playerOnly=False] uid: string, mode?: Rounds|TimeAttack = null
+dedimania.tmuf.map [none, serviceOnly=False, readOnly=True, playerOnly=False] uid: string, mode?: Rounds|TimeAttack = null
 ix.basket [none, serviceOnly=False, readOnly=True, playerOnly=False] userId: long
 ix.basket_download_response [none, serviceOnly=False, readOnly=True, playerOnly=False] userId: long, ignoreDirectories?: bool = false
 ix.basket_download_url [none, serviceOnly=False, readOnly=True, playerOnly=False] userId: long, ignoreDirectories?: bool = false

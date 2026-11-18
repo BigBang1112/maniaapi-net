@@ -25,6 +25,7 @@
         <Project Path="Samples/WebAppMasterServerExample/WebAppMasterServerExample.csproj" />
     </Folder>
     <Folder Name="/Src/">
+        <Project Path="Src/ManiaAPI.Dedimania/ManiaAPI.Dedimania.csproj" />
         <Project Path="Src/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.csproj" />
         <Project Path="Src/ManiaAPI.ManiaPlanetAPI/ManiaAPI.ManiaPlanetAPI.csproj" />
         <Project Path="Src/ManiaAPI.NadeoAPI.Extensions.Gbx/ManiaAPI.NadeoAPI.Extensions.Gbx.csproj" />
@@ -48,6 +49,7 @@
         <File Path="Tests/Directory.Build.props" />
         <File Path="Tests/Directory.Build.targets" />
         <File Path="Tests/README.md" />
+        <Project Path="Tests/ManiaAPI.Dedimania.Tests/ManiaAPI.Dedimania.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.GBXRemote.Tests/ManiaAPI.GBXRemote.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Tests/ManiaAPI.ManiaPlanetAPI.Tests.csproj" />
