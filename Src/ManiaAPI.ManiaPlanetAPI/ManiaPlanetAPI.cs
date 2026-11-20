@@ -419,7 +419,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             first = false;
 
             sb.Append($"orderBy=");
-            sb.Append(orderBy);
+            sb.Append(Uri.EscapeDataString(orderBy));
         }
 
         if (titleUids is not null)
@@ -430,7 +430,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
                 first = false;
 
                 sb.Append("titleUids[]=");
-                sb.Append(titleUid);
+                sb.Append(Uri.EscapeDataString(titleUid));
             }
         }
 
@@ -442,7 +442,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
                 first = false;
 
                 sb.Append("environments[]=");
-                sb.Append(environment);
+                sb.Append(Uri.EscapeDataString(environment));
             }
         }
 
@@ -452,7 +452,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             first = false;
 
             sb.Append("scriptName=");
-            sb.Append(scriptName);
+            sb.Append(Uri.EscapeDataString(scriptName));
         }
 
         if (search is not null)
@@ -461,7 +461,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             first = false;
 
             sb.Append("search=");
-            sb.Append(search);
+            sb.Append(Uri.EscapeDataString(search));
         }
 
         if (zone is not null)
@@ -470,7 +470,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             first = false;
 
             sb.Append("zone=");
-            sb.Append(zone);
+            sb.Append(Uri.EscapeDataString(zone));
         }
 
         if (onlyPublic)
@@ -522,7 +522,36 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             sb.Append(length);
         }
 
-        return await GetJsonAsync(sb.ToString(), ManiaPlanetAPIJsonContext.Default.ImmutableListOnlineServer, cancellationToken);
+        using var response = await GetResponseAsync(sb.ToString(), cancellationToken);
+        var json = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+
+        try
+        {
+            return JsonSerializer.Deserialize(json, ManiaPlanetAPIJsonContext.Default.ImmutableListOnlineServer)
+                ?? throw new JsonException("The response body is null.");
+        }
+        catch (JsonException) when (TryReadServersByIndex(json, out var servers))
+        {
+            return servers;
+        }
+    }
+
+    /// <summary>
+    /// Reads servers sent as an object keyed by their index, like <c>{"7":{...}}</c>, which the API has returned instead of an array.
+    /// </summary>
+    /// <returns>False when the JSON isn't in that shape either, so the error of the array parse is reported.</returns>
+    private static bool TryReadServersByIndex(byte[] json, [NotNullWhen(true)] out ImmutableList<OnlineServer>? servers)
+    {
+        try
+        {
+            servers = JsonSerializer.Deserialize(json, ManiaPlanetAPIJsonContext.Default.DictionaryStringOnlineServer)?.Values.ToImmutableList();
+        }
+        catch (JsonException)
+        {
+            servers = null;
+        }
+
+        return servers is not null;
     }
 
     protected internal async Task<HttpResponseMessage> GetResponseAsync(string endpoint, CancellationToken cancellationToken = default)

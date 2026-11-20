@@ -10,6 +10,17 @@ public class ManiaPlanetAPITests
 
     private static readonly DateTimeOffset ExpiresAt = DateTimeOffset.FromUnixTimeSeconds(1_900_000_000);
 
+    private static string OnlineServerJson(string login) => $$"""
+        {
+          "name": "Server", "description": "", "login": "{{login}}", "title": "TMStadium@nadeo",
+          "ladder_limit_min": 0, "ladder_limit_max": 80000, "average_ladder_points": 46899,
+          "player_count": 20, "player_max": 199, "spectator_count": 0, "zone": "World|Europe",
+          "is_private": false, "is_spectator_private": false, "is_lobby": false,
+          "level_class_1": 0, "level_class_2": 0, "level_class_3": 0, "level_class_4": 0, "level_class_5": 0,
+          "script_name": "TimeAttack.Script.txt", "game_mode": 0, "relay_of": "", "environment": "Stadium"
+        }
+        """;
+
     private static readonly string TitleJson = $$"""
         {
           "uid": "{{TitleUid}}",
@@ -189,9 +200,53 @@ public class ManiaPlanetAPITests
             length: 20);
 
         await Assert.That(fake.Request.Uri.Query).IsEqualTo(
-            "?orderBy=levelClass1&titleUids[]=TMStadium@nadeo&titleUids[]=TMCanyon@nadeo&environments[]=Stadium" +
+            "?orderBy=levelClass1&titleUids[]=TMStadium%40nadeo&titleUids[]=TMCanyon%40nadeo&environments[]=Stadium" +
             "&scriptName=TimeAttack.Script.txt&search=lol&zone=World%7CEurope&onlyPublic=1&onlyPrivate=1&onlyLobby=1" +
             "&excludeLobby=0&offset=10&length=20");
+    }
+
+    [Test]
+    public async Task SearchOnlineServersAsync_SearchWithUrlCharacters_StaysInItsParameter()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var api = CreateApi(fake);
+
+        await api.SearchOnlineServersAsync(search: "R&D #1+", scriptName: "a=b");
+
+        await Assert.That(fake.Request.Uri.Query).IsEqualTo("?scriptName=a%3Db&search=R%26D%20%231%2B");
+    }
+
+    [Test]
+    public async Task SearchOnlineServersAsync_ServersArray_ReturnsServers()
+    {
+        var fake = FakeHttpMessageHandler.Json($"[{OnlineServerJson("first")},{OnlineServerJson("second")}]");
+        using var api = CreateApi(fake);
+
+        var servers = await api.SearchOnlineServersAsync();
+
+        await Assert.That(servers.Select(x => x.Login)).IsEquivalentTo(["first", "second"]);
+    }
+
+    [Test]
+    public async Task SearchOnlineServersAsync_ServersKeyedByIndex_ReturnsServersInOrder()
+    {
+        var fake = FakeHttpMessageHandler.Json($$"""{"7":{{OnlineServerJson("first")}},"12":{{OnlineServerJson("second")}}}""");
+        using var api = CreateApi(fake);
+
+        var servers = await api.SearchOnlineServersAsync();
+
+        await Assert.That(string.Join(',', servers.Select(x => x.Login))).IsEqualTo("first,second");
+    }
+
+    [Test]
+    public async Task SearchOnlineServersAsync_NeitherShape_ThrowsArrayError()
+    {
+        var fake = FakeHttpMessageHandler.Json("\"maintenance\"");
+        using var api = CreateApi(fake);
+
+        var ex = await Assert.ThrowsAsync<System.Text.Json.JsonException>(() => api.SearchOnlineServersAsync());
+
+        await Assert.That(ex!.Message).Contains("ImmutableList");
     }
 
     [Test]
