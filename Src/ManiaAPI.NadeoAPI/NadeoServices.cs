@@ -281,7 +281,7 @@ public class NadeoServices : NadeoAPI, INadeoServices
 
     public virtual async Task<ImmutableList<MapInfo>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"maps/by-uid/?mapUidList={string.Join(',', mapUids)}",
+        return await GetJsonAsync($"maps/by-uid/?mapUidList={string.Join(',', mapUids.Select(Uri.EscapeDataString))}",
             NadeoAPIJsonContext.Default.ImmutableListMapInfo, cancellationToken);
     }
 
@@ -376,7 +376,7 @@ public class NadeoServices : NadeoAPI, INadeoServices
 
     public virtual async Task<MapFavoriteCollection> GetFavoriteMapsByUidsAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
     {
-        return await GetJsonAsync($"maps/favorites/by-map-uids?mapUidList={string.Join(',', mapUids)}",
+        return await GetJsonAsync($"maps/favorites/by-map-uids?mapUidList={string.Join(',', mapUids.Select(Uri.EscapeDataString))}",
             NadeoAPIJsonContext.Default.MapFavoriteCollection, cancellationToken);
     }
 

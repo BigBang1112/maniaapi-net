@@ -89,7 +89,7 @@ public partial class MX
                 if (first) sb.Append('?');
                 else sb.Append('&');
                 sb.Append("uid=");
-                sb.Append(string.Join("%2C", Uid));
+                sb.Append(string.Join("%2C", global::System.Linq.Enumerable.Select(Uid, x => WebUtility.UrlEncode(x))));
                 first = false;
             }
 
@@ -323,7 +323,7 @@ public partial class MX
                 if (first) sb.Append('?');
                 else sb.Append('&');
                 sb.Append("vehicle=");
-                sb.Append(string.Join("%2C", Vehicle));
+                sb.Append(string.Join("%2C", global::System.Linq.Enumerable.Select(Vehicle, x => WebUtility.UrlEncode(x))));
                 first = false;
             }
 
@@ -332,7 +332,7 @@ public partial class MX
                 if (first) sb.Append('?');
                 else sb.Append('&');
                 sb.Append("exvehicle=");
-                sb.Append(string.Join("%2C", ExVehicle));
+                sb.Append(string.Join("%2C", global::System.Linq.Enumerable.Select(ExVehicle, x => WebUtility.UrlEncode(x))));
                 first = false;
             }
 
@@ -567,7 +567,7 @@ public partial class MX
                 {
                     if (first) sb.Append('?');
                     else sb.Append('&');
-                    sb.Append(additionalParameter.Key);
+                    sb.Append(WebUtility.UrlEncode(additionalParameter.Key));
                     sb.Append('=');
                     sb.Append(WebUtility.UrlEncode(additionalParameter.Value));
                     first = false;

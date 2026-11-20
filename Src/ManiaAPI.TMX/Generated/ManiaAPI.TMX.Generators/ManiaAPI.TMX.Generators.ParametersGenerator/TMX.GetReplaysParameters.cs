@@ -87,7 +87,7 @@ public partial class TMX
                 {
                     if (first) sb.Append('?');
                     else sb.Append('&');
-                    sb.Append(additionalParameter.Key);
+                    sb.Append(WebUtility.UrlEncode(additionalParameter.Key));
                     sb.Append('=');
                     sb.Append(WebUtility.UrlEncode(additionalParameter.Value));
                     first = false;

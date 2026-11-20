@@ -299,7 +299,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
 
     public virtual async Task<ImmutableList<MapInfoLive>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
     {
-        return (await GetJsonAsync($"token/map/get-multiple?mapUidList={string.Join(',', mapUids)}",
+        return (await GetJsonAsync($"token/map/get-multiple?mapUidList={string.Join(',', mapUids.Select(Uri.EscapeDataString))}",
             NadeoAPIJsonContext.Default.MapInfoLiveCollection, cancellationToken)).MapList;
     }
 
@@ -710,7 +710,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}/map/{UrlHelper.EscapePathSegment(mapUid)}/surround/{lower}/{upper}?" +
             $"{(score is null ? "" : $"score={score}&")}" +
             $"{(onlyWorld is null ? "" : $"onlyWorld={onlyWorld}&")}" +
-            $"{(zoneId is null ? "" : $"zoneId={zoneId}")}",
+            $"{(zoneId is null ? "" : $"zoneId={Uri.EscapeDataString(zoneId)}")}",
             NadeoAPIJsonContext.Default.TopLeaderboardCollection, cancellationToken);
     }
 

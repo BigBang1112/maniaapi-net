@@ -190,7 +190,30 @@ public class ParametersGenerator : IIncrementalGenerator
                 sb.Append(propSymbol.Name.ToLowerInvariant());
                 sb.AppendLine("=\");");
                 sb.Append("                sb.Append(string.Join(\"%2C\", ");
-                sb.Append(propSymbol.Name);
+
+                var elementType = ((IArrayTypeSymbol)propSymbol.Type).ElementType;
+
+                if (elementType is INamedTypeSymbol { TypeKind: TypeKind.Enum, EnumUnderlyingType: { } underlyingType })
+                {
+                    // Exchanges filter by the numeric value and ignore names, like scalar enums
+                    sb.Append("global::System.Linq.Enumerable.Select(");
+                    sb.Append(propSymbol.Name);
+                    sb.Append(", x => (");
+                    sb.Append(underlyingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                    sb.Append(")x)");
+                }
+                else if (elementType.SpecialType == SpecialType.System_String)
+                {
+                    // Escaped like scalar strings, so a value can't add parameters or end the query
+                    sb.Append("global::System.Linq.Enumerable.Select(");
+                    sb.Append(propSymbol.Name);
+                    sb.Append(", x => WebUtility.UrlEncode(x))");
+                }
+                else
+                {
+                    sb.Append(propSymbol.Name);
+                }
+
                 sb.AppendLine("));");
                 sb.AppendLine("                first = false;");
                 sb.AppendLine("            }");
@@ -209,7 +232,7 @@ public class ParametersGenerator : IIncrementalGenerator
                 sb.AppendLine("                {");
                 sb.AppendLine("                    if (first) sb.Append('?');");
                 sb.AppendLine("                    else sb.Append('&');");
-                sb.AppendLine("                    sb.Append(additionalParameter.Key);");
+                sb.AppendLine("                    sb.Append(WebUtility.UrlEncode(additionalParameter.Key));");
                 sb.AppendLine("                    sb.Append('=');");
                 sb.AppendLine("                    sb.Append(WebUtility.UrlEncode(additionalParameter.Value));");
                 sb.AppendLine("                    first = false;");

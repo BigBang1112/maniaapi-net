@@ -233,6 +233,29 @@ public class NadeoLiveServicesTests
     }
 
     [Test]
+    public async Task GetMapInfosAsync_UidsWithUrlCharacters_StayInTheList()
+    {
+        var fake = FakeHttpMessageHandler.Json("""{"mapList":[],"itemCount":0}""");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await nls.GetMapInfosAsync(["a&b", "c#d"]);
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo($"{LiveUrl}/token/map/get-multiple?mapUidList=a%26b,c%23d");
+    }
+
+    [Test]
+    public async Task GetSurroundingRecordsAsync_ZoneWithUrlCharacters_StaysInItsParameter()
+    {
+        var fake = FakeHttpMessageHandler.Json(EmptyLeaderboardJson);
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await nls.GetSurroundingRecordsAsync(PersonalBest, MapUid, 1, 1, zoneId: "x&onlyWorld=true#");
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo(
+            $"{LiveUrl}/token/leaderboard/group/{PersonalBest}/map/{MapUid}/surround/1/1?zoneId=x%26onlyWorld%3Dtrue%23");
+    }
+
+    [Test]
     public async Task GetClubActivitiesAsync_WithFolder_SendsFolderId()
     {
         var fake = FakeHttpMessageHandler.Json("""{"activityList":[],"maxPage":0,"itemCount":0}""");

@@ -154,6 +154,38 @@ public class TMXTests
     }
 
     [Test]
+    public async Task SearchTracksAsync_EnumArray_SendsNumbers()
+    {
+        var fake = FakeHttpMessageHandler.Json(TracksJson);
+        using var tmx = CreateTmx(fake);
+
+        // The exchange ignores tag names, so they must be sent as their numbers
+        await tmx.SearchTracksAsync(new TMX.SearchTracksParameters
+        {
+            Tag = [TrackStyle.Stunts, TrackStyle.Fullspeed],
+            Fields = new TrackItemFields { TrackId = true }
+        });
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo($"{SiteUrl}/api/tracks?tag=1%2C5&fields=TrackId");
+    }
+
+    [Test]
+    public async Task SearchTracksAsync_StringArrayAndAdditionalKey_StayInTheirParameters()
+    {
+        var fake = FakeHttpMessageHandler.Json(TracksJson);
+        using var tmx = CreateTmx(fake);
+
+        await tmx.SearchTracksAsync(new TMX.SearchTracksParameters
+        {
+            UId = ["a&b=c", "d,e#f"],
+            AdditionalParameters = [new("x&y", "1")],
+            Fields = new TrackItemFields { TrackId = true }
+        });
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo($"{SiteUrl}/api/tracks?uid=a%26b%3Dc%2Cd%2Ce%23f&x%26y=1&fields=TrackId");
+    }
+
+    [Test]
     public async Task SearchTracksAsync_ErrorStatus_Throws()
     {
         var fake = FakeHttpMessageHandler.Json("{}", HttpStatusCode.InternalServerError);
