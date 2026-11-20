@@ -4,9 +4,13 @@ using System.Globalization;
 using System.Text;
 using TmScores;
 
-namespace ManiaAPI.MasterServer.TMUF;
+namespace ManiaAPI.MasterServer.TMF;
 
-public interface IMasterServerTMUF : IMasterServer
+/// <summary>
+/// A TrackMania Forever master server, shared by TrackMania United Forever (<see cref="IMasterServerTMUF"/>)
+/// and TrackMania Nations Forever (<see cref="IMasterServerTMNF"/>).
+/// </summary>
+public interface IMasterServerTMF : IMasterServer
 {
     Task<LeagueRankings> GetLadderLeagueRankingsAsync(string league = "World", int page = 0, int count = 10, CancellationToken cancellationToken = default);
     Task<MasterServerResponse<LeagueRankings>> GetLadderLeagueRankingsResponseAsync(string league = "World", int page = 0, int count = 10, CancellationToken cancellationToken = default);
@@ -51,41 +55,25 @@ public interface IMasterServerTMUF : IMasterServer
     static abstract string GetScoresUrl(ScoresNumber num, string scoresName, int leagueId);
 }
 
-public class MasterServerTMUF : MasterServer, IMasterServerTMUF
+/// <summary>
+/// The requests shared by the TrackMania Forever master servers. Use <see cref="MasterServerTMUF"/> for TrackMania United Forever
+/// or <see cref="MasterServerTMNF"/> for TrackMania Nations Forever; they differ in their address and their players.
+/// </summary>
+public abstract class MasterServerTMF : MasterServer, IMasterServerTMF
 {
-    public const string DefaultUnitedUrl = "http://game.trackmaniaforever.com/online_game/request.php";
-    public const string DefaultNationsUrl = "http://game2.trackmaniaforever.com/online_game/request.php";
-
     private const string GeneralScoresName = "General";
     private const string LadderScoresName = "Multi";
 
+    // Both games run the same TmForever executable
     protected override string GameXml => "<name>TmForever</name><version>2.11.25</version>";
 
-    public MasterServerTMUF(string url, string userAgent) : base(new Uri(url), userAgent) { }
+    protected MasterServerTMF(Uri uri, string userAgent) : base(uri, userAgent) { }
 
-    public MasterServerTMUF(MasterServerType type, string userAgent) : this(type switch
-    {
-        MasterServerType.United => DefaultUnitedUrl,
-        MasterServerType.Nations => DefaultNationsUrl,
-        _ => throw new ArgumentException("Invalid master server type", nameof(type))
-    }, userAgent) { }
+    protected MasterServerTMF(HttpClient client, string userAgent) : base(client, userAgent) { }
 
-    public MasterServerTMUF(HttpClient client, string userAgent) : base(client, userAgent) { }
+    protected MasterServerTMF(Uri uri) : base(uri) { }
 
-    public MasterServerTMUF(string url = DefaultUnitedUrl) : base(new Uri(url)) { }
-
-    public MasterServerTMUF(MasterServerType type) : this(type switch
-    {
-        MasterServerType.United => DefaultUnitedUrl,
-        MasterServerType.Nations => DefaultNationsUrl,
-        _ => throw new ArgumentException("Invalid master server type", nameof(type))
-    }) { }
-
-    /// <summary>
-    /// Creates a new instance of <see cref="MasterServerTMUF"/> using any <see cref="HttpClient"/>.
-    /// </summary>
-    /// <param name="client">HTTP client.</param>
-    public MasterServerTMUF(HttpClient client) : base(client) { }
+    protected MasterServerTMF(HttpClient client) : base(client) { }
 
     public virtual async Task<MasterServerResponse<PlayerRankings>> GetLadderPlayerRankingsResponseAsync(
         string league = "World",

@@ -1,7 +1,7 @@
 using ManiaAPI.MasterServer.MP3;
 using ManiaAPI.MasterServer.MP4;
 using ManiaAPI.MasterServer.TMT;
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Immutable;
 
@@ -18,6 +18,30 @@ public class ServiceRegistrationTests
 
         // Resolved by Type, as the interface's static abstract members keep it from being a generic type argument
         await Assert.That(provider.GetRequiredService(typeof(IMasterServerTMUF))).IsTypeOf<MasterServerTMUF>();
+        await Assert.That(provider.GetRequiredService<MasterServerTMUF>().Client.BaseAddress?.ToString()).IsEqualTo(MasterServerTMUF.DefaultUrl);
+    }
+
+    [Test]
+    public async Task AddMasterServerTMNF_RegistersNationsClientAndInterface()
+    {
+        var services = new ServiceCollection();
+        services.AddMasterServerTMNF();
+        using var provider = services.BuildServiceProvider();
+
+        await Assert.That(provider.GetRequiredService(typeof(IMasterServerTMNF))).IsTypeOf<MasterServerTMNF>();
+        await Assert.That(provider.GetRequiredService<MasterServerTMNF>().Client.BaseAddress?.ToString()).IsEqualTo(MasterServerTMNF.DefaultUrl);
+    }
+
+    [Test]
+    public async Task AddBothForeverServers_KeepsTheirAddressesApart()
+    {
+        var services = new ServiceCollection();
+        services.AddMasterServerTMUF();
+        services.AddMasterServerTMNF();
+        using var provider = services.BuildServiceProvider();
+
+        await Assert.That(provider.GetRequiredService<MasterServerTMUF>().Client.BaseAddress?.Host).IsEqualTo("game.trackmaniaforever.com");
+        await Assert.That(provider.GetRequiredService<MasterServerTMNF>().Client.BaseAddress?.Host).IsEqualTo("game2.trackmaniaforever.com");
     }
 
     [Test]

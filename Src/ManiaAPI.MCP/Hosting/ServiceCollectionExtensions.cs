@@ -4,7 +4,6 @@ using ManiaAPI.MCP.Configuration;
 using ManiaAPI.MCP.Engine;
 using ManiaAPI.MCP.Tools;
 using ManiaAPI.MasterServer.Extensions.Hosting;
-using ManiaAPI.MasterServer.TMUF;
 using ManiaAPI.MasterServer.MP4;
 using ManiaAPI.ManiaPlanetAPI;
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
@@ -68,9 +67,7 @@ public static class ServiceCollectionExtensions
         services.AddTMX(exchange => exchange.ConfigureHttpClient = builder => builder.ConfigureHttpClient(client =>
             client.MaxResponseContentBufferSize = options.Shaping.MaxResourceBytes));
         services.AddMasterServerTMUF();
-        services.AddHttpClient("MasterServerTMNF", client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultNationsUrl));
-        services.AddKeyedScoped("tmnf", (provider, _) => new MasterServerTMUF(
-            provider.GetRequiredService<IHttpClientFactory>().CreateClient("MasterServerTMNF")));
+        services.AddMasterServerTMNF();
         services.AddMasterServerMP3();
         services.AddMasterServerMP4();
         services.AddKeyedScoped("player", (provider, _) =>

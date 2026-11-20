@@ -1,7 +1,7 @@
 ﻿using ManiaAPI.MasterServer.MP3;
 using ManiaAPI.MasterServer.MP4;
 using ManiaAPI.MasterServer.TMT;
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Immutable;
 using System.Net;
@@ -27,10 +27,33 @@ public static class MasterServerServiceExtensions
         var o = new MasterServerOptions();
         options(o);
 
+        // Registered by Type, as the interface's static abstract members keep it from being a generic type argument
         services.AddTransient(typeof(IMasterServerTMUF), provider => provider.GetRequiredService<MasterServerTMUF>());
 
-        return services.AddHttpClient(nameof(MasterServerTMUF), client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultUnitedUrl))
+        return services.AddHttpClient(nameof(MasterServerTMUF), client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultUrl))
             .AddTypedClient(client => new MasterServerTMUF(client))
+            .ConfigureHttpClient(client => ConfigureUserAgent(client, o));
+    }
+
+    /// <summary>
+    /// Adds the <see cref="MasterServerTMNF"/> client to the service collection, with its <see cref="HttpClient"/> configured to use the default TMNF master server, but it can be changed with the builder.
+    /// </summary>
+    public static IHttpClientBuilder AddMasterServerTMNF(this IServiceCollection services)
+    {
+        return AddMasterServerTMNF(services, _ => { });
+    }
+
+    /// <summary>Registers the TMNF client with application User-Agent options.</summary>
+    public static IHttpClientBuilder AddMasterServerTMNF(this IServiceCollection services, Action<MasterServerOptions> options)
+    {
+        var o = new MasterServerOptions();
+        options(o);
+
+        // Registered by Type, as the interface's static abstract members keep it from being a generic type argument
+        services.AddTransient(typeof(IMasterServerTMNF), provider => provider.GetRequiredService<MasterServerTMNF>());
+
+        return services.AddHttpClient(nameof(MasterServerTMNF), client => client.BaseAddress = new Uri(MasterServerTMNF.DefaultUrl))
+            .AddTypedClient(client => new MasterServerTMNF(client))
             .ConfigureHttpClient(client => ConfigureUserAgent(client, o));
     }
 

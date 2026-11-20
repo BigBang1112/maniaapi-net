@@ -6,12 +6,13 @@ Provides an efficient way to inject master server services into your application
 
 Previously named `ManiaAPI.Xml.Extensions.Hosting`. To migrate, replace the package reference and use `ManiaAPI.MasterServer.Extensions.Hosting`. The service registration methods are unchanged.
 
-## Setup for TMUF
+## Setup for TMUF and TMNF
 
 ```cs
 using ManiaAPI.MasterServer.Extensions.Hosting;
 
 builder.Services.AddMasterServerTMUF(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
+builder.Services.AddMasterServerTMNF(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 ```
 
 ## Setup for ManiaPlanet
@@ -85,7 +86,7 @@ Features this last setup brings:
 
 HTTP requests can transiently fail, so it's a good idea to add some retry logic.
 
-`AddMasterServerTMUF` returns an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
+`AddMasterServerTMUF` and `AddMasterServerTMNF` return an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
 
 ```cs
 using ManiaAPI.MasterServer.Extensions.Hosting;

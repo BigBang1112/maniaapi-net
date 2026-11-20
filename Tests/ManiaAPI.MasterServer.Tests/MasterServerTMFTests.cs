@@ -1,15 +1,15 @@
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 
 namespace ManiaAPI.MasterServer.Tests;
 
-public class MasterServerTMUFTests
+public class MasterServerTMFTests
 {
     private const int LeagueId = 5;
 
     [Test]
     public async Task GetScoresUrl_CombinesNumberNameAndLeague()
     {
-        var url = MasterServerTMUF.GetScoresUrl(ScoresNumber.Scores3, "UnitedRace", LeagueId);
+        var url = MasterServerTMF.GetScoresUrl(ScoresNumber.Scores3, "UnitedRace", LeagueId);
 
         await Assert.That(url).IsEqualTo($"http://scores.trackmaniaforever.com/scores3/UnitedRace/UnitedRace{LeagueId}.gz");
     }
@@ -17,7 +17,7 @@ public class MasterServerTMUFTests
     [Test]
     public async Task GetGeneralScoresUrl_UsesGeneralScores()
     {
-        var url = MasterServerTMUF.GetGeneralScoresUrl(ScoresNumber.Scores3, LeagueId);
+        var url = MasterServerTMF.GetGeneralScoresUrl(ScoresNumber.Scores3, LeagueId);
 
         await Assert.That(url).IsEqualTo($"http://scores.trackmaniaforever.com/scores3/General/General{LeagueId}.gz");
     }
@@ -25,20 +25,48 @@ public class MasterServerTMUFTests
     [Test]
     public async Task GetLadderScoresUrl_UsesMultiScores()
     {
-        var url = MasterServerTMUF.GetLadderScoresUrl(ScoresNumber.Scores3, LeagueId);
+        var url = MasterServerTMF.GetLadderScoresUrl(ScoresNumber.Scores3, LeagueId);
 
         await Assert.That(url).IsEqualTo($"http://scores.trackmaniaforever.com/scores3/Multi/Multi{LeagueId}.gz");
     }
 
     [Test]
-    public async Task Constructor_Default_UsesUnitedMasterServer()
+    public async Task MasterServerTMUF_Default_UsesUnitedMasterServer()
     {
         using var server = new MasterServerTMUF();
 
-        var baseAddress = server.Client.BaseAddress?.ToString();
-
-        await Assert.That(baseAddress).IsEqualTo(MasterServerTMUF.DefaultUnitedUrl);
+        await Assert.That(server.Client.BaseAddress?.ToString()).IsEqualTo("http://game.trackmaniaforever.com/online_game/request.php");
+        await Assert.That(server is IMasterServerTMUF).IsTrue();
     }
+
+    [Test]
+    public async Task MasterServerTMNF_Default_UsesNationsMasterServer()
+    {
+        using var server = new MasterServerTMNF();
+
+        await Assert.That(server.Client.BaseAddress?.ToString()).IsEqualTo("http://game2.trackmaniaforever.com/online_game/request.php");
+        await Assert.That(server is IMasterServerTMNF).IsTrue();
+    }
+
+    [Test]
+    public async Task MasterServerTMNF_WithUserAgent_UsesNationsMasterServer()
+    {
+        using var server = new MasterServerTMNF(MasterServerTMNF.DefaultUrl, "MyApp/1.0");
+
+        await Assert.That(server.Client.BaseAddress?.ToString()).IsEqualTo(MasterServerTMNF.DefaultUrl);
+    }
+
+#pragma warning disable CS0618 // The obsolete MasterServerType constructors must keep their addresses
+    [Test]
+    [Arguments(MasterServerType.United, MasterServerTMUF.DefaultUrl)]
+    [Arguments(MasterServerType.Nations, MasterServerTMNF.DefaultUrl)]
+    public async Task MasterServerTMUF_ObsoleteType_KeepsItsAddress(MasterServerType type, string url)
+    {
+        using var server = new MasterServerTMUF(type);
+
+        await Assert.That(server.Client.BaseAddress?.ToString()).IsEqualTo(url);
+    }
+#pragma warning restore CS0618
     [Test]
     public async Task FetchLatestGeneralScoresInfoAsync_PicksLatestTimestampAndDisposesResponses()
     {
@@ -51,7 +79,7 @@ public class MasterServerTMUFTests
             lock (contents) contents.Add(content);
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = content };
         });
-        using var server = new MasterServerTMUF(fake.CreateClient(MasterServerTMUF.DefaultUnitedUrl));
+        using var server = new MasterServerTMUF(fake.CreateClient(MasterServerTMUF.DefaultUrl));
 
         var info = await server.FetchLatestGeneralScoresInfoAsync(LeagueId);
 
@@ -76,7 +104,7 @@ public class MasterServerTMUFTests
             lock (contents) contents.Add(content);
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = content };
         });
-        using var server = new MasterServerTMUF(fake.CreateClient(MasterServerTMUF.DefaultUnitedUrl));
+        using var server = new MasterServerTMUF(fake.CreateClient(MasterServerTMUF.DefaultUrl));
 
         await Assert.ThrowsAsync<HttpRequestException>(() => server.FetchLatestGeneralScoresInfoAsync(LeagueId));
 

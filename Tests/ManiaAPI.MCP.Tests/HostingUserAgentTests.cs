@@ -4,7 +4,7 @@ using ManiaAPI.MasterServer.Extensions.Hosting;
 using ManiaAPI.MasterServer.MP3;
 using ManiaAPI.MasterServer.MP4;
 using ManiaAPI.MasterServer.TMT;
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 using ManiaAPI.NadeoAPI;
 using ManiaAPI.NadeoAPI.Extensions.Hosting;
 using ManiaAPI.TMX;
@@ -41,6 +41,7 @@ public class HostingUserAgentTests
         });
         services.AddTMX(options => options.UserAgent = UserAgentAssertions.Value);
         services.AddMasterServerTMUF(options => options.UserAgent = UserAgentAssertions.Value);
+        services.AddMasterServerTMNF(options => options.UserAgent = UserAgentAssertions.Value);
         services.AddMasterServerMP3(options => options.UserAgent = UserAgentAssertions.Value);
         services.AddMasterServerMP4(options => options.UserAgent = UserAgentAssertions.Value);
         services.AddMasterServerTMT(options => options.UserAgent = UserAgentAssertions.Value);
@@ -67,6 +68,7 @@ public class HostingUserAgentTests
             scoped.GetRequiredService<TrackmaniaWS.TrackmaniaWS>().Client,
             scoped.GetRequiredService<IX>().Client,
             scoped.GetRequiredService<MasterServerTMUF>().Client,
+            scoped.GetRequiredService<MasterServerTMNF>().Client,
             scoped.GetRequiredService<InitServerMP3>().Client,
             scoped.GetRequiredService<InitServerMP4>().Client,
             scoped.GetRequiredService<MasterServerMP3>().Client,

@@ -57,14 +57,20 @@ For all games:
 - Check if login exists
 - Run Test request
 
-## Setup for TMUF
+## Setup for TMUF and TMNF
 
 ```cs
 using ManiaAPI.MasterServer;
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 
-var masterServer = new MasterServerTMUF(MasterServerType.United, "MyApp/1.0 (contact: me@example.com)");
+// TrackMania United Forever
+var tmuf = new MasterServerTMUF(MasterServerTMUF.DefaultUrl, "MyApp/1.0 (contact: me@example.com)");
+
+// TrackMania Nations Forever
+var tmnf = new MasterServerTMNF(MasterServerTMNF.DefaultUrl, "MyApp/1.0 (contact: me@example.com)");
 ```
+
+Both share their requests through `MasterServerTMF`.
 
 ## Setup for ManiaPlanet
 

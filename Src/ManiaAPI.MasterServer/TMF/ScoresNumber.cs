@@ -1,4 +1,4 @@
-﻿namespace ManiaAPI.MasterServer.TMUF;
+﻿namespace ManiaAPI.MasterServer.TMF;
 
 public enum ScoresNumber
 {

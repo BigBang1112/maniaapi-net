@@ -1,7 +1,7 @@
 using ManiaAPI.MasterServer.MP3;
 using ManiaAPI.MasterServer.MP4;
 using ManiaAPI.MasterServer.TMT;
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 
 namespace ManiaAPI.MasterServer.Tests;
 
@@ -10,7 +10,7 @@ public class UserAgentTests
     [Test]
     public async Task MasterServerTMUF_0_ApplicationIdentityAppearsFirst()
     {
-        using var fresh = new MasterServerTMUF(MasterServerType.United, UserAgentAssertions.Value).Client;
+        using var fresh = new MasterServerTMUF(MasterServerTMUF.DefaultUrl, UserAgentAssertions.Value).Client;
         await UserAgentAssertions.VerifyAsync(fresh);
 
         using var http = UserAgentAssertions.CreateClient();
@@ -19,6 +19,17 @@ public class UserAgentTests
 
         // Wrapping a shared HttpClient again must not duplicate either identity.
         _ = new MasterServerTMUF(http, UserAgentAssertions.Value);
+        await UserAgentAssertions.VerifyAsync(http, replacesExisting: true);
+    }
+
+    [Test]
+    public async Task MasterServerTMNF_0_ApplicationIdentityAppearsFirst()
+    {
+        using var fresh = new MasterServerTMNF(MasterServerTMNF.DefaultUrl, UserAgentAssertions.Value).Client;
+        await UserAgentAssertions.VerifyAsync(fresh);
+
+        using var http = UserAgentAssertions.CreateClient();
+        _ = new MasterServerTMNF(http, UserAgentAssertions.Value);
         await UserAgentAssertions.VerifyAsync(http, replacesExisting: true);
     }
 
