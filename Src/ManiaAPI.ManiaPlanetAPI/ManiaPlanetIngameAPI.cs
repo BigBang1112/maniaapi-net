@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ManiaAPI.ManiaPlanetAPI;
 
-public interface IManiaPlanetIngameAPI
+public interface IManiaPlanetIngameAPI : IDisposable
 {
     HttpClient Client { get; }
 
@@ -341,5 +341,11 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
 
         return await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.ImmutableListOnlineServer, cancellationToken)
             ?? throw new JsonException("The response body is null.");
+    }
+
+    public virtual void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

@@ -6,7 +6,7 @@ namespace ManiaAPI.MasterServer.TMT;
 /// <summary>
 /// Interface for the <see cref="AggregatedMasterServerTMT"/> class.
 /// </summary>
-public interface IAggregatedMasterServerTMT
+public interface IAggregatedMasterServerTMT : IDisposable
 {
     Task<AggregatedSummaryZoneResponse<int>> GetCampaignLeaderBoardSummariesResponseAsync(IEnumerable<string> zones, IProgress<AggregatedSummaryZoneProgress<int>>? progress = null, CancellationToken cancellationToken = default);
     Task<AggregatedSummaryZoneResponse<int>> GetCampaignLeaderBoardSummariesResponseAsync(string zone = "World", IProgress<AggregatedSummaryZoneProgress<int>>? progress = null, CancellationToken cancellationToken = default);
@@ -34,9 +34,26 @@ public class AggregatedMasterServerTMT : IAggregatedMasterServerTMT
 {
     private readonly ImmutableDictionary<Platform, MasterServerTMT> masterServers;
 
+    /// <summary>
+    /// Combines the master servers of each platform. They're disposed with this instance.
+    /// </summary>
+    /// <param name="masterServers">Master server of each platform.</param>
     public AggregatedMasterServerTMT(ImmutableDictionary<Platform, MasterServerTMT> masterServers)
     {
         this.masterServers = masterServers;
+    }
+
+    /// <summary>
+    /// Disposes the master server of each platform.
+    /// </summary>
+    public virtual void Dispose()
+    {
+        foreach (var masterServer in masterServers.Values)
+        {
+            masterServer.Dispose();
+        }
+
+        GC.SuppressFinalize(this);
     }
 
     public virtual async Task<AggregatedSummaryZoneResponse<int>> GetCampaignLeaderBoardSummariesResponseAsync(IEnumerable<string> zones, IProgress<AggregatedSummaryZoneProgress<int>>? progress = null, CancellationToken cancellationToken = default)

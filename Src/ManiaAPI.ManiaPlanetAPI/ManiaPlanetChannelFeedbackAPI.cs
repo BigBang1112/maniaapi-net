@@ -57,4 +57,10 @@ public class ManiaPlanetChannelFeedbackAPI : IManiaPlanetChannelFeedbackAPI
         return await response.Content.ReadFromJsonAsync(ManiaPlanetChannelFeedbackAPIJsonContext.Default.ChannelFeedbackStatus, cancellationToken)
             ?? throw new JsonException("The response body is null.");
     }
+
+    public virtual void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

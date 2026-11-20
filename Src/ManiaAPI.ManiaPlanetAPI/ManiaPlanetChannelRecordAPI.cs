@@ -161,4 +161,10 @@ public class ManiaPlanetChannelRecordAPI : IManiaPlanetChannelRecordAPI
 
         return message.Trim().Trim('"') == NoLeaderboardMessage;
     }
+
+    public virtual void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

@@ -4,7 +4,7 @@ namespace ManiaAPI.ManiaPlanetAPI;
 /// The ManiaPlanet Channel Record API (records.prod.live.maniaplanet.com), which holds the leaderboards of channel maps.
 /// Only its public read routes are wrapped; the others are for game servers.
 /// </summary>
-public interface IManiaPlanetChannelRecordAPI
+public interface IManiaPlanetChannelRecordAPI : IDisposable
 {
     HttpClient Client { get; }
 
