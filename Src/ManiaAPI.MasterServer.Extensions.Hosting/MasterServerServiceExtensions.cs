@@ -26,6 +26,9 @@ public static class MasterServerServiceExtensions
     {
         var o = new MasterServerOptions();
         options(o);
+
+        services.AddTransient(typeof(IMasterServerTMUF), provider => provider.GetRequiredService<MasterServerTMUF>());
+
         return services.AddHttpClient(nameof(MasterServerTMUF), client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultUnitedUrl))
             .AddTypedClient(client => new MasterServerTMUF(client))
             .ConfigureHttpClient(client => ConfigureUserAgent(client, o));
@@ -64,6 +67,8 @@ public static class MasterServerServiceExtensions
             client.BaseAddress = new Uri(MasterServerMP4.DefaultUrl);
             return new MasterServerMP4(client);
         });
+        services.AddTransient<IInitServerMP4>(provider => provider.GetRequiredService<InitServerMP4>());
+        services.AddTransient<IMasterServerMP4>(provider => provider.GetRequiredService<MasterServerMP4>());
 
         httpInitServer.ConfigureHttpClient(client => ConfigureUserAgent(client, o));
         httpMasterServer.ConfigureHttpClient(client => ConfigureUserAgent(client, o));
@@ -107,6 +112,8 @@ public static class MasterServerServiceExtensions
             client.BaseAddress = new Uri(MasterServerMP3.DefaultUrl);
             return new MasterServerMP3(client);
         });
+        services.AddTransient<IInitServerMP3>(provider => provider.GetRequiredService<InitServerMP3>());
+        services.AddTransient<IMasterServerMP3>(provider => provider.GetRequiredService<MasterServerMP3>());
 
         httpInitServer.ConfigureHttpClient(client => ConfigureUserAgent(client, o));
         httpMasterServer.ConfigureHttpClient(client => ConfigureUserAgent(client, o));
@@ -154,6 +161,7 @@ public static class MasterServerServiceExtensions
 
             services.AddKeyedScoped(platform, (provider, key) => new InitServerTMT(
                 provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(InitServerTMT)}_{key}")));
+            services.AddKeyedScoped<IInitServerTMT>(platform, (provider, key) => provider.GetRequiredKeyedService<InitServerTMT>(key));
         }
 
         services.AddScoped(provider => Enum.GetValues<Platform>()
@@ -163,6 +171,7 @@ public static class MasterServerServiceExtensions
 
         services.AddScoped(provider => new AggregatedMasterServerTMT(
             provider.GetRequiredService<IMasterServerTMTFactory>().CreateClients()));
+        services.AddScoped<IAggregatedMasterServerTMT>(provider => provider.GetRequiredService<AggregatedMasterServerTMT>());
     }
 
     private static void ConfigureUserAgent(HttpClient client, MasterServerOptions options)

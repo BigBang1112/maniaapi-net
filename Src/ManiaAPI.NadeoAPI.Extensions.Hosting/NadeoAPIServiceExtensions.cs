@@ -45,6 +45,10 @@ public static class NadeoAPIServiceExtensions
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoMeetServices)),
             provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoMeetServices)), o.UserAgent));
 
+        services.AddTransient<INadeoServices>(provider => provider.GetRequiredService<NadeoServices>());
+        services.AddTransient<INadeoLiveServices>(provider => provider.GetRequiredService<NadeoLiveServices>());
+        services.AddTransient<INadeoMeetServices>(provider => provider.GetRequiredService<NadeoMeetServices>());
+
         services.AddHostedService<NadeoAPIRefreshBackgroundService>();
     }
 
@@ -72,6 +76,7 @@ public static class NadeoAPIServiceExtensions
         services.AddTransient(provider => new NadeoServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoServices)),
             provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoServices)), o.UserAgent));
+        services.AddTransient<INadeoServices>(provider => provider.GetRequiredService<NadeoServices>());
 
         services.AddHostedService<NadeoAPIRefreshBackgroundService>();
 
@@ -93,6 +98,7 @@ public static class NadeoAPIServiceExtensions
         services.AddTransient(provider => new NadeoLiveServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoLiveServices)),
             provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoLiveServices)), o.UserAgent));
+        services.AddTransient<INadeoLiveServices>(provider => provider.GetRequiredService<NadeoLiveServices>());
 
         services.AddHostedService<NadeoAPIRefreshBackgroundService>();
 
@@ -114,6 +120,7 @@ public static class NadeoAPIServiceExtensions
         services.AddTransient(provider => new NadeoMeetServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoMeetServices)),
             provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoMeetServices)), o.UserAgent));
+        services.AddTransient<INadeoMeetServices>(provider => provider.GetRequiredService<NadeoMeetServices>());
 
         services.AddHostedService<NadeoAPIRefreshBackgroundService>();
 

@@ -11,6 +11,10 @@ public static class TrackmaniaWSServiceExtensions
         services.AddTransient(provider => new TrackmaniaWS(
             options.Credentials ?? throw new InvalidOperationException("Credentials are required currently."),
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(TrackmaniaWS)), options.UserAgent));
+
+        // The interface resolves the same client, so it can be injected and mocked
+        services.AddTransient<ITrackmaniaWS>(provider => provider.GetRequiredService<TrackmaniaWS>());
+
         return builder;
     }
 }

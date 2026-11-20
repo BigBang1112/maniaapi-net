@@ -14,6 +14,9 @@ public static class TrackmaniaAPIServiceExtensions
             Credentials = o.Credentials
         });
 
+        // The interface resolves the same client, so it can be injected and mocked
+        services.AddTransient<ITrackmaniaAPI>(provider => provider.GetRequiredService<TrackmaniaAPI>());
+
         return services.AddHttpClient(nameof(TrackmaniaAPI))
             .AddTypedClient((client, provider) => new TrackmaniaAPI(
                 client, provider.GetRequiredService<TrackmaniaAPIHandler>(), o.UserAgent));

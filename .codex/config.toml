@@ -1,6 +1,0 @@
-[mcp_servers.maniaapi-dev]
-command = "dotnet"
-args = ["D:/GbxTools/maniaapi-net/Src/ManiaAPI.MCP/bin/Release/net11.0/ManiaAPI.MCP.dll"]
-
-[mcp_servers.maniaapi-dev.env]
-ManiaAPI__UserAgent = "maniaapi-mcp-dev/0.1 (+https://github.com/BigBang1112/maniaapi-net)"

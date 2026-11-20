@@ -14,6 +14,8 @@ public static class ManiaPlanetAPIServiceExtensions
             Credentials = o.Credentials
         });
 
+        services.AddTransient<IManiaPlanetAPI>(provider => provider.GetRequiredService<ManiaPlanetAPI>());
+
         return services.AddHttpClient(nameof(ManiaPlanetAPI))
             .AddTypedClient((client, provider) => new ManiaPlanetAPI(
                 client, provider.GetRequiredService<ManiaPlanetAPIHandler>(), o.UserAgent));
@@ -33,6 +35,8 @@ public static class ManiaPlanetAPIServiceExtensions
     {
         var o = new ManiaPlanetAPIOptions();
         options(o);
+
+        services.AddTransient<IManiaPlanetIngameAPI>(provider => provider.GetRequiredService<ManiaPlanetIngameAPI>());
 
         return services.AddHttpClient(nameof(ManiaPlanetIngameAPI))
             .AddTypedClient(client => new ManiaPlanetIngameAPI(client, o.UserAgent))
@@ -55,6 +59,8 @@ public static class ManiaPlanetAPIServiceExtensions
         var o = new ManiaPlanetAPIOptions();
         options(o);
 
+        services.AddTransient<IManiaPlanetChannelRecordAPI>(provider => provider.GetRequiredService<ManiaPlanetChannelRecordAPI>());
+
         return services.AddHttpClient(nameof(ManiaPlanetChannelRecordAPI))
             .AddTypedClient(client => new ManiaPlanetChannelRecordAPI(client, o.UserAgent))
             .ConfigureHttpClient(client =>
@@ -75,6 +81,8 @@ public static class ManiaPlanetAPIServiceExtensions
     {
         var o = new ManiaPlanetAPIOptions();
         options(o);
+
+        services.AddTransient<IManiaPlanetChannelFeedbackAPI>(provider => provider.GetRequiredService<ManiaPlanetChannelFeedbackAPI>());
 
         return services.AddHttpClient(nameof(ManiaPlanetChannelFeedbackAPI))
             .AddTypedClient(client => new ManiaPlanetChannelFeedbackAPI(client, o.UserAgent))
