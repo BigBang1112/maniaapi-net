@@ -342,22 +342,45 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
 
     public async Task<ImmutableList<Position>> GetLeaderboardPositionsByTimeAsync(IEnumerable<string> mapUids, IEnumerable<int> scores, CancellationToken cancellationToken = default)
     {
-        return await GetLeaderboardPositionsByTimeAsync(mapUids, ["Personal_Best"], scores, cancellationToken);
+        ArgumentNullException.ThrowIfNull(mapUids);
+
+        // One group per map, as the groups are paired with the maps
+        var mapUidList = mapUids.ToImmutableList();
+        return await GetLeaderboardPositionsByTimeAsync(mapUidList, mapUidList.Select(_ => "Personal_Best"), scores, cancellationToken);
     }
 
+    /// <exception cref="ArgumentException"><paramref name="mapUids"/>, <paramref name="groupUids"/>, and <paramref name="scores"/> have different lengths.</exception>
     public virtual async Task<ImmutableList<Position>> GetLeaderboardPositionsByTimeAsync(IEnumerable<string> mapUids, IEnumerable<string> groupUids, IEnumerable<int> scores, CancellationToken cancellationToken = default)
     {
-        var body = new MapGroupIdCollection(mapUids
-            .Zip(groupUids, (mapUid, groupUid) =>
+        ArgumentNullException.ThrowIfNull(mapUids);
+        ArgumentNullException.ThrowIfNull(groupUids);
+        ArgumentNullException.ThrowIfNull(scores);
+
+        var mapUidList = mapUids.ToImmutableList();
+        var groupUidList = groupUids.ToImmutableList();
+        var scoreList = scores.ToImmutableList();
+
+        // Zip would silently drop the maps without a group or a score
+        if (groupUidList.Count != mapUidList.Count || scoreList.Count != mapUidList.Count)
+        {
+            throw new ArgumentException("Each map needs exactly one group and one score.", nameof(groupUids));
+        }
+
+        if (mapUidList.Count == 0)
+        {
+            return [];
+        }
+
+        var body = new MapGroupIdCollection(mapUidList
+            .Zip(groupUidList, (mapUid, groupUid) =>
                 new MapGroupId(mapUid, groupUid))
             .ToImmutableList());
         var jsonContent = JsonContent.Create(body, NadeoAPIJsonContext.Default.MapGroupIdCollection);
-        
-        var queryParams = mapUids
-            .Zip(scores, (mapUid, score) =>
-                $"scores[{Uri.EscapeDataString(mapUid)}]={score}")
-            .Aggregate((a, b) => $"{a}&{b}");
-        
+
+        var queryParams = string.Join('&', mapUidList
+            .Zip(scoreList, (mapUid, score) =>
+                $"scores[{Uri.EscapeDataString(mapUid)}]={score}"));
+
         try
         {
             return await PostJsonAsync($"token/leaderboard/group/map?{queryParams}", jsonContent, 

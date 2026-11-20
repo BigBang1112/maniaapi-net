@@ -123,6 +123,43 @@ public class NadeoLiveServicesTests
     }
 
     [Test]
+    public async Task GetLeaderboardPositionsByTimeAsync_WithoutGroups_SendsEveryMapWithPersonalBest()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await nls.GetLeaderboardPositionsByTimeAsync(["MapA", "MapB", "MapC"], [1000, 2000, 3000]);
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo(
+            $"{LiveUrl}/token/leaderboard/group/map?scores[MapA]=1000&scores[MapB]=2000&scores[MapC]=3000");
+        await Assert.That(fake.Request.Body).IsEqualTo(
+            $$"""{"maps":[{"mapUid":"MapA","groupUid":"{{PersonalBest}}"},{"mapUid":"MapB","groupUid":"{{PersonalBest}}"},{"mapUid":"MapC","groupUid":"{{PersonalBest}}"}]}""");
+    }
+
+    [Test]
+    public async Task GetLeaderboardPositionsByTimeAsync_NoMaps_ReturnsEmptyWithoutRequest()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        var positions = await nls.GetLeaderboardPositionsByTimeAsync([], []);
+
+        await Assert.That(positions).IsEmpty();
+        await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
+    public async Task GetLeaderboardPositionsByTimeAsync_LengthsDiffer_ThrowsWithoutRequest()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await Assert.ThrowsAsync<ArgumentException>(() => nls.GetLeaderboardPositionsByTimeAsync(["MapA", "MapB"], [PersonalBest], [1000, 2000]));
+
+        await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
     public async Task GetClubActivitiesAsync_WithFolder_SendsFolderId()
     {
         var fake = FakeHttpMessageHandler.Json("""{"activityList":[],"maxPage":0,"itemCount":0}""");
