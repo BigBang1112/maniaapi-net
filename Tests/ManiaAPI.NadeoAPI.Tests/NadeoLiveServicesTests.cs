@@ -137,6 +137,36 @@ public class NadeoLiveServicesTests
     }
 
     [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task GetLeaderboardPositionsByTimeAsync_ConflictingScores_ThrowsWithoutRequest(bool withGroups)
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => withGroups
+            ? nls.GetLeaderboardPositionsByTimeAsync(["MapA", "MapB", "MapA"], [PersonalBest, PersonalBest, "SeasonA"], [1000, 1500, 2000])
+            : nls.GetLeaderboardPositionsByTimeAsync(["MapA", "MapB", "MapA"], [1000, 1500, 2000]));
+
+        await Assert.That(exception?.ParamName).IsEqualTo("scores");
+        await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
+    public async Task GetLeaderboardPositionsByTimeAsync_RepeatedMapWithSameScore_SendsOneScoreAndEveryGroup()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await nls.GetLeaderboardPositionsByTimeAsync(["MapA", "mapa", "MapA"], [PersonalBest, PersonalBest, "SeasonA"], [1000, 2000, 1000]);
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo(
+            $"{LiveUrl}/token/leaderboard/group/map?scores[MapA]=1000&scores[mapa]=2000");
+        await Assert.That(fake.Request.Body).IsEqualTo(
+            $$"""{"maps":[{"mapUid":"MapA","groupUid":"{{PersonalBest}}"},{"mapUid":"mapa","groupUid":"{{PersonalBest}}"},{"mapUid":"MapA","groupUid":"SeasonA"}]}""");
+    }
+
+    [Test]
     public async Task GetLeaderboardPositionsByTimeAsync_NoMaps_ReturnsEmptyWithoutRequest()
     {
         var fake = FakeHttpMessageHandler.Json("[]");
@@ -157,6 +187,49 @@ public class NadeoLiveServicesTests
         await Assert.ThrowsAsync<ArgumentException>(() => nls.GetLeaderboardPositionsByTimeAsync(["MapA", "MapB"], [PersonalBest], [1000, 2000]));
 
         await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
+    [Arguments(2, 1)]
+    [Arguments(1, 2)]
+    [Arguments(0, 1)]
+    [Arguments(1, 0)]
+    public async Task GetPlayerRecordsAsync_LengthsDiffer_ThrowsWithoutRequest(int mapCount, int groupCount)
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        var mapUids = Enumerable.Range(0, mapCount).Select(i => $"Map{i}");
+        var groupUids = Enumerable.Repeat(PersonalBest, groupCount);
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => nls.GetPlayerRecordsAsync(mapUids, groupUids));
+
+        await Assert.That(exception?.ParamName).IsEqualTo("groupUids");
+        await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task GetPlayerRecordsAsync_MatchingLengths_SendsEveryMapWithItsGroup(bool withGroups)
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        if (withGroups)
+        {
+            await nls.GetPlayerRecordsAsync(["MapA", "MapB"], [PersonalBest, "SeasonA"]);
+        }
+        else
+        {
+            await nls.GetPlayerRecordsAsync(["MapA", "MapB"]);
+        }
+
+        var secondGroup = withGroups ? "SeasonA" : PersonalBest;
+        await Assert.That(fake.Request.Method).IsEqualTo(HttpMethod.Post);
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo($"{LiveUrl}/token/leaderboard/group/map");
+        await Assert.That(fake.Request.Body).IsEqualTo(
+            $$"""{"maps":[{"mapUid":"MapA","groupUid":"{{PersonalBest}}"},{"mapUid":"MapB","groupUid":"{{secondGroup}}"}]}""");
     }
 
     [Test]
