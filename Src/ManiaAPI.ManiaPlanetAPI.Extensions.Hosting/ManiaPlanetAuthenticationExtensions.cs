@@ -23,6 +23,15 @@ public static class ManiaPlanetAuthenticationExtensions
 
     public static AuthenticationBuilder AddManiaPlanet(this AuthenticationBuilder builder, string scheme, string displayName, Action<ManiaPlanetAuthenticationOptions> configuration)
     {
-        return builder.AddOAuth<ManiaPlanetAuthenticationOptions, ManiaPlanetAuthenticationHandler>(scheme, displayName, configuration);
+        builder.AddOAuth<ManiaPlanetAuthenticationOptions, ManiaPlanetAuthenticationHandler>(scheme, displayName, configuration);
+        builder.Services.PostConfigure<ManiaPlanetAuthenticationOptions>(scheme, options =>
+        {
+            if (!string.IsNullOrWhiteSpace(options.UserAgent) && options.Backchannel is { } backchannel)
+            {
+                backchannel.DefaultRequestHeaders.UserAgent.Clear();
+                backchannel.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
+            }
+        });
+        return builder;
     }
 }

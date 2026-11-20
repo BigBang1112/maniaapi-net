@@ -4,4 +4,4 @@ Project skills live in [.agents/skills](.agents/skills). For .NET 11 work, check
 
 # Code style
 
-Put each top-level type (class, record, struct, interface, enum) in its own file named after the type, in the folder of its namespace. Nested types stay with their containing type. Keep only the `using` directives each file needs.
+Put each top-level type (class, record, struct, interface, enum) in its own file named after the type, in the folder of its namespace, except interfaces with a matching class: keep those interfaces in the class's file (for example, `INadeoAPI` belongs in `NadeoAPI.cs` alongside `NadeoAPI`). Interfaces without a matching class stay in their own files. Nested types stay with their containing type. Keep only the `using` directives each file needs.

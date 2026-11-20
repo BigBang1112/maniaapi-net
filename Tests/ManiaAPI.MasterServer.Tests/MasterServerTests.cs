@@ -1,6 +1,6 @@
 using System.Globalization;
 using ManiaAPI.MasterServer.MP4;
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 
 namespace ManiaAPI.MasterServer.Tests;
 

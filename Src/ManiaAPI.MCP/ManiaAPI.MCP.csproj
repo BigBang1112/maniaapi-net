@@ -8,9 +8,13 @@
         <IsPackable>true</IsPackable>
         <ToolCommandName>maniaapi-mcp</ToolCommandName>
         <PackageId>ManiaAPI.MCP</PackageId>
-        <Version>0.1.1</Version>
+        <Version>0.2.0</Version>
         <PackageReleaseNotes>
-- Enhance metadata
+- Added Dedimania map records
+- Added UnitedLadder rankings, leaderboards, player history, and replays
+- Fixed batch leaderboard positions returning only the first map
+- Fixed online server search failing on some filtered results
+- Fixed TMX enum filters, such as tags, being ignored
         </PackageReleaseNotes>
         <Authors>BigBang1112</Authors>
         <Description>Stateless MCP gateway for ManiaAPI.NET.</Description>
@@ -38,6 +42,7 @@
         <ProjectReference Include="../ManiaAPI.ManiaPlanetAPI.Extensions.Hosting/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.csproj" />
         <ProjectReference Include="../ManiaAPI.TrackmaniaWS.Extensions.Hosting/ManiaAPI.TrackmaniaWS.Extensions.Hosting.csproj" />
         <ProjectReference Include="../ManiaAPI.UnitedLadder/ManiaAPI.UnitedLadder.csproj" />
+        <ProjectReference Include="../ManiaAPI.Dedimania/ManiaAPI.Dedimania.csproj" />
         <ProjectReference Include="../ManiaAPI.NadeoAPI.Extensions.Gbx/ManiaAPI.NadeoAPI.Extensions.Gbx.csproj" />
         <ProjectReference Include="../ManiaAPI.TMX.Extensions.Gbx/ManiaAPI.TMX.Extensions.Gbx.csproj" />
         <ProjectReference Include="../../Generators/ManiaAPI.MCP.Generators/ManiaAPI.MCP.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
@@ -58,5 +63,6 @@
         <AdditionalFiles Include="../ManiaAPI.ManiaPlanetAPI/ManiaPlanetIngameAPI.cs" />
         <AdditionalFiles Include="../ManiaAPI.TrackmaniaWS/TrackmaniaWS.cs" />
         <AdditionalFiles Include="../ManiaAPI.UnitedLadder/UnitedLadder.cs" />
+        <AdditionalFiles Include="../ManiaAPI.Dedimania/Dedimania.cs" />
     </ItemGroup>
 </Project>

@@ -100,6 +100,17 @@ public class NadeoServicesTests
     }
 
     [Test]
+    public async Task GetMapInfosAsync_UidsWithUrlCharacters_StayInTheList()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var ns = new NadeoServices(fake.CreateClient());
+
+        await ns.GetMapInfosAsync(["a&b", "c#d"]);
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo($"{BaseUrl}/maps/by-uid/?mapUidList=a%26b,c%23d");
+    }
+
+    [Test]
     public async Task GetMapInfoAsync_ByUid_ReturnsParsedMapInfo()
     {
         var fake = FakeHttpMessageHandler.Json($"[{MapInfoJson}]");

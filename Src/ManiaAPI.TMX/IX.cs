@@ -26,11 +26,22 @@ public class IX : IIX
 
     public HttpClient Client { get; }
 
-    public IX(HttpClient client)
+    public IX(string userAgent) : this(new HttpClient(), userAgent) { }
+
+    public IX(HttpClient client) : this(client, null) { }
+
+    public IX(HttpClient client, string? userAgent)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;

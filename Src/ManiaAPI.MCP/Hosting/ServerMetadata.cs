@@ -16,6 +16,7 @@ public static class ServerMetadata
         "Other listed tools run common operations directly.\n" +
         "- Pass the game to maniaapi_search when the user names one. TM2 and Trackmania 2 are ManiaPlanet, " +
         "TMUF and TMNF are TrackMania Forever, and SM is ShootMania.\n" +
+        "- UnitedLadder (united.ladder.*) covers only TrackMania Nations Forever (TMNF) and TrackMania United Forever (TMUF).\n" +
         "- Use shape in maniaapi_invoke to select fields and limit large results.\n" +
         "- Writes are refused unless the server operator allows them, and then need confirmation.\n" +
         "- Credentials stay on the server. Don't ask the user for passwords or API keys.";

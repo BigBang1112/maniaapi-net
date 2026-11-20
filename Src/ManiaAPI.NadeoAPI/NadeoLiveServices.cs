@@ -23,8 +23,10 @@ public interface INadeoLiveServices : INadeoAPI
     /// <param name="cancellationToken">Cancellation token.</param>
     Task<TopLeaderboardCollection> GetTopLeaderboardAsync(string mapUid, string groupUid, Guid zoneId, CancellationToken cancellationToken = default);
     Task<ImmutableList<Position>> GetLeaderboardPositionByTimeAsync(string mapUid, string groupUid, int score, CancellationToken cancellationToken = default);
+    /// <exception cref="ArgumentException">The input sequences have different lengths, or the same map UID is paired with different scores.</exception>
     Task<ImmutableList<Position>> GetLeaderboardPositionsByTimeAsync(IEnumerable<string> mapUids, IEnumerable<string> groupUids, IEnumerable<int> scores, CancellationToken cancellationToken = default);
     Task<ImmutableList<Position>> GetLeaderboardPositionByTimeAsync(string mapUid, int score, CancellationToken cancellationToken = default);
+    /// <exception cref="ArgumentException">The input sequences have different lengths, or the same map UID is paired with different scores.</exception>
     Task<ImmutableList<Position>> GetLeaderboardPositionsByTimeAsync(IEnumerable<string> mapUids, IEnumerable<int> scores, CancellationToken cancellationToken = default);
     Task<TrackOfTheDayCollection> GetTrackOfTheDaysAsync(int length, int offset = 0, bool royal = false, CancellationToken cancellationToken = default);
     Task<TrackOfTheDayInfo> GetTrackOfTheDayInfoAsync(string mapUid, CancellationToken cancellationToken = default);
@@ -103,6 +105,7 @@ public interface INadeoLiveServices : INadeoAPI
     /// <summary>
     /// Gets the currently authenticated user's records on multiple maps. A maximum of 50 records may be requested.
     /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="mapUids"/> and <paramref name="groupUids"/> have different lengths.</exception>
     Task<ImmutableList<Position>> GetPlayerRecordsAsync(IEnumerable<string> mapUids, IEnumerable<string> groupUids, CancellationToken cancellationToken = default);
     Task<ImmutableList<Position>> GetPlayerRecordsAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default);
     /// <summary>
@@ -263,6 +266,14 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     public override string Audience => nameof(NadeoLiveServices);
     public override string BaseAddress => "https://live-services.trackmania.nadeo.live/api";
 
+    public NadeoLiveServices(HttpClient client, NadeoAPIHandler? handler, string? userAgent, bool automaticallyAuthorize = true) : base(client, handler ?? new NadeoAPIHandler(), userAgent, automaticallyAuthorize) { }
+
+    public NadeoLiveServices(HttpClient client, string userAgent, bool automaticallyAuthorize = true)
+        : this(client, null, userAgent, automaticallyAuthorize) { }
+
+    public NadeoLiveServices(string userAgent, bool automaticallyAuthorize = true)
+        : this(new HttpClient(), new NadeoAPIHandler(), userAgent, automaticallyAuthorize) { }
+
     public NadeoLiveServices(HttpClient client, NadeoAPIHandler? handler = null, bool automaticallyAuthorize = true)
         : base(client, handler ?? new NadeoAPIHandler(), automaticallyAuthorize)
     {
@@ -288,7 +299,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
 
     public virtual async Task<ImmutableList<MapInfoLive>> GetMapInfosAsync(IEnumerable<string> mapUids, CancellationToken cancellationToken = default)
     {
-        return (await GetJsonAsync($"token/map/get-multiple?mapUidList={string.Join(',', mapUids)}",
+        return (await GetJsonAsync($"token/map/get-multiple?mapUidList={string.Join(',', mapUids.Select(Uri.EscapeDataString))}",
             NadeoAPIJsonContext.Default.MapInfoLiveCollection, cancellationToken)).MapList;
     }
 
@@ -332,24 +343,59 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         return await GetLeaderboardPositionByTimeAsync(mapUid, "Personal_Best", score, cancellationToken);
     }
 
+    /// <exception cref="ArgumentException">The input sequences have different lengths, or the same map UID is paired with different scores.</exception>
     public async Task<ImmutableList<Position>> GetLeaderboardPositionsByTimeAsync(IEnumerable<string> mapUids, IEnumerable<int> scores, CancellationToken cancellationToken = default)
     {
-        return await GetLeaderboardPositionsByTimeAsync(mapUids, ["Personal_Best"], scores, cancellationToken);
+        ArgumentNullException.ThrowIfNull(mapUids);
+
+        // One group per map, as the groups are paired with the maps
+        var mapUidList = mapUids.ToImmutableList();
+        return await GetLeaderboardPositionsByTimeAsync(mapUidList, mapUidList.Select(_ => "Personal_Best"), scores, cancellationToken);
     }
 
+    /// <exception cref="ArgumentException"><paramref name="mapUids"/>, <paramref name="groupUids"/>, and <paramref name="scores"/> have different lengths, or the same map UID is paired with different scores.</exception>
     public virtual async Task<ImmutableList<Position>> GetLeaderboardPositionsByTimeAsync(IEnumerable<string> mapUids, IEnumerable<string> groupUids, IEnumerable<int> scores, CancellationToken cancellationToken = default)
     {
-        var body = new MapGroupIdCollection(mapUids
-            .Zip(groupUids, (mapUid, groupUid) =>
+        ArgumentNullException.ThrowIfNull(mapUids);
+        ArgumentNullException.ThrowIfNull(groupUids);
+        ArgumentNullException.ThrowIfNull(scores);
+
+        var mapUidList = mapUids.ToImmutableList();
+        var groupUidList = groupUids.ToImmutableList();
+        var scoreList = scores.ToImmutableList();
+
+        // Zip would silently drop the maps without a group or a score
+        if (groupUidList.Count != mapUidList.Count || scoreList.Count != mapUidList.Count)
+        {
+            throw new ArgumentException("Each map needs exactly one group and one score.", nameof(groupUids));
+        }
+
+        if (mapUidList.Count == 0)
+        {
+            return [];
+        }
+
+        // Scores are keyed only by map UID in the query, even when a map belongs to multiple groups.
+        var scoresByMap = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var (mapUid, score) in mapUidList.Zip(scoreList))
+        {
+            if (scoresByMap.TryGetValue(mapUid, out var existingScore) && existingScore != score)
+            {
+                throw new ArgumentException("Each map UID must have the same score across all groups.", nameof(scores));
+            }
+
+            scoresByMap[mapUid] = score;
+        }
+
+        var body = new MapGroupIdCollection(mapUidList
+            .Zip(groupUidList, (mapUid, groupUid) =>
                 new MapGroupId(mapUid, groupUid))
             .ToImmutableList());
         var jsonContent = JsonContent.Create(body, NadeoAPIJsonContext.Default.MapGroupIdCollection);
-        
-        var queryParams = mapUids
-            .Zip(scores, (mapUid, score) =>
-                $"scores[{Uri.EscapeDataString(mapUid)}]={score}")
-            .Aggregate((a, b) => $"{a}&{b}");
-        
+
+        var queryParams = string.Join('&', scoresByMap
+            .Select(pair => $"scores[{Uri.EscapeDataString(pair.Key)}]={pair.Value}"));
+
         try
         {
             return await PostJsonAsync($"token/leaderboard/group/map?{queryParams}", jsonContent, 
@@ -626,10 +672,22 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         return await GetPlayerClubMapRecordAsync("Personal_Best", mapUid, clubId, cancellationToken);
     }
 
+    /// <exception cref="ArgumentException"><paramref name="mapUids"/> and <paramref name="groupUids"/> have different lengths.</exception>
     public virtual async Task<ImmutableList<Position>> GetPlayerRecordsAsync(IEnumerable<string> mapUids, IEnumerable<string> groupUids, CancellationToken cancellationToken = default)
     {
-        var body = new MapGroupIdCollection(mapUids
-            .Zip(groupUids, (mapUid, groupUid) =>
+        ArgumentNullException.ThrowIfNull(mapUids);
+        ArgumentNullException.ThrowIfNull(groupUids);
+
+        var mapUidList = mapUids.ToImmutableList();
+        var groupUidList = groupUids.ToImmutableList();
+
+        if (groupUidList.Count != mapUidList.Count)
+        {
+            throw new ArgumentException("Each map needs exactly one group.", nameof(groupUids));
+        }
+
+        var body = new MapGroupIdCollection(mapUidList
+            .Zip(groupUidList, (mapUid, groupUid) =>
                 new MapGroupId(mapUid, groupUid))
             .ToImmutableList());
         var jsonContent = JsonContent.Create(body, NadeoAPIJsonContext.Default.MapGroupIdCollection);
@@ -652,7 +710,7 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
         return await GetJsonAsync($"token/leaderboard/group/{UrlHelper.EscapePathSegment(groupUid)}/map/{UrlHelper.EscapePathSegment(mapUid)}/surround/{lower}/{upper}?" +
             $"{(score is null ? "" : $"score={score}&")}" +
             $"{(onlyWorld is null ? "" : $"onlyWorld={onlyWorld}&")}" +
-            $"{(zoneId is null ? "" : $"zoneId={zoneId}")}",
+            $"{(zoneId is null ? "" : $"zoneId={Uri.EscapeDataString(zoneId)}")}",
             NadeoAPIJsonContext.Default.TopLeaderboardCollection, cancellationToken);
     }
 

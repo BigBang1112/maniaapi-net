@@ -16,44 +16,20 @@ public static class NadeoAPIServiceExtensions
 
         services.AddKeyedSingleton(nameof(NadeoServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials,
-            SaveCredentials = false
+            PendingCredentials = o.Credentials
         });
         services.AddKeyedSingleton(nameof(NadeoLiveServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials,
-            SaveCredentials = false
+            PendingCredentials = o.Credentials
         });
         services.AddKeyedSingleton(nameof(NadeoMeetServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials,
-            SaveCredentials = false
+            PendingCredentials = o.Credentials
         });
 
-        var httpNadeoServices = services.AddHttpClient<NadeoServices>()
-            .ConfigureHttpClient(client =>
-            {
-                if (o.UserAgent is not null)
-                {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
-                }
-            });
-        var httpNadeoLiveServices = services.AddHttpClient<NadeoLiveServices>()
-            .ConfigureHttpClient(client =>
-            {
-                if (o.UserAgent is not null)
-                {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
-                }
-            });
-        var httpNadeoMeetServices = services.AddHttpClient<NadeoMeetServices>()
-            .ConfigureHttpClient(client =>
-            {
-                if (o.UserAgent is not null)
-                {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
-                }
-            });
+        var httpNadeoServices = services.AddHttpClient(nameof(NadeoServices));
+        var httpNadeoLiveServices = services.AddHttpClient(nameof(NadeoLiveServices));
+        var httpNadeoMeetServices = services.AddHttpClient(nameof(NadeoMeetServices));
 
         if (configureNadeoServices is not null) configureNadeoServices(httpNadeoServices);
         if (configureNadeoLiveServices is not null) configureNadeoLiveServices(httpNadeoLiveServices);
@@ -61,13 +37,17 @@ public static class NadeoAPIServiceExtensions
 
         services.AddTransient(provider => new NadeoServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoServices)),
-            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoServices))));
+            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoServices)), o.UserAgent));
         services.AddTransient(provider => new NadeoLiveServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoLiveServices)),
-            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoLiveServices))));
+            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoLiveServices)), o.UserAgent));
         services.AddTransient(provider => new NadeoMeetServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoMeetServices)),
-            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoMeetServices))));
+            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoMeetServices)), o.UserAgent));
+
+        services.AddTransient<INadeoServices>(provider => provider.GetRequiredService<NadeoServices>());
+        services.AddTransient<INadeoLiveServices>(provider => provider.GetRequiredService<NadeoLiveServices>());
+        services.AddTransient<INadeoMeetServices>(provider => provider.GetRequiredService<NadeoMeetServices>());
 
         services.AddHostedService<NadeoAPIRefreshBackgroundService>();
     }
@@ -88,22 +68,15 @@ public static class NadeoAPIServiceExtensions
 
         services.AddKeyedSingleton(nameof(NadeoServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials,
-            SaveCredentials = false
+            PendingCredentials = o.Credentials
         });
 
-        var httpBuilder = services.AddHttpClient<NadeoServices>()
-            .ConfigureHttpClient(client =>
-            {
-                if (o.UserAgent is not null)
-                {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
-                }
-            });
+        var httpBuilder = services.AddHttpClient(nameof(NadeoServices));
 
         services.AddTransient(provider => new NadeoServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoServices)),
-            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoServices))));
+            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoServices)), o.UserAgent));
+        services.AddTransient<INadeoServices>(provider => provider.GetRequiredService<NadeoServices>());
 
         services.AddHostedService<NadeoAPIRefreshBackgroundService>();
 
@@ -117,22 +90,15 @@ public static class NadeoAPIServiceExtensions
 
         services.AddKeyedSingleton(nameof(NadeoLiveServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials,
-            SaveCredentials = false
+            PendingCredentials = o.Credentials
         });
 
-        var httpBuilder = services.AddHttpClient<NadeoLiveServices>()
-            .ConfigureHttpClient(client =>
-            {
-                if (o.UserAgent is not null)
-                {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
-                }
-            });
+        var httpBuilder = services.AddHttpClient(nameof(NadeoLiveServices));
 
         services.AddTransient(provider => new NadeoLiveServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoLiveServices)),
-            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoLiveServices))));
+            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoLiveServices)), o.UserAgent));
+        services.AddTransient<INadeoLiveServices>(provider => provider.GetRequiredService<NadeoLiveServices>());
 
         services.AddHostedService<NadeoAPIRefreshBackgroundService>();
 
@@ -146,22 +112,15 @@ public static class NadeoAPIServiceExtensions
 
         services.AddKeyedSingleton(nameof(NadeoMeetServices), new NadeoAPIHandler
         {
-            PendingCredentials = o.Credentials,
-            SaveCredentials = false
+            PendingCredentials = o.Credentials
         });
 
-        var httpBuilder = services.AddHttpClient<NadeoMeetServices>()
-            .ConfigureHttpClient(client =>
-            {
-                if (o.UserAgent is not null)
-                {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(o.UserAgent);
-                }
-            });
+        var httpBuilder = services.AddHttpClient(nameof(NadeoMeetServices));
 
         services.AddTransient(provider => new NadeoMeetServices(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NadeoMeetServices)),
-            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoMeetServices))));
+            provider.GetRequiredKeyedService<NadeoAPIHandler>(nameof(NadeoMeetServices)), o.UserAgent));
+        services.AddTransient<INadeoMeetServices>(provider => provider.GetRequiredService<NadeoMeetServices>());
 
         services.AddHostedService<NadeoAPIRefreshBackgroundService>();
 

@@ -25,6 +25,7 @@
         <Project Path="Samples/WebAppMasterServerExample/WebAppMasterServerExample.csproj" />
     </Folder>
     <Folder Name="/Src/">
+        <Project Path="Src/ManiaAPI.Dedimania/ManiaAPI.Dedimania.csproj" />
         <Project Path="Src/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.csproj" />
         <Project Path="Src/ManiaAPI.ManiaPlanetAPI/ManiaAPI.ManiaPlanetAPI.csproj" />
         <Project Path="Src/ManiaAPI.NadeoAPI.Extensions.Gbx/ManiaAPI.NadeoAPI.Extensions.Gbx.csproj" />
@@ -48,19 +49,23 @@
         <File Path="Tests/Directory.Build.props" />
         <File Path="Tests/Directory.Build.targets" />
         <File Path="Tests/README.md" />
+        <Project Path="Tests/ManiaAPI.Dedimania.Tests/ManiaAPI.Dedimania.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.GBXRemote.Tests/ManiaAPI.GBXRemote.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests/ManiaAPI.ManiaPlanetAPI.Extensions.Hosting.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.ManiaPlanetAPI.Tests/ManiaAPI.ManiaPlanetAPI.Tests.csproj" />
+        <Project Path="Tests/ManiaAPI.MasterServer.Extensions.Hosting.Tests/ManiaAPI.MasterServer.Extensions.Hosting.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.MasterServer.Tests/ManiaAPI.MasterServer.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.MCP.Tests/ManiaAPI.MCP.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.NadeoAPI.Extensions.Gbx.Tests/ManiaAPI.NadeoAPI.Extensions.Gbx.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.NadeoAPI.Extensions.Hosting.Tests/ManiaAPI.NadeoAPI.Extensions.Hosting.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.NadeoAPI.Tests/ManiaAPI.NadeoAPI.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.TMX.Extensions.Gbx.Tests/ManiaAPI.TMX.Extensions.Gbx.Tests.csproj" />
+        <Project Path="Tests/ManiaAPI.TMX.Extensions.Hosting.Tests/ManiaAPI.TMX.Extensions.Hosting.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.TMX.Tests/ManiaAPI.TMX.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.TrackmaniaAPI.Extensions.Hosting.Tests/ManiaAPI.TrackmaniaAPI.Extensions.Hosting.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.TrackmaniaAPI.Tests/ManiaAPI.TrackmaniaAPI.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.TrackmaniaIO.Tests/ManiaAPI.TrackmaniaIO.Tests.csproj" />
+        <Project Path="Tests/ManiaAPI.TrackmaniaWS.Extensions.Hosting.Tests/ManiaAPI.TrackmaniaWS.Extensions.Hosting.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.TrackmaniaWS.Tests/ManiaAPI.TrackmaniaWS.Tests.csproj" />
         <Project Path="Tests/ManiaAPI.UnitedLadder.Tests/ManiaAPI.UnitedLadder.Tests.csproj" />
     </Folder>

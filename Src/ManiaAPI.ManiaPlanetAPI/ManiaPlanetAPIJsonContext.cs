@@ -13,5 +13,6 @@ namespace ManiaAPI.ManiaPlanetAPI;
 [JsonSerializable(typeof(ImmutableList<Zone>))]
 [JsonSerializable(typeof(ImmutableList<TitleScript>))]
 [JsonSerializable(typeof(ImmutableList<OnlineServer>))]
+[JsonSerializable(typeof(Dictionary<string, OnlineServer>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class ManiaPlanetAPIJsonContext : JsonSerializerContext;

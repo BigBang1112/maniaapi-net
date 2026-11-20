@@ -316,6 +316,35 @@ public class TrackmaniaAPITests
     }
 
     [Test]
+    public async Task GetUserAsync_TokenAboutToExpire_AuthorizesAgainFirst()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            () => TokenResponse(DateTimeOffset.UtcNow.AddSeconds(30), out _),
+            () => TokenResponse(DateTimeOffset.UtcNow.AddHours(1), out _),
+            () => FakeResponse.Json(UserJson));
+        using var api = CreateApi(fake);
+        await api.AuthorizeAsync(ClientId, ClientSecret);
+
+        await api.GetUserAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([$"{BaseUrl}/access_token", $"{BaseUrl}/access_token", $"{BaseUrl}/user"]);
+    }
+
+    [Test]
+    public async Task GetUserAsync_TokenValidForMinutes_DoesNotAuthorizeAgain()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            () => TokenResponse(DateTimeOffset.UtcNow.AddMinutes(5), out _),
+            () => FakeResponse.Json(UserJson));
+        using var api = CreateApi(fake);
+        await api.AuthorizeAsync(ClientId, ClientSecret);
+
+        await api.GetUserAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([$"{BaseUrl}/access_token", $"{BaseUrl}/user"]);
+    }
+
+    [Test]
     public async Task GetUserAsync_TwoClientsSharingHandler_AuthorizesOnce()
     {
         var authorization = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 
 namespace ManiaAPI.MCP.Catalog;
 
@@ -35,9 +35,9 @@ public static class ScoreUrlOperations
                             var league = arguments.GetProperty("leagueId").GetInt32();
                             var url = kind switch
                             {
-                                "general" => MasterServerTMUF.GetGeneralScoresUrl(number, league),
-                                "ladder" => MasterServerTMUF.GetLadderScoresUrl(number, league),
-                                _ => MasterServerTMUF.GetScoresUrl(number, arguments.GetProperty("scoresName").GetString()!, league)
+                                "general" => MasterServerTMF.GetGeneralScoresUrl(number, league),
+                                "ladder" => MasterServerTMF.GetLadderScoresUrl(number, league),
+                                _ => MasterServerTMF.GetScoresUrl(number, arguments.GetProperty("scoresName").GetString()!, league)
                             };
 
                             return Task.FromResult<JsonNode?>(JsonValue.Create(url));

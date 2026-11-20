@@ -12,6 +12,20 @@ The game provides 3 domains, and they are split into 3 separate services:
 - `NadeoLiveServices` for leaderboards, clubs, and other live content
 - `NadeoMeetServices` for getting the current Cup of the Day
 
+The library spaces request starts at least 500 milliseconds apart across all three services in the process, including authentication and token refreshes. Concurrent callers wait asynchronously and can cancel while waiting. For sustained work, increase the shared interval before sending requests, for example:
+
+```cs
+NadeoAPI.RequestInterval = TimeSpan.FromSeconds(2);
+```
+
+The interval cannot be less than 500 milliseconds.
+
+Add a `User-Agent` identifying your application. The library appends its own identity and preserves yours:
+
+```cs
+using var ns = new NadeoServices("MyLeaderboard/1.0 (by @myhandle; contact: me@example.com)");
+```
+
 ## Features
 
 For `NadeoServices`:
@@ -76,7 +90,7 @@ Make sure you have created your service account [here](https://www.trackmania.co
 ```cs
 using ManiaAPI.NadeoAPI;
 
-var ns = new NadeoServices();
+var ns = new NadeoServices("MyApp/1.0 (contact: me@example.com)");
 
 await ns.AuthorizeAsync("service_name", "ls>97jO>e3>>D/Ce");
 
@@ -96,10 +110,10 @@ using ManiaAPI.NadeoAPI;
 var login = "service_name";
 var password = "ls>97jO>e3>>D/Ce";
 
-var ns = new NadeoServices();
+var ns = new NadeoServices("MyApp/1.0 (contact: me@example.com)");
 await ns.AuthorizeAsync(login, password);
 
-var nls = new NadeoLiveServices();
+var nls = new NadeoLiveServices("MyApp/1.0 (contact: me@example.com)");
 await nls.AuthorizeAsync(login, password);
 
 // Ready to use combined

@@ -38,6 +38,32 @@ public class LegacyTests
     }
 
     [Test]
+    [Arguments("tmuf")]
+    [Arguments("tmnf")]
+    [Arguments("maniaplanet")]
+    public async Task DedimaniaMapReturnsRecords(string toolset)
+    {
+        var fake = FakeHttpMessageHandler.Text(
+            "BeySZdnfuSh4nHY5xztiXLmlrXe,Stadium,Nadeo,1162,A01-Race\r\n" +
+            "23921,2,1789146567,niter2018,juneyslounge,$i$o$fffCasino Enjoyer,$fff$wNadeo Hunt Server\r\n");
+
+        var collection = new ServiceCollection();
+        collection.AddLogging();
+        collection.AddManiaAPI(TestConfiguration.Create());
+        collection.AddHttpClient(nameof(Dedimania.Dedimania)).ConfigurePrimaryHttpMessageHandler(() => fake);
+
+        using var services = collection.BuildServiceProvider();
+        using var request = services.CreateScope();
+        var options = services.GetRequiredService<McpOptions>();
+        var result = await services.GetRequiredService<OperationEngine>().InvokeAsync("dedimania." + toolset + ".map",
+            EngineTests.Json("{\"uid\":\"BeySZdnfuSh4nHY5xztiXLmlrXe\",\"mode\":\"TimeAttack\"}"), GameScope.Create(options), request.ServiceProvider);
+
+        await Assert.That(result["data"]!["name"]!.GetValue<string>()).IsEqualTo("A01-Race");
+        await Assert.That(result["data"]!["records"]![0]!["login"]!.GetValue<string>()).IsEqualTo("niter2018");
+        await Assert.That(fake.Request.Url).IsEqualTo("http://dedimania.net:8080/MAP?uid=BeySZdnfuSh4nHY5xztiXLmlrXe&mode=2&more");
+    }
+
+    [Test]
     public async Task TurboOperationsCanBeInvokedRepeatedly()
     {
         var init = FakeHttpMessageHandler.Text("""

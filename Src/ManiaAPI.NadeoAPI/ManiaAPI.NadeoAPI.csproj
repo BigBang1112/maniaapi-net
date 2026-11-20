@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <PackageId>ManiaAPI.NadeoAPI</PackageId>
-        <Version>2.10.1</Version>
+        <Version>2.11.0</Version>
         <Authors>BigBang1112</Authors>
         <Description>Wrapper for the official in-game Nadeo API from Trackmania released in 2020. Part of the ManiaAPI.NET library set.</Description>
         <Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
@@ -11,7 +11,13 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, nadeo, nadeoapi</PackageTags>
         <PackageReleaseNotes>
-- Updated TmEssentials to 2.9.0
+- **Added `NadeoAPI.RequestInterval` to pace requests across all Nadeo clients**
+- Added constructors with an application User-Agent to `NadeoServices`, `NadeoLiveServices`, and `NadeoMeetServices`
+- Fixed a rejected refresh token not signing in again with saved credentials
+- Fixed `GetLeaderboardPositionsByTimeAsync` without groups sending only the first map
+- Changed `GetLeaderboardPositionsByTimeAsync` and `GetPlayerRecordsAsync` to throw `ArgumentException` for mismatched inputs
+- Fixed URL escaping of map UIDs in `GetMapInfosAsync` and `GetFavoriteMapsByUidsAsync`, and of zone IDs in `GetSurroundingRecordsAsync`
+- Updated TmEssentials to 2.9.1
         </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
@@ -42,7 +48,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="TmEssentials" Version="2.9.0" />
+        <PackageReference Include="TmEssentials" Version="2.9.1" />
     </ItemGroup>
 
     <ItemGroup>

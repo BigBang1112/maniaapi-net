@@ -8,6 +8,7 @@ var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.Services.AddNadeoAPI(options =>
 {
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
     options.Credentials = new NadeoAPICredentials(
         builder.Configuration["NadeoAPI:Login"]!,
         builder.Configuration["NadeoAPI:Password"]!);

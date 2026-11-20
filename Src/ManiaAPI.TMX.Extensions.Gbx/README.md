@@ -18,7 +18,7 @@ using ManiaAPI.TMX;
 using ManiaAPI.TMX.Extensions.Gbx;
 
 // Pick one from TMUF, TMNF, Nations, Sunrise, Original
-var tmx = new TMX(TmxSite.TMUF);
+var tmx = new TMX(TmxSite.TMUF, "MyApp/1.0 (contact: me@example.com)");
 
 // Get the track object
 var map = await tmx.GetTrackGbxNodeAsync(12345);

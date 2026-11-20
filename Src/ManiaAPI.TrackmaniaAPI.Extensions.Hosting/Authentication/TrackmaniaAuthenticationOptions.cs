@@ -6,6 +6,8 @@ namespace ManiaAPI.TrackmaniaAPI.Extensions.Hosting.Authentication;
 
 public class TrackmaniaAuthenticationOptions : OAuthOptions
 {
+    public string? UserAgent { get; set; }
+
     public TrackmaniaAuthenticationOptions()
     {
         ClaimsIssuer = TrackmaniaAuthenticationDefaults.Issuer;

@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <PackageId>ManiaAPI.TrackmaniaAPI</PackageId>
-        <Version>2.10.0</Version>
+        <Version>2.11.0</Version>
         <Authors>BigBang1112</Authors>
         <Description>Wrapper for the official web API from Trackmania released in 2020. Part of the ManiaAPI.NET library set.</Description>
         <Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
@@ -11,12 +11,8 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net</PackageTags>
         <PackageReleaseNotes>
-- Added `GetUserAdminClubsAsync`, `GetUserFavoriteMapsAsync`, `AddUserFavoriteMapAsync`, and `RemoveUserFavoriteMapAsync` for player OAuth tokens
-- Added public JSON converters and access to `TrackmaniaAPIHandler.Authorization` for external serialization and player tokens
-- Fixed concurrent authorization for clients sharing a handler and encoding of multiple OAuth scopes
-- Fixed display name and account ID lookups handling empty results without hiding malformed JSON, and escaped display names in requests
-- Updated the User-Agent to report the installed package version
-- Added .NET 11 support
+- Added constructors with an application User-Agent
+- Fixed automatic authorization waiting until the token expired
         </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>

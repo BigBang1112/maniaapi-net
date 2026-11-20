@@ -1,7 +1,6 @@
 ﻿using ExtendMasterServerSample;
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.TMT;
-using MinimalXmlReader;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Net;
@@ -15,11 +14,11 @@ var platform = Platform.PC;
 
 var platformLoginNicknamePairs = File.ReadLines("D:\\Visual Studio\\TurboLoginScraper\\TurboLoginScraper\\bin\\Debug\\net9.0\\pc.txt");
 
-var initServer = new InitServerTMT(platform);
+var initServer = new InitServerTMT(platform, "ExtendMasterServerSample/1.0 (contact: me@example.com)");
 
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var masterServer = new ExtendedMasterServerTMT(waitingParams.MasterServers.First());
+var masterServer = new ExtendedMasterServerTMT(waitingParams.MasterServers.First(), "ExtendMasterServerSample/1.0 (contact: me@example.com)");
 
 var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
 jsonOptions.Converters.Add(new TimeInt32Converter());
@@ -92,7 +91,7 @@ foreach (var line in platformLoginNicknamePairs.Skip(120))
 
 internal class ExtendedMasterServerTMT : MasterServerTMT
 {
-    public ExtendedMasterServerTMT(MasterServerInfo info) : base(info) { }
+    public ExtendedMasterServerTMT(MasterServerInfo info, string userAgent) : base(info, userAgent) { }
 
     public async Task<MasterServerResponse<RecordsComparison>> GetChallengeRecordsComparisonResponseAsync(string login, string authorLogin, int sessionId, CancellationToken cancellationToken = default)
     {

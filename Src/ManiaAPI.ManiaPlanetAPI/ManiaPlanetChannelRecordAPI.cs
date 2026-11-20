@@ -25,15 +25,26 @@ public class ManiaPlanetChannelRecordAPI : IManiaPlanetChannelRecordAPI
 
     public HttpClient Client { get; }
 
+    public ManiaPlanetChannelRecordAPI(string userAgent) : this(new HttpClient { BaseAddress = new Uri(BaseAddress) }, userAgent) { }
+
     /// <summary>
     /// Creates a new instance of the ManiaPlanet Channel Record API client.
     /// </summary>
     /// <param name="client">HTTP client.</param>
-    public ManiaPlanetChannelRecordAPI(HttpClient client)
+    public ManiaPlanetChannelRecordAPI(HttpClient client) : this(client, null) { }
+
+    public ManiaPlanetChannelRecordAPI(HttpClient client, string? userAgent)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;
@@ -149,5 +160,11 @@ public class ManiaPlanetChannelRecordAPI : IManiaPlanetChannelRecordAPI
         var message = await response.Content.ReadAsStringAsync(cancellationToken);
 
         return message.Trim().Trim('"') == NoLeaderboardMessage;
+    }
+
+    public virtual void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

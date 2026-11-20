@@ -47,6 +47,12 @@ public interface IMasterServerMP : IMasterServer, IAnyServerMP
 
 public abstract class MasterServerMP : MasterServer, IMasterServerMP
 {
+    protected MasterServerMP(Uri uri, string userAgent) : base(uri, userAgent) { }
+
+    protected MasterServerMP(MasterServerInfo info, string userAgent) : base(info.GetUri(), userAgent) { }
+
+    protected MasterServerMP(HttpClient client, string userAgent) : base(client, userAgent) { }
+
     protected MasterServerMP(Uri uri) : base(uri) { }
 
     protected MasterServerMP(MasterServerInfo info) : base(info.GetUri()) { }

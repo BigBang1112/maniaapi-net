@@ -8,8 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 // Register the services
-builder.Services.AddMasterServerTMT();
-builder.Services.AddMasterServerMP4();
+builder.Services.AddMasterServerTMT(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
+builder.Services.AddMasterServerMP4(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 
 builder.Services.AddHostedService<StartupHostedService>();
 

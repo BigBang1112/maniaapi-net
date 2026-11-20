@@ -54,6 +54,21 @@ public class NadeoAPIRefreshBackgroundServiceTests
     }
 
     [Test]
+    public async Task RefreshTokenRejected_SignsInAgainWithoutWarning()
+    {
+        await using var host = new RefreshHost();
+        host.Server.RespondToRefresh = (_, _) => Task.FromResult(FakeResponse.Status(HttpStatusCode.Unauthorized));
+        await host.AuthorizeAsync<NadeoServices>();
+        await host.StartAsync();
+
+        // The first sign-in is the authorization above, the second is the recovery after the rejected refresh
+        await host.AdvanceUntilAsync(() => host.Server.SignIns.Count >= 2);
+
+        await Assert.That(host.Server.SignIns).Contains(NadeoServicesAudience);
+        await Assert.That(host.RefreshWarnings).IsEmpty();
+    }
+
+    [Test]
     public async Task StopAsync_DuringRefresh_LogsNoWarning()
     {
         await using var host = await StartWithHangingRefreshAsync();

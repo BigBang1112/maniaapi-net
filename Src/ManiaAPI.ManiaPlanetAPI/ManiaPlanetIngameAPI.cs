@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ManiaAPI.ManiaPlanetAPI;
 
-public interface IManiaPlanetIngameAPI
+public interface IManiaPlanetIngameAPI : IDisposable
 {
     HttpClient Client { get; }
 
@@ -22,15 +22,26 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
 
     public HttpClient Client { get; }
 
+    public ManiaPlanetIngameAPI(string userAgent) : this(new HttpClient { BaseAddress = new Uri(BaseAddress) }, userAgent) { }
+
     /// <summary>
     /// Creates a new instance of the ManiaPlanet ingame API client.
     /// </summary>
     /// <param name="client">HTTP client.</param>
-    public ManiaPlanetIngameAPI(HttpClient client)
+    public ManiaPlanetIngameAPI(HttpClient client) : this(client, null) { }
+
+    public ManiaPlanetIngameAPI(HttpClient client, string? userAgent)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;
@@ -330,5 +341,11 @@ public class ManiaPlanetIngameAPI : IManiaPlanetIngameAPI
 
         return await response.Content.ReadFromJsonAsync(ManiaPlanetAPIJsonContext.Default.ImmutableListOnlineServer, cancellationToken)
             ?? throw new JsonException("The response body is null.");
+    }
+
+    public virtual void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

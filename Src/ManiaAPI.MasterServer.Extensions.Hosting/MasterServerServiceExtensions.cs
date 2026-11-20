@@ -1,7 +1,7 @@
 ﻿using ManiaAPI.MasterServer.MP3;
 using ManiaAPI.MasterServer.MP4;
 using ManiaAPI.MasterServer.TMT;
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Immutable;
 using System.Net;
@@ -18,7 +18,43 @@ public static class MasterServerServiceExtensions
     /// </summary>
     public static IHttpClientBuilder AddMasterServerTMUF(this IServiceCollection services)
     {
-        return services.AddHttpClient<MasterServerTMUF>(client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultUnitedUrl));
+        return AddMasterServerTMUF(services, _ => { });
+    }
+
+    /// <summary>Registers the TMUF client with application User-Agent options.</summary>
+    public static IHttpClientBuilder AddMasterServerTMUF(this IServiceCollection services, Action<MasterServerOptions> options)
+    {
+        var o = new MasterServerOptions();
+        options(o);
+
+        // Registered by Type, as the interface's static abstract members keep it from being a generic type argument
+        services.AddTransient(typeof(IMasterServerTMUF), provider => provider.GetRequiredService<MasterServerTMUF>());
+
+        return services.AddHttpClient(nameof(MasterServerTMUF), client => client.BaseAddress = new Uri(MasterServerTMUF.DefaultUrl))
+            .AddTypedClient(client => new MasterServerTMUF(client))
+            .ConfigureHttpClient(client => ConfigureUserAgent(client, o));
+    }
+
+    /// <summary>
+    /// Adds the <see cref="MasterServerTMNF"/> client to the service collection, with its <see cref="HttpClient"/> configured to use the default TMNF master server, but it can be changed with the builder.
+    /// </summary>
+    public static IHttpClientBuilder AddMasterServerTMNF(this IServiceCollection services)
+    {
+        return AddMasterServerTMNF(services, _ => { });
+    }
+
+    /// <summary>Registers the TMNF client with application User-Agent options.</summary>
+    public static IHttpClientBuilder AddMasterServerTMNF(this IServiceCollection services, Action<MasterServerOptions> options)
+    {
+        var o = new MasterServerOptions();
+        options(o);
+
+        // Registered by Type, as the interface's static abstract members keep it from being a generic type argument
+        services.AddTransient(typeof(IMasterServerTMNF), provider => provider.GetRequiredService<MasterServerTMNF>());
+
+        return services.AddHttpClient(nameof(MasterServerTMNF), client => client.BaseAddress = new Uri(MasterServerTMNF.DefaultUrl))
+            .AddTypedClient(client => new MasterServerTMNF(client))
+            .ConfigureHttpClient(client => ConfigureUserAgent(client, o));
     }
 
     /// <summary>
@@ -28,8 +64,21 @@ public static class MasterServerServiceExtensions
         Action<IHttpClientBuilder>? configureInitServer = null,
         Action<IHttpClientBuilder>? configureMasterServer = null)
     {
-        var httpInitServer = services.AddHttpClient<InitServerMP4>(client => client.BaseAddress = new Uri(InitServerMP4.DefaultUrl));
-        var httpMasterServer = services.AddHttpClient<MasterServerMP4>()
+        AddMasterServerMP4(services, _ => { }, configureInitServer, configureMasterServer);
+    }
+
+    /// <summary>Registers MP4 init and master server clients with application User-Agent options.</summary>
+    public static void AddMasterServerMP4(this IServiceCollection services,
+        Action<MasterServerOptions> options,
+        Action<IHttpClientBuilder>? configureInitServer = null,
+        Action<IHttpClientBuilder>? configureMasterServer = null)
+    {
+        var o = new MasterServerOptions();
+        options(o);
+
+        var httpInitServer = services.AddHttpClient(nameof(InitServerMP4), client => client.BaseAddress = new Uri(InitServerMP4.DefaultUrl))
+            .AddTypedClient(client => new InitServerMP4(client));
+        var httpMasterServer = services.AddHttpClient(nameof(MasterServerMP4))
             .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
             {
                 PooledConnectionLifetime = TimeSpan.FromMinutes(10),
@@ -41,6 +90,11 @@ public static class MasterServerServiceExtensions
             client.BaseAddress = new Uri(MasterServerMP4.DefaultUrl);
             return new MasterServerMP4(client);
         });
+        services.AddTransient<IInitServerMP4>(provider => provider.GetRequiredService<InitServerMP4>());
+        services.AddTransient<IMasterServerMP4>(provider => provider.GetRequiredService<MasterServerMP4>());
+
+        httpInitServer.ConfigureHttpClient(client => ConfigureUserAgent(client, o));
+        httpMasterServer.ConfigureHttpClient(client => ConfigureUserAgent(client, o));
 
         if (configureInitServer is not null) configureInitServer(httpInitServer);
         if (configureMasterServer is not null) configureMasterServer(httpMasterServer);
@@ -55,8 +109,21 @@ public static class MasterServerServiceExtensions
         Action<IHttpClientBuilder>? configureInitServer = null,
         Action<IHttpClientBuilder>? configureMasterServer = null)
     {
-        var httpInitServer = services.AddHttpClient<InitServerMP3>(client => client.BaseAddress = new Uri(InitServerMP3.DefaultUrl));
-        var httpMasterServer = services.AddHttpClient<MasterServerMP3>()
+        AddMasterServerMP3(services, _ => { }, configureInitServer, configureMasterServer);
+    }
+
+    /// <summary>Registers MP3 init and master server clients with application User-Agent options.</summary>
+    public static void AddMasterServerMP3(this IServiceCollection services,
+        Action<MasterServerOptions> options,
+        Action<IHttpClientBuilder>? configureInitServer = null,
+        Action<IHttpClientBuilder>? configureMasterServer = null)
+    {
+        var o = new MasterServerOptions();
+        options(o);
+
+        var httpInitServer = services.AddHttpClient(nameof(InitServerMP3), client => client.BaseAddress = new Uri(InitServerMP3.DefaultUrl))
+            .AddTypedClient(client => new InitServerMP3(client));
+        var httpMasterServer = services.AddHttpClient(nameof(MasterServerMP3))
             .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
             {
                 PooledConnectionLifetime = TimeSpan.FromMinutes(10),
@@ -68,6 +135,11 @@ public static class MasterServerServiceExtensions
             client.BaseAddress = new Uri(MasterServerMP3.DefaultUrl);
             return new MasterServerMP3(client);
         });
+        services.AddTransient<IInitServerMP3>(provider => provider.GetRequiredService<InitServerMP3>());
+        services.AddTransient<IMasterServerMP3>(provider => provider.GetRequiredService<MasterServerMP3>());
+
+        httpInitServer.ConfigureHttpClient(client => ConfigureUserAgent(client, o));
+        httpMasterServer.ConfigureHttpClient(client => ConfigureUserAgent(client, o));
 
         if (configureInitServer is not null) configureInitServer(httpInitServer);
         if (configureMasterServer is not null) configureMasterServer(httpMasterServer);
@@ -82,6 +154,18 @@ public static class MasterServerServiceExtensions
         Action<IHttpClientBuilder>? configureInitServer = null,
         Action<IHttpClientBuilder>? configureMasterServer = null)
     {
+        AddMasterServerTMT(services, _ => { }, configureInitServer, configureMasterServer);
+    }
+
+    /// <summary>Registers TMT init and master server clients with application User-Agent options.</summary>
+    public static void AddMasterServerTMT(this IServiceCollection services,
+        Action<MasterServerOptions> options,
+        Action<IHttpClientBuilder>? configureInitServer = null,
+        Action<IHttpClientBuilder>? configureMasterServer = null)
+    {
+        var o = new MasterServerOptions();
+        options(o);
+
         foreach (var platform in Enum.GetValues<Platform>())
         {
             var httpInitServer = services.AddHttpClient($"{nameof(InitServerTMT)}_{platform}", client => client.BaseAddress = new Uri(InitServerTMT.GetDefaultUrl(platform)));
@@ -92,11 +176,15 @@ public static class MasterServerServiceExtensions
                     AutomaticDecompression = DecompressionMethods.GZip
                 });
 
+            httpInitServer.ConfigureHttpClient(client => ConfigureUserAgent(client, o));
+            httpMasterServer.ConfigureHttpClient(client => ConfigureUserAgent(client, o));
+
             if (configureInitServer is not null) configureInitServer(httpInitServer);
             if (configureMasterServer is not null) configureMasterServer(httpMasterServer);
 
             services.AddKeyedScoped(platform, (provider, key) => new InitServerTMT(
                 provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(InitServerTMT)}_{key}")));
+            services.AddKeyedScoped<IInitServerTMT>(platform, (provider, key) => provider.GetRequiredKeyedService<InitServerTMT>(key));
         }
 
         services.AddScoped(provider => Enum.GetValues<Platform>()
@@ -106,5 +194,15 @@ public static class MasterServerServiceExtensions
 
         services.AddScoped(provider => new AggregatedMasterServerTMT(
             provider.GetRequiredService<IMasterServerTMTFactory>().CreateClients()));
+        services.AddScoped<IAggregatedMasterServerTMT>(provider => provider.GetRequiredService<AggregatedMasterServerTMT>());
+    }
+
+    private static void ConfigureUserAgent(HttpClient client, MasterServerOptions options)
+    {
+        if (!string.IsNullOrWhiteSpace(options.UserAgent))
+        {
+            client.DefaultRequestHeaders.UserAgent.Clear();
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
+        }
     }
 }

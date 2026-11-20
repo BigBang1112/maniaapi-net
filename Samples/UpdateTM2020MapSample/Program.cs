@@ -2,7 +2,7 @@
 using ManiaAPI.NadeoAPI.Extensions.Gbx;
 using Spectre.Console;
 
-using var ns = new NadeoServices();
+using var ns = new NadeoServices("MyApp/1.0 (contact: me@example.com)");
 
 var login = AnsiConsole.Ask<string>("Enter service account [green]login[/]:");
 

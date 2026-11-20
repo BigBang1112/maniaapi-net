@@ -23,7 +23,7 @@ This API is more moderated and cached, but doesn't require you to authenticate w
 ```cs
 using ManiaAPI.TrackmaniaIO;
 
-var tmio = new TrackmaniaIO("Example from ManiaAPI.NET"); // User agent to comply with https://openplanet.dev/tmio/api
+var tmio = new TrackmaniaIO("MyApp/1.0 (contact: me@example.com)"); // User agent to comply with https://openplanet.dev/tmio/api
 ```
 
 or with DI, using an injected `HttpClient`:
@@ -31,5 +31,8 @@ or with DI, using an injected `HttpClient`:
 ```cs
 using ManiaAPI.TrackmaniaIO;
 
-builder.Services.AddHttpClient<TrackmaniaIO>();
+builder.Services.AddHttpClient(nameof(TrackmaniaIO));
+builder.Services.AddTransient(provider => new TrackmaniaIO(
+    provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(TrackmaniaIO)),
+    "MyApp/1.0 (contact: me@example.com)"));
 ```

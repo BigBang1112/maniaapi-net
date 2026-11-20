@@ -4,7 +4,7 @@ namespace ManiaAPI.ManiaPlanetAPI;
 /// The ManiaPlanet Channel Feedback API (feedback.prod.live.maniaplanet.com), which holds the votes and ratings players give on channel maps.
 /// Only its public route is wrapped; the vote and rating routes need the game servers' credentials.
 /// </summary>
-public interface IManiaPlanetChannelFeedbackAPI
+public interface IManiaPlanetChannelFeedbackAPI : IDisposable
 {
     HttpClient Client { get; }
 

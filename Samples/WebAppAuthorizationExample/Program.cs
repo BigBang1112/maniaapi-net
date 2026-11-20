@@ -15,6 +15,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie()
     .AddManiaPlanet(options =>
     {
+        options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
         options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:ClientId"]!;
         options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:ClientSecret"]!;
 
@@ -24,6 +25,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     })
     .AddManiaPlanet("ManiaPlanetEmail", options =>
     {
+        options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
         options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:ClientId"]!;
         options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:ClientSecret"]!;
         options.CallbackPath = "/signin-maniaplanet-email";
@@ -34,6 +36,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     })
     .AddTrackmania(options =>
     {
+        options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
         options.ClientId = builder.Configuration["OAuth2:Trackmania:ClientId"]!;
         options.ClientSecret = builder.Configuration["OAuth2:Trackmania:ClientSecret"]!;
 
@@ -45,6 +48,7 @@ builder.Services.AddTransient<UserDelegatingHandler>();
 
 builder.Services.AddManiaPlanetAPI(options =>
 {
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
     options.Credentials = new ManiaPlanetAPICredentials(
         builder.Configuration["OAuth2:ManiaPlanet:ClientId"]!,
         builder.Configuration["OAuth2:ManiaPlanet:ClientSecret"]!);
@@ -52,6 +56,7 @@ builder.Services.AddManiaPlanetAPI(options =>
 
 builder.Services.AddTrackmaniaAPI(options =>
 {
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
     options.Credentials = new TrackmaniaAPICredentials(
         builder.Configuration["OAuth2:Trackmania:ClientId"]!,
         builder.Configuration["OAuth2:Trackmania:ClientSecret"]!);

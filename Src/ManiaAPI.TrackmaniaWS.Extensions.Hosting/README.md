@@ -11,6 +11,7 @@ using ManiaAPI.TrackmaniaWS.Extensions.Hosting;
 
 builder.Services.AddTrackmaniaWS(new TrackmaniaWSOptions
 {
+    UserAgent = "MyApp/1.0 (contact: me@example.com)",
     Credentials = new("tmf_yourapp", "password")
 });
 ```
@@ -26,6 +27,7 @@ using ManiaAPI.TrackmaniaWS.Extensions.Hosting;
 
 builder.Services.AddTrackmaniaWS(new TrackmaniaWSOptions
 {
+    UserAgent = "MyApp/1.0 (contact: me@example.com)",
     Credentials = new("tmf_yourapp", "password")
 })
 .AddStandardResilienceHandler();

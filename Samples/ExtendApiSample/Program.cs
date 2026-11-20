@@ -3,7 +3,7 @@ using Spectre.Console;
 using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 
-using var ens = new ExtendedNadeoServices();
+using var ens = new ExtendedNadeoServices("ExtendApiSample/1.0 (contact: me@example.com)");
 
 var login = AnsiConsole.Ask<string>("Enter service account [green]login[/]:");
 
@@ -21,7 +21,7 @@ foreach (var map in submittedMaps)
     AnsiConsole.WriteLine(map.Name);
 }
 
-internal class ExtendedNadeoServices : NadeoServices
+internal class ExtendedNadeoServices(string userAgent) : NadeoServices(userAgent)
 {
     public async Task<ImmutableList<MapInfo>> GetSubmittedMapsExampleExtensionAsync(CancellationToken cancellationToken = default)
     {

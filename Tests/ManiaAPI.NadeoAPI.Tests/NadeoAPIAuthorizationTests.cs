@@ -106,17 +106,89 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
-    public async Task RefreshAsync_FailedRefresh_ThrowsResponseException()
+    public async Task RefreshAsync_FailedRefreshWithoutSavedCredentials_ThrowsResponseException()
     {
         var fake = FakeHttpMessageHandler.Sequence(
             ExpiredTokenResponse,
-            () => FakeResponse.Json("""{"message":"Refresh token expired."}""", HttpStatusCode.Unauthorized));
-        using var ns = new NadeoServices(fake.CreateClient());
+            RefreshTokenRejectedResponse);
+        using var ns = new NadeoServices(fake.CreateClient(), new NadeoAPIHandler { SaveCredentials = false });
         await ns.AuthorizeAsync(Login, Password);
 
         var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.RefreshAsync().AsTask());
 
         await Assert.That(ex!.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+    }
+
+    [Test]
+    public async Task RefreshAsync_RefreshTokenRejected_ReauthorizesWithSavedCredentials()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            ExpiredTokenResponse,
+            RefreshTokenRejectedResponse,
+            () => NadeoTokens.Valid(Audience, out _));
+        using var ns = new NadeoServices(fake.CreateClient());
+        await ns.AuthorizeAsync(Login, Password);
+
+        var refreshed = await ns.RefreshAsync();
+
+        await Assert.That(refreshed).IsTrue();
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl, RefreshUrl, AuthenticationUrl]);
+        await Assert.That(fake.Requests[2].Authorization?.Parameter).IsEqualTo(Convert.ToBase64String(Encoding.UTF8.GetBytes($"{Login}:{Password}")));
+        await Assert.That(ns.ExpirationTime!.Value).IsGreaterThan(DateTimeOffset.UtcNow);
+    }
+
+    [Test]
+    public async Task RefreshAsync_RefreshTokenRejectedForSharedHandler_RecoversEveryClient()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            ExpiredTokenResponse,
+            RefreshTokenRejectedResponse,
+            () => NadeoTokens.Valid(Audience, out _),
+            () => FakeResponse.Json("[]"));
+        var handler = new NadeoAPIHandler();
+        using var first = new NadeoServices(fake.CreateClient(), handler);
+        using var second = new NadeoServices(fake.CreateClient(), handler);
+        await first.AuthorizeAsync(Login, Password);
+
+        await first.RefreshAsync();
+        await second.GetZonesAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl, RefreshUrl, AuthenticationUrl, ZonesUrl]);
+    }
+
+    [Test]
+    public async Task RefreshAsync_SavedCredentialsRejected_DoesNotSendThemAgain()
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            ExpiredTokenResponse,
+            RefreshTokenRejectedResponse,
+            () => FakeResponse.Json("""{"message":"Invalid credentials."}""", HttpStatusCode.Unauthorized),
+            RefreshTokenRejectedResponse);
+        using var ns = new NadeoServices(fake.CreateClient());
+        await ns.AuthorizeAsync(Login, Password);
+
+        await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.RefreshAsync().AsTask());
+        var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.RefreshAsync().AsTask());
+
+        await Assert.That(ex!.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([AuthenticationUrl, RefreshUrl, AuthenticationUrl, RefreshUrl]);
+    }
+
+    [Test]
+    [Arguments(HttpStatusCode.Forbidden)]
+    [Arguments(HttpStatusCode.InternalServerError)]
+    public async Task RefreshAsync_RefreshFailsTemporarily_DoesNotReauthorize(HttpStatusCode status)
+    {
+        var fake = FakeHttpMessageHandler.Sequence(
+            ExpiredTokenResponse,
+            () => FakeResponse.Json("{}", status));
+        using var ns = new NadeoServices(fake.CreateClient());
+        await ns.AuthorizeAsync(Login, Password);
+
+        var ex = await Assert.ThrowsAsync<NadeoAPIResponseException>(() => ns.RefreshAsync().AsTask());
+
+        await Assert.That(ex!.StatusCode).IsEqualTo(status);
+        await Assert.That(fake.Requests).Count().IsEqualTo(2);
     }
 
     [Test]
@@ -166,7 +238,6 @@ public class NadeoAPIAuthorizationTests
 
     [Test]
     [Arguments(HttpStatusCode.Unauthorized)]
-    [Arguments(HttpStatusCode.Forbidden)]
     public async Task GetZonesAsync_PendingCredentialsRejected_FailsLaterRequestsWithoutSigningInAgain(HttpStatusCode status)
     {
         var fake = FakeHttpMessageHandler.Sequence(
@@ -183,10 +254,12 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
-    public async Task GetZonesAsync_PendingCredentialsFailTemporarily_SignsInAgainOnNextRequest()
+    [Arguments(HttpStatusCode.Forbidden)]
+    [Arguments(HttpStatusCode.ServiceUnavailable)]
+    public async Task GetZonesAsync_PendingCredentialsFailTemporarily_SignsInAgainOnNextRequest(HttpStatusCode status)
     {
         var fake = FakeHttpMessageHandler.Sequence(
-            () => FakeResponse.Json("""{"message":"Service unavailable."}""", HttpStatusCode.ServiceUnavailable),
+            () => FakeResponse.Json("""{"message":"Temporarily unavailable."}""", status),
             () => NadeoTokens.Valid(Audience, out _),
             () => FakeResponse.Json("[]"));
         using var ns = new NadeoServices(fake.CreateClient(), PendingCredentialsHandler());
@@ -490,6 +563,14 @@ public class NadeoAPIAuthorizationTests
     {
         var expiredToken = NadeoTokens.AccessToken(Audience, DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddMinutes(-30));
         return FakeResponse.Json(NadeoTokens.Response(expiredToken, refreshToken: RefreshToken));
+    }
+
+    /// <summary>
+    /// The refresh endpoint's answer to a refresh token that expired or was revoked.
+    /// </summary>
+    private static HttpResponseMessage RefreshTokenRejectedResponse()
+    {
+        return FakeResponse.Json("""{"message":"Refresh token expired."}""", HttpStatusCode.Unauthorized);
     }
 
     /// <summary>

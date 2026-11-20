@@ -6,12 +6,13 @@ Provides an efficient way to inject master server services into your application
 
 Previously named `ManiaAPI.Xml.Extensions.Hosting`. To migrate, replace the package reference and use `ManiaAPI.MasterServer.Extensions.Hosting`. The service registration methods are unchanged.
 
-## Setup for TMUF
+## Setup for TMUF and TMNF
 
 ```cs
 using ManiaAPI.MasterServer.Extensions.Hosting;
 
-builder.Services.AddMasterServerTMUF();
+builder.Services.AddMasterServerTMUF(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
+builder.Services.AddMasterServerTMNF(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 ```
 
 ## Setup for ManiaPlanet
@@ -19,7 +20,7 @@ builder.Services.AddMasterServerTMUF();
 ```cs
 using ManiaAPI.MasterServer.Extensions.Hosting;
 
-builder.Services.AddMasterServerMP4();
+builder.Services.AddMasterServerMP4(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 ```
 
 You can now inject `MasterServerMP4`, as long as you're fine relying on `Maniaplanet relay 1` to continue running, and use it without additional steps. Compression is enabled.
@@ -29,7 +30,7 @@ If you want to have better control over the selection of master servers, use thi
 ```cs
 using ManiaAPI.MasterServer.Extensions.Hosting;
 
-builder.Services.AddMasterServerMP4();
+builder.Services.AddMasterServerMP4(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 
 // --------------------
 // Do the setup
@@ -56,7 +57,7 @@ The same idea works for ManiaPlanet 3 with `AddMasterServerMP3()`, which uses `M
 using ManiaAPI.MasterServer.Extensions.Hosting;
 
 // Register the services
-builder.Services.AddMasterServerTMT();
+builder.Services.AddMasterServerTMT(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 
 // --------------------
 // Do the setup
@@ -85,19 +86,21 @@ Features this last setup brings:
 
 HTTP requests can transiently fail, so it's a good idea to add some retry logic.
 
-`AddMasterServerTMUF` returns an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
+`AddMasterServerTMUF` and `AddMasterServerTMNF` return an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
 
 ```cs
 using ManiaAPI.MasterServer.Extensions.Hosting;
 
-builder.Services.AddMasterServerTMUF()
+builder.Services.AddMasterServerTMUF(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)")
     .AddStandardResilienceHandler();
 
 builder.Services.AddMasterServerMP4(
-    configureInitServer: http => http.AddStandardResilienceHandler(),
+    options: options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)",
+ http => http.AddStandardResilienceHandler(),
     configureMasterServer: http => http.AddStandardResilienceHandler());
 
 builder.Services.AddMasterServerTMT(
-    configureInitServer: http => http.AddStandardResilienceHandler(),
+    options: options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)",
+ http => http.AddStandardResilienceHandler(),
     configureMasterServer: http => http.AddStandardResilienceHandler());
 ```

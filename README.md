@@ -16,6 +16,7 @@ A wrapper for these web APIs:
 - [Trackmania Web Services](http://developers.trackmania.com/webservices/) (old TMF web API)
 - [Trackmania Exchange](https://api2.mania.exchange/), including Item Exchange
 - [UnitedLadder](https://ul.unitedascenders.xyz/)
+- [Dedimania](http://dedimania.net/) (records of TMF and ManiaPlanet servers)
 - Master server APIs using XML (for TMF, TMT, and ManiaPlanet)
 - GBXRemote protocol using XML-RPC (for TMF, ManiaPlanet, and TM2020)
 
@@ -42,6 +43,7 @@ Anything you can imagine!
 - [ManiaAPI.MasterServer.Extensions.Hosting](#maniaapimasterserverextensionshosting)
 - [ManiaAPI.GBXRemote](#maniaapigbxremote)
 - [ManiaAPI.UnitedLadder](#maniaapiunitedladder)
+- [ManiaAPI.Dedimania](#maniaapidedimania)
 
 ### Samples
 
@@ -133,7 +135,7 @@ Make sure you have created your service account [here](https://www.trackmania.co
 ```cs
 using ManiaAPI.NadeoAPI;
 
-var ns = new NadeoServices();
+var ns = new NadeoServices("MyApp/1.0 (contact: me@example.com)");
 
 await ns.AuthorizeAsync("service_name", "ls>97jO>e3>>D/Ce");
 
@@ -153,10 +155,10 @@ using ManiaAPI.NadeoAPI;
 var login = "service_name";
 var password = "ls>97jO>e3>>D/Ce";
 
-var ns = new NadeoServices();
+var ns = new NadeoServices("MyApp/1.0 (contact: me@example.com)");
 await ns.AuthorizeAsync(login, password);
 
-var nls = new NadeoLiveServices();
+var nls = new NadeoLiveServices("MyApp/1.0 (contact: me@example.com)");
 await nls.AuthorizeAsync(login, password);
 
 // Ready to use combined
@@ -188,6 +190,7 @@ using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 
 builder.Services.AddNadeoAPI(options =>
 {
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
     options.Credentials = new NadeoAPICredentials(
         builder.Configuration["NadeoAPI:Login"]!,
         builder.Configuration["NadeoAPI:Password"]!);
@@ -210,6 +213,7 @@ using ManiaAPI.NadeoAPI.Extensions.Hosting;
 
 builder.Services.AddNadeoAPI(options =>
 {
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
     options.Credentials = new NadeoAPICredentials(
         builder.Configuration["NadeoAPI:Login"]!,
         builder.Configuration["NadeoAPI:Password"]!);
@@ -238,7 +242,7 @@ A simple example to show how you can update a map without having to manually spe
 using ManiaAPI.NadeoAPI;
 using ManiaAPI.NadeoAPI.Extensions.Gbx;
 
-var ns = new NadeoServices();
+var ns = new NadeoServices("MyApp/1.0 (contact: me@example.com)");
 await ns.AuthorizeAsync("service_name", "ls>97jO>e3>>D/Ce");
 
 // Update the map (no leaderboard lost!)
@@ -272,7 +276,7 @@ For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Gene
 ```cs
 using ManiaAPI.TrackmaniaAPI;
 
-var tm = new TrackmaniaAPI();
+var tm = new TrackmaniaAPI("MyApp/1.0 (contact: me@example.com)");
 
 await tm.AuthorizeAsync("clientId", "clientSecret", ["clubs", "read_favorite"]);
 
@@ -298,7 +302,8 @@ using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 
 builder.Services.AddTrackmaniaAPI(options =>
 {
-    options.Credentials = new ManiaPlanetAPICredentials(
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
+    options.Credentials = new TrackmaniaAPICredentials(
         builder.Configuration["Trackmania:ClientId"]!,
         builder.Configuration["Trackmania:ClientSecret"]!);
 });
@@ -318,6 +323,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie()
     .AddTrackmania(options =>
     {
+        options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
         options.ClientId = builder.Configuration["OAuth2:Trackmania:ClientId"]!;
         options.ClientSecret = builder.Configuration["OAuth2:Trackmania:ClientSecret"]!;
         
@@ -347,7 +353,8 @@ using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 
 builder.Services.AddTrackmaniaAPI(options =>
 {
-    options.Credentials = new ManiaPlanetAPICredentials(
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
+    options.Credentials = new TrackmaniaAPICredentials(
         builder.Configuration["Trackmania:ClientId"]!,
         builder.Configuration["Trackmania:ClientSecret"]!);
 })
@@ -382,7 +389,7 @@ For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web
 ```cs
 using ManiaAPI.ManiaPlanetAPI;
 
-var mp = new ManiaPlanetAPI();
+var mp = new ManiaPlanetAPI("MyApp/1.0 (contact: me@example.com)");
 
 // You can optionally authorize to do more things, and possibly be less limited
 await mp.AuthorizeAsync("clientId", "clientSecret", ["basic", "dedicated", "maps"]);
@@ -395,7 +402,7 @@ For ingame API, use the `ManiaPlanetIngameAPI`. This is not an authenticated API
 ```cs
 using ManiaAPI.ManiaPlanetAPI;
 
-var mpIngame = new ManiaPlanetIngameAPI();
+var mpIngame = new ManiaPlanetIngameAPI("MyApp/1.0 (contact: me@example.com)");
 
 // Authenticate a user
 var user = await mpIngame.AuthenticateAsync("username", "token");
@@ -411,7 +418,7 @@ For leaderboards of channel maps, use the `ManiaPlanetChannelRecordAPI`. It does
 ```cs
 using ManiaAPI.ManiaPlanetAPI;
 
-var channel = new ManiaPlanetChannelRecordAPI();
+var channel = new ManiaPlanetChannelRecordAPI("MyApp/1.0 (contact: me@example.com)");
 
 // Top 10, the number of records, and the ranks of the given players
 var leaderboard = await channel.GetLeaderboardAsync("9W_9qjV56i67CWpYDclFyOhz5g", ["lbt76240"]);
@@ -428,7 +435,7 @@ For feedback of channel maps, use the `ManiaPlanetChannelFeedbackAPI`. Only the 
 ```cs
 using ManiaAPI.ManiaPlanetAPI;
 
-var feedback = new ManiaPlanetChannelFeedbackAPI();
+var feedback = new ManiaPlanetChannelFeedbackAPI("MyApp/1.0 (contact: me@example.com)");
 
 var status = await feedback.GetStatusAsync();
 
@@ -454,6 +461,7 @@ using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 
 builder.Services.AddManiaPlanetAPI(options =>
 {
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
     options.Credentials = new ManiaPlanetAPICredentials(
         builder.Configuration["ManiaPlanet:ClientId"]!,
         builder.Configuration["ManiaPlanet:ClientSecret"]!);
@@ -467,7 +475,7 @@ builder.Services.AddManiaPlanetAPI(options =>
 ```cs
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 
-builder.Services.AddManiaPlanetIngameAPI();
+builder.Services.AddManiaPlanetIngameAPI(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 ```
 
 ### Setup OAuth2
@@ -484,6 +492,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie()
     .AddManiaPlanet(options =>
     {
+        options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
         options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:ClientId"]!;
         options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:ClientSecret"]!;
 
@@ -513,13 +522,14 @@ using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 
 builder.Services.AddManiaPlanetAPI(options =>
 {
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
     options.Credentials = new ManiaPlanetAPICredentials(
         builder.Configuration["ManiaPlanet:ClientId"]!,
         builder.Configuration["ManiaPlanet:ClientSecret"]!);
 })
 .AddStandardResilienceHandler();
 
-builder.Services.AddManiaPlanetIngameAPI()
+builder.Services.AddManiaPlanetIngameAPI(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)")
     .AddStandardResilienceHandler();
 ```
 
@@ -548,7 +558,7 @@ This API is more moderated and cached, but doesn't require you to authorize with
 ```cs
 using ManiaAPI.TrackmaniaIO;
 
-var tmio = new TrackmaniaIO("Example from ManiaAPI.NET"); // User agent to comply with https://openplanet.dev/tmio/api
+var tmio = new TrackmaniaIO("MyApp/1.0 (contact: me@example.com)"); // User agent to comply with https://openplanet.dev/tmio/api
 ```
 
 or with DI, using an injected `HttpClient`:
@@ -556,7 +566,10 @@ or with DI, using an injected `HttpClient`:
 ```cs
 using ManiaAPI.TrackmaniaIO;
 
-builder.Services.AddHttpClient<TrackmaniaIO>();
+builder.Services.AddHttpClient(nameof(TrackmaniaIO));
+builder.Services.AddTransient(provider => new TrackmaniaIO(
+    provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(TrackmaniaIO)),
+    "MyApp/1.0 (contact: me@example.com)"));
 ```
 
 ## ManiaAPI.TrackmaniaWS
@@ -591,7 +604,7 @@ Errors throw `TrackmaniaWSResponseException` (an `HttpRequestException`) with th
 ```cs
 using ManiaAPI.TrackmaniaWS;
 
-var ws = new TrackmaniaWS("tmf_yourapp", "password");
+var ws = new TrackmaniaWS("tmf_yourapp", "password", "MyApp/1.0 (contact: me@example.com)");
 
 // Ready to use
 ```
@@ -617,6 +630,7 @@ using ManiaAPI.TrackmaniaWS.Extensions.Hosting;
 
 builder.Services.AddTrackmaniaWS(new TrackmaniaWSOptions
 {
+    UserAgent = "MyApp/1.0 (contact: me@example.com)",
     Credentials = new("tmf_yourapp", "password")
 });
 ```
@@ -632,6 +646,7 @@ using ManiaAPI.TrackmaniaWS.Extensions.Hosting;
 
 builder.Services.AddTrackmaniaWS(new TrackmaniaWSOptions
 {
+    UserAgent = "MyApp/1.0 (contact: me@example.com)",
     Credentials = new("tmf_yourapp", "password")
 })
 .AddStandardResilienceHandler();
@@ -673,10 +688,10 @@ Wraps:
 using ManiaAPI.TMX;
 
 // Pick one from TMUF, TMNF, Nations, Sunrise, Original
-var tmx = new TMX(TmxSite.TMUF);
+var tmx = new TMX(TmxSite.TMUF, "MyApp/1.0 (contact: me@example.com)");
 
 // or one from Trackmania, Maniaplanet, Shootmania
-var tmx = new MX(TMXSite.Trackmania);
+var tmx = new MX(MxSite.Trackmania, "MyApp/1.0 (contact: me@example.com)");
 ```
 
 or with DI, for a specific site, using an injected `HttpClient`:
@@ -686,7 +701,7 @@ using ManiaAPI.TMX;
 
 builder.Services.AddHttpClient("TMX_TMNF");
 builder.Services.AddScoped<TMX>(provider => new TMX(
-    provider.GetRequiredService<IHttpClientFactory>().CreateClient("TMX_TMNF"), TmxSite.TMNF));
+    provider.GetRequiredService<IHttpClientFactory>().CreateClient("TMX_TMNF"), TmxSite.TMNF, "MyApp/1.0 (contact: me@example.com)"));
 ```
 
 For Item Exchange, use `IX`:
@@ -694,7 +709,7 @@ For Item Exchange, use `IX`:
 ```cs
 using ManiaAPI.TMX;
 
-var ix = new IX();
+var ix = new IX("MyApp/1.0 (contact: me@example.com)");
 
 var result = await ix.SearchItemsAsync(new() { ItemName = ["rock"], Limit = 20 });
 ```
@@ -712,7 +727,7 @@ Provides an efficient way to inject all TMX services into your application.
 ```cs
 using ManiaAPI.TMX.Extensions.Hosting;
 
-builder.Services.AddTMX();
+builder.Services.AddTMX(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 ```
 
 Features this setup brings:
@@ -735,6 +750,7 @@ using ManiaAPI.TMX.Extensions.Hosting;
 
 builder.Services.AddTMX(options =>
 {
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
     options.ConfigureHttpClient = http => http.AddStandardResilienceHandler();
 });
 ```
@@ -759,7 +775,7 @@ using ManiaAPI.TMX;
 using ManiaAPI.TMX.Extensions.Gbx;
 
 // Pick one from TMUF, TMNF, Nations, Sunrise, Original
-var tmx = new TMX(TmxSite.TMUF);
+var tmx = new TMX(TmxSite.TMUF, "MyApp/1.0 (contact: me@example.com)");
 
 // Get the track object
 var map = await tmx.GetTrackGbxNodeAsync(12345);
@@ -826,14 +842,20 @@ For all games:
 - Check if login exists
 - Run Test request
 
-### Setup for TMUF
+### Setup for TMUF and TMNF
 
 ```cs
 using ManiaAPI.MasterServer;
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 
-var masterServer = new MasterServerTMUF();
+// TrackMania United Forever
+var tmuf = new MasterServerTMUF(MasterServerTMUF.DefaultUrl, "MyApp/1.0 (contact: me@example.com)");
+
+// TrackMania Nations Forever
+var tmnf = new MasterServerTMNF(MasterServerTMNF.DefaultUrl, "MyApp/1.0 (contact: me@example.com)");
 ```
+
+Both share their requests through `MasterServerTMF`.
 
 ### Setup for ManiaPlanet
 
@@ -843,7 +865,7 @@ First examples assume `Maniaplanet relay 1` master server is still running.
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.MP4;
 
-var masterServer = new MasterServerMP4();
+var masterServer = new MasterServerMP4(MasterServerMP4.DefaultUrl, "MyApp/1.0 (contact: me@example.com)");
 ```
 
 Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client.
@@ -856,7 +878,7 @@ var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression =
 {
     BaseAddress = new Uri(MasterServerMP4.DefaultUrl)
 };
-var masterServer = new MasterServerMP4(httpClient);
+var masterServer = new MasterServerMP4(httpClient, "MyApp/1.0 (contact: me@example.com)");
 ```
 
 In case `Maniaplanet relay 1` shuts down / errors out, you have to reach out to the init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
@@ -865,10 +887,10 @@ In case `Maniaplanet relay 1` shuts down / errors out, you have to reach out to 
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.MP4;
 
-var initServer = new InitServerMP4();
+var initServer = new InitServerMP4(InitServerMP4.DefaultUrl, "MyApp/1.0 (contact: me@example.com)");
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var masterServer = new MasterServerMP4(waitingParams.MasterServers.First());
+var masterServer = new MasterServerMP4(waitingParams.MasterServers.First(), "MyApp/1.0 (contact: me@example.com)");
 
 // The master server is now ready to use
 ```
@@ -879,14 +901,14 @@ Example with enabled compression:
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.MP4;
 
-var initServer = new InitServerMP4();
+var initServer = new InitServerMP4(InitServerMP4.DefaultUrl, "MyApp/1.0 (contact: me@example.com)");
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
 var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
     BaseAddress = waitingParams.MasterServers.First().GetUri()
 };
-var masterServer = new MasterServerMP4(httpClient);
+var masterServer = new MasterServerMP4(httpClient, "MyApp/1.0 (contact: me@example.com)");
 
 // The master server is now ready to use
 ```
@@ -901,10 +923,10 @@ TMT handles 3 platforms: PC, XB1, and PS4. Each have their own init server and m
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.TMT;
 
-var initServer = new InitServerTMT(Platform.PC);
+var initServer = new InitServerTMT(Platform.PC, "MyApp/1.0 (contact: me@example.com)");
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+var masterServer = new MasterServerTMT(waitingParams.MasterServers.First(), "MyApp/1.0 (contact: me@example.com)");
 
 // You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
 ```
@@ -915,14 +937,14 @@ Because the responses can be quite large sometimes, it's **recommended to accept
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.TMT;
 
-var initServer = new InitServerTMT(Platform.PC);
+var initServer = new InitServerTMT(Platform.PC, "MyApp/1.0 (contact: me@example.com)");
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
 var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
     BaseAddress = waitingParams.MasterServers.First().GetUri()
 };
-var masterServer = new MasterServerTMT(httpClient);
+var masterServer = new MasterServerTMT(httpClient, "MyApp/1.0 (contact: me@example.com)");
 
 // You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
 ```
@@ -935,7 +957,7 @@ using ManiaAPI.MasterServer.TMT;
 
 var waitingParams = Enum.GetValues<Platform>().ToDictionary(
     platform => platform, 
-    platform => new InitServerTMT(platform).GetWaitingParamsAsync(cancellationToken));
+    platform => new InitServerTMT(platform, "MyApp/1.0 (contact: me@example.com)").GetWaitingParamsAsync(cancellationToken));
 
 await Task.WhenAll(waitingParams.Values);
 
@@ -944,7 +966,7 @@ var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDicti
     pair => new MasterServerTMT(new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
     {
         BaseAddress = pair.Value.Result.MasterServers.First().GetUri()
-    })));
+    }, "MyApp/1.0 (contact: me@example.com)")));
 
 // You can now use aggregatedMasterServer to work with all master servers at once
 ```
@@ -974,12 +996,13 @@ Provides an efficient way to inject master server services into your application
 
 Previously named `ManiaAPI.Xml.Extensions.Hosting`. To migrate, replace the package reference and use `ManiaAPI.MasterServer.Extensions.Hosting`. The service registration methods are unchanged.
 
-### Setup for TMUF
+### Setup for TMUF and TMNF
 
 ```cs
 using ManiaAPI.MasterServer.Extensions.Hosting;
 
-builder.Services.AddMasterServerTMUF();
+builder.Services.AddMasterServerTMUF(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
+builder.Services.AddMasterServerTMNF(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 ```
 
 ### Setup for ManiaPlanet
@@ -987,7 +1010,7 @@ builder.Services.AddMasterServerTMUF();
 ```cs
 using ManiaAPI.MasterServer.Extensions.Hosting;
 
-builder.Services.AddMasterServerMP4();
+builder.Services.AddMasterServerMP4(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 ```
 
 You can now inject `MasterServerMP4`, as long as you're fine relying on `Maniaplanet relay 1` to continue running, and use it without additional steps. Compression is enabled.
@@ -997,7 +1020,7 @@ If you want to have better control over the selection of master servers, use thi
 ```cs
 using ManiaAPI.MasterServer.Extensions.Hosting;
 
-builder.Services.AddMasterServerMP4();
+builder.Services.AddMasterServerMP4(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 
 // --------------------
 // Do the setup
@@ -1024,7 +1047,7 @@ The same idea works for ManiaPlanet 3 with `AddMasterServerMP3()`, which uses `M
 using ManiaAPI.MasterServer.Extensions.Hosting;
 
 // Register the services
-builder.Services.AddMasterServerTMT();
+builder.Services.AddMasterServerTMT(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 
 // --------------------
 // Do the setup
@@ -1053,20 +1076,22 @@ Features this last setup brings:
 
 HTTP requests can transiently fail, so it's a good idea to add some retry logic.
 
-`AddMasterServerTMUF` returns an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
+`AddMasterServerTMUF` and `AddMasterServerTMNF` return an `IHttpClientBuilder` directly, while `AddMasterServerMP4`, `AddMasterServerMP3`, and `AddMasterServerTMT` expose `configureInitServer` and `configureMasterServer` callbacks, so you can add [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) to automatically retry requests, apply timeouts, and use circuit breakers:
 
 ```cs
 using ManiaAPI.MasterServer.Extensions.Hosting;
 
-builder.Services.AddMasterServerTMUF()
+builder.Services.AddMasterServerTMUF(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)")
     .AddStandardResilienceHandler();
 
 builder.Services.AddMasterServerMP4(
-    configureInitServer: http => http.AddStandardResilienceHandler(),
+    options: options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)",
+ http => http.AddStandardResilienceHandler(),
     configureMasterServer: http => http.AddStandardResilienceHandler());
 
 builder.Services.AddMasterServerTMT(
-    configureInitServer: http => http.AddStandardResilienceHandler(),
+    options: options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)",
+ http => http.AddStandardResilienceHandler(),
     configureMasterServer: http => http.AddStandardResilienceHandler());
 ```
 
@@ -1165,20 +1190,32 @@ Method names and the wire protocol are unchanged.
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.UnitedLadder?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.UnitedLadder/)
 
-Wraps https://ul.unitedascenders.xyz/ (new UnitedLadder).
+Wraps the [UnitedLadder API](https://api.ul.unitedascenders.xyz/docs) for **TrackMania Nations Forever (TMNF) and TrackMania United Forever (TMUF) only**. Combines player profiles, rankings, statistics, and historical data from the TrackMania Forever services. Authentication is not required.
 
 ### Features
 
-- Get player info (registration ID from login for example)
-
-More will be added in the future.
+- Player profiles, including solo and multiplayer statistics, zone ranks, tags, and metadata
+- Force a profile refresh through TMF Web Services
+- Solo and multiplayer rankings by zone and environment
+- Track leaderboards, record scores, and ghost links
+- Official map results and player statistics by environment and campaign
+- Login registration and United account status
+- Player history and progression of skill points, ladder points, or nicknames
+- Leaderboard snapshots with collection and expiry times
+- Ghost replay downloads by track UID and numeric player ID
 
 ### Setup
 
 ```cs
 using ManiaAPI.UnitedLadder;
 
-var ul = new UnitedLadder();
+using var ul = new UnitedLadder("MyApp/1.0 (contact: me@example.com)");
+
+var player = await ul.GetPlayerAsync("bigbang1112");
+var refreshed = await ul.GetPlayerAsync("bigbang1112", forceWebServices: true);
+var solo = await ul.GetSoloRankingsAsync(zone: "World|France", page: 0);
+var multiplayer = await ul.GetMultiplayerRankingsAsync(environment: "Stadium");
+var leaderboard = await ul.GetTrackLeaderboardAsync("BeySZdnfuSh4nHY5xztiXLmlrXe");
 ```
 
 or with DI, using an injected `HttpClient`:
@@ -1188,6 +1225,48 @@ using ManiaAPI.UnitedLadder;
 
 builder.Services.AddHttpClient<UnitedLadder>();
 ```
+
+## ManiaAPI.Dedimania
+
+[![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.Dedimania?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.Dedimania/)
+
+Wraps the Dedimania records API (http://dedimania.net:8080/MAP), the records database of TMF and ManiaPlanet servers.
+
+### Features
+
+- Get a map with its records, optionally only of Rounds or Time Attack
+
+### Setup
+
+```cs
+using ManiaAPI.Dedimania;
+
+var dedimania = new Dedimania("MyApp/1.0 (contact: me@example.com)");
+```
+
+or with DI, using an injected `HttpClient`:
+
+```cs
+using ManiaAPI.Dedimania;
+
+builder.Services.AddHttpClient<Dedimania>();
+```
+
+### Usage
+
+```cs
+var map = await dedimania.GetMapAsync("BeySZdnfuSh4nHY5xztiXLmlrXe"); // A01-Race (TMNF)
+
+if (map is not null)
+{
+    foreach (var record in map.Records)
+    {
+        Console.WriteLine($"{record.Time}: {record.Login} ({record.Mode})");
+    }
+}
+```
+
+`GetMapAsync` returns null when Dedimania doesn't know the map, and at most 100 records. Pass `GameMode.Rounds` or `GameMode.TimeAttack` to get records of one mode only.
 
 ## Build
 

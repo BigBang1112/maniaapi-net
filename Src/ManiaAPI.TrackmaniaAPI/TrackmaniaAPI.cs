@@ -41,6 +41,8 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 {
     public const string BaseAddress = "https://api.trackmania.com/api";
 
+    private static readonly TimeSpan RenewalMargin = TimeSpan.FromMinutes(1);
+
     public TrackmaniaAPIHandler Handler { get; }
 
     public DateTimeOffset? ExpirationTime => Handler.Payload?.ExpirationTime;
@@ -48,20 +50,32 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     public HttpClient Client { get; }
     public bool AutomaticallyAuthorize { get; }
 
+    public TrackmaniaAPI(string userAgent, bool automaticallyAuthorize = true)
+        : this(new HttpClient(), new TrackmaniaAPIHandler(), userAgent, automaticallyAuthorize) { }
+
     /// <summary>
     /// Creates a new instance of the Trackmania API client.
     /// </summary>
     /// <param name="client">HTTP client.</param>
     /// <param name="handler">Handler to use for the Trackmania API.</param>
-    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.</param>
+    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client a minute before the <see cref="ExpirationTime"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="client"/> or <paramref name="handler"/> is null.</exception>
-    public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, bool automaticallyAuthorize = true)
+    public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, bool automaticallyAuthorize = true) : this(client, handler, null, automaticallyAuthorize) { }
+
+    public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, string? userAgent, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
         Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         AutomaticallyAuthorize = automaticallyAuthorize;
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;
@@ -358,7 +372,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     private bool IsAuthorizationDue([NotNullWhen(true)] out TrackmaniaAPICredentials? credentials)
     {
         credentials = Handler.Credentials;
-        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime);
+        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime.Value - RenewalMargin);
     }
 
     public virtual void Dispose()

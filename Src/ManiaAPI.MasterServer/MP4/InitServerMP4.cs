@@ -12,6 +12,12 @@ public class InitServerMP4 : InitServerMP, IInitServerMP4
 
     protected override string GameXml => XmlHelperMP4.GameXml;
 
+    public InitServerMP4(string url, string userAgent) : base(new Uri(url), userAgent) { }
+
+    public InitServerMP4(Uri uri, string userAgent) : base(uri, userAgent) { }
+
+    public InitServerMP4(HttpClient client, string userAgent) : base(client, userAgent) { }
+
     public InitServerMP4(string url = DefaultUrl) : base(new Uri(url)) { }
 
     public InitServerMP4(Uri uri) : base(uri) { }

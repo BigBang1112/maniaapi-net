@@ -30,7 +30,7 @@ Errors throw `TrackmaniaWSResponseException` (an `HttpRequestException`) with th
 ```cs
 using ManiaAPI.TrackmaniaWS;
 
-var ws = new TrackmaniaWS("tmf_yourapp", "password");
+var ws = new TrackmaniaWS("tmf_yourapp", "password", "MyApp/1.0 (contact: me@example.com)");
 
 // Ready to use
 ```

@@ -123,6 +123,139 @@ public class NadeoLiveServicesTests
     }
 
     [Test]
+    public async Task GetLeaderboardPositionsByTimeAsync_WithoutGroups_SendsEveryMapWithPersonalBest()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await nls.GetLeaderboardPositionsByTimeAsync(["MapA", "MapB", "MapC"], [1000, 2000, 3000]);
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo(
+            $"{LiveUrl}/token/leaderboard/group/map?scores[MapA]=1000&scores[MapB]=2000&scores[MapC]=3000");
+        await Assert.That(fake.Request.Body).IsEqualTo(
+            $$"""{"maps":[{"mapUid":"MapA","groupUid":"{{PersonalBest}}"},{"mapUid":"MapB","groupUid":"{{PersonalBest}}"},{"mapUid":"MapC","groupUid":"{{PersonalBest}}"}]}""");
+    }
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task GetLeaderboardPositionsByTimeAsync_ConflictingScores_ThrowsWithoutRequest(bool withGroups)
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => withGroups
+            ? nls.GetLeaderboardPositionsByTimeAsync(["MapA", "MapB", "MapA"], [PersonalBest, PersonalBest, "SeasonA"], [1000, 1500, 2000])
+            : nls.GetLeaderboardPositionsByTimeAsync(["MapA", "MapB", "MapA"], [1000, 1500, 2000]));
+
+        await Assert.That(exception?.ParamName).IsEqualTo("scores");
+        await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
+    public async Task GetLeaderboardPositionsByTimeAsync_RepeatedMapWithSameScore_SendsOneScoreAndEveryGroup()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await nls.GetLeaderboardPositionsByTimeAsync(["MapA", "mapa", "MapA"], [PersonalBest, PersonalBest, "SeasonA"], [1000, 2000, 1000]);
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo(
+            $"{LiveUrl}/token/leaderboard/group/map?scores[MapA]=1000&scores[mapa]=2000");
+        await Assert.That(fake.Request.Body).IsEqualTo(
+            $$"""{"maps":[{"mapUid":"MapA","groupUid":"{{PersonalBest}}"},{"mapUid":"mapa","groupUid":"{{PersonalBest}}"},{"mapUid":"MapA","groupUid":"SeasonA"}]}""");
+    }
+
+    [Test]
+    public async Task GetLeaderboardPositionsByTimeAsync_NoMaps_ReturnsEmptyWithoutRequest()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        var positions = await nls.GetLeaderboardPositionsByTimeAsync([], []);
+
+        await Assert.That(positions).IsEmpty();
+        await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
+    public async Task GetLeaderboardPositionsByTimeAsync_LengthsDiffer_ThrowsWithoutRequest()
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await Assert.ThrowsAsync<ArgumentException>(() => nls.GetLeaderboardPositionsByTimeAsync(["MapA", "MapB"], [PersonalBest], [1000, 2000]));
+
+        await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
+    [Arguments(2, 1)]
+    [Arguments(1, 2)]
+    [Arguments(0, 1)]
+    [Arguments(1, 0)]
+    public async Task GetPlayerRecordsAsync_LengthsDiffer_ThrowsWithoutRequest(int mapCount, int groupCount)
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        var mapUids = Enumerable.Range(0, mapCount).Select(i => $"Map{i}");
+        var groupUids = Enumerable.Repeat(PersonalBest, groupCount);
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => nls.GetPlayerRecordsAsync(mapUids, groupUids));
+
+        await Assert.That(exception?.ParamName).IsEqualTo("groupUids");
+        await Assert.That(fake.Requests).IsEmpty();
+    }
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task GetPlayerRecordsAsync_MatchingLengths_SendsEveryMapWithItsGroup(bool withGroups)
+    {
+        var fake = FakeHttpMessageHandler.Json("[]");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        if (withGroups)
+        {
+            await nls.GetPlayerRecordsAsync(["MapA", "MapB"], [PersonalBest, "SeasonA"]);
+        }
+        else
+        {
+            await nls.GetPlayerRecordsAsync(["MapA", "MapB"]);
+        }
+
+        var secondGroup = withGroups ? "SeasonA" : PersonalBest;
+        await Assert.That(fake.Request.Method).IsEqualTo(HttpMethod.Post);
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo($"{LiveUrl}/token/leaderboard/group/map");
+        await Assert.That(fake.Request.Body).IsEqualTo(
+            $$"""{"maps":[{"mapUid":"MapA","groupUid":"{{PersonalBest}}"},{"mapUid":"MapB","groupUid":"{{secondGroup}}"}]}""");
+    }
+
+    [Test]
+    public async Task GetMapInfosAsync_UidsWithUrlCharacters_StayInTheList()
+    {
+        var fake = FakeHttpMessageHandler.Json("""{"mapList":[],"itemCount":0}""");
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await nls.GetMapInfosAsync(["a&b", "c#d"]);
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo($"{LiveUrl}/token/map/get-multiple?mapUidList=a%26b,c%23d");
+    }
+
+    [Test]
+    public async Task GetSurroundingRecordsAsync_ZoneWithUrlCharacters_StaysInItsParameter()
+    {
+        var fake = FakeHttpMessageHandler.Json(EmptyLeaderboardJson);
+        using var nls = new NadeoLiveServices(fake.CreateClient());
+
+        await nls.GetSurroundingRecordsAsync(PersonalBest, MapUid, 1, 1, zoneId: "x&onlyWorld=true#");
+
+        await Assert.That(fake.Request.Uri.AbsoluteUri).IsEqualTo(
+            $"{LiveUrl}/token/leaderboard/group/{PersonalBest}/map/{MapUid}/surround/1/1?zoneId=x%26onlyWorld%3Dtrue%23");
+    }
+
+    [Test]
     public async Task GetClubActivitiesAsync_WithFolder_SendsFolderId()
     {
         var fake = FakeHttpMessageHandler.Json("""{"activityList":[],"maxPage":0,"itemCount":0}""");

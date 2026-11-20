@@ -27,6 +27,7 @@ COPY Src/ManiaAPI.TrackmaniaAPI.Extensions.Hosting/ManiaAPI.TrackmaniaAPI.Extens
 COPY Src/ManiaAPI.TrackmaniaWS/ManiaAPI.TrackmaniaWS.csproj Src/ManiaAPI.TrackmaniaWS/
 COPY Src/ManiaAPI.TrackmaniaWS.Extensions.Hosting/ManiaAPI.TrackmaniaWS.Extensions.Hosting.csproj Src/ManiaAPI.TrackmaniaWS.Extensions.Hosting/
 COPY Src/ManiaAPI.UnitedLadder/ManiaAPI.UnitedLadder.csproj Src/ManiaAPI.UnitedLadder/
+COPY Src/ManiaAPI.Dedimania/ManiaAPI.Dedimania.csproj Src/ManiaAPI.Dedimania/
 RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
     dotnet restore Src/ManiaAPI.MCP/ManiaAPI.MCP.csproj
 

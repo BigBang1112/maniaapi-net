@@ -23,6 +23,18 @@ public interface INadeoAPI : IDisposable
 
 public abstract class NadeoAPI : INadeoAPI
 {
+    /// <summary>
+    /// Minimum time between request starts across all NadeoAPI clients in this process, including authentication and refreshes.
+    /// Defaults to 500 milliseconds, the approximate ceiling for short bursts. Increase this for sustained operations.
+    /// Requests made directly through <see cref="Client"/> bypass this pacing.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The interval is less than 500 milliseconds.</exception>
+    public static TimeSpan RequestInterval
+    {
+        get => RateLimiter.Shared.RequestInterval;
+        set => RateLimiter.Shared.RequestInterval = value;
+    }
+
     public NadeoAPIHandler Handler { get; }
 
     public HttpClient Client { get; }
@@ -41,13 +53,22 @@ public abstract class NadeoAPI : INadeoAPI
     /// <param name="handler">Holds the tokens. Clients that share it share the authorization.</param>
     /// <param name="automaticallyAuthorize">Whether requests refresh the token once its refresh time has passed.</param>
     /// <exception cref="ArgumentNullException"><paramref name="client"/> or <paramref name="handler"/> is null.</exception>
-    protected NadeoAPI(HttpClient client, NadeoAPIHandler handler, bool automaticallyAuthorize = true)
+    protected NadeoAPI(HttpClient client, NadeoAPIHandler handler, bool automaticallyAuthorize = true) : this(client, handler, null, automaticallyAuthorize) { }
+
+    protected NadeoAPI(HttpClient client, NadeoAPIHandler handler, string? userAgent, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
         Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         AutomaticallyAuthorize = automaticallyAuthorize;
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;
@@ -93,7 +114,7 @@ public abstract class NadeoAPI : INadeoAPI
         var payload = new AuthorizationBody(Audience);
         var content = JsonContent.Create(payload, NadeoAPIJsonContext.Default.AuthorizationBody);
 
-        var authRequest = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/basic")
+        using var authRequest = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/basic")
         {
             Headers = { Authorization = new AuthenticationHeaderValue("Basic", encodedAuthenticationValue) },
             Content = content
@@ -150,7 +171,7 @@ public abstract class NadeoAPI : INadeoAPI
 
         try
         {
-            response = await Client.SendAsync(request, cancellationToken);
+            response = await Handler.RequestLimiter.SendAsync(Client, request, cancellationToken);
         }
         catch (HttpRequestException ex)
         {
@@ -202,9 +223,9 @@ public abstract class NadeoAPI : INadeoAPI
 
             // If expired for over 20 hours, the refresh token is likely expired too, so reauthorize when credentials were saved.
             // Without saved credentials, try the refresh token anyway.
-            if (Handler.SaveCredentials && Handler.SavedCredentials is not null && DateTimeOffset.UtcNow >= ExpirationTime!.Value.AddHours(20))
+            if (Handler.SaveCredentials && Handler.SavedCredentials is { } credentials && DateTimeOffset.UtcNow >= ExpirationTime!.Value.AddHours(20))
             {
-                await AuthorizeAsync(Handler.SavedCredentials, cancellationToken);
+                await AuthorizeWithSavedCredentialsAsync(credentials, cancellationToken);
                 return true;
             }
 
@@ -213,13 +234,44 @@ public abstract class NadeoAPI : INadeoAPI
                 Headers = { Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={Handler.RefreshToken}") }
             };
 
-            await RequestTokenAsync(message, cancellationToken);
+            try
+            {
+                await RequestTokenAsync(message, cancellationToken);
+            }
+            catch (NadeoAPIResponseException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized
+                && Handler.SaveCredentials && Handler.SavedCredentials is not null)
+            {
+                // The refresh token expired early or was revoked, so the session can only continue by signing in again
+                await AuthorizeWithSavedCredentialsAsync(Handler.SavedCredentials, cancellationToken);
+            }
 
             return true;
         }
         finally
         {
             Handler.AuthorizationLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Signs in again with the saved credentials. Credentials Nadeo rejects with HTTP 401 are forgotten,
+    /// so later refreshes don't keep sending them and risk getting the account locked.
+    /// </summary>
+    /// <exception cref="NadeoAPIResponseException">Signing in failed.</exception>
+    private async Task AuthorizeWithSavedCredentialsAsync(NadeoAPICredentials credentials, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AuthorizeAsync(credentials, cancellationToken);
+        }
+        catch (NadeoAPIResponseException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            if (Handler.SavedCredentials == credentials)
+            {
+                Handler.SavedCredentials = null;
+            }
+
+            throw;
         }
     }
 
@@ -241,7 +293,7 @@ public abstract class NadeoAPI : INadeoAPI
 
             if (Handler.CredentialsRejection is { } rejection && rejection.Credentials == credentials)
             {
-                // Only rejections with a 401 or 403 status are stored. The original is kept for its stack trace and correlation.
+                // Only 401 rejections are stored, a 403 can be a temporary rate limit.
                 throw new NadeoAPIResponseException(rejection.Error.Response, rejection.Error.StatusCode!.Value, rejection.Error.ReasonPhrase, rejection.Error);
             }
 
@@ -249,7 +301,7 @@ public abstract class NadeoAPI : INadeoAPI
             {
                 await AuthorizeAsync(credentials, cancellationToken);
             }
-            catch (NadeoAPIResponseException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            catch (NadeoAPIResponseException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
                 // Wrong credentials stay wrong, so they aren't sent again until they're replaced
                 Handler.CredentialsRejection = (credentials, ex);
@@ -306,7 +358,7 @@ public abstract class NadeoAPI : INadeoAPI
 
         try
         {
-            response = await Client.SendAsync(request, cancellationToken);
+            response = await Handler.RequestLimiter.SendAsync(Client, request, cancellationToken);
         }
         catch (HttpRequestException ex)
         {
@@ -372,16 +424,8 @@ public abstract class NadeoAPI : INadeoAPI
 #if DEBUG
     protected async Task<string> GetAsync(string? endpoint, CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
-        request.Headers.Authorization = Handler.Authorization;
-
-        using var response = await Client.SendAsync(request, cancellationToken);
-
-        var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
-
-        await ValidateResponseAsync(response, cancellationToken);
-
-        return responseString;
+        using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
+        return await response.Content.ReadAsStringAsync(cancellationToken);
     }
 #endif
 

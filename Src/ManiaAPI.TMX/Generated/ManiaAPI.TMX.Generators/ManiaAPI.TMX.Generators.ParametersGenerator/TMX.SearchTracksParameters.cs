@@ -80,7 +80,7 @@ public partial class TMX
                 if (first) sb.Append('?');
                 else sb.Append('&');
                 sb.Append("uid=");
-                sb.Append(string.Join("%2C", UId));
+                sb.Append(string.Join("%2C", global::System.Linq.Enumerable.Select(UId, x => WebUtility.UrlEncode(x))));
                 first = false;
             }
 
@@ -152,7 +152,7 @@ public partial class TMX
                 if (first) sb.Append('?');
                 else sb.Append('&');
                 sb.Append("tag=");
-                sb.Append(string.Join("%2C", Tag));
+                sb.Append(string.Join("%2C", global::System.Linq.Enumerable.Select(Tag, x => (byte)x)));
                 first = false;
             }
 
@@ -161,7 +161,7 @@ public partial class TMX
                 if (first) sb.Append('?');
                 else sb.Append('&');
                 sb.Append("etag=");
-                sb.Append(string.Join("%2C", ETag));
+                sb.Append(string.Join("%2C", global::System.Linq.Enumerable.Select(ETag, x => (byte)x)));
                 first = false;
             }
 
@@ -233,7 +233,7 @@ public partial class TMX
                 if (first) sb.Append('?');
                 else sb.Append('&');
                 sb.Append("environment=");
-                sb.Append(string.Join("%2C", Environment));
+                sb.Append(string.Join("%2C", global::System.Linq.Enumerable.Select(Environment, x => (byte)x)));
                 first = false;
             }
 
@@ -242,7 +242,7 @@ public partial class TMX
                 if (first) sb.Append('?');
                 else sb.Append('&');
                 sb.Append("vehicle=");
-                sb.Append(string.Join("%2C", Vehicle));
+                sb.Append(string.Join("%2C", global::System.Linq.Enumerable.Select(Vehicle, x => (byte)x)));
                 first = false;
             }
 
@@ -251,7 +251,7 @@ public partial class TMX
                 if (first) sb.Append('?');
                 else sb.Append('&');
                 sb.Append("mood=");
-                sb.Append(string.Join("%2C", Mood));
+                sb.Append(string.Join("%2C", global::System.Linq.Enumerable.Select(Mood, x => (byte)x)));
                 first = false;
             }
 
@@ -260,7 +260,7 @@ public partial class TMX
                 if (first) sb.Append('?');
                 else sb.Append('&');
                 sb.Append("difficulty=");
-                sb.Append(string.Join("%2C", Difficulty));
+                sb.Append(string.Join("%2C", global::System.Linq.Enumerable.Select(Difficulty, x => (byte)x)));
                 first = false;
             }
 
@@ -269,7 +269,7 @@ public partial class TMX
                 if (first) sb.Append('?');
                 else sb.Append('&');
                 sb.Append("routes=");
-                sb.Append(string.Join("%2C", Routes));
+                sb.Append(string.Join("%2C", global::System.Linq.Enumerable.Select(Routes, x => (byte)x)));
                 first = false;
             }
 
@@ -387,7 +387,7 @@ public partial class TMX
                 {
                     if (first) sb.Append('?');
                     else sb.Append('&');
-                    sb.Append(additionalParameter.Key);
+                    sb.Append(WebUtility.UrlEncode(additionalParameter.Key));
                     sb.Append('=');
                     sb.Append(WebUtility.UrlEncode(additionalParameter.Value));
                     first = false;

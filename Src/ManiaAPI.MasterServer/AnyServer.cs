@@ -15,11 +15,22 @@ public abstract class AnyServer : IAnyServer
 
     protected abstract string GameXml { get; }
 
-    protected AnyServer(HttpClient client)
+    protected AnyServer(Uri uri, string userAgent) : this(new HttpClient { BaseAddress = uri }, userAgent) { }
+
+    protected AnyServer(HttpClient client) : this(client, null) { }
+
+    protected AnyServer(HttpClient client, string? userAgent)
     {
         Client = client;
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;

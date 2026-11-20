@@ -194,6 +194,12 @@ public class MasterServerMP4 : MasterServerMP, IMasterServerMP4
     protected override string GameXml => XmlHelperMP4.GameXml;
     protected override string GetGameXml(string titleId) => $"{GameXml}<title>{XmlHelper.Escape(titleId)}</title>";
 
+    public MasterServerMP4(string url, string userAgent) : base(new Uri(url), userAgent) { }
+
+    public MasterServerMP4(MasterServerInfo info, string userAgent) : base(info.GetUri(), userAgent) { }
+
+    public MasterServerMP4(HttpClient client, string userAgent) : base(client, userAgent) { }
+
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerMP4"/> using the expected master server address. In case it's offline, you need to check <see cref="InitServerMP4"/>.
     /// </summary>

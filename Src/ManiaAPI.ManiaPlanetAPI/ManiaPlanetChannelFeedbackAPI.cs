@@ -10,15 +10,26 @@ public class ManiaPlanetChannelFeedbackAPI : IManiaPlanetChannelFeedbackAPI
 
     public HttpClient Client { get; }
 
+    public ManiaPlanetChannelFeedbackAPI(string userAgent) : this(new HttpClient { BaseAddress = new Uri(BaseAddress) }, userAgent) { }
+
     /// <summary>
     /// Creates a new instance of the ManiaPlanet Channel Feedback API client.
     /// </summary>
     /// <param name="client">HTTP client.</param>
-    public ManiaPlanetChannelFeedbackAPI(HttpClient client)
+    public ManiaPlanetChannelFeedbackAPI(HttpClient client) : this(client, null) { }
+
+    public ManiaPlanetChannelFeedbackAPI(HttpClient client, string? userAgent)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;
@@ -45,5 +56,11 @@ public class ManiaPlanetChannelFeedbackAPI : IManiaPlanetChannelFeedbackAPI
 
         return await response.Content.ReadFromJsonAsync(ManiaPlanetChannelFeedbackAPIJsonContext.Default.ChannelFeedbackStatus, cancellationToken)
             ?? throw new JsonException("The response body is null.");
+    }
+
+    public virtual void Dispose()
+    {
+        Client.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

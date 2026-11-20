@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <PackageId>ManiaAPI.UnitedLadder</PackageId>
-        <Version>2.10.0</Version>
+        <Version>2.11.0</Version>
         <Authors>BigBang1112</Authors>
         <Description>Wrapper for the new UnitedLadder API (ul.unitedascenders.xyz). Part of the ManiaAPI.NET library set.</Description>
         <Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
@@ -11,9 +11,10 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, unitedladder</PackageTags>
         <PackageReleaseNotes>
-- Fixed URL escaping of player logins in `GetPlayerAsync`
-- Updated the User-Agent to report the installed package version
-- Added .NET 11 support
+- Added `GetSoloRankingsAsync`, `GetMultiplayerRankingsAsync`, `GetTrackLeaderboardAsync`, and `GetLeaderboardSnapshotAsync`
+- Added `GetPlayerMapsAsync`, `GetPlayerSoloBreakdownAsync`, `GetPlayerHistoryAsync`, and `GetPlayerProgressionAsync`
+- Added `CheckLoginAsync`, `GetReplayResponseAsync`, and a `forceWebServices` overload of `GetPlayerAsync`
+- Added constructors with an application User-Agent
         </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>

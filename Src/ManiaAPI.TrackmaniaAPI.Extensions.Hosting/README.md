@@ -15,7 +15,8 @@ using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 
 builder.Services.AddTrackmaniaAPI(options =>
 {
-    options.Credentials = new ManiaPlanetAPICredentials(
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
+    options.Credentials = new TrackmaniaAPICredentials(
         builder.Configuration["Trackmania:ClientId"]!,
         builder.Configuration["Trackmania:ClientSecret"]!);
 });
@@ -35,6 +36,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie()
     .AddTrackmania(options =>
     {
+        options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
         options.ClientId = builder.Configuration["OAuth2:Trackmania:ClientId"]!;
         options.ClientSecret = builder.Configuration["OAuth2:Trackmania:ClientSecret"]!;
         
@@ -64,7 +66,8 @@ using ManiaAPI.TrackmaniaAPI.Extensions.Hosting;
 
 builder.Services.AddTrackmaniaAPI(options =>
 {
-    options.Credentials = new ManiaPlanetAPICredentials(
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
+    options.Credentials = new TrackmaniaAPICredentials(
         builder.Configuration["Trackmania:ClientId"]!,
         builder.Configuration["Trackmania:ClientSecret"]!);
 })

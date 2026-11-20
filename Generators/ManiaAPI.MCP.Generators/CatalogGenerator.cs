@@ -32,8 +32,8 @@ public sealed class CatalogGenerator : IIncrementalGenerator
         ("ManiaAPI.TMX.ITMX", "tmx", "exchange", "none", "tmx"),
         ("ManiaAPI.TMX.IMX", "mx", "exchange", "none", "mx"),
         ("ManiaAPI.TMX.IIX", "ix", "exchange", "none", null),
-        ("ManiaAPI.MasterServer.TMUF.IMasterServerTMUF", "masterserver.tmuf", "tmuf", "none", null),
-        ("ManiaAPI.MasterServer.TMUF.IMasterServerTMUF", "masterserver.tmnf", "tmnf", "none", null),
+        ("ManiaAPI.MasterServer.TMF.IMasterServerTMUF", "masterserver.tmuf", "tmuf", "none", null),
+        ("ManiaAPI.MasterServer.TMF.IMasterServerTMNF", "masterserver.tmnf", "tmnf", "none", null),
         ("ManiaAPI.MasterServer.MP3.IMasterServerMP3", "masterserver.mp3", "maniaplanet", "none", null),
         ("ManiaAPI.MasterServer.MP4.IMasterServerMP4", "masterserver.mp4", "maniaplanet", "none", null),
         ("ManiaAPI.MasterServer.TMT.IMasterServerTMT", "masterserver.tmt", "trackmaniaturbo", "none", null),
@@ -43,7 +43,11 @@ public sealed class CatalogGenerator : IIncrementalGenerator
         ("ManiaAPI.ManiaPlanetAPI.IManiaPlanetChannelRecordAPI", "maniaplanet.channel_record", "maniaplanet", "none", null),
         ("ManiaAPI.ManiaPlanetAPI.IManiaPlanetChannelFeedbackAPI", "maniaplanet.channel_feedback", "maniaplanet", "none", null),
         ("ManiaAPI.TrackmaniaWS.ITrackmaniaWS", "trackmania.ws", "tmuf", "tmws", null),
-        ("ManiaAPI.UnitedLadder.IUnitedLadder", "united.ladder", "tmuf", "none", null)
+        ("ManiaAPI.UnitedLadder.IUnitedLadder", "united.ladder", "tmuf", "none", null),
+        // Dedimania has records of TMF and ManiaPlanet maps, so each of those toolsets gets it.
+        ("ManiaAPI.Dedimania.IDedimania", "dedimania.tmuf", "tmuf", "none", null),
+        ("ManiaAPI.Dedimania.IDedimania", "dedimania.tmnf", "tmnf", "none", null),
+        ("ManiaAPI.Dedimania.IDedimania", "dedimania.maniaplanet", "maniaplanet", "none", null)
     ];
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -361,7 +365,7 @@ public sealed class CatalogGenerator : IIncrementalGenerator
         source.Append(resultType is null ? "                        " :
             binary && resultType.Name is "HttpResponseMessage" or "Stream" ? "                        using var result = " : "                        var result = ");
         source.Append(isTask ? "await " : "");
-        var boundClient = TypeName(clientType).Replace(".IMasterServerTMUF", ".MasterServerTMUF");
+        var boundClient = TypeName(clientType).Replace(".IMasterServerTMUF", ".MasterServerTMUF").Replace(".IMasterServerTMNF", ".MasterServerTMNF");
         source.AppendLine($"(await context.ClientAsync<{boundClient}>({Literal(prefix)}, cancellationToken)).{method.Name}(");
 
         for (var i = 0; i < method.Parameters.Length; i++)
@@ -502,7 +506,7 @@ public sealed class CatalogGenerator : IIncrementalGenerator
 
             foreach (var declaration in tree.GetRoot().DescendantNodes().OfType<TypeDeclarationSyntax>())
             {
-                // A class's comments also count for its interface (MasterServerTMUF for IMasterServerTMUF).
+                // A class's comments also count for its interface (MasterServerTMF for IMasterServerTMF).
                 var names = declaration is InterfaceDeclarationSyntax
                     ? new[] { declaration.Identifier.ValueText }
                     : new[] { declaration.Identifier.ValueText, "I" + declaration.Identifier.ValueText };

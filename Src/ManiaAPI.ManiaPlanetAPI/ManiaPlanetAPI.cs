@@ -25,7 +25,7 @@ public interface IManiaPlanetAPI : IDisposable
     DateTimeOffset? ExpirationTime { get; }
 
     /// <summary>
-    /// If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.
+    /// If calling an endpoint should automatically try to authorize the OAuth2 client a minute before the <see cref="ExpirationTime"/>.
     /// This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.
     /// </summary>
     bool AutomaticallyAuthorize { get; }
@@ -110,6 +110,8 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 {
     public const string BaseAddress = "https://maniaplanet.com/webservices";
 
+    private static readonly TimeSpan RenewalMargin = TimeSpan.FromMinutes(1);
+
     public ManiaPlanetAPIHandler Handler { get; }
 
     public DateTimeOffset? ExpirationTime => Handler.Payload?.ExpirationTime;
@@ -118,19 +120,31 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     public bool AutomaticallyAuthorize { get; }
 
+    public ManiaPlanetAPI(string userAgent, bool automaticallyAuthorize = true)
+        : this(new HttpClient(), new ManiaPlanetAPIHandler(), userAgent, automaticallyAuthorize) { }
+
     /// <summary>
     /// Creates a new instance of the ManiaPlanet API client.
     /// </summary>
-    /// <param name="client">HTTP client to reuse. It is not intentionally mutated for better usage on backend.</param>
+    /// <param name="client">HTTP client used to send requests.</param>
     /// <param name="handler">Handler to use for the ManiaPlanet API.</param>
-    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.</param>
-    public ManiaPlanetAPI(HttpClient client, ManiaPlanetAPIHandler handler, bool automaticallyAuthorize = true)
+    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client a minute before the <see cref="ExpirationTime"/>. This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.</param>
+    public ManiaPlanetAPI(HttpClient client, ManiaPlanetAPIHandler handler, bool automaticallyAuthorize = true) : this(client, handler, null, automaticallyAuthorize) { }
+
+    public ManiaPlanetAPI(HttpClient client, ManiaPlanetAPIHandler handler, string? userAgent, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
         Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         AutomaticallyAuthorize = automaticallyAuthorize;
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;
@@ -147,7 +161,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     /// <summary>
     /// Creates a new instance of the ManiaPlanet API client.
     /// </summary>
-    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.</param>
+    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client a minute before the <see cref="ExpirationTime"/>. This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.</param>
     public ManiaPlanetAPI(bool automaticallyAuthorize = true) : this(new HttpClient(), new ManiaPlanetAPIHandler(), automaticallyAuthorize) { }
 
     public virtual async Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default)
@@ -407,7 +421,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             first = false;
 
             sb.Append($"orderBy=");
-            sb.Append(orderBy);
+            sb.Append(Uri.EscapeDataString(orderBy));
         }
 
         if (titleUids is not null)
@@ -418,7 +432,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
                 first = false;
 
                 sb.Append("titleUids[]=");
-                sb.Append(titleUid);
+                sb.Append(Uri.EscapeDataString(titleUid));
             }
         }
 
@@ -430,7 +444,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
                 first = false;
 
                 sb.Append("environments[]=");
-                sb.Append(environment);
+                sb.Append(Uri.EscapeDataString(environment));
             }
         }
 
@@ -440,7 +454,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             first = false;
 
             sb.Append("scriptName=");
-            sb.Append(scriptName);
+            sb.Append(Uri.EscapeDataString(scriptName));
         }
 
         if (search is not null)
@@ -449,7 +463,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             first = false;
 
             sb.Append("search=");
-            sb.Append(search);
+            sb.Append(Uri.EscapeDataString(search));
         }
 
         if (zone is not null)
@@ -458,7 +472,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             first = false;
 
             sb.Append("zone=");
-            sb.Append(zone);
+            sb.Append(Uri.EscapeDataString(zone));
         }
 
         if (onlyPublic)
@@ -510,7 +524,36 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
             sb.Append(length);
         }
 
-        return await GetJsonAsync(sb.ToString(), ManiaPlanetAPIJsonContext.Default.ImmutableListOnlineServer, cancellationToken);
+        using var response = await GetResponseAsync(sb.ToString(), cancellationToken);
+        var json = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+
+        try
+        {
+            return JsonSerializer.Deserialize(json, ManiaPlanetAPIJsonContext.Default.ImmutableListOnlineServer)
+                ?? throw new JsonException("The response body is null.");
+        }
+        catch (JsonException) when (TryReadServersByIndex(json, out var servers))
+        {
+            return servers;
+        }
+    }
+
+    /// <summary>
+    /// Reads servers sent as an object keyed by their index, like <c>{"7":{...}}</c>, which the API has returned instead of an array.
+    /// </summary>
+    /// <returns>False when the JSON isn't in that shape either, so the error of the array parse is reported.</returns>
+    private static bool TryReadServersByIndex(byte[] json, [NotNullWhen(true)] out ImmutableList<OnlineServer>? servers)
+    {
+        try
+        {
+            servers = JsonSerializer.Deserialize(json, ManiaPlanetAPIJsonContext.Default.DictionaryStringOnlineServer)?.Values.ToImmutableList();
+        }
+        catch (JsonException)
+        {
+            servers = null;
+        }
+
+        return servers is not null;
     }
 
     protected internal async Task<HttpResponseMessage> GetResponseAsync(string endpoint, CancellationToken cancellationToken = default)
@@ -573,7 +616,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     private bool IsAuthorizationDue([NotNullWhen(true)] out ManiaPlanetAPICredentials? credentials)
     {
         credentials = Handler.Credentials;
-        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime);
+        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime.Value - RenewalMargin);
     }
 
     public virtual void Dispose()

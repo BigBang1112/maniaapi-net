@@ -10,6 +10,7 @@ public static class OperationOverrides
     /// <summary>Search synonyms, added to every operation whose ID contains the key.</summary>
     private static readonly (string Contains, string Tags)[] TagRules =
     [
+        ("united.ladder.", "TrackMania Forever TMNF Nations Forever TMUF United Forever"),
         ("track_of_the_day", "TOTD track of the day daily map"),
         ("cup_of_the_day", "COTD cup of the day daily cup competition"),
         ("cup_of_the_week", "COTW cup of the week weekly cup"),

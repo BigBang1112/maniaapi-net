@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <PackageId>ManiaAPI.TrackmaniaWS</PackageId>
-        <Version>2.10.1</Version>
+        <Version>2.11.0</Version>
         <Authors>BigBang1112</Authors>
         <Description>Wrapper for the old TMF web API (ws.trackmania.com). Part of the ManiaAPI.NET library set.</Description>
         <Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
@@ -11,7 +11,8 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, io</PackageTags>
         <PackageReleaseNotes>
-- Updated TmEssentials to 2.9.0
+- Added constructors with an application User-Agent
+- Updated TmEssentials to 2.9.1
         </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
@@ -46,7 +47,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="TmEssentials" Version="2.9.0" />
+        <PackageReference Include="TmEssentials" Version="2.9.1" />
     </ItemGroup>
 
 

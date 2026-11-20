@@ -1,7 +1,7 @@
 using ManiaAPI.MasterServer.MP3;
 using ManiaAPI.MasterServer.MP4;
 using ManiaAPI.MasterServer.TMT;
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 using System.Collections.Immutable;
 
 namespace ManiaAPI.MasterServer.Tests.Live;

@@ -4,7 +4,7 @@ using ManiaAPI.TMX;
 using ManiaAPI.MCP.Hosting;
 using ManiaAPI.MasterServer.MP3;
 using ManiaAPI.MasterServer.MP4;
-using ManiaAPI.MasterServer.TMUF;
+using ManiaAPI.MasterServer.TMF;
 using ManiaAPI.MCP.Resources;
 using System.Text.Json.Nodes;
 using System.Text.Json;
@@ -26,7 +26,7 @@ public sealed class InvocationContext(
 
     public async Task<JsonObject> ScoresAsync(string prefix, string method, JsonElement arguments, CancellationToken cancellationToken)
     {
-        var client = Client<MasterServerTMUF>(prefix);
+        var client = Client<MasterServerTMF>(prefix);
         var scoresName = method.Contains("Campaign", StringComparison.Ordinal)
             ? arguments.GetProperty("campaignName").GetString()!
             : method.Contains("General", StringComparison.Ordinal) ? "General" : "Multi";
@@ -43,12 +43,12 @@ public sealed class InvocationContext(
                 : scoresName == "Multi"
                     ? await client.FetchLatestLadderScoresInfoAsync(leagueId, cancellationToken)
                     : await client.FetchLatestCampaignScoresInfoAsync(scoresName, leagueId, cancellationToken)).Number
-            : CatalogMetadata.Argument<MasterServer.TMUF.ScoresNumber>(arguments, "num");
+            : CatalogMetadata.Argument<MasterServer.TMF.ScoresNumber>(arguments, "num");
 
         if (capture is null)
         {
             var metadata = BinarySummary();
-            metadata["url"] = MasterServerTMUF.GetScoresUrl(number, scoresName, leagueId);
+            metadata["url"] = MasterServerTMF.GetScoresUrl(number, scoresName, leagueId);
 
             return metadata;
         }
@@ -154,7 +154,7 @@ public sealed class InvocationContext(
             "mx" => services.GetRequiredKeyedService<MX>(Enum.Parse<MxSite>(site!)),
             "ix" => services.GetRequiredService<TMX.IX>(),
             "masterserver.tmuf" => services.GetRequiredService<MasterServerTMUF>(),
-            "masterserver.tmnf" => services.GetRequiredKeyedService<MasterServerTMUF>("tmnf"),
+            "masterserver.tmnf" => services.GetRequiredService<MasterServerTMNF>(),
             "masterserver.mp3" => services.GetRequiredService<MasterServerMP3>(),
             "masterserver.mp4" => operation?.Id is "masterserver.mp4.player_infos"
                 ? services.GetRequiredKeyedService<MasterServerMP4>("player")
@@ -165,6 +165,7 @@ public sealed class InvocationContext(
             "maniaplanet.channel_feedback" => services.GetRequiredService<ManiaPlanetAPI.ManiaPlanetChannelFeedbackAPI>(),
             "trackmania.ws" => services.GetRequiredService<TrackmaniaWS.TrackmaniaWS>(),
             "united.ladder" => services.GetRequiredService<UnitedLadder.UnitedLadder>(),
+            "dedimania.tmuf" or "dedimania.tmnf" or "dedimania.maniaplanet" => services.GetRequiredService<Dedimania.Dedimania>(),
             _ => throw new InvalidOperationException("Unknown catalog client.")
         };
 
