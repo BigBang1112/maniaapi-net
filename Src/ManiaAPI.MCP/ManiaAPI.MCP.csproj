@@ -11,6 +11,10 @@
         <Version>0.2.0</Version>
         <PackageReleaseNotes>
 - Added Dedimania map records
+- Added UnitedLadder rankings, leaderboards, player history, and replays
+- Fixed batch leaderboard positions returning only the first map
+- Fixed online server search failing on some filtered results
+- Fixed TMX enum filters, such as tags, being ignored
         </PackageReleaseNotes>
         <Authors>BigBang1112</Authors>
         <Description>Stateless MCP gateway for ManiaAPI.NET.</Description>

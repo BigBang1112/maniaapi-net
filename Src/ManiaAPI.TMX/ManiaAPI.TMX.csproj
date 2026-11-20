@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <PackageId>ManiaAPI.TMX</PackageId>
-        <Version>2.10.1</Version>
+        <Version>2.11.0</Version>
         <Authors>BigBang1112</Authors>
         <Description>Wrapper for the TMX API, currently only on tm-exchange.com. Part of the ManiaAPI.NET library set.</Description>
         <Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
@@ -11,7 +11,10 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, tmx, mx, exchange</PackageTags>
         <PackageReleaseNotes>
-- Updated TmEssentials to 2.9.0
+- Added constructors with an application User-Agent to `TMX`, `MX`, and `IX`
+- Fixed enum array filters, such as `Tag` and `Environment`, being sent as names and ignored
+- Fixed URL escaping of string array parameters and `AdditionalParameters` keys
+- Updated TmEssentials to 2.9.1
         </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
@@ -52,7 +55,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="TmEssentials" Version="2.9.0" />
+        <PackageReference Include="TmEssentials" Version="2.9.1" />
     </ItemGroup>
 
     <ItemGroup>

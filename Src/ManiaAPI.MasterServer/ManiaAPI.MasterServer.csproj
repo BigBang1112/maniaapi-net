@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <PackageId>ManiaAPI.MasterServer</PackageId>
-        <Version>2.10.1</Version>
+        <Version>2.11.0</Version>
         <Authors>BigBang1112</Authors>
         <Description>Wrapper for the master server APIs used in TMF, TMT, and ManiaPlanet. Part of the ManiaAPI.NET library set.</Description>
         <Copyright>Copyright (c) 2022-2026 Petr Pivoňka</Copyright>
@@ -11,7 +11,12 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, masterserver, xml</PackageTags>
         <PackageReleaseNotes>
-- Updated TmEssentials to 2.9.0
+- **Added `MasterServerTMNF`** for TrackMania Nations Forever, sharing requests with `MasterServerTMUF` through `MasterServerTMF`
+- **Renamed the `ManiaAPI.MasterServer.TMUF` namespace to `ManiaAPI.MasterServer.TMF`**. Update `using` directives
+- Added constructors with an application User-Agent to every client
+- Added `IDisposable` to `AggregatedMasterServerTMT`, disposing its master servers
+- Deprecated `MasterServerType`, `MasterServerTMUF.DefaultUnitedUrl`, and `MasterServerTMUF.DefaultNationsUrl`
+- Updated TmEssentials to 2.9.1
         </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
@@ -48,7 +53,7 @@
 
     <ItemGroup>
         <PackageReference Include="MinimalXmlReader" Version="0.2.1" />
-        <PackageReference Include="TmEssentials" Version="2.9.0" />
+        <PackageReference Include="TmEssentials" Version="2.9.1" />
         <PackageReference Include="TmScores" Version="1.0.0" />
     </ItemGroup>
 
