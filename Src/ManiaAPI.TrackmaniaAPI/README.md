@@ -21,7 +21,7 @@ For the list of scopes, see [the API docs](https://api.trackmania.com/doc). Gene
 ```cs
 using ManiaAPI.TrackmaniaAPI;
 
-var tm = new TrackmaniaAPI();
+var tm = new TrackmaniaAPI("MyApp/1.0 (contact: me@example.com)");
 
 await tm.AuthorizeAsync("clientId", "clientSecret", ["clubs", "read_favorite"]);
 

@@ -61,6 +61,17 @@ public class MasterServerTMUF : MasterServer, IMasterServerTMUF
 
     protected override string GameXml => "<name>TmForever</name><version>2.11.25</version>";
 
+    public MasterServerTMUF(string url, string userAgent) : base(new Uri(url), userAgent) { }
+
+    public MasterServerTMUF(MasterServerType type, string userAgent) : this(type switch
+    {
+        MasterServerType.United => DefaultUnitedUrl,
+        MasterServerType.Nations => DefaultNationsUrl,
+        _ => throw new ArgumentException("Invalid master server type", nameof(type))
+    }, userAgent) { }
+
+    public MasterServerTMUF(HttpClient client, string userAgent) : base(client, userAgent) { }
+
     public MasterServerTMUF(string url = DefaultUnitedUrl) : base(new Uri(url)) { }
 
     public MasterServerTMUF(MasterServerType type) : this(type switch

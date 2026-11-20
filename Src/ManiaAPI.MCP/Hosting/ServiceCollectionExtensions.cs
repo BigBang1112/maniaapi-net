@@ -101,8 +101,8 @@ public static class ServiceCollectionExtensions
             });
         }
 
-        services.AddHttpClient<UnitedLadder.UnitedLadder>();
-        services.AddHttpClient<Dedimania.Dedimania>();
+        services.AddHttpClient(nameof(UnitedLadder.UnitedLadder)).AddTypedClient(client => new UnitedLadder.UnitedLadder(client));
+        services.AddHttpClient(nameof(Dedimania.Dedimania)).AddTypedClient(client => new Dedimania.Dedimania(client));
         services.AddTrackmaniaAPI(o =>
         {
             if (options.TrackmaniaAPI.Configured)

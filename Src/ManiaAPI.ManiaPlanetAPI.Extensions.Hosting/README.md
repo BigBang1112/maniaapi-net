@@ -15,6 +15,7 @@ using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 
 builder.Services.AddManiaPlanetAPI(options =>
 {
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
     options.Credentials = new ManiaPlanetAPICredentials(
         builder.Configuration["ManiaPlanet:ClientId"]!,
         builder.Configuration["ManiaPlanet:ClientSecret"]!);
@@ -28,7 +29,7 @@ builder.Services.AddManiaPlanetAPI(options =>
 ```cs
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 
-builder.Services.AddManiaPlanetIngameAPI();
+builder.Services.AddManiaPlanetIngameAPI(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 ```
 
 ## Setup `ManiaPlanetChannelRecordAPI` injection
@@ -38,7 +39,7 @@ builder.Services.AddManiaPlanetIngameAPI();
 ```cs
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 
-builder.Services.AddManiaPlanetChannelRecordAPI();
+builder.Services.AddManiaPlanetChannelRecordAPI(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 ```
 
 ## Setup `ManiaPlanetChannelFeedbackAPI` injection
@@ -48,7 +49,7 @@ builder.Services.AddManiaPlanetChannelRecordAPI();
 ```cs
 using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 
-builder.Services.AddManiaPlanetChannelFeedbackAPI();
+builder.Services.AddManiaPlanetChannelFeedbackAPI(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 ```
 
 ## Setup OAuth2
@@ -65,6 +66,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie()
     .AddManiaPlanet(options =>
     {
+        options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
         options.ClientId = builder.Configuration["OAuth2:ManiaPlanet:ClientId"]!;
         options.ClientSecret = builder.Configuration["OAuth2:ManiaPlanet:ClientSecret"]!;
 
@@ -94,12 +96,13 @@ using ManiaAPI.ManiaPlanetAPI.Extensions.Hosting;
 
 builder.Services.AddManiaPlanetAPI(options =>
 {
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
     options.Credentials = new ManiaPlanetAPICredentials(
         builder.Configuration["ManiaPlanet:ClientId"]!,
         builder.Configuration["ManiaPlanet:ClientSecret"]!);
 })
 .AddStandardResilienceHandler();
 
-builder.Services.AddManiaPlanetIngameAPI()
+builder.Services.AddManiaPlanetIngameAPI(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)")
     .AddStandardResilienceHandler();
 ```

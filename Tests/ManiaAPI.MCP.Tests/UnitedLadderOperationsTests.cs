@@ -96,7 +96,7 @@ public class UnitedLadderOperationsTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddManiaAPI(TestConfiguration.Create());
-        services.AddHttpClient<UnitedLadder.UnitedLadder>().ConfigurePrimaryHttpMessageHandler(() => handler);
+        services.AddHttpClient(nameof(UnitedLadder.UnitedLadder)).AddTypedClient(client => new UnitedLadder.UnitedLadder(client)).ConfigurePrimaryHttpMessageHandler(() => handler);
         return services.BuildServiceProvider();
     }
 }

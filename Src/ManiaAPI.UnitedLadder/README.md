@@ -21,7 +21,7 @@ Wraps the [UnitedLadder API](https://api.ul.unitedascenders.xyz/docs), which com
 ```cs
 using ManiaAPI.UnitedLadder;
 
-using var ul = new UnitedLadder();
+using var ul = new UnitedLadder("MyApp/1.0 (contact: me@example.com)");
 
 var player = await ul.GetPlayerAsync("bigbang1112");
 var refreshed = await ul.GetPlayerAsync("bigbang1112", forceWebServices: true);

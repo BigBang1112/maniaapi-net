@@ -60,11 +60,22 @@ public class UnitedLadder : IUnitedLadder
 
     public HttpClient Client { get; }
 
-    public UnitedLadder(HttpClient client)
+    public UnitedLadder(string userAgent) : this(new HttpClient(), userAgent) { }
+
+    public UnitedLadder(HttpClient client) : this(client, null) { }
+
+    public UnitedLadder(HttpClient client, string? userAgent)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;

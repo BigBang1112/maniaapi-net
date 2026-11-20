@@ -9,7 +9,7 @@ Provides an efficient way to inject all TMX services into your application.
 ```cs
 using ManiaAPI.TMX.Extensions.Hosting;
 
-builder.Services.AddTMX();
+builder.Services.AddTMX(options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)");
 ```
 
 Features this setup brings:
@@ -33,6 +33,7 @@ using ManiaAPI.TMX.Extensions.Hosting;
 
 builder.Services.AddTMX(options =>
 {
+    options.UserAgent = "MyApp/1.0 (contact: me@example.com)";
     options.ConfigureHttpClient = http => http.AddStandardResilienceHandler();
 });
 ```

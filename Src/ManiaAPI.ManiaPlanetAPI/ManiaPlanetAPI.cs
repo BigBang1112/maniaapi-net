@@ -118,19 +118,31 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 
     public bool AutomaticallyAuthorize { get; }
 
+    public ManiaPlanetAPI(string userAgent, bool automaticallyAuthorize = true)
+        : this(new HttpClient(), new ManiaPlanetAPIHandler(), userAgent, automaticallyAuthorize) { }
+
     /// <summary>
     /// Creates a new instance of the ManiaPlanet API client.
     /// </summary>
-    /// <param name="client">HTTP client to reuse. It is not intentionally mutated for better usage on backend.</param>
+    /// <param name="client">HTTP client used to send requests.</param>
     /// <param name="handler">Handler to use for the ManiaPlanet API.</param>
     /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.</param>
-    public ManiaPlanetAPI(HttpClient client, ManiaPlanetAPIHandler handler, bool automaticallyAuthorize = true)
+    public ManiaPlanetAPI(HttpClient client, ManiaPlanetAPIHandler handler, bool automaticallyAuthorize = true) : this(client, handler, null, automaticallyAuthorize) { }
+
+    public ManiaPlanetAPI(HttpClient client, ManiaPlanetAPIHandler handler, string? userAgent, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
         Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         AutomaticallyAuthorize = automaticallyAuthorize;
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;

@@ -11,6 +11,10 @@ public interface IInitServerMP : IAnyServerMP
 
 public abstract class InitServerMP : AnyServer, IInitServerMP
 {
+    protected InitServerMP(HttpClient client, string userAgent) : base(client, userAgent) { }
+
+    protected InitServerMP(Uri uri, string userAgent) : base(uri, userAgent) { }
+
     protected InitServerMP(HttpClient client) : base(client) { }
 
     protected InitServerMP(Uri uri) : base(uri) { }

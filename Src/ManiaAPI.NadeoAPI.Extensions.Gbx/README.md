@@ -17,7 +17,7 @@ A simple example to show how you can update a map without having to manually spe
 using ManiaAPI.NadeoAPI;
 using ManiaAPI.NadeoAPI.Extensions.Gbx;
 
-var ns = new NadeoServices();
+var ns = new NadeoServices("MyApp/1.0 (contact: me@example.com)");
 await ns.AuthorizeAsync("service_name", "ls>97jO>e3>>D/Ce");
 
 // Update the map (no leaderboard lost!)

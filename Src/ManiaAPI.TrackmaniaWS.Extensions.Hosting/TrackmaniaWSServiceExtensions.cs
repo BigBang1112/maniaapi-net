@@ -6,11 +6,11 @@ public static class TrackmaniaWSServiceExtensions
 {
     public static IHttpClientBuilder AddTrackmaniaWS(this IServiceCollection services, TrackmaniaWSOptions options)
     {
-        var builder = services.AddHttpClient<TrackmaniaWS>()
+        var builder = services.AddHttpClient(nameof(TrackmaniaWS))
             .ConfigureHttpClient(client => client.BaseAddress = new Uri(TrackmaniaWS.BaseAddress));
         services.AddTransient(provider => new TrackmaniaWS(
             options.Credentials ?? throw new InvalidOperationException("Credentials are required currently."),
-            provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(TrackmaniaWS))));
+            provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(TrackmaniaWS)), options.UserAgent));
         return builder;
     }
 }

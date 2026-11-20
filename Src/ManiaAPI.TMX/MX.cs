@@ -80,11 +80,22 @@ public partial class MX : IMX
     public MxSite Site { get; }
     public string SiteName { get; }
 
-    public MX(HttpClient client, MxSite site)
+    public MX(MxSite site, string userAgent) : this(new HttpClient(), site, userAgent) { }
+
+    public MX(HttpClient client, MxSite site) : this(client, site, null) { }
+
+    public MX(HttpClient client, MxSite site, string? userAgent)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;

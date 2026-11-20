@@ -192,11 +192,26 @@ public class TrackmaniaWS : ITrackmaniaWS
 
     public HttpClient Client { get; }
 
-    public TrackmaniaWS(string apiUsername, string apiPassword, HttpClient client)
+    public TrackmaniaWS(string apiUsername, string apiPassword, string userAgent) : this(apiUsername, apiPassword, new HttpClient { BaseAddress = new Uri(BaseAddress) }, userAgent) { }
+
+    public TrackmaniaWS(TrackmaniaWSCredentials credentials, HttpClient client, string? userAgent) : this(credentials.ApiUsername, credentials.ApiPassword, client, userAgent) { }
+
+    public TrackmaniaWS(TrackmaniaWSCredentials credentials, string userAgent) : this(credentials.ApiUsername, credentials.ApiPassword, userAgent) { }
+
+    public TrackmaniaWS(string apiUsername, string apiPassword, HttpClient client) : this(apiUsername, apiPassword, client, null) { }
+
+    public TrackmaniaWS(string apiUsername, string apiPassword, HttpClient client, string? userAgent)
     {
         Client = client;
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;

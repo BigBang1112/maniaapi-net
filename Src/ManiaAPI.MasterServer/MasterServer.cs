@@ -15,6 +15,10 @@ public interface IMasterServer : IAnyServer, IDisposable
 
 public abstract class MasterServer : AnyServer, IMasterServer
 {
+    protected MasterServer(HttpClient client, string userAgent) : base(client, userAgent) { }
+
+    protected MasterServer(Uri uri, string userAgent) : base(uri, userAgent) { }
+
     protected MasterServer(HttpClient client) : base(client) { }
 
     protected MasterServer(Uri uri) : base(uri) { }

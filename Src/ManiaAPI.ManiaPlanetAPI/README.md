@@ -26,7 +26,7 @@ For the list of scopes, see [here at the bottom](https://doc.maniaplanet.com/web
 ```cs
 using ManiaAPI.ManiaPlanetAPI;
 
-var mp = new ManiaPlanetAPI();
+var mp = new ManiaPlanetAPI("MyApp/1.0 (contact: me@example.com)");
 
 // You can optionally authorize to do more things, and possibly be less limited
 await mp.AuthorizeAsync("clientId", "clientSecret", ["basic", "dedicated", "maps"]);
@@ -39,7 +39,7 @@ For ingame API, use the `ManiaPlanetIngameAPI`. This is not an authenticated API
 ```cs
 using ManiaAPI.ManiaPlanetAPI;
 
-var mpIngame = new ManiaPlanetIngameAPI();
+var mpIngame = new ManiaPlanetIngameAPI("MyApp/1.0 (contact: me@example.com)");
 
 // Authenticate a user
 var user = await mpIngame.AuthenticateAsync("username", "token");
@@ -55,7 +55,7 @@ For leaderboards of channel maps, use the `ManiaPlanetChannelRecordAPI`. It does
 ```cs
 using ManiaAPI.ManiaPlanetAPI;
 
-var channel = new ManiaPlanetChannelRecordAPI();
+var channel = new ManiaPlanetChannelRecordAPI("MyApp/1.0 (contact: me@example.com)");
 
 // Top 10, the number of records, and the ranks of the given players
 var leaderboard = await channel.GetLeaderboardAsync("9W_9qjV56i67CWpYDclFyOhz5g", ["lbt76240"]);
@@ -72,7 +72,7 @@ For feedback of channel maps, use the `ManiaPlanetChannelFeedbackAPI`. Only the 
 ```cs
 using ManiaAPI.ManiaPlanetAPI;
 
-var feedback = new ManiaPlanetChannelFeedbackAPI();
+var feedback = new ManiaPlanetChannelFeedbackAPI("MyApp/1.0 (contact: me@example.com)");
 
 var status = await feedback.GetStatusAsync();
 

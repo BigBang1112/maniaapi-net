@@ -1,8 +1,5 @@
 ﻿using ExtendMasterServerSample;
-using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.TMT;
-using MinimalXmlReader;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
@@ -15,11 +12,11 @@ var platform = Platform.PC;
 
 var platformLoginNicknamePairs = File.ReadLines("D:\\Visual Studio\\TurboLoginScraper\\TurboLoginScraper\\bin\\Debug\\net9.0\\pc.txt");
 
-var initServer = new InitServerTMT(platform);
+var initServer = new InitServerTMT(platform, "ExtendMasterServerSample/1.0 (contact: me@example.com)");
 
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var masterServer = new ExtendedMasterServerTMT(waitingParams.MasterServers.First());
+var masterServer = new ExtendedMasterServerTMT(waitingParams.MasterServers.First(), "ExtendMasterServerSample/1.0 (contact: me@example.com)");
 
 var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
 jsonOptions.Converters.Add(new TimeInt32Converter());

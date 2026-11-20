@@ -31,6 +31,12 @@ public class MasterServerTMT : MasterServer, IMasterServerTMT
 {
     protected override string GameXml => XmlHelperTMT.GameXml;
 
+    public MasterServerTMT(Uri uri, string userAgent) : base(uri, userAgent) { }
+
+    public MasterServerTMT(MasterServerInfo info, string userAgent) : base(info.GetUri(), userAgent) { }
+
+    public MasterServerTMT(HttpClient client, string userAgent) : base(client, userAgent) { }
+
     /// <summary>
     /// Creates a new instance of <see cref="MasterServerTMT"/> using a raw address. Because the address changes quite often and also because there are multiple platforms, it is recommended to use <see cref="InitServerTMT"/> to get the address first.
     /// </summary>

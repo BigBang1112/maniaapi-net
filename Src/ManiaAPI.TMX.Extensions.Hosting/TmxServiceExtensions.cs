@@ -13,45 +13,27 @@ public static class TmxServiceExtensions
         foreach (var site in Enum.GetValues<TmxSite>())
         {
             var builder = services.AddHttpClient($"{nameof(TMX)}_{site}");
-            if (!string.IsNullOrEmpty(options.UserAgent))
-            {
-                builder.ConfigureHttpClient(client => {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
-                });
-            }
             options.ConfigureHttpClient?.Invoke(builder);
                 
             services.AddKeyedScoped(site, (provider, key) => new TMX(
-                provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(TMX)}_{key}"), site));
+                provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(TMX)}_{key}"), site, options.UserAgent));
             services.AddScoped(provider => provider.GetRequiredKeyedService<TMX>(site));
         }
 
         foreach (var site in Enum.GetValues<MxSite>())
         {
             var builder = services.AddHttpClient($"{nameof(MX)}_{site}");
-            if (!string.IsNullOrEmpty(options.UserAgent))
-            {
-                builder.ConfigureHttpClient(client => {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
-                });
-            }
             options.ConfigureHttpClient?.Invoke(builder);
 
             services.AddKeyedScoped(site, (provider, key) => new MX(
-                provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(MX)}_{key}"), site));
+                provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(MX)}_{key}"), site, options.UserAgent));
             services.AddScoped(provider => provider.GetRequiredKeyedService<MX>(site));
         }
 
         var ixBuilder = services.AddHttpClient(nameof(IX));
-        if (!string.IsNullOrEmpty(options.UserAgent))
-        {
-            ixBuilder.ConfigureHttpClient(client => {
-                client.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
-            });
-        }
         options.ConfigureHttpClient?.Invoke(ixBuilder);
 
-        services.AddScoped(provider => new IX(provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(IX))));
+        services.AddScoped(provider => new IX(provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(IX)), options.UserAgent));
 
         services.AddScoped(provider => Enum.GetValues<TmxSite>()
             .ToImmutableDictionary(site => site, site => provider.GetRequiredKeyedService<TMX>(site)));

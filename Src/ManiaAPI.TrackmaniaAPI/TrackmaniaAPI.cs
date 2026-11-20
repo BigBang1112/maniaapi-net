@@ -48,6 +48,9 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     public HttpClient Client { get; }
     public bool AutomaticallyAuthorize { get; }
 
+    public TrackmaniaAPI(string userAgent, bool automaticallyAuthorize = true)
+        : this(new HttpClient(), new TrackmaniaAPIHandler(), userAgent, automaticallyAuthorize) { }
+
     /// <summary>
     /// Creates a new instance of the Trackmania API client.
     /// </summary>
@@ -55,13 +58,22 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// <param name="handler">Handler to use for the Trackmania API.</param>
     /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.</param>
     /// <exception cref="ArgumentNullException"><paramref name="client"/> or <paramref name="handler"/> is null.</exception>
-    public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, bool automaticallyAuthorize = true)
+    public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, bool automaticallyAuthorize = true) : this(client, handler, null, automaticallyAuthorize) { }
+
+    public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, string? userAgent, bool automaticallyAuthorize = true)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
         Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         AutomaticallyAuthorize = automaticallyAuthorize;
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;

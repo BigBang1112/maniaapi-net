@@ -1,6 +1,5 @@
 using ManiaAPI.TMX;
 using System.Collections.Immutable;
-using System.Net;
 using WebAppTmxExample.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,7 +13,7 @@ foreach (TmxSite site in Enum.GetValues<TmxSite>())
     builder.Services.AddHttpClient($"{nameof(TMX)}_{site}");
 
     builder.Services.AddKeyedScoped(site, (provider, key) => new TMX(
-        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(TMX)}_{key}"), site));
+        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(TMX)}_{key}"), site, "MyApp/1.0 (contact: me@example.com)"));
     builder.Services.AddScoped(provider => provider.GetRequiredKeyedService<TMX>(site));
 }
 

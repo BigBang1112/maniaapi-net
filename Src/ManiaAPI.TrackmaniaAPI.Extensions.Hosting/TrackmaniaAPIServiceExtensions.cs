@@ -14,7 +14,9 @@ public static class TrackmaniaAPIServiceExtensions
             Credentials = o.Credentials
         });
 
-        return services.AddHttpClient<TrackmaniaAPI>();
+        return services.AddHttpClient(nameof(TrackmaniaAPI))
+            .AddTypedClient((client, provider) => new TrackmaniaAPI(
+                client, provider.GetRequiredService<TrackmaniaAPIHandler>(), o.UserAgent));
     }
 
     public static IHttpClientBuilder AddTrackmaniaAPI(this IServiceCollection services)

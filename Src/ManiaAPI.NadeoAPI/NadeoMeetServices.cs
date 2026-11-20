@@ -85,6 +85,14 @@ public class NadeoMeetServices : NadeoAPI, INadeoMeetServices
     public override string Audience => nameof(NadeoLiveServices);
     public override string BaseAddress => "https://meet.trackmania.nadeo.club/api";
 
+    public NadeoMeetServices(HttpClient client, NadeoAPIHandler? handler, string? userAgent, bool automaticallyAuthorize = true) : base(client, handler ?? new NadeoAPIHandler(), userAgent, automaticallyAuthorize) { }
+
+    public NadeoMeetServices(HttpClient client, string userAgent, bool automaticallyAuthorize = true)
+        : this(client, null, userAgent, automaticallyAuthorize) { }
+
+    public NadeoMeetServices(string userAgent, bool automaticallyAuthorize = true)
+        : this(new HttpClient(), new NadeoAPIHandler(), userAgent, automaticallyAuthorize) { }
+
     public NadeoMeetServices(HttpClient client, NadeoAPIHandler? handler = null, bool automaticallyAuthorize = true)
         : base(client, handler ?? new NadeoAPIHandler(), automaticallyAuthorize)
     {

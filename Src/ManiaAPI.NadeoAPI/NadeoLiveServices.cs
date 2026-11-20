@@ -263,6 +263,14 @@ public class NadeoLiveServices : NadeoAPI, INadeoLiveServices
     public override string Audience => nameof(NadeoLiveServices);
     public override string BaseAddress => "https://live-services.trackmania.nadeo.live/api";
 
+    public NadeoLiveServices(HttpClient client, NadeoAPIHandler? handler, string? userAgent, bool automaticallyAuthorize = true) : base(client, handler ?? new NadeoAPIHandler(), userAgent, automaticallyAuthorize) { }
+
+    public NadeoLiveServices(HttpClient client, string userAgent, bool automaticallyAuthorize = true)
+        : this(client, null, userAgent, automaticallyAuthorize) { }
+
+    public NadeoLiveServices(string userAgent, bool automaticallyAuthorize = true)
+        : this(new HttpClient(), new NadeoAPIHandler(), userAgent, automaticallyAuthorize) { }
+
     public NadeoLiveServices(HttpClient client, NadeoAPIHandler? handler = null, bool automaticallyAuthorize = true)
         : base(client, handler ?? new NadeoAPIHandler(), automaticallyAuthorize)
     {

@@ -29,11 +29,22 @@ public class Dedimania : IDedimania
 
     public HttpClient Client { get; }
 
-    public Dedimania(HttpClient client)
+    public Dedimania(string userAgent) : this(new HttpClient(), userAgent) { }
+
+    public Dedimania(HttpClient client) : this(client, null) { }
+
+    public Dedimania(HttpClient client, string? userAgent)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;

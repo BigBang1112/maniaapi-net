@@ -73,10 +73,8 @@ public class TrackmaniaIO : ITrackmaniaIO
 
         var headers = Client.DefaultRequestHeaders;
 
-        if (!headers.UserAgent.Any(h => h.ToString().Equals(userAgent, StringComparison.Ordinal)))
-        {
-            headers.UserAgent.ParseAdd(userAgent);
-        }
+        headers.UserAgent.Clear();
+        headers.UserAgent.ParseAdd(userAgent);
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;

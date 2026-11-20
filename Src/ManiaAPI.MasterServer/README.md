@@ -63,7 +63,7 @@ For all games:
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.TMUF;
 
-var masterServer = new MasterServerTMUF();
+var masterServer = new MasterServerTMUF(MasterServerType.United, "MyApp/1.0 (contact: me@example.com)");
 ```
 
 ## Setup for ManiaPlanet
@@ -74,7 +74,7 @@ First examples assume `Maniaplanet relay 1` master server is still running.
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.MP4;
 
-var masterServer = new MasterServerMP4();
+var masterServer = new MasterServerMP4(MasterServerMP4.DefaultUrl, "MyApp/1.0 (contact: me@example.com)");
 ```
 
 Because the responses can be quite large sometimes, it's **recommended to accept compression** on the client.
@@ -87,7 +87,7 @@ var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression =
 {
     BaseAddress = new Uri(MasterServerMP4.DefaultUrl)
 };
-var masterServer = new MasterServerMP4(httpClient);
+var masterServer = new MasterServerMP4(httpClient, "MyApp/1.0 (contact: me@example.com)");
 ```
 
 In case `Maniaplanet relay 1` shuts down / errors out, you have to reach out to the init server with `GetWaitingParams` and retrieve an available relay. That's how the game client does it (thanks Mystixor for figuring this out).
@@ -96,10 +96,10 @@ In case `Maniaplanet relay 1` shuts down / errors out, you have to reach out to 
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.MP4;
 
-var initServer = new InitServerMP4();
+var initServer = new InitServerMP4(InitServerMP4.DefaultUrl, "MyApp/1.0 (contact: me@example.com)");
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var masterServer = new MasterServerMP4(waitingParams.MasterServers.First());
+var masterServer = new MasterServerMP4(waitingParams.MasterServers.First(), "MyApp/1.0 (contact: me@example.com)");
 
 // The master server is now ready to use
 ```
@@ -110,14 +110,14 @@ Example with enabled compression:
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.MP4;
 
-var initServer = new InitServerMP4();
+var initServer = new InitServerMP4(InitServerMP4.DefaultUrl, "MyApp/1.0 (contact: me@example.com)");
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
 var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
     BaseAddress = waitingParams.MasterServers.First().GetUri()
 };
-var masterServer = new MasterServerMP4(httpClient);
+var masterServer = new MasterServerMP4(httpClient, "MyApp/1.0 (contact: me@example.com)");
 
 // The master server is now ready to use
 ```
@@ -132,10 +132,10 @@ TMT handles 3 platforms: PC, XB1, and PS4. Each have their own init server and m
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.TMT;
 
-var initServer = new InitServerTMT(Platform.PC);
+var initServer = new InitServerTMT(Platform.PC, "MyApp/1.0 (contact: me@example.com)");
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
-var masterServer = new MasterServerTMT(waitingParams.MasterServers.First());
+var masterServer = new MasterServerTMT(waitingParams.MasterServers.First(), "MyApp/1.0 (contact: me@example.com)");
 
 // You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
 ```
@@ -146,14 +146,14 @@ Because the responses can be quite large sometimes, it's **recommended to accept
 using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.TMT;
 
-var initServer = new InitServerTMT(Platform.PC);
+var initServer = new InitServerTMT(Platform.PC, "MyApp/1.0 (contact: me@example.com)");
 var waitingParams = await initServer.GetWaitingParamsAsync();
 
 var httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
 {
     BaseAddress = waitingParams.MasterServers.First().GetUri()
 };
-var masterServer = new MasterServerTMT(httpClient);
+var masterServer = new MasterServerTMT(httpClient, "MyApp/1.0 (contact: me@example.com)");
 
 // You can repeat this exact setup for XB1 and PS4 as well if you want to work with those platforms, with something like Dictionary<Platform, MasterServerTMT> ...
 ```
@@ -166,7 +166,7 @@ using ManiaAPI.MasterServer.TMT;
 
 var waitingParams = Enum.GetValues<Platform>().ToDictionary(
     platform => platform, 
-    platform => new InitServerTMT(platform).GetWaitingParamsAsync(cancellationToken));
+    platform => new InitServerTMT(platform, "MyApp/1.0 (contact: me@example.com)").GetWaitingParamsAsync(cancellationToken));
 
 await Task.WhenAll(waitingParams.Values);
 
@@ -175,7 +175,7 @@ var aggregatedMasterServer = new AggregatedMasterServerTMT(waitingParams.ToDicti
     pair => new MasterServerTMT(new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
     {
         BaseAddress = pair.Value.Result.MasterServers.First().GetUri()
-    })));
+    }, "MyApp/1.0 (contact: me@example.com)")));
 
 // You can now use aggregatedMasterServer to work with all master servers at once
 ```

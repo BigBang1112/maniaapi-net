@@ -13,7 +13,7 @@ Wraps the Dedimania records API (http://dedimania.net:8080/MAP), the records dat
 ```cs
 using ManiaAPI.Dedimania;
 
-var dedimania = new Dedimania();
+var dedimania = new Dedimania("MyApp/1.0 (contact: me@example.com)");
 ```
 
 or with DI, using an injected `HttpClient`:

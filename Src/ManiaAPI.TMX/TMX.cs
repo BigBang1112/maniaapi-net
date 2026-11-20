@@ -59,7 +59,11 @@ public partial class TMX : ITMX
     public TmxSite Site { get; }
     public string SiteName { get; }
 
-    public TMX(HttpClient client, TmxSite site)
+    public TMX(TmxSite site, string userAgent) : this(new HttpClient(), site, userAgent) { }
+
+    public TMX(HttpClient client, TmxSite site) : this(client, site, null) { }
+
+    public TMX(HttpClient client, TmxSite site, string? userAgent)
     {
         Client = client ?? throw new ArgumentNullException(nameof(client));
 
@@ -74,6 +78,13 @@ public partial class TMX : ITMX
         };
 
         var headers = Client.DefaultRequestHeaders;
+
+        if (userAgent is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userAgent);
+            headers.UserAgent.Clear();
+            headers.UserAgent.ParseAdd(userAgent);
+        }
 
         const string product = "ManiaAPI.NET";
         const string version = PackageInfo.Version;

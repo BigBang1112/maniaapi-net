@@ -23,10 +23,10 @@ Wraps:
 using ManiaAPI.TMX;
 
 // Pick one from TMUF, TMNF, Nations, Sunrise, Original
-var tmx = new TMX(TmxSite.TMUF);
+var tmx = new TMX(TmxSite.TMUF, "MyApp/1.0 (contact: me@example.com)");
 
 // or one from Trackmania, Maniaplanet, Shootmania
-var tmx = new MX(TMXSite.Trackmania);
+var tmx = new MX(MxSite.Trackmania, "MyApp/1.0 (contact: me@example.com)");
 ```
 
 or with DI, for a specific site, using an injected `HttpClient`:
@@ -36,7 +36,7 @@ using ManiaAPI.TMX;
 
 builder.Services.AddHttpClient("TMX_TMNF");
 builder.Services.AddScoped<TMX>(provider => new TMX(
-    provider.GetRequiredService<IHttpClientFactory>().CreateClient("TMX_TMNF"), TmxSite.TMNF));
+    provider.GetRequiredService<IHttpClientFactory>().CreateClient("TMX_TMNF"), TmxSite.TMNF, "MyApp/1.0 (contact: me@example.com)"));
 ```
 
 For multiple sites in DI, you can use keyed services:
@@ -44,24 +44,26 @@ For multiple sites in DI, you can use keyed services:
 ```cs
 foreach (var site in Enum.GetValues<TmxSite>())
 {
-    if (site.isMX()) {
-        services.AddHttpClient($"{nameof(MX)}_{site}");
-        services.AddKeyedScoped(site, (provider, key) => new MX(
-            provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(MX)}_{key}"), site, options));
-        services.AddScoped(provider => provider.GetRequiredKeyedService<MX>(site));
-    }
-    else {
-        services.AddHttpClient($"{nameof(TMX)}_{site}");
-        services.AddKeyedScoped(site, (provider, key) => new TMX(
-            provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(TMX)}_{key}"), site, options));
-        services.AddScoped(provider => provider.GetRequiredKeyedService<TMX>(site));
-    }
+    services.AddHttpClient($"{nameof(TMX)}_{site}");
+    services.AddKeyedScoped(site, (provider, key) => new TMX(
+        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(TMX)}_{key}"),
+        site, "MyApp/1.0 (contact: me@example.com)"));
+    services.AddScoped(provider => provider.GetRequiredKeyedService<TMX>(site));
 }
 
-services.AddScoped(provider => Enum.GetValues<TmxSite>().Where(site => site.isMX())
-    .ToImmutableDictionary(site => site, site => provider.GetRequiredKeyedService<MX>(site)));
-services.AddScoped(provider => Enum.GetValues<TmxSite>().Where(site => !site.isMX())
+foreach (var site in Enum.GetValues<MxSite>())
+{
+    services.AddHttpClient($"{nameof(MX)}_{site}");
+    services.AddKeyedScoped(site, (provider, key) => new MX(
+        provider.GetRequiredService<IHttpClientFactory>().CreateClient($"{nameof(MX)}_{key}"),
+        site, "MyApp/1.0 (contact: me@example.com)"));
+    services.AddScoped(provider => provider.GetRequiredKeyedService<MX>(site));
+}
+
+services.AddScoped(provider => Enum.GetValues<TmxSite>()
     .ToImmutableDictionary(site => site, site => provider.GetRequiredKeyedService<TMX>(site)));
+services.AddScoped(provider => Enum.GetValues<MxSite>()
+    .ToImmutableDictionary(site => site, site => provider.GetRequiredKeyedService<MX>(site)));
 ```
 
 Features this last setup brings:
@@ -180,7 +182,7 @@ var vehicles = await tmx.GetVehiclesAsync();
 ```cs
 using ManiaAPI.TMX;
 
-var ix = new IX();
+var ix = new IX("MyApp/1.0 (contact: me@example.com)");
 
 // Search items, 10 to 200 per page
 var result = await ix.SearchItemsAsync(new()
