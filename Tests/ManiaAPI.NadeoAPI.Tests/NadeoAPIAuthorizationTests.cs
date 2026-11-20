@@ -166,7 +166,6 @@ public class NadeoAPIAuthorizationTests
 
     [Test]
     [Arguments(HttpStatusCode.Unauthorized)]
-    [Arguments(HttpStatusCode.Forbidden)]
     public async Task GetZonesAsync_PendingCredentialsRejected_FailsLaterRequestsWithoutSigningInAgain(HttpStatusCode status)
     {
         var fake = FakeHttpMessageHandler.Sequence(
@@ -183,10 +182,12 @@ public class NadeoAPIAuthorizationTests
     }
 
     [Test]
-    public async Task GetZonesAsync_PendingCredentialsFailTemporarily_SignsInAgainOnNextRequest()
+    [Arguments(HttpStatusCode.Forbidden)]
+    [Arguments(HttpStatusCode.ServiceUnavailable)]
+    public async Task GetZonesAsync_PendingCredentialsFailTemporarily_SignsInAgainOnNextRequest(HttpStatusCode status)
     {
         var fake = FakeHttpMessageHandler.Sequence(
-            () => FakeResponse.Json("""{"message":"Service unavailable."}""", HttpStatusCode.ServiceUnavailable),
+            () => FakeResponse.Json("""{"message":"Temporarily unavailable."}""", status),
             () => NadeoTokens.Valid(Audience, out _),
             () => FakeResponse.Json("[]"));
         using var ns = new NadeoServices(fake.CreateClient(), PendingCredentialsHandler());

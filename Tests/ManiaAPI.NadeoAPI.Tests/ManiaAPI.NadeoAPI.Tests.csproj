@@ -2,6 +2,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Src\ManiaAPI.NadeoAPI\ManiaAPI.NadeoAPI.csproj" />
+        <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
     </ItemGroup>
 
 </Project>

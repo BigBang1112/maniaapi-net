@@ -12,6 +12,22 @@ The game provides 3 domains, and they are split into 3 separate services:
 - `NadeoLiveServices` for leaderboards, clubs, and other live content
 - `NadeoMeetServices` for getting the current Cup of the Day
 
+The library spaces request starts at least 500 milliseconds apart across all three services in the process, including authentication and token refreshes. Concurrent callers wait asynchronously and can cancel while waiting. For sustained work, increase the shared interval before sending requests, for example:
+
+```cs
+NadeoAPI.RequestInterval = TimeSpan.FromSeconds(2);
+```
+
+The interval cannot be less than 500 milliseconds.
+
+Add a `User-Agent` identifying your application. The library appends its own identity and preserves yours:
+
+```cs
+var http = new HttpClient();
+http.DefaultRequestHeaders.UserAgent.ParseAdd("MyLeaderboard/1.0 (by @myhandle; contact: me@example.com)");
+using var ns = new NadeoServices(http);
+```
+
 ## Features
 
 For `NadeoServices`:

@@ -23,6 +23,18 @@ public interface INadeoAPI : IDisposable
 
 public abstract class NadeoAPI : INadeoAPI
 {
+    /// <summary>
+    /// Minimum time between request starts across all NadeoAPI clients in this process, including authentication and refreshes.
+    /// Defaults to 500 milliseconds, the approximate ceiling for short bursts. Increase this for sustained operations.
+    /// Requests made directly through <see cref="Client"/> bypass this pacing.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The interval is less than 500 milliseconds.</exception>
+    public static TimeSpan RequestInterval
+    {
+        get => RateLimiter.Shared.RequestInterval;
+        set => RateLimiter.Shared.RequestInterval = value;
+    }
+
     public NadeoAPIHandler Handler { get; }
 
     public HttpClient Client { get; }
@@ -93,7 +105,7 @@ public abstract class NadeoAPI : INadeoAPI
         var payload = new AuthorizationBody(Audience);
         var content = JsonContent.Create(payload, NadeoAPIJsonContext.Default.AuthorizationBody);
 
-        var authRequest = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/basic")
+        using var authRequest = new HttpRequestMessage(HttpMethod.Post, "https://prod.trackmania.core.nadeo.online/v2/authentication/token/basic")
         {
             Headers = { Authorization = new AuthenticationHeaderValue("Basic", encodedAuthenticationValue) },
             Content = content
@@ -150,7 +162,7 @@ public abstract class NadeoAPI : INadeoAPI
 
         try
         {
-            response = await Client.SendAsync(request, cancellationToken);
+            response = await Handler.RequestLimiter.SendAsync(Client, request, cancellationToken);
         }
         catch (HttpRequestException ex)
         {
@@ -241,7 +253,7 @@ public abstract class NadeoAPI : INadeoAPI
 
             if (Handler.CredentialsRejection is { } rejection && rejection.Credentials == credentials)
             {
-                // Only rejections with a 401 or 403 status are stored. The original is kept for its stack trace and correlation.
+                // Only 401 rejections are stored, a 403 can be a temporary rate limit.
                 throw new NadeoAPIResponseException(rejection.Error.Response, rejection.Error.StatusCode!.Value, rejection.Error.ReasonPhrase, rejection.Error);
             }
 
@@ -249,7 +261,7 @@ public abstract class NadeoAPI : INadeoAPI
             {
                 await AuthorizeAsync(credentials, cancellationToken);
             }
-            catch (NadeoAPIResponseException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            catch (NadeoAPIResponseException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
                 // Wrong credentials stay wrong, so they aren't sent again until they're replaced
                 Handler.CredentialsRejection = (credentials, ex);
@@ -306,7 +318,7 @@ public abstract class NadeoAPI : INadeoAPI
 
         try
         {
-            response = await Client.SendAsync(request, cancellationToken);
+            response = await Handler.RequestLimiter.SendAsync(Client, request, cancellationToken);
         }
         catch (HttpRequestException ex)
         {
@@ -372,16 +384,8 @@ public abstract class NadeoAPI : INadeoAPI
 #if DEBUG
     protected async Task<string> GetAsync(string? endpoint, CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseAddress}/{endpoint}");
-        request.Headers.Authorization = Handler.Authorization;
-
-        using var response = await Client.SendAsync(request, cancellationToken);
-
-        var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
-
-        await ValidateResponseAsync(response, cancellationToken);
-
-        return responseString;
+        using var response = await SendAsync(HttpMethod.Get, endpoint, cancellationToken: cancellationToken);
+        return await response.Content.ReadAsStringAsync(cancellationToken);
     }
 #endif
 
