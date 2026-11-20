@@ -264,6 +264,15 @@ namespace ManiaAPI.MCP.Serialization;
 [JsonSerializable(typeof(global::ManiaAPI.Dedimania.GameMode), TypeInfoPropertyName = "DedimaniaGameMode")]
 [JsonSerializable(typeof(global::ManiaAPI.Dedimania.GameMode?), TypeInfoPropertyName = "DedimaniaGameModeNullable")]
 [JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.TrackmaniaWS.Zone>), TypeInfoPropertyName = "WsZones")]
+[JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.UnitedLadder.PlayerRanking>), TypeInfoPropertyName = "UnitedPlayerRankings")]
+[JsonSerializable(typeof(global::ManiaAPI.UnitedLadder.PlayerRanking), TypeInfoPropertyName = "UnitedPlayerRanking")]
+[JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.UnitedLadder.MapPoints>), TypeInfoPropertyName = "UnitedMapPoints")]
+[JsonSerializable(typeof(global::ManiaAPI.UnitedLadder.TrackLeaderboard), TypeInfoPropertyName = "UnitedTrackLeaderboard")]
+[JsonSerializable(typeof(global::ManiaAPI.UnitedLadder.SoloBreakdown), TypeInfoPropertyName = "UnitedSoloBreakdown")]
+[JsonSerializable(typeof(global::ManiaAPI.UnitedLadder.LoginData), TypeInfoPropertyName = "UnitedLoginData")]
+[JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.UnitedLadder.HistoricalPlayerData>), TypeInfoPropertyName = "UnitedHistory")]
+[JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.UnitedLadder.ProgressionDataPoint>), TypeInfoPropertyName = "UnitedProgression")]
+[JsonSerializable(typeof(global::System.Collections.Immutable.ImmutableList<global::ManiaAPI.UnitedLadder.LeaderboardSnapshot>), TypeInfoPropertyName = "UnitedSnapshots")]
 // TimeInt32 is written as integer milliseconds; without the converter every TimeSpan-like property is serialized.
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, UseStringEnumConverter = true,
     Converters = [typeof(global::TmEssentials.Converters.JsonTimeInt32Converter)])]

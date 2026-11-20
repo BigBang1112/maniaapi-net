@@ -2,7 +2,7 @@
 
 An MCP server that lets AI assistants talk to Trackmania and ManiaPlanet APIs through [ManiaAPI.NET](https://github.com/BigBang1112/maniaapi-net). Ask your assistant about leaderboards, maps, clubs, or players, and it figures out which API to call.
 
-Covers NadeoAPI, Trackmania web API, ManiaPlanet web, Channel Record, and Channel Feedback APIs, Trackmania Web Services, Trackmania Exchange and Item Exchange, UnitedLadder, Dedimania, and master servers of TMUF, TMNF, ManiaPlanet, and TMTurbo.
+Covers NadeoAPI, Trackmania web API, ManiaPlanet web, Channel Record, and Channel Feedback APIs, Trackmania Web Services, Trackmania Exchange and Item Exchange, UnitedLadder (TMNF/TMUF only), Dedimania, and master servers of TMUF, TMNF, ManiaPlanet, and TMTurbo.
 
 ## Tags
 

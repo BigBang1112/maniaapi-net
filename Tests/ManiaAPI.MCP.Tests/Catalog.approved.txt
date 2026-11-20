@@ -371,4 +371,14 @@ trackmania.ws.zone_children [tmws, serviceOnly=False, readOnly=True, playerOnly=
 trackmania.ws.zone_children_by_path [tmws, serviceOnly=False, readOnly=True, playerOnly=False] path: string, offset?: int = 0, length?: int = 10, sort?: Id|Name = null, descending?: bool = false
 trackmania.ws.zone_id [tmws, serviceOnly=False, readOnly=True, playerOnly=False] path: string
 trackmania.ws.zones [tmws, serviceOnly=False, readOnly=True, playerOnly=False] offset?: int = 0, length?: int = 10, sort?: Id|Name = null, descending?: bool = false
-united.ladder.player [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+united.ladder.check_login [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+united.ladder.leaderboard_snapshot [none, serviceOnly=False, readOnly=True, playerOnly=False] type: string, zone?: string = "World", environment?: string = null, page?: int = null
+united.ladder.multiplayer_rankings [none, serviceOnly=False, readOnly=True, playerOnly=False] environment?: string = "Merge", zone?: string = "World", page?: int = 0
+united.ladder.player [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string, forceWebServices: bool || login: string
+united.ladder.player_history [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string, startDate?: datetime = null, endDate?: datetime = null
+united.ladder.player_maps [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string, page?: int = 0
+united.ladder.player_progression [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string, field?: string = "skillpoints", environment?: string = null, startDate?: datetime = null, endDate?: datetime = null
+united.ladder.player_solo_breakdown [none, serviceOnly=False, readOnly=True, playerOnly=False] login: string
+united.ladder.replay_response [none, serviceOnly=False, readOnly=True, playerOnly=False] uid: string, playerId: int
+united.ladder.solo_rankings [none, serviceOnly=False, readOnly=True, playerOnly=False] zone?: string = "World", page?: int = 0
+united.ladder.track_leaderboard [none, serviceOnly=False, readOnly=True, playerOnly=False] uid: string, zone?: string = "World", page?: int = 0

@@ -1167,20 +1167,32 @@ Method names and the wire protocol are unchanged.
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.UnitedLadder?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.UnitedLadder/)
 
-Wraps https://ul.unitedascenders.xyz/ (new UnitedLadder).
+Wraps the [UnitedLadder API](https://api.ul.unitedascenders.xyz/docs) for **TrackMania Nations Forever (TMNF) and TrackMania United Forever (TMUF) only**. Combines player profiles, rankings, statistics, and historical data from the TrackMania Forever services. Authentication is not required.
 
 ### Features
 
-- Get player info (registration ID from login for example)
-
-More will be added in the future.
+- Player profiles, including solo and multiplayer statistics, zone ranks, tags, and metadata
+- Force a profile refresh through TMF Web Services
+- Solo and multiplayer rankings by zone and environment
+- Track leaderboards, record scores, and ghost links
+- Official map results and player statistics by environment and campaign
+- Login registration and United account status
+- Player history and progression of skill points, ladder points, or nicknames
+- Leaderboard snapshots with collection and expiry times
+- Ghost replay downloads by track UID and numeric player ID
 
 ### Setup
 
 ```cs
 using ManiaAPI.UnitedLadder;
 
-var ul = new UnitedLadder();
+using var ul = new UnitedLadder();
+
+var player = await ul.GetPlayerAsync("bigbang1112");
+var refreshed = await ul.GetPlayerAsync("bigbang1112", forceWebServices: true);
+var solo = await ul.GetSoloRankingsAsync(zone: "World|France", page: 0);
+var multiplayer = await ul.GetMultiplayerRankingsAsync(environment: "Stadium");
+var leaderboard = await ul.GetTrackLeaderboardAsync("BeySZdnfuSh4nHY5xztiXLmlrXe");
 ```
 
 or with DI, using an injected `HttpClient`:
