@@ -1,5 +1,7 @@
 ﻿using ExtendMasterServerSample;
+using ManiaAPI.MasterServer;
 using ManiaAPI.MasterServer.TMT;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
@@ -89,7 +91,7 @@ foreach (var line in platformLoginNicknamePairs.Skip(120))
 
 internal class ExtendedMasterServerTMT : MasterServerTMT
 {
-    public ExtendedMasterServerTMT(MasterServerInfo info) : base(info) { }
+    public ExtendedMasterServerTMT(MasterServerInfo info, string userAgent) : base(info, userAgent) { }
 
     public async Task<MasterServerResponse<RecordsComparison>> GetChallengeRecordsComparisonResponseAsync(string login, string authorLogin, int sessionId, CancellationToken cancellationToken = default)
     {
