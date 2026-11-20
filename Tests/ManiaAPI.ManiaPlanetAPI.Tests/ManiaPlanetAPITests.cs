@@ -127,6 +127,22 @@ public class ManiaPlanetAPITests
     }
 
     [Test]
+    public async Task GetZonesAsync_TokenAboutToExpire_AuthorizesAgainFirst()
+    {
+        const string tokenUrl = "https://prod.live.maniaplanet.com/login/oauth2/access_token";
+        var fake = FakeHttpMessageHandler.Sequence(
+            () => TokenResponse(DateTimeOffset.UtcNow.AddSeconds(30)),
+            () => TokenResponse(DateTimeOffset.UtcNow.AddHours(1)),
+            () => FakeResponse.Json(ZonesJson));
+        using var api = CreateApi(fake);
+        await api.AuthorizeAsync(ClientId, ClientSecret);
+
+        await api.GetZonesAsync();
+
+        await Assert.That(fake.Requests.Select(x => x.Url)).IsEquivalentTo([tokenUrl, tokenUrl, $"{BaseUrl}/zones"]);
+    }
+
+    [Test]
     public async Task GetZonesAsync_RequestsZones()
     {
         var fake = FakeHttpMessageHandler.Json(ZonesJson);

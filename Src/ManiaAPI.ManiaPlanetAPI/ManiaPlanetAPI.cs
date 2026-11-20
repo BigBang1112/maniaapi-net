@@ -25,7 +25,7 @@ public interface IManiaPlanetAPI : IDisposable
     DateTimeOffset? ExpirationTime { get; }
 
     /// <summary>
-    /// If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.
+    /// If calling an endpoint should automatically try to authorize the OAuth2 client a minute before the <see cref="ExpirationTime"/>.
     /// This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.
     /// </summary>
     bool AutomaticallyAuthorize { get; }
@@ -110,6 +110,8 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
 {
     public const string BaseAddress = "https://maniaplanet.com/webservices";
 
+    private static readonly TimeSpan RenewalMargin = TimeSpan.FromMinutes(1);
+
     public ManiaPlanetAPIHandler Handler { get; }
 
     public DateTimeOffset? ExpirationTime => Handler.Payload?.ExpirationTime;
@@ -126,7 +128,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     /// </summary>
     /// <param name="client">HTTP client used to send requests.</param>
     /// <param name="handler">Handler to use for the ManiaPlanet API.</param>
-    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.</param>
+    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client a minute before the <see cref="ExpirationTime"/>. This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.</param>
     public ManiaPlanetAPI(HttpClient client, ManiaPlanetAPIHandler handler, bool automaticallyAuthorize = true) : this(client, handler, null, automaticallyAuthorize) { }
 
     public ManiaPlanetAPI(HttpClient client, ManiaPlanetAPIHandler handler, string? userAgent, bool automaticallyAuthorize = true)
@@ -159,7 +161,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     /// <summary>
     /// Creates a new instance of the ManiaPlanet API client.
     /// </summary>
-    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached. This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.</param>
+    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client a minute before the <see cref="ExpirationTime"/>. This is only considered after calling <see cref="AuthorizeAsync(string, string, IEnumerable{string}, CancellationToken)"/>.</param>
     public ManiaPlanetAPI(bool automaticallyAuthorize = true) : this(new HttpClient(), new ManiaPlanetAPIHandler(), automaticallyAuthorize) { }
 
     public virtual async Task AuthorizeAsync(string clientId, string clientSecret, IEnumerable<string> scopes, CancellationToken cancellationToken = default)
@@ -614,7 +616,7 @@ public class ManiaPlanetAPI : IManiaPlanetAPI
     private bool IsAuthorizationDue([NotNullWhen(true)] out ManiaPlanetAPICredentials? credentials)
     {
         credentials = Handler.Credentials;
-        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime);
+        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime.Value - RenewalMargin);
     }
 
     public virtual void Dispose()

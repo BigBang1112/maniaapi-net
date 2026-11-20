@@ -41,6 +41,8 @@ public class TrackmaniaAPI : ITrackmaniaAPI
 {
     public const string BaseAddress = "https://api.trackmania.com/api";
 
+    private static readonly TimeSpan RenewalMargin = TimeSpan.FromMinutes(1);
+
     public TrackmaniaAPIHandler Handler { get; }
 
     public DateTimeOffset? ExpirationTime => Handler.Payload?.ExpirationTime;
@@ -56,7 +58,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     /// </summary>
     /// <param name="client">HTTP client.</param>
     /// <param name="handler">Handler to use for the Trackmania API.</param>
-    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client when the <see cref="ExpirationTime"/> is reached.</param>
+    /// <param name="automaticallyAuthorize">If calling an endpoint should automatically try to authorize the OAuth2 client a minute before the <see cref="ExpirationTime"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="client"/> or <paramref name="handler"/> is null.</exception>
     public TrackmaniaAPI(HttpClient client, TrackmaniaAPIHandler handler, bool automaticallyAuthorize = true) : this(client, handler, null, automaticallyAuthorize) { }
 
@@ -370,7 +372,7 @@ public class TrackmaniaAPI : ITrackmaniaAPI
     private bool IsAuthorizationDue([NotNullWhen(true)] out TrackmaniaAPICredentials? credentials)
     {
         credentials = Handler.Credentials;
-        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime);
+        return credentials is not null && (ExpirationTime is null || DateTimeOffset.UtcNow >= ExpirationTime.Value - RenewalMargin);
     }
 
     public virtual void Dispose()
