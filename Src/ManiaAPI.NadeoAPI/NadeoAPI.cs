@@ -223,9 +223,9 @@ public abstract class NadeoAPI : INadeoAPI
 
             // If expired for over 20 hours, the refresh token is likely expired too, so reauthorize when credentials were saved.
             // Without saved credentials, try the refresh token anyway.
-            if (Handler.SaveCredentials && Handler.SavedCredentials is not null && DateTimeOffset.UtcNow >= ExpirationTime!.Value.AddHours(20))
+            if (Handler.SaveCredentials && Handler.SavedCredentials is { } credentials && DateTimeOffset.UtcNow >= ExpirationTime!.Value.AddHours(20))
             {
-                await AuthorizeAsync(Handler.SavedCredentials, cancellationToken);
+                await AuthorizeWithSavedCredentialsAsync(credentials, cancellationToken);
                 return true;
             }
 
@@ -234,13 +234,44 @@ public abstract class NadeoAPI : INadeoAPI
                 Headers = { Authorization = new AuthenticationHeaderValue("nadeo_v1", $"t={Handler.RefreshToken}") }
             };
 
-            await RequestTokenAsync(message, cancellationToken);
+            try
+            {
+                await RequestTokenAsync(message, cancellationToken);
+            }
+            catch (NadeoAPIResponseException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized
+                && Handler.SaveCredentials && Handler.SavedCredentials is not null)
+            {
+                // The refresh token expired early or was revoked, so the session can only continue by signing in again
+                await AuthorizeWithSavedCredentialsAsync(Handler.SavedCredentials, cancellationToken);
+            }
 
             return true;
         }
         finally
         {
             Handler.AuthorizationLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Signs in again with the saved credentials. Credentials Nadeo rejects with HTTP 401 are forgotten,
+    /// so later refreshes don't keep sending them and risk getting the account locked.
+    /// </summary>
+    /// <exception cref="NadeoAPIResponseException">Signing in failed.</exception>
+    private async Task AuthorizeWithSavedCredentialsAsync(NadeoAPICredentials credentials, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AuthorizeAsync(credentials, cancellationToken);
+        }
+        catch (NadeoAPIResponseException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            if (Handler.SavedCredentials == credentials)
+            {
+                Handler.SavedCredentials = null;
+            }
+
+            throw;
         }
     }
 

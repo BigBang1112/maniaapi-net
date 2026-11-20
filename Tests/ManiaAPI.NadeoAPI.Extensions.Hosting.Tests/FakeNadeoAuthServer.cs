@@ -14,6 +14,7 @@ internal sealed class FakeNadeoAuthServer : HttpMessageHandler
     private const string RefreshPath = "/v2/authentication/token/refresh";
 
     private readonly ConcurrentQueue<string> refreshes = new();
+    private readonly ConcurrentQueue<string> signIns = new();
 
     /// <summary>
     /// Answers a refresh for the given audience. Refreshes succeed by default.
@@ -26,6 +27,11 @@ internal sealed class FakeNadeoAuthServer : HttpMessageHandler
     /// </summary>
     public IReadOnlyCollection<string> Refreshes => refreshes;
 
+    /// <summary>
+    /// Audiences of the sign-in requests, in the order they were sent.
+    /// </summary>
+    public IReadOnlyCollection<string> SignIns => signIns;
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         switch (request.RequestUri!.AbsolutePath)
@@ -33,6 +39,7 @@ internal sealed class FakeNadeoAuthServer : HttpMessageHandler
             case BasicPath:
                 var body = await request.Content!.ReadAsStringAsync(cancellationToken);
                 var audience = JsonDocument.Parse(body).RootElement.GetProperty("audience").GetString()!;
+                signIns.Enqueue(audience);
                 return ExpiredToken(audience);
 
             case RefreshPath:

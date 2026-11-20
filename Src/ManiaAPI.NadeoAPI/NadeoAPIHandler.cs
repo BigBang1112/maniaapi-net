@@ -38,7 +38,9 @@ public sealed class NadeoAPIHandler
     public UbisoftAuthenticationTicket? UbisoftTicket { get; internal set; }
 
     /// <summary>
-    /// Whether to save credentials after successful authentication. This is true by default to reduce confusion regarding refresh tokens after 24 hours of inactivity, but in case you don't need 24/7 authentication, you should set this to false to increase security. The ManiaAPI.NadeoAPI.Extensions.Hosting package solves this problem differently, so this property is ignored when adding the client via that package.
+    /// Whether to save credentials after successful authentication, so the client can sign in again once the refresh token
+    /// has expired (after about 24 hours of inactivity) or was rejected. This is true by default, and the ManiaAPI.NadeoAPI.Extensions.Hosting
+    /// package keeps it on. In case you don't need 24/7 authentication, you can set this to false so the credentials aren't kept in memory.
     /// </summary>
     public bool SaveCredentials { get; init; } = true;
 }
