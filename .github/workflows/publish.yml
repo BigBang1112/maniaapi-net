@@ -37,3 +37,4 @@ jobs:
           package-prefix: ManiaAPI.
           nuget-user: ${{ vars.NUGET_USER }}
           release-description: ${{ inputs.description }}
+          release-all-packages: true
