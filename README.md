@@ -1086,12 +1086,12 @@ builder.Services.AddMasterServerTMUF(options => options.UserAgent = "MyApp/1.0 (
 
 builder.Services.AddMasterServerMP4(
     options: options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)",
- http => http.AddStandardResilienceHandler(),
+    configureInitServer: http => http.AddStandardResilienceHandler(),
     configureMasterServer: http => http.AddStandardResilienceHandler());
 
 builder.Services.AddMasterServerTMT(
     options: options => options.UserAgent = "MyApp/1.0 (contact: me@example.com)",
- http => http.AddStandardResilienceHandler(),
+    configureInitServer: http => http.AddStandardResilienceHandler(),
     configureMasterServer: http => http.AddStandardResilienceHandler());
 ```
 
