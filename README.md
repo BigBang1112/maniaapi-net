@@ -16,7 +16,7 @@ A wrapper for these web APIs:
 - [Trackmania Web Services](http://developers.trackmania.com/webservices/) (old TMF web API)
 - [Trackmania Exchange](https://api2.mania.exchange/), including Item Exchange
 - [UnitedLadder](https://ul.unitedascenders.xyz/)
-- [Dedimania](http://dedimania.net/) (records of TMF and ManiaPlanet servers)
+- [Dedimania](http://dedimania.net/) (records of TMF and TM2 servers)
 - Master server APIs using XML (for TMF, TMT, and ManiaPlanet)
 - GBXRemote protocol using XML-RPC (for TMF, ManiaPlanet, and TM2020)
 
@@ -1230,7 +1230,7 @@ builder.Services.AddHttpClient<UnitedLadder>();
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.Dedimania?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.Dedimania/)
 
-Wraps the Dedimania records API, the records database of TMF (http://dedimania.net:8000/MAP) and ManiaPlanet (http://dedimania.net:8080/MAP) servers.
+Wraps the Dedimania records API, the records database of TMF (http://dedimania.net:8000/MAP) and TM2 (http://dedimania.net:8080/MAP) servers.
 
 ### Features
 
@@ -1267,7 +1267,7 @@ if (map is not null)
 }
 ```
 
-`GetMapAsync` returns null when Dedimania doesn't know the map, and at most 100 records. Use `DedimaniaGame.TMF` for TMUF and TMNF maps, and `DedimaniaGame.ManiaPlanet` for ManiaPlanet maps. Pass `GameMode.Rounds` or `GameMode.TimeAttack` to get records of one mode only.
+`GetMapAsync` returns null when Dedimania doesn't know the map, and at most 100 records. Use `DedimaniaGame.TMF` for TMUF and TMNF maps, and `DedimaniaGame.TM2` for TM2 maps. Pass `GameMode.Rounds` or `GameMode.TimeAttack` to get records of one mode only.
 
 ## Build
 

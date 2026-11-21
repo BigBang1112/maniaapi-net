@@ -166,7 +166,7 @@ public sealed class InvocationContext(
             "trackmania.ws" => services.GetRequiredService<TrackmaniaWS.TrackmaniaWS>(),
             "united.ladder" => services.GetRequiredService<UnitedLadder.UnitedLadder>(),
             "dedimania.tmuf" or "dedimania.tmnf" => services.GetRequiredKeyedService<Dedimania.Dedimania>(Dedimania.DedimaniaGame.TMF),
-            "dedimania.maniaplanet" => services.GetRequiredKeyedService<Dedimania.Dedimania>(Dedimania.DedimaniaGame.ManiaPlanet),
+            "dedimania.maniaplanet" => services.GetRequiredKeyedService<Dedimania.Dedimania>(Dedimania.DedimaniaGame.TM2),
             _ => throw new InvalidOperationException("Unknown catalog client.")
         };
 

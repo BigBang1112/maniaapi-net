@@ -11,7 +11,7 @@ public enum DedimaniaGame
     TMF,
 
     /// <summary>
-    /// ManiaPlanet (TrackMania 2).
+    /// TrackMania 2 (ManiaPlanet).
     /// </summary>
-    ManiaPlanet
+    TM2
 }

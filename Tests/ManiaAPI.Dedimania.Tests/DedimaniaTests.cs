@@ -7,7 +7,7 @@ public class DedimaniaTests
     // A01-Race, the first official TMNF map.
     private const string Uid = "BeySZdnfuSh4nHY5xztiXLmlrXe";
 
-    // Copied from real ManiaPlanet replies, which separate lines with CRLF. The second record has no date and server login, as
+    // Copied from real TM2 replies, which separate lines with CRLF. The second record has no date and server login, as
     // without "more". Its server name had a comma, which Dedimania replaced with a dot.
     private const string MapResponse =
         "BeySZdnfuSh4nHY5xztiXLmlrXe,Stadium,Nadeo,1162,A01-Race\r\n" +
@@ -18,7 +18,7 @@ public class DedimaniaTests
     public async Task GetMapAsync_RequestsMapWithMoreDetails()
     {
         var fake = FakeHttpMessageHandler.Text(MapResponse);
-        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.ManiaPlanet);
+        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.TM2);
 
         await dedimania.GetMapAsync(Uid);
 
@@ -31,7 +31,7 @@ public class DedimaniaTests
     public async Task GetMapAsync_Mode_RequestsMode(GameMode mode, int expected)
     {
         var fake = FakeHttpMessageHandler.Text(MapResponse);
-        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.ManiaPlanet);
+        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.TM2);
 
         await dedimania.GetMapAsync(Uid, mode);
 
@@ -90,7 +90,7 @@ public class DedimaniaTests
     }
 
     [Test]
-    public async Task GetMapAsync_TMF_ManiaPlanetRecord_Throws()
+    public async Task GetMapAsync_TMF_TM2Record_Throws()
     {
         var fake = FakeHttpMessageHandler.Text(MapResponse);
         using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.TMF);
@@ -102,7 +102,7 @@ public class DedimaniaTests
     public async Task GetMapAsync_EscapesUid()
     {
         var fake = FakeHttpMessageHandler.Text("-1");
-        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.ManiaPlanet);
+        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.TM2);
 
         await dedimania.GetMapAsync("a&b c");
 
@@ -114,7 +114,7 @@ public class DedimaniaTests
     public async Task GetMapAsync_ReturnsParsedMap()
     {
         var fake = FakeHttpMessageHandler.Text(MapResponse);
-        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.ManiaPlanet);
+        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.TM2);
 
         var map = await dedimania.GetMapAsync(Uid);
 
@@ -134,7 +134,7 @@ public class DedimaniaTests
     public async Task GetMapAsync_NoRecords_ReturnsEmptyRecords()
     {
         var fake = FakeHttpMessageHandler.Text("QfWgfkZpeKY9h5WrtrnnOsRdQOb,Canyon,old_bug,14,2 Crazy Mini\r\n");
-        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.ManiaPlanet);
+        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.TM2);
 
         var map = await dedimania.GetMapAsync("QfWgfkZpeKY9h5WrtrnnOsRdQOb", GameMode.TimeAttack);
 
@@ -146,7 +146,7 @@ public class DedimaniaTests
     public async Task GetMapAsync_UnknownMap_ReturnsNull()
     {
         var fake = FakeHttpMessageHandler.Text("-1\r\n");
-        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.ManiaPlanet);
+        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.TM2);
 
         var map = await dedimania.GetMapAsync("nothing");
 
@@ -159,7 +159,7 @@ public class DedimaniaTests
     public async Task GetMapAsync_EmptyUid_Throws(string uid)
     {
         var fake = FakeHttpMessageHandler.Text(MapResponse);
-        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.ManiaPlanet);
+        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.TM2);
 
         await Assert.ThrowsAsync<ArgumentException>(() => dedimania.GetMapAsync(uid));
         await Assert.That(fake.Requests).IsEmpty();
@@ -169,7 +169,7 @@ public class DedimaniaTests
     public async Task GetMapAsync_UnexpectedResponse_Throws()
     {
         var fake = FakeHttpMessageHandler.Text("usage: http://dedimania.net:8080/MAP?uid=...\r\n");
-        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.ManiaPlanet);
+        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.TM2);
 
         await Assert.ThrowsAsync<FormatException>(() => dedimania.GetMapAsync(Uid));
     }
@@ -178,7 +178,7 @@ public class DedimaniaTests
     public async Task GetMapAsync_ServerError_Throws()
     {
         var fake = FakeHttpMessageHandler.Text("", statusCode: HttpStatusCode.InternalServerError);
-        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.ManiaPlanet);
+        using var dedimania = new Dedimania(fake.CreateClient(), DedimaniaGame.TM2);
 
         await Assert.ThrowsAsync<HttpRequestException>(() => dedimania.GetMapAsync(Uid));
     }

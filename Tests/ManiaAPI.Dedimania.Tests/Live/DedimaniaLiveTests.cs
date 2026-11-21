@@ -8,7 +8,7 @@ public class DedimaniaLiveTests
 
     [Test]
     [Arguments(DedimaniaGame.TMF)]
-    [Arguments(DedimaniaGame.ManiaPlanet)]
+    [Arguments(DedimaniaGame.TM2)]
     public async Task GetMapAsync_ReturnsMapWithRecords(DedimaniaGame game)
     {
         using var dedimania = new Dedimania(game);
@@ -27,8 +27,8 @@ public class DedimaniaLiveTests
     [Test]
     [Arguments(DedimaniaGame.TMF, GameMode.Rounds)]
     [Arguments(DedimaniaGame.TMF, GameMode.TimeAttack)]
-    [Arguments(DedimaniaGame.ManiaPlanet, GameMode.Rounds)]
-    [Arguments(DedimaniaGame.ManiaPlanet, GameMode.TimeAttack)]
+    [Arguments(DedimaniaGame.TM2, GameMode.Rounds)]
+    [Arguments(DedimaniaGame.TM2, GameMode.TimeAttack)]
     public async Task GetMapAsync_Mode_ReturnsRecordsOfMode(DedimaniaGame game, GameMode mode)
     {
         using var dedimania = new Dedimania(game);
@@ -42,7 +42,7 @@ public class DedimaniaLiveTests
 
     [Test]
     [Arguments(DedimaniaGame.TMF)]
-    [Arguments(DedimaniaGame.ManiaPlanet)]
+    [Arguments(DedimaniaGame.TM2)]
     public async Task GetMapAsync_UnknownMap_ReturnsNull(DedimaniaGame game)
     {
         using var dedimania = new Dedimania(game);

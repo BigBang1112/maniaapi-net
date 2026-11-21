@@ -31,7 +31,7 @@ public interface IDedimania : IDisposable
 public class Dedimania : IDedimania
 {
     public const string TMFBaseAddress = "http://dedimania.net:8000";
-    public const string ManiaPlanetBaseAddress = "http://dedimania.net:8080";
+    public const string TM2BaseAddress = "http://dedimania.net:8080";
 
     public HttpClient Client { get; }
     public DedimaniaGame Game { get; }
@@ -48,7 +48,7 @@ public class Dedimania : IDedimania
         BaseAddress = game switch
         {
             DedimaniaGame.TMF => TMFBaseAddress,
-            DedimaniaGame.ManiaPlanet => ManiaPlanetBaseAddress,
+            DedimaniaGame.TM2 => TM2BaseAddress,
             _ => throw new ArgumentOutOfRangeException(nameof(game), game, "Unknown Dedimania game.")
         };
 
@@ -84,7 +84,7 @@ public class Dedimania : IDedimania
 
         var escapedUid = Uri.EscapeDataString(uid);
 
-        // The TMF server takes only the UID and always sends the date and the server login. The ManiaPlanet server
+        // The TMF server takes only the UID and always sends the date and the server login. The TM2 server
         // filters by mode itself, and "more" adds the date and the server login to each record.
         var endpoint = Game switch
         {
@@ -119,7 +119,7 @@ public class Dedimania : IDedimania
     /// <summary>
     /// Parses the reply of the <c>MAP</c> endpoint. Its first line is <c>uid,envir,author,nb_time_played,name</c>.
     /// Each other line is <c>rank,time,mode,date,login,serverlogin,nickname,servername</c> on TMF, with mode 0 for
-    /// Rounds and 1 for Time Attack, and <c>time,mode,date,login,serverlogin,nickname,servername</c> on ManiaPlanet,
+    /// Rounds and 1 for Time Attack, and <c>time,mode,date,login,serverlogin,nickname,servername</c> on TM2,
     /// with mode 1 for Rounds and 2 for Time Attack. Names have no commas, Dedimania replaces them with dots.
     /// An unknown map is <c>-1</c>.
     /// </summary>
