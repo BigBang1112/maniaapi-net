@@ -8,13 +8,9 @@
         <IsPackable>true</IsPackable>
         <ToolCommandName>maniaapi-mcp</ToolCommandName>
         <PackageId>ManiaAPI.MCP</PackageId>
-        <Version>0.2.0</Version>
+        <Version>0.2.1</Version>
         <PackageReleaseNotes>
-- Added Dedimania map records
-- Added UnitedLadder rankings, leaderboards, player history, and replays
-- Fixed batch leaderboard positions returning only the first map
-- Fixed online server search failing on some filtered results
-- Fixed TMX enum filters, such as tags, being ignored
+- Fixed Dedimania records of TMF maps
         </PackageReleaseNotes>
         <Authors>BigBang1112</Authors>
         <Description>Stateless MCP gateway for ManiaAPI.NET.</Description>

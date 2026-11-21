@@ -99,7 +99,14 @@ public static class ServiceCollectionExtensions
         }
 
         services.AddHttpClient(nameof(UnitedLadder.UnitedLadder)).AddTypedClient(client => new UnitedLadder.UnitedLadder(client));
-        services.AddHttpClient(nameof(Dedimania.Dedimania)).AddTypedClient(client => new Dedimania.Dedimania(client));
+        services.AddHttpClient(nameof(Dedimania.Dedimania));
+
+        foreach (var game in Enum.GetValues<Dedimania.DedimaniaGame>())
+        {
+            services.AddKeyedTransient(game, (provider, _) => new Dedimania.Dedimania(
+                provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(Dedimania.Dedimania)), game));
+        }
+
         services.AddTrackmaniaAPI(o =>
         {
             if (options.TrackmaniaAPI.Configured)
