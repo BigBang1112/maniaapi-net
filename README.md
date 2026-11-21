@@ -1230,7 +1230,7 @@ builder.Services.AddHttpClient<UnitedLadder>();
 
 [![NuGet](https://img.shields.io/nuget/vpre/ManiaAPI.Dedimania?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/ManiaAPI.Dedimania/)
 
-Wraps the Dedimania records API (http://dedimania.net:8080/MAP), the records database of TMF and ManiaPlanet servers.
+Wraps the Dedimania records API, the records database of TMF (http://dedimania.net:8000/MAP) and ManiaPlanet (http://dedimania.net:8080/MAP) servers.
 
 ### Features
 
@@ -1241,7 +1241,7 @@ Wraps the Dedimania records API (http://dedimania.net:8080/MAP), the records dat
 ```cs
 using ManiaAPI.Dedimania;
 
-var dedimania = new Dedimania("MyApp/1.0 (contact: me@example.com)");
+var dedimania = new Dedimania(DedimaniaGame.TMF, "MyApp/1.0 (contact: me@example.com)");
 ```
 
 or with DI, using an injected `HttpClient`:
@@ -1249,7 +1249,8 @@ or with DI, using an injected `HttpClient`:
 ```cs
 using ManiaAPI.Dedimania;
 
-builder.Services.AddHttpClient<Dedimania>();
+builder.Services.AddHttpClient(nameof(Dedimania))
+    .AddTypedClient(client => new Dedimania(client, DedimaniaGame.TMF));
 ```
 
 ### Usage
@@ -1266,7 +1267,7 @@ if (map is not null)
 }
 ```
 
-`GetMapAsync` returns null when Dedimania doesn't know the map, and at most 100 records. Pass `GameMode.Rounds` or `GameMode.TimeAttack` to get records of one mode only.
+`GetMapAsync` returns null when Dedimania doesn't know the map, and at most 100 records. Use `DedimaniaGame.TMF` for TMUF and TMNF maps, and `DedimaniaGame.ManiaPlanet` for ManiaPlanet maps. Pass `GameMode.Rounds` or `GameMode.TimeAttack` to get records of one mode only.
 
 ## Build
 

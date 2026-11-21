@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <PackageId>ManiaAPI.Dedimania</PackageId>
-        <Version>2.11.0</Version>
+        <Version>2.11.1</Version>
         <Authors>BigBang1112</Authors>
         <Description>Wrapper for the Dedimania records API (dedimania.net). Part of the ManiaAPI.NET library set.</Description>
         <Copyright>Copyright (c) 2026 Petr Pivoňka</Copyright>
@@ -11,7 +11,8 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>trackmania, maniaplanet, tm, api, web, maniaapi, maniaapi.net, dedimania, records</PackageTags>
         <PackageReleaseNotes>
-- Added `Dedimania` with `GetMapAsync` for map records
+- Added `DedimaniaGame`, required by the constructors
+- Fixed TMF maps, which use a separate server
         </PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>

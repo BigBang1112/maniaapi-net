@@ -38,14 +38,15 @@ public class LegacyTests
     }
 
     [Test]
-    [Arguments("tmuf")]
-    [Arguments("tmnf")]
-    [Arguments("maniaplanet")]
-    public async Task DedimaniaMapReturnsRecords(string toolset)
+    [Arguments("tmuf", "1,23810,1,1754236572,TMU:fwo_axell,TMU:huntloch2,Axell,Huntloch", "TMU:fwo_axell",
+        "http://dedimania.net:8000/MAP?uid=BeySZdnfuSh4nHY5xztiXLmlrXe")]
+    [Arguments("tmnf", "1,23810,1,1754236572,TMU:fwo_axell,TMU:huntloch2,Axell,Huntloch", "TMU:fwo_axell",
+        "http://dedimania.net:8000/MAP?uid=BeySZdnfuSh4nHY5xztiXLmlrXe")]
+    [Arguments("maniaplanet", "23921,2,1789146567,niter2018,juneyslounge,$i$o$fffCasino Enjoyer,$fff$wNadeo Hunt Server", "niter2018",
+        "http://dedimania.net:8080/MAP?uid=BeySZdnfuSh4nHY5xztiXLmlrXe&mode=2&more")]
+    public async Task DedimaniaMapUsesTheGameServer(string toolset, string record, string login, string url)
     {
-        var fake = FakeHttpMessageHandler.Text(
-            "BeySZdnfuSh4nHY5xztiXLmlrXe,Stadium,Nadeo,1162,A01-Race\r\n" +
-            "23921,2,1789146567,niter2018,juneyslounge,$i$o$fffCasino Enjoyer,$fff$wNadeo Hunt Server\r\n");
+        var fake = FakeHttpMessageHandler.Text("BeySZdnfuSh4nHY5xztiXLmlrXe,Stadium,Nadeo,1162,A01-Race\r\n" + record + "\r\n");
 
         var collection = new ServiceCollection();
         collection.AddLogging();
@@ -59,8 +60,8 @@ public class LegacyTests
             EngineTests.Json("{\"uid\":\"BeySZdnfuSh4nHY5xztiXLmlrXe\",\"mode\":\"TimeAttack\"}"), GameScope.Create(options), request.ServiceProvider);
 
         await Assert.That(result["data"]!["name"]!.GetValue<string>()).IsEqualTo("A01-Race");
-        await Assert.That(result["data"]!["records"]![0]!["login"]!.GetValue<string>()).IsEqualTo("niter2018");
-        await Assert.That(fake.Request.Url).IsEqualTo("http://dedimania.net:8080/MAP?uid=BeySZdnfuSh4nHY5xztiXLmlrXe&mode=2&more");
+        await Assert.That(result["data"]!["records"]![0]!["login"]!.GetValue<string>()).IsEqualTo(login);
+        await Assert.That(fake.Request.Url).IsEqualTo(url);
     }
 
     [Test]

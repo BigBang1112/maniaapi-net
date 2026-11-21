@@ -3,13 +3,15 @@ namespace ManiaAPI.Dedimania.Tests.Live;
 [LiveTest]
 public class DedimaniaLiveTests
 {
-    // A01-Race, the first official TMNF map, with records of both Rounds and Time Attack.
+    // A01-Race, the first official TMNF map, with records of both Rounds and Time Attack on both servers.
     private const string Uid = "BeySZdnfuSh4nHY5xztiXLmlrXe";
 
     [Test]
-    public async Task GetMapAsync_ReturnsMapWithRecords()
+    [Arguments(DedimaniaGame.TMF)]
+    [Arguments(DedimaniaGame.ManiaPlanet)]
+    public async Task GetMapAsync_ReturnsMapWithRecords(DedimaniaGame game)
     {
-        using var dedimania = new Dedimania();
+        using var dedimania = new Dedimania(game);
 
         var map = await dedimania.GetMapAsync(Uid);
 
@@ -23,11 +25,13 @@ public class DedimaniaLiveTests
     }
 
     [Test]
-    [Arguments(GameMode.Rounds)]
-    [Arguments(GameMode.TimeAttack)]
-    public async Task GetMapAsync_Mode_ReturnsRecordsOfMode(GameMode mode)
+    [Arguments(DedimaniaGame.TMF, GameMode.Rounds)]
+    [Arguments(DedimaniaGame.TMF, GameMode.TimeAttack)]
+    [Arguments(DedimaniaGame.ManiaPlanet, GameMode.Rounds)]
+    [Arguments(DedimaniaGame.ManiaPlanet, GameMode.TimeAttack)]
+    public async Task GetMapAsync_Mode_ReturnsRecordsOfMode(DedimaniaGame game, GameMode mode)
     {
-        using var dedimania = new Dedimania();
+        using var dedimania = new Dedimania(game);
 
         var map = await dedimania.GetMapAsync(Uid, mode);
 
@@ -37,9 +41,11 @@ public class DedimaniaLiveTests
     }
 
     [Test]
-    public async Task GetMapAsync_UnknownMap_ReturnsNull()
+    [Arguments(DedimaniaGame.TMF)]
+    [Arguments(DedimaniaGame.ManiaPlanet)]
+    public async Task GetMapAsync_UnknownMap_ReturnsNull(DedimaniaGame game)
     {
-        using var dedimania = new Dedimania();
+        using var dedimania = new Dedimania(game);
 
         var map = await dedimania.GetMapAsync($"nomap{Guid.NewGuid():N}");
 
