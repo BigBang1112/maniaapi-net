@@ -55,7 +55,7 @@ public class CatalogTests
             tool.InputSchema.GetRawText().Length + (tool.OutputSchema?.GetRawText().Length ?? 0) + 200);
         var estimatedTokens = (characters + 2) / 3;
 
-        await Assert.That(list.Tools.Count).IsLessThanOrEqualTo(20);
+        await Assert.That(list.Tools.Count).IsLessThanOrEqualTo(21);
         await Assert.That(estimatedTokens).IsLessThan(8000);
     }
 

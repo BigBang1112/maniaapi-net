@@ -8,8 +8,10 @@
         <IsPackable>true</IsPackable>
         <ToolCommandName>maniaapi-mcp</ToolCommandName>
         <PackageId>ManiaAPI.MCP</PackageId>
-        <Version>0.2.1</Version>
+        <Version>0.2.2</Version>
         <PackageReleaseNotes>
+- Added `map_lookup` to find map UIDs by name on the exchange sites
+- Added the `uid` filter to `exchange_search`
 - Fixed Dedimania records of TMF maps
         </PackageReleaseNotes>
         <Authors>BigBang1112</Authors>
