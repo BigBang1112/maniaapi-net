@@ -31,6 +31,30 @@ public class LiveGatewayTests
     }
 
     [Test]
+    [Arguments("""{"name":"A01-Race","game":"tmnf"}""")]
+    [Arguments("""{"uid":"BeySZdnfuSh4nHY5xztiXLmlrXe","game":"tmnf"}""")]
+    public async Task MapLookupFindsA01Race(string arguments)
+    {
+        using var services = EngineTests.CreateServices();
+        using var request = services.CreateScope();
+
+        var result = await services.GetRequiredService<GatewayTools>().CallAsync(new CallToolRequestParams
+        {
+            Name = "map_lookup",
+            Arguments = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(arguments)
+        }, request.ServiceProvider, CancellationToken.None);
+
+        await Assert.That(result.IsError ?? false).IsFalse();
+
+        var matches = result.StructuredContent!.Value.GetProperty("data").GetProperty("matches").EnumerateArray().ToArray();
+        var match = matches.First(match => match.GetProperty("uid").GetString() == "BeySZdnfuSh4nHY5xztiXLmlrXe");
+        await Assert.That(match.GetProperty("site").GetString()).IsEqualTo("TMNF");
+        await Assert.That(match.GetProperty("name").GetString()).IsEqualTo("A01-Race");
+        await Assert.That(match.GetProperty("id").GetInt64()).IsGreaterThan(0);
+        await Assert.That(match.GetProperty("author").GetString()).IsNotNull();
+    }
+
+    [Test]
     public async Task Trackmania2020Read()
     {
         var configuration = TestConfiguration.Create(new Dictionary<string, string?>

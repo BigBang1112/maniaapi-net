@@ -103,14 +103,17 @@ public static class OperationOverrides
         ["nadeo.core.player_zone"] = "Use for a player's zone (country or region) by account ID.",
         ["mx.search_maps"] = "Use to find community maps on Mania Exchange by name, author, or IDs. Then use mx.map_gbx_header for map details or mx.map_gbx_url for the file.",
         ["tmx.search_tracks"] = "Use to find community tracks on TrackMania Exchange by name, author, or IDs. Then use tmx.track_gbx_header for track details or tmx.track_gbx_url for the file.",
+        ["dedimania.tmuf.map"] = "Use for the Dedimania records of a TMUF or TMNF map by UID. Find the UID by map name with map_lookup.",
+        ["dedimania.tmnf.map"] = "Use for the Dedimania records of a TMUF or TMNF map by UID. Find the UID by map name with map_lookup.",
+        ["dedimania.maniaplanet.map"] = "Use for the Dedimania records of a TM2 map by UID. Find the UID by map name with map_lookup.",
         ["masterserver.tmuf.player_infos"] = "Use with the player's login, not their display nickname.",
         ["masterserver.mp4.player_infos"] = "Use with the player's login, not their display nickname.",
     };
 
     private static readonly Dictionary<string, string> Parameters = new(StringComparer.Ordinal)
     {
-        ["mapUid"] = "Map UID, the map's string identifier (not the mapId GUID).",
-        ["mapUids"] = "Map UIDs, the maps' string identifiers (not mapId GUIDs).",
+        ["mapUid"] = "Map UID, the map's string identifier (not the mapId GUID). Find it by map name with map_lookup.",
+        ["mapUids"] = "Map UIDs, the maps' string identifiers (not mapId GUIDs). Find them by map name with map_lookup.",
         ["mapId"] = "Map ID (GUID), not the map UID.",
         ["mapIds"] = "Map IDs (GUIDs), not map UIDs.",
         ["accountId"] = "Account ID (GUID). Resolve a display name with trackmania.api.account_ids.",

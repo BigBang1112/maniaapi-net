@@ -232,6 +232,13 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
                             "type": "integer"
                           },
                           "maxItems": 100
+                        },
+                        "uid": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 100
                         }
                       },
                       "additionalProperties": false
@@ -252,8 +259,60 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
                 input["required"]!.AsArray().Add("site");
             }
 
-            yield return Tool("exchange_search", "Find community maps or tracks. Allowed sites: " + sites + ". TM2 uses Maniaplanet; ShootMania uses Shootmania.",
+            yield return Tool("exchange_search", "Find community maps or tracks by name, author, exchange IDs, or map UIDs. Allowed sites: " + sites + ". TM2 uses Maniaplanet; ShootMania uses Shootmania.",
                 input, new JsonObject());
+        }
+
+        if (Enabled("exchange", "map_lookup"))
+        {
+            var input = Parse("""
+                {
+                  "type": "object",
+                  "properties": {
+                    "uid": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "author": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "game": {
+                      "type": "string"
+                    },
+                    "site": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 25,
+                      "default": 5
+                    }
+                  },
+                  "additionalProperties": false
+                }
+                """).AsObject();
+
+            input["properties"]!["site"]!["enum"] = new JsonArray(scope.TmxSites.Concat(scope.MxSites)
+                .Select(site => (JsonNode?)JsonValue.Create(site)).ToArray());
+
+            yield return Tool("map_lookup", "Find a map's UID by name/author, or its name by UID, on every exchange site at once. " +
+                "Narrow with game (tmnf, tm2, ...) or site. count is per site.",
+                input, Parse("""
+                    {
+                      "type": "object",
+                      "properties": {
+                        "matches": {
+                          "type": "array"
+                        }
+                      }
+                    }
+                    """));
         }
 
         if (Enabled("exchange", "exchange_item"))
@@ -338,12 +397,23 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
             var input = JsonNode.Parse(arguments.GetRawText())!.AsObject();
             input["site"] = site;
 
+            // TMX names the UID filter uId, MX names it uid.
+            if (operation == "tmx.search_tracks" && input["parameters"] is JsonObject parameters && parameters.Remove("uid", out var uids))
+            {
+                parameters["uId"] = uids;
+            }
+
             return await Call(operation, input, scope, services, cancellationToken);
         }
 
         if (name == "exchange_item")
         {
             return await ExchangeItem(arguments, scope, services, cancellationToken);
+        }
+
+        if (name == "map_lookup")
+        {
+            return await MapLookup(arguments, scope, services, cancellationToken);
         }
 
         var data = new JsonObject();
@@ -476,6 +546,142 @@ public sealed class FeaturedTools(McpOptions options, OperationEngine engine)
         }
 
         return ResultShaper.Shape(data, null, options.Shaping, notes);
+    }
+
+    /// <summary>
+    /// Searches the exchange sites in scope at once and returns their matches in one shape, so a map's UID can be
+    /// found by name or its name by UID without knowing each site's field names.
+    /// </summary>
+    private async Task<JsonObject> MapLookup(JsonElement arguments, GameScope scope, IServiceProvider services, CancellationToken token)
+    {
+        var uid = Text(arguments, "uid");
+        var name = Text(arguments, "name");
+        var author = Text(arguments, "author");
+
+        if (uid is null && name is null && author is null)
+        {
+            throw new ArgumentException("Supply uid, or name and/or author.");
+        }
+
+        var count = arguments.TryGetProperty("count", out var supplied) ? supplied.GetInt32() : 5;
+        var sites = LookupSites(arguments, scope);
+        var searches = sites.Select(site => Search(site)).ToArray();
+        var matches = new JsonArray();
+        var notes = new List<string>();
+
+        foreach (var (site, result, error) in await Task.WhenAll(searches))
+        {
+            if (error is not null)
+            {
+                notes.Add($"{site} unavailable: {error}");
+                continue;
+            }
+
+            notes.AddRange(Notes(site, result!));
+
+            var tmx = scope.TmxSites.Contains(site);
+            var data = result!["data"];
+
+            foreach (var item in data?["results"]?.AsArray() ?? [])
+            {
+                var match = new JsonObject { ["site"] = site };
+                Copy(match, "id", item?[tmx ? "trackId" : "mapId"]);
+                Copy(match, "uid", item?[tmx ? "uId" : "mapUid"]);
+                Copy(match, "name", item?[tmx ? "trackName" : "name"]);
+                Copy(match, "author", item?["uploader"]?["name"]);
+                Copy(match, "environment", tmx ? item?["environment"] : null);
+                Copy(match, "uploadedAt", item?["uploadedAt"]);
+
+                // TMX's trackName gets no plain sibling upstream, as name does here.
+                FormattedText.AddPlain(match);
+                matches.Add(match);
+            }
+
+            if (data?["More"]?.GetValue<bool>() == true)
+            {
+                notes.Add($"{site} has more matches; raise count or narrow name and author.");
+            }
+        }
+
+        if (matches.Count == 0 && notes.Count == 0)
+        {
+            notes.Add(uid is null
+                ? "No map matched on " + string.Join(", ", sites) + "."
+                : "No exchange site in scope has this UID; the map may not be uploaded to an exchange.");
+        }
+
+        return ResultShaper.Shape(new JsonObject { ["matches"] = matches }, null, options.Shaping, notes);
+
+        // A site that fails leaves a note instead of failing the lookup on the other sites.
+        async Task<(string Site, JsonObject? Result, string? Error)> Search(string site)
+        {
+            var tmx = scope.TmxSites.Contains(site);
+            var parameters = new JsonObject { ["count"] = count };
+
+            if (uid is not null)
+            {
+                parameters[tmx ? "uId" : "uid"] = new JsonArray(uid);
+            }
+
+            if (name is not null)
+            {
+                parameters["name"] = name;
+            }
+
+            if (author is not null)
+            {
+                parameters["author"] = author;
+            }
+
+            string[] fields = tmx
+                ? ["More", "results.trackId", "results.uId", "results.trackName", "results.uploader.name", "results.environment", "results.uploadedAt"]
+                : ["More", "results.mapId", "results.mapUid", "results.name", "results.uploader.name", "results.uploadedAt"];
+
+            try
+            {
+                using var document = JsonDocument.Parse(new JsonObject { ["site"] = site, ["parameters"] = parameters }.ToJsonString());
+                var result = await engine.InvokeAsync(tmx ? "tmx.search_tracks" : "mx.search_maps", document.RootElement.Clone(),
+                    scope, services, new ResultShape(fields), token);
+
+                return (site, result, null);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException || !token.IsCancellationRequested)
+            {
+                return (site, null, OperationEngine.Error(exception)["message"]?.ToString());
+            }
+        }
+    }
+
+    /// <summary>
+    /// The exchange sites a lookup searches: the given site, the sites of the given game, or every site in scope.
+    /// </summary>
+    private static string[] LookupSites(JsonElement arguments, GameScope scope)
+    {
+        if (arguments.TryGetProperty("site", out _))
+        {
+            return [Site(arguments, scope)];
+        }
+
+        var lookup = Text(arguments, "game") is { } game ? scope.ForGame(game) : scope;
+        var sites = lookup.TmxSites.Concat(lookup.MxSites).ToArray();
+
+        return sites.Length > 0 ? sites
+            : throw new ArgumentException("No exchange site in this endpoint's scope has maps of that game.");
+    }
+
+    private static string? Text(JsonElement arguments, string name)
+    {
+        return arguments.TryGetProperty(name, out var value) && value.GetString() is { } text && !string.IsNullOrWhiteSpace(text)
+            ? text.Trim()
+            : null;
+    }
+
+    private static void Copy(JsonObject target, string name, JsonNode? value)
+    {
+        if (value is not null)
+        {
+            target[name] = value.DeepClone();
+        }
     }
 
     /// <summary>
